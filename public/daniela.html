@@ -133,7 +133,7 @@ html,body{height:100%;background:#06060a;color:#f0f0f8;font-family:-apple-system
         <div class="name">Daniela <small>psicologia.doc · gpt-4.1-mini</small></div>
         <div class="icons">
           <span class="live" title="Online"></span>
-          <span style="font-size:11px;color:#a78bfa;font-weight:700" id="tools-cnt">17 tools</span>
+          <span style="font-size:11px;color:#a78bfa;font-weight:700" id="tools-cnt">19 tools</span>
         </div>
       </div>
       <div class="connectors" id="connectors-bar">
@@ -148,8 +148,8 @@ html,body{height:100%;background:#06060a;color:#f0f0f8;font-family:-apple-system
     <div class="msgs" id="msgs">
       <div class="empty" id="empty">
         <div class="empty-i">🤖</div>
-        <div class="empty-t">Sou a Daniela <span class="realtime-badge">V22 FULL</span></div>
-        <div class="empty-d">17 tools · conectores MCP herdados do Claude. Quando eu criar um app, ele <strong style="color:#34d399">aparece automaticamente do lado direito</strong> pra você testar.</div>
+        <div class="empty-t">Sou a Daniela <span class="realtime-badge">V23 AUTOFIX</span></div>
+        <div class="empty-d">19 tools · conectores MCP herdados do Claude. Quando eu criar um app, ele <strong style="color:#34d399">aparece automaticamente do lado direito</strong>. Tenho <strong style="color:#fbbf24">auto-correção</strong>: verifico se ficou bom e conserto sozinha se algo falhar.</div>
         <div class="suggest">
           <div class="sg" onclick="sugest('Liste todos seus conectores ativos')">📡 Conectores</div>
           <div class="sg" onclick="sugest('Crie uma calculadora moderna dark com histórico')">🧮 Calculadora</div>
@@ -166,7 +166,7 @@ html,body{height:100%;background:#06060a;color:#f0f0f8;font-family:-apple-system
         <textarea class="in" id="in" placeholder="Mensagem para Daniela..." rows="1"></textarea>
         <button class="send" id="send" onclick="send()">➤</button>
       </div>
-      <div class="foot">Daniela <strong>V22-FULL</strong> · gpt-4.1-mini · <a href="/conectores.html">Gerenciar conectores</a></div>
+      <div class="foot">Daniela <strong>V23-AUTOFIX</strong> · gpt-4.1-mini · <a href="/conectores.html">Gerenciar conectores</a></div>
     </div>
   </div>
 
@@ -308,6 +308,8 @@ function pulseConnectorsForTool(toolName){
     vercel_deploy_status:"vercel",vercel_force_deploy:"vercel",
     create_static_app:["supabase","vercel","github"],
     create_realtime_app:["supabase","vercel","github"],
+    verify_app:["supabase","vercel","github"],
+    repair_app:["supabase","vercel","github"],
     list_static_apps:"supabase",list_realtime_apps:"supabase",
     list_connectors:"supabase",supabase_sql:"supabase",
     load_skills:"supabase",health_check:"openai",get_token_usage:"supabase"};
@@ -327,7 +329,21 @@ function addMsg(role, content, tools){
   div.className = "msg";
   let toolsHtml = "";
   if(tools && tools.length){
-    toolsHtml = '<div class="bub tools">⚙️ ' + tools.map(function(t){return t.name;}).join(" → ") + '</div>';
+    const toolEmojis = {
+      verify_app: "🔍",
+      repair_app: "🔧",
+      create_static_app: "📱",
+      create_realtime_app: "⚡",
+      list_static_apps: "📦",
+      list_realtime_apps: "📦",
+      list_connectors: "📡",
+      web_search: "🔎", web_fetch: "🌐", browser_visit: "🌐",
+      github_read: "🐙", github_list: "🐙", github_write: "🐙",
+      vercel_deploy_status: "▲", vercel_force_deploy: "▲",
+      supabase_sql: "🟢", load_skills: "🧠",
+      health_check: "💚", get_token_usage: "💰"
+    };
+    toolsHtml = '<div class="bub tools">' + tools.map(function(t){return (toolEmojis[t.name]||"⚙️") + " " + t.name;}).join(" → ") + '</div>';
     tools.forEach(function(t){ pulseConnectorsForTool(t.name); });
   }
   div.innerHTML = '<div class="msg-av '+cls+'">'+av+'</div><div style="flex:1;min-width:0"><div class="bub '+bub+'">'+(role==="assistant"?renderUrls(content):escapeHtml(content))+'</div>'+toolsHtml+'</div>';
