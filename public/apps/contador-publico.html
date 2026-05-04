@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Contador Público de Visitas</title>
+<style>
+  body {
+    margin: 0;
+    background-color: #121212;
+    color: #eee;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    padding: 20px;
+  }
+  h1 {
+    font-size: 8rem;
+    margin: 0 0 20px 0;
+    user-select: none;
+  }
+  button {
+    font-size: 2rem;
+    padding: 15px 40px;
+    background-color: #6200ee;
+    border: none;
+    border-radius: 10px;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-bottom: 40px;
+  }
+  button:hover {
+    background-color: #3700b3;
+  }
+  ul {
+    list-style: none;
+    padding: 0;
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+  }
+  ul li {
+    background: #1e1e1e;
+    margin: 10px 0;
+    padding: 12px 15px;
+    border-radius: 8px;
+    font-size: 1.2rem;
+    font-family: monospace;
+  }
+</style>
+</head>
+<body>
+<h1 id="total">0</h1>
+<button id="incrementBtn">+1 Incrementar</button>
+<ul id="lastVisits"></ul>
+<script>
+  const API = "https://tpjvalzwkqwttvmszvie.supabase.co/functions/v1/app-runtime/contador-publico/api";
+
+  async function fetchVisits() {
+    try {
+      const res = await fetch(API + "?action=list");
+      const data = await res.json();
+      if (data.items) {
+        const total = data.items.length;
+        document.getElementById('total').textContent = total;
+
+        const lastVisits = data.items.slice(-5).reverse();
+        const list = document.getElementById('lastVisits');
+        list.innerHTML = '';
+        lastVisits.forEach(item => {
+          const date = new Date(item.created_at);
+          const li = document.createElement('li');
+          li.textContent = date.toLocaleString();
+          list.appendChild(li);
+        });
+      }
+    } catch (e) {
+      console.error('Erro ao buscar visitas:', e);
+    }
+  }
+
+  async function increment() {
+    try {
+      await fetch(API, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({action: 'create', data: {}})
+      });
+      await fetchVisits();
+    } catch (e) {
+      console.error('Erro incrementando:', e);
+    }
+  }
+
+  document.getElementById('incrementBtn').addEventListener('click', increment);
+
+  fetchVisits();
+  setInterval(fetchVisits, 3000);
+</script>
+</body>
+</html>
