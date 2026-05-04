@@ -1,105 +1,24 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Contador Público de Visitas</title>
-<style>
-  body {
-    margin: 0;
-    background-color: #121212;
-    color: #eee;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    padding: 20px;
-  }
-  h1 {
-    font-size: 8rem;
-    margin: 0 0 20px 0;
-    user-select: none;
-  }
-  button {
-    font-size: 2rem;
-    padding: 15px 40px;
-    background-color: #6200ee;
-    border: none;
-    border-radius: 10px;
-    color: white;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    margin-bottom: 40px;
-  }
-  button:hover {
-    background-color: #3700b3;
-  }
-  ul {
-    list-style: none;
-    padding: 0;
-    width: 100%;
-    max-width: 400px;
-    text-align: center;
-  }
-  ul li {
-    background: #1e1e1e;
-    margin: 10px 0;
-    padding: 12px 15px;
-    border-radius: 8px;
-    font-size: 1.2rem;
-    font-family: monospace;
-  }
-</style>
-</head>
-<body>
-<h1 id="total">0</h1>
-<button id="incrementBtn">+1 Incrementar</button>
-<ul id="lastVisits"></ul>
+<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Contador Público</title>
+<style>*{box-sizing:border-box;margin:0;padding:0}html,body{background:#0a0a0f;color:#f0f0f8;font-family:-apple-system,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.wrap{max-width:420px;width:100%;text-align:center}h1{font-size:22px;margin-bottom:8px}.sub{color:#888;font-size:13px;margin-bottom:30px}
+.cnt{font-size:96px;font-weight:900;background:linear-gradient(135deg,#7c3aed,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-family:'SF Mono',monospace;line-height:1;margin-bottom:8px}
+.lbl{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:2px;margin-bottom:30px}
+.btn{background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;color:#fff;padding:18px 40px;border-radius:14px;font-size:18px;font-weight:800;cursor:pointer;width:100%;box-shadow:0 8px 24px rgba(124,58,237,0.3)}
+.btn:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(124,58,237,0.5)}.btn:active{transform:scale(0.96)}
+.list{margin-top:24px;text-align:left;background:#13131a;border:1px solid #252535;border-radius:12px;padding:14px;max-height:200px;overflow-y:auto}
+.list-h{font-size:10px;color:#888;text-transform:uppercase;font-weight:700;letter-spacing:1.5px;margin-bottom:10px}
+.it{padding:8px 0;border-bottom:1px solid #1c1c26;font-family:monospace;font-size:11px;color:#a78bfa}
+.it:last-child{border:none}.live{display:inline-block;width:6px;height:6px;border-radius:50%;background:#22c55e;margin-right:5px;animation:p 1.5s infinite}
+@keyframes p{0%,100%{opacity:1}50%{opacity:.4}}
+</style></head><body>
+<div class="wrap"><h1>🔢 Contador Público</h1><div class="sub"><span class="live"></span>Realtime · persistido em Supabase</div>
+<div class="cnt" id="cnt">0</div><div class="lbl">Visitas totais</div>
+<button class="btn" onclick="inc()">+1 Incrementar</button>
+<div class="list"><div class="list-h">Últimas 5 visitas</div><div id="list"></div></div></div>
 <script>
-  const API = "https://tpjvalzwkqwttvmszvie.supabase.co/functions/v1/app-runtime/contador-publico/api";
-
-  async function fetchVisits() {
-    try {
-      const res = await fetch(API + "?action=list");
-      const data = await res.json();
-      if (data.items) {
-        const total = data.items.length;
-        document.getElementById('total').textContent = total;
-
-        const lastVisits = data.items.slice(-5).reverse();
-        const list = document.getElementById('lastVisits');
-        list.innerHTML = '';
-        lastVisits.forEach(item => {
-          const date = new Date(item.created_at);
-          const li = document.createElement('li');
-          li.textContent = date.toLocaleString();
-          list.appendChild(li);
-        });
-      }
-    } catch (e) {
-      console.error('Erro ao buscar visitas:', e);
-    }
-  }
-
-  async function increment() {
-    try {
-      await fetch(API, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({action: 'create', data: {}})
-      });
-      await fetchVisits();
-    } catch (e) {
-      console.error('Erro incrementando:', e);
-    }
-  }
-
-  document.getElementById('incrementBtn').addEventListener('click', increment);
-
-  fetchVisits();
-  setInterval(fetchVisits, 3000);
-</script>
-</body>
-</html>
+const API="https://tpjvalzwkqwttvmszvie.supabase.co/functions/v1/app-runtime/contador-publico/api";
+async function inc(){await fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"create",data:{ts:Date.now()}})});load();}
+async function load(){const r=await fetch(API+"?action=list&limit=1000");const d=await r.json();const it=d.items||[];document.getElementById("cnt").textContent=it.length;document.getElementById("list").innerHTML=it.slice(0,5).map(function(x){return '<div class="it">#'+x.id.slice(0,8)+' · '+new Date(x.created_at).toLocaleTimeString("pt-BR")+'</div>';}).join("")||'<div class="it">Nenhuma visita ainda</div>';}
+load();setInterval(load,3000);
+</script></body></html>
