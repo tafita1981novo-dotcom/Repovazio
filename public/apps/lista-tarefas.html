@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Lista de Tarefas Compartilhada</title>
+<style>
+  body {
+    background-color: #121212;
+    color: #e0e0e0;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+  }
+  h1 {
+    text-align: center;
+    color: #bb86fc;
+  }
+  #new-task {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+  input[type=text] {
+    width: 70%;
+    padding: 10px;
+    border: none;
+    border-radius: 4px 0 0 4px;
+    font-size: 16px;
+  }
+  button.add {
+    background-color: #bb86fc;
+    border: none;
+    padding: 10px 20px;
+    color: #121212;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 0 4px 4px 0;
+    transition: background-color 0.3s;
+  }
+  button.add:hover {
+    background-color: #9a67ea;
+  }
+  ul {
+    list-style: none;
+    padding: 0;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  li {
+    background-color: #1e1e1e;
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+  }
+  li.completed {
+    text-decoration: line-through;
+    color: #777;
+  }
+  li > input[type=checkbox] {
+    margin-right: 15px;
+    width: 18px;
+    height: 18px;
+  }
+  li > button.delete {
+    margin-left: auto;
+    background-color: transparent;
+    border: none;
+    color: #cf6679;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 18px;
+  }
+  li > button.delete:hover {
+    color: #ff4455;
+  }
+</style>
+</head>
+<body>
+<h1>Lista de Tarefas Compartilhada</h1>
+<div id="new-task">
+  <input type="text" id="task-input" placeholder="Nova tarefa..." />
+  <button class="add" onclick="addTask()">Adicionar</button>
+</div>
+<ul id="task-list"></ul>
+<script>
+const API = "https://tpjvalzwkqwttvmszvie.supabase.co/functions/v1/app-runtime/lista-tarefas/api";
+
+async function load() {
+  const res = await fetch(API + "?action=list");
+  const data = await res.json();
+  render(data.items);
+}
+
+function render(tasks) {
+  const list = document.getElementById("task-list");
+  list.innerHTML = "";
+  tasks.forEach(task => {
+    const li = document.createElement("li");
+    li.className = task.completed ? "completed" : "";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = task.completed;
+    checkbox.onchange = () => toggleComplete(task.id, checkbox.checked);
+
+    const span = document.createElement("span");
+    span.textContent = task.text;
+
+    const btnDelete = document.createElement("button");
+    btnDelete.className = "delete";
+    btnDelete.textContent = "×";
+    btnDelete.onclick = () => deleteTask(task.id);
+
+    li.appendChild(checkbox);
+    li.appendChild(span);
+    li.appendChild(btnDelete);
+    list.appendChild(li);
+  });
+}
+
+async function addTask() {
+  const input = document.getElementById("task-input");
+  const text = input.value.trim();
+  if (!text) return;
+  await fetch(API, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "create", data: { text, completed: false } }),
+  });
+  input.value = "";
+  load();
+}
+
+async function toggleComplete(id, completed) {
+  await fetch(API, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "update", id, data: { completed } }),
+  });
+  load();
+}
+
+async function deleteTask(id) {
+  await fetch(API, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "delete", id }),
+  });
+  load();
+}
+
+load();
+setInterval(load, 3000);
+</script>
+</body>
+</html>
