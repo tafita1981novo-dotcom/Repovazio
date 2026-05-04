@@ -509,6 +509,7 @@ export default function App(){
   const totalWA=waGroups.reduce((s,g)=>s+g.membros,0);
 
   const NAV=[
+    {id:"daniela_chat",icon:"💬",label:"Conversar com Daniela",external:"https://tpjvalzwkqwttvmszvie.supabase.co/functions/v1/daniela-app"},
     {id:"dashboard",icon:"⊡",label:"Dashboard"},
     {id:"cerebro",icon:"🧠",label:"Cérebro AO VIVO"},
     {id:"gerador",icon:"✨",label:"Gerador Manual"},
@@ -616,7 +617,7 @@ export default function App(){
           {revealed&&<div style={{margin:"8px 12px",padding:"8px 12px",background:"linear-gradient(135deg,rgba(124,58,237,0.1),rgba(236,72,153,0.05))",border:"1px solid rgba(124,58,237,0.3)",borderRadius:10}}><div style={{fontSize:11,fontWeight:700,color:"var(--purple)"}}>🎉 Daniela Coelho, psicóloga</div><div style={{fontSize:9,color:"var(--muted)",marginTop:2}}>Revelação ativa · Consultas abertas</div></div>}
           <nav style={{padding:"6px 0",flex:1,overflowY:"auto"}}>
             {NAV.map(n=>(
-              <div key={n.id} className={"ni"+(page===n.id?" on":"")} onClick={()=>navTo(n.id)}>
+              <div key={n.id} className={"ni"+(page===n.id?" on":"")} onClick={()=>{if(n.external){window.open(n.external,"_blank","noopener");}else{navTo(n.id);}}}>
                 <span style={{fontSize:17,width:24,flexShrink:0}}>{n.icon}</span>
                 <span style={{flex:1}}>{n.label}</span>
                 {n.badge&&<span style={{fontSize:9,fontWeight:700,background:n.badge==="✅"?"var(--gl)":n.badge==="🔓"?"var(--pl)":"var(--rl)",color:n.badge==="✅"?"var(--green)":n.badge==="🔓"?"var(--purple)":"var(--red)",borderRadius:4,padding:"1px 5px",flexShrink:0}}>{n.badge}</span>}
