@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Conectores · Daniela</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#0a0a0f;color:#f0f0f8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh}
+.wrap{max-width:760px;margin:0 auto;padding:20px;padding-top:calc(20px + env(safe-area-inset-top,0px))}
+.hdr{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.back{color:#a78bfa;text-decoration:none;font-size:13px;font-weight:600;padding:8px 12px;border-radius:8px;background:#13131a;border:1px solid #252535}
+.back:hover{background:#1c1c26;border-color:#7c3aed}
+.title{font-size:22px;font-weight:800;flex:1}
+.sub{color:#888;font-size:13px;margin-bottom:24px;line-height:1.5}
+.section{margin-bottom:26px}
+.sec-title{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.sec-count{background:#252535;border-radius:10px;padding:1px 8px;font-size:10px;color:#a78bfa}
+.list{display:grid;gap:8px}
+.item{background:#13131a;border:1px solid #252535;border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;transition:all 0.15s}
+.item:hover{border-color:#7c3aed;background:#1c1c26}
+.item.connected{border-color:rgba(52,211,153,0.3)}
+.ico{width:42px;height:42px;border-radius:10px;background:#0a0a0f;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;border:1px solid #252535}
+.info{flex:1;min-width:0}
+.nm{font-weight:700;font-size:14px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.bd-on{background:#10a37f;color:#fff;font-size:9px;padding:2px 6px;border-radius:6px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px}
+.dt{font-size:11px;color:#888;margin-top:3px;line-height:1.4;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.act{display:flex;gap:8px;flex-shrink:0}
+.btn{background:#7c3aed;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.15s;text-decoration:none;display:inline-flex;align-items:center;gap:5px}
+.btn:hover{background:#9333ea}
+.btn:active{transform:scale(0.96)}
+.btn.disconn{background:#252535;color:#888}
+.btn.disconn:hover{background:#3a3a4a;color:#f0f0f8}
+.btn.docs{background:transparent;border:1px solid #252535;color:#888;padding:7px 12px}
+.btn.docs:hover{background:#1c1c26;border-color:#7c3aed;color:#a78bfa}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-bg.show{display:flex}
+.modal{background:#13131a;border:1px solid #252535;border-radius:14px;max-width:420px;width:100%;padding:24px}
+.m-hdr{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.m-ico{width:48px;height:48px;border-radius:12px;background:#0a0a0f;display:flex;align-items:center;justify-content:center;font-size:26px;border:1px solid #252535}
+.m-tt{font-size:18px;font-weight:800}
+.m-st{font-size:12px;color:#888;margin-top:2px}
+.m-dsc{color:#b0b0c8;font-size:13px;line-height:1.5;margin-bottom:14px}
+.m-lbl{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:block}
+.m-inp{width:100%;background:#0a0a0f;border:1px solid #252535;border-radius:10px;padding:12px 14px;color:#f0f0f8;font-size:14px;outline:none;font-family:'SF Mono',monospace;margin-bottom:14px}
+.m-inp:focus{border-color:#7c3aed}
+.m-buttons{display:flex;gap:8px;margin-top:8px}
+.m-buttons .btn{flex:1;justify-content:center;padding:11px}
+.m-buttons .btn.cancel{background:#252535;color:#b0b0c8}
+.m-link{color:#a78bfa;font-size:12px;text-decoration:underline}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#10a37f;color:#fff;padding:11px 22px;border-radius:24px;font-size:13px;font-weight:700;z-index:200;box-shadow:0 8px 30px rgba(0,0,0,0.5);opacity:0;transition:all 0.3s;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(-4px)}
+.toast.err{background:#dc2626}
+.empty{text-align:center;padding:30px 20px;color:#55556a;font-size:13px}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid #252535;border-top-color:#7c3aed;border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (max-width:640px){.title{font-size:18px}.item{padding:12px}.ico{width:38px;height:38px;font-size:20px}.nm{font-size:13px}.btn.docs{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hdr">
+    <a href="/daniela.html" class="back">← Voltar ao Chat</a>
+  </div>
+  <div class="title">📡 Conectores da Daniela</div>
+  <div class="sub">Daniela usa esses conectores pra executar tools reais (publicar no YouTube, criar designs no Canva, falar com voz ElevenLabs, etc). Os <strong style="color:#10a37f">conectados</strong> são herdados do seu Claude. Os <strong style="color:#a78bfa">disponíveis</strong> precisam de uma API key sua.</div>
+
+  <div class="section">
+    <div class="sec-title">✅ Conectados <span class="sec-count" id="cnt-on"><span class="spinner"></span></span></div>
+    <div class="list" id="list-on"><div class="empty">Carregando...</div></div>
+  </div>
+
+  <div class="section">
+    <div class="sec-title">🔌 Disponíveis para conectar <span class="sec-count" id="cnt-off">—</span></div>
+    <div class="list" id="list-off"></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal" onclick="if(event.target.id==='modal')closeModal()">
+  <div class="modal">
+    <div class="m-hdr">
+      <div class="m-ico" id="m-ico">🔌</div>
+      <div><div class="m-tt" id="m-tt">Conectar</div><div class="m-st" id="m-st">—</div></div>
+    </div>
+    <div class="m-dsc" id="m-dsc"></div>
+    <div id="m-fields"></div>
+    <div class="m-buttons">
+      <button class="btn cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn" id="m-save" onclick="saveConnection()">Conectar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = "https://tpjvalzwkqwttvmszvie.supabase.co/functions/v1/connectors-api";
+const ANON = "eyJhbGciOiJIUzI1NiIsImtpZCI6Iks2T29uVnpZTDF2bGYwSEoiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwanZhbHp3a3F3dHR2bXN6dmllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ0OTI4OTMsImV4cCI6MjA2MDA2ODg5M30.LBASD9OY8fSyP1ywS-LYzRbZ-_ZLHC7P56v0dFB3opQ";
+let currentConn = null;
+
+function toast(msg, err) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = "toast show" + (err?" err":"");
+  setTimeout(function(){ t.className = "toast"+(err?" err":""); }, 2800);
+}
+
+async function loadAll() {
+  try {
+    const r = await fetch(API, { headers: { apikey: ANON, Authorization: "Bearer "+ANON } });
+    const d = await r.json();
+    const on = (d.connectors||[]).filter(function(c){ return c.connected; });
+    const off = (d.connectors||[]).filter(function(c){ return !c.connected; });
+    document.getElementById("cnt-on").textContent = on.length;
+    document.getElementById("cnt-off").textContent = off.length;
+    document.getElementById("list-on").innerHTML = on.length ? on.map(renderConn).join("") : '<div class="empty">Nenhum conectado ainda</div>';
+    document.getElementById("list-off").innerHTML = off.length ? off.map(renderConn).join("") : '<div class="empty">Todos conectados! 🎉</div>';
+  } catch(e) {
+    toast("Erro ao carregar: "+e.message, true);
+    document.getElementById("list-on").innerHTML = '<div class="empty">Erro ao carregar</div>';
+  }
+}
+
+function renderConn(c) {
+  const isOn = !!c.connected;
+  const escName = String(c.name||"").replace(/'/g,"\\'");
+  const docsLink = c.oauth_url ? '<a href="'+c.oauth_url+'" target="_blank" rel="noopener" class="btn docs">Docs ↗</a>' : '';
+  const btn = isOn
+    ? '<button class="btn disconn" onclick="disconnect(\''+escName+'\')">Desconectar</button>'
+    : '<button class="btn" onclick="openConnect(\''+escName+'\')">Conectar</button>';
+  return '<div class="item '+(isOn?'connected':'')+'">'+
+    '<div class="ico">'+(c.icon||'🔌')+'</div>'+
+    '<div class="info">'+
+      '<div class="nm">'+(c.display_name||c.name)+(isOn?'<span class="bd-on">Ativo</span>':'')+'</div>'+
+      '<div class="dt">'+(c.account_info||c.description||'—')+'</div>'+
+    '</div>'+
+    '<div class="act">'+docsLink+btn+'</div>'+
+  '</div>';
+}
+
+async function openConnect(name) {
+  const r = await fetch(API);
+  const d = await r.json();
+  const c = (d.connectors||[]).find(function(x){return x.name===name;});
+  if(!c) return;
+  currentConn = c;
+  document.getElementById("m-ico").textContent = c.icon || "🔌";
+  document.getElementById("m-tt").textContent = "Conectar "+(c.display_name||c.name);
+  document.getElementById("m-st").textContent = c.connection_method==='oauth' ? 'OAuth (em breve)' : 'API Key necessária';
+  const dsc = c.description ? c.description+'.' : '';
+  const link = c.oauth_url ? ' <a href="'+c.oauth_url+'" target="_blank" rel="noopener" class="m-link">Pegar token →</a>' : '';
+  document.getElementById("m-dsc").innerHTML = dsc+link;
+  document.getElementById("m-fields").innerHTML = 
+    '<label class="m-lbl">API Key / Token</label>'+
+    '<input type="password" class="m-inp" id="m-key" placeholder="Cole o token aqui" autocomplete="off">'+
+    '<label class="m-lbl" style="margin-top:8px">Descrição (opcional)</label>'+
+    '<input type="text" class="m-inp" id="m-info" placeholder="Ex: minha conta principal">';
+  document.getElementById("modal").classList.add("show");
+  setTimeout(function(){ const k=document.getElementById("m-key"); if(k)k.focus(); }, 100);
+}
+
+function closeModal() {
+  document.getElementById("modal").classList.remove("show");
+  currentConn = null;
+}
+
+async function saveConnection() {
+  if(!currentConn) return;
+  const key = document.getElementById("m-key").value.trim();
+  const info = document.getElementById("m-info").value.trim();
+  if(!key) { toast("Cole o token primeiro", true); return; }
+  const btn = document.getElementById("m-save");
+  btn.disabled = true; btn.textContent = "Salvando...";
+  try {
+    const r = await fetch(API+"/connect", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", apikey: ANON, Authorization: "Bearer "+ANON },
+      body: JSON.stringify({
+        name: currentConn.name,
+        api_key: key,
+        secret_name: currentConn.api_key_secret_name || (currentConn.name.toUpperCase()+"_API_KEY"),
+        account_info: info || ('Conectado · '+new Date().toLocaleDateString('pt-BR'))
+      })
+    });
+    const d = await r.json();
+    if(d.ok) {
+      toast("✅ "+(currentConn.display_name||currentConn.name)+" conectado!");
+      closeModal();
+      loadAll();
+    } else {
+      toast("Erro: "+(d.error||"falhou"), true);
+    }
+  } catch(e) {
+    toast("Erro: "+e.message, true);
+  }
+  btn.disabled = false; btn.textContent = "Conectar";
+}
+
+async function disconnect(name) {
+  if(!confirm("Desconectar "+name+"?")) return;
+  try {
+    await fetch(API+"/disconnect", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", apikey: ANON, Authorization: "Bearer "+ANON },
+      body: JSON.stringify({ name })
+    });
+    toast(name+" desconectado");
+    loadAll();
+  } catch(e) {
+    toast("Erro: "+e.message, true);
+  }
+}
+
+loadAll();
+</script>
+</body>
+</html>
