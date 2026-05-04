@@ -6,17 +6,25 @@
 <title>Daniela · psicologia.doc</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;background:#0a0a0f;color:#f0f0f8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;overflow:hidden;-webkit-font-smoothing:antialiased}
-.app{display:flex;flex-direction:column;height:100dvh;max-width:760px;margin:0 auto;background:#0a0a0f}
+html,body{height:100%;background:#06060a;color:#f0f0f8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;overflow:hidden;-webkit-font-smoothing:antialiased}
+
+/* SPLIT LAYOUT */
+.app{display:flex;height:100dvh;background:#06060a}
+.chat-pane{display:flex;flex-direction:column;width:100%;max-width:760px;flex-shrink:0;background:#0a0a0f;border-right:1px solid #1c1c26;transition:max-width 0.3s}
+.app.split .chat-pane{max-width:46%}
+.preview-pane{flex:1;display:none;flex-direction:column;background:#0a0a0f;min-width:0}
+.app.split .preview-pane{display:flex}
+
+/* CHAT HEADER */
 .hdr{padding:10px 14px 8px;border-bottom:1px solid #1c1c26;background:#0a0a0f;flex-shrink:0;padding-top:calc(10px + env(safe-area-inset-top,0px))}
 .hrow{display:flex;align-items:center;gap:10px;margin-bottom:8px}
 .av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#a855f7);display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:15px;flex-shrink:0}
-.name{font-weight:800;font-size:16px;flex:1;display:flex;flex-direction:column;line-height:1.2}
-.name small{color:#a78bfa;font-size:10px;font-weight:600;margin-top:1px}
-.icons{display:flex;gap:8px;font-size:14px;align-items:center}
-.icons span.live{position:relative;display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;animation:pulse 1.5s infinite}
+.name{font-weight:800;font-size:16px;flex:1;display:flex;flex-direction:column;line-height:1.2;min-width:0}
+.name small{color:#a78bfa;font-size:10px;font-weight:600;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.icons{display:flex;gap:8px;font-size:14px;align-items:center;flex-shrink:0}
+.live{position:relative;display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;animation:pulse 1.5s infinite}
 
-/* Barra de Conectores MCP */
+/* CONNECTORS BAR */
 .connectors{display:flex;gap:6px;overflow-x:auto;padding:4px 0 8px;scrollbar-width:none;-webkit-overflow-scrolling:touch;margin-bottom:8px;align-items:center}
 .connectors::-webkit-scrollbar{display:none}
 .conn{flex-shrink:0;display:flex;align-items:center;gap:5px;background:#13131a;border:1px solid #252535;border-radius:18px;padding:5px 10px;font-size:11px;cursor:pointer;transition:all 0.15s;position:relative;color:#b0b0c8;text-decoration:none}
@@ -27,15 +35,17 @@ html,body{height:100%;background:#0a0a0f;color:#f0f0f8;font-family:-apple-system
 .conn .nm{font-weight:600;font-size:10px;color:#f0f0f8}
 .conn .dot{position:absolute;top:3px;right:6px;width:5px;height:5px;border-radius:50%;background:#22c55e}
 .conn-add{background:linear-gradient(135deg,rgba(124,58,237,0.15),rgba(168,85,247,0.1));border:1px dashed rgba(168,139,250,0.5);font-weight:800;font-size:14px;width:32px;height:30px;justify-content:center;padding:0;color:#a78bfa}
-.conn-add:hover{background:rgba(124,58,237,0.25);border-style:solid;border-color:#a78bfa;color:#fff;transform:scale(1.05)}
+.conn-add:hover{background:rgba(124,58,237,0.25);border-style:solid;color:#fff}
 @keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(168,139,250,0.4)}50%{box-shadow:0 0 0 4px rgba(168,139,250,0)}}
 
+/* TOKENS */
 .tokens{background:linear-gradient(135deg,rgba(124,58,237,0.12),rgba(168,85,247,0.04));border:1px solid rgba(124,58,237,0.25);border-radius:10px;padding:7px 10px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:10px}
 .tk{text-align:center}
 .tk-l{color:#888;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px;font-size:9px}
 .tk-v{font-family:'SF Mono',Monaco,monospace;font-weight:800;font-size:13px}
 .tk-purple{color:#a78bfa}.tk-green{color:#34d399}.tk-amber{color:#fbbf24}
 
+/* MSGS */
 .msgs{flex:1;overflow-y:auto;padding:12px 12px 8px;-webkit-overflow-scrolling:touch}
 .msg{display:flex;gap:8px;margin-bottom:14px;align-items:flex-start}
 .msg-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;flex-shrink:0;color:#fff}
@@ -54,17 +64,29 @@ html,body{height:100%;background:#0a0a0f;color:#f0f0f8;font-family:-apple-system
 .sg{background:#13131a;border:1px solid #252535;border-radius:18px;padding:7px 12px;font-size:11px;cursor:pointer;color:#b0b0c8}
 .sg:hover{background:#1c1c26;border-color:#7c3aed}
 
+/* INPUT */
 .input{padding:8px 10px;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid #1c1c26;background:#0a0a0f;flex-shrink:0}
 .in-row{display:flex;gap:6px;align-items:flex-end;background:#13131a;border:1px solid #252535;border-radius:22px;padding:6px 6px 6px 12px}
 .atk{background:transparent;border:none;color:#888;cursor:pointer;font-size:18px;padding:6px 4px;flex-shrink:0}
 .in{flex:1;background:transparent;border:none;color:#f0f0f8;font-size:14px;outline:none;resize:none;font-family:inherit;padding:6px 0;max-height:120px;line-height:1.4}
 .in::placeholder{color:#55556a}
-.send{background:#7c3aed;border:none;width:32px;height:32px;border-radius:50%;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;transition:all 0.15s}
+.send{background:#7c3aed;border:none;width:32px;height:32px;border-radius:50%;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
 .send:disabled{background:#252535;color:#55556a}
-.send:not(:disabled):active{transform:scale(0.92)}
 .foot{font-size:10px;color:#55556a;text-align:center;margin-top:6px}
-.foot strong{color:#a78bfa}
-.foot a{color:#a78bfa;text-decoration:none}
+.foot strong{color:#a78bfa}.foot a{color:#a78bfa;text-decoration:none}
+
+/* PREVIEW PANE (right) */
+.preview-hdr{padding:10px 14px;border-bottom:1px solid #1c1c26;background:#0a0a0f;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.preview-title{font-weight:800;font-size:13px;flex-shrink:0;display:flex;align-items:center;gap:6px}
+.preview-title .badge-rt{background:#10a37f;color:#fff;font-size:8px;padding:2px 6px;border-radius:6px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px}
+.preview-url{flex:1;background:#06060a;border:1px solid #252535;border-radius:8px;padding:5px 10px;font-size:11px;color:#a78bfa;font-family:'SF Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.preview-btn{background:#13131a;border:1px solid #252535;color:#b0b0c8;padding:5px 10px;border-radius:8px;cursor:pointer;font-size:12px;flex-shrink:0;transition:all 0.15s;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
+.preview-btn:hover{background:#1c1c26;border-color:#7c3aed;color:#fff}
+.preview-frame{flex:1;border:none;width:100%;background:#fff}
+.preview-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;color:#55556a;text-align:center}
+.preview-empty-i{font-size:50px;margin-bottom:12px;opacity:0.4}
+.preview-empty-t{font-size:14px;font-weight:700;color:#b0b0c8;margin-bottom:6px}
+.preview-empty-d{font-size:12px;line-height:1.5;max-width:300px}
 
 .typing{display:inline-flex;gap:3px;align-items:center;padding:4px 0}
 .typing span{width:6px;height:6px;border-radius:50%;background:#a78bfa;animation:typing 1.2s infinite}
@@ -79,57 +101,93 @@ html,body{height:100%;background:#0a0a0f;color:#f0f0f8;font-family:-apple-system
 
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:#252535;border-radius:2px}
 
-.preview{margin-top:8px;background:#0a0a0f;border:1px solid #252535;border-radius:10px;padding:10px}
+/* App previews IN chat (badge cards) */
+.preview{margin-top:8px;background:#0a0a0f;border:1px solid #252535;border-radius:10px;padding:10px;cursor:pointer;transition:all 0.15s}
+.preview:hover{border-color:#7c3aed;background:#13131a}
 .preview-l{color:#888;font-size:10px;margin-bottom:4px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px}
 .preview-u{color:#a78bfa;word-break:break-all;font-family:monospace;font-size:11px;margin-bottom:8px}
-.preview-b{display:inline-block;background:#7c3aed;color:#fff;padding:7px 14px;border-radius:8px;text-decoration:none;font-size:12px;font-weight:700}
+.preview-actions{display:flex;gap:6px}
+.preview-b{background:#7c3aed;color:#fff;padding:6px 12px;border-radius:8px;text-decoration:none;font-size:11px;font-weight:700;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+.preview-b.alt{background:#252535;color:#b0b0c8}
 .realtime-badge{display:inline-block;background:#10a37f;color:#fff;font-size:9px;padding:2px 6px;border-radius:6px;margin-left:6px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px}
+
+/* MOBILE: preview pane fica overlay */
+@media (max-width: 900px){
+  .app.split .chat-pane{max-width:100%;display:flex}
+  .app.split .preview-pane{position:fixed;inset:0;z-index:90;background:#0a0a0f;display:flex}
+  .app.split.preview-min .preview-pane{display:none}
+  .app.split.preview-min .chat-pane{display:flex}
+  .preview-back-mobile{display:inline-flex !important}
+}
+.preview-back-mobile{display:none}
 </style>
 </head>
 <body>
-<div class="app">
-  <div class="hdr">
-    <div class="hrow">
-      <div class="av">D</div>
-      <div class="name">Daniela <small>psicologia.doc · gpt-4.1-mini</small></div>
-      <div class="icons">
-        <span class="live" title="Online"></span>
-        <span style="font-size:11px;color:#a78bfa;font-weight:700" id="tools-cnt">17 tools</span>
+<div class="app" id="app">
+
+  <!-- LEFT: CHAT -->
+  <div class="chat-pane">
+    <div class="hdr">
+      <div class="hrow">
+        <div class="av">D</div>
+        <div class="name">Daniela <small>psicologia.doc · gpt-4.1-mini</small></div>
+        <div class="icons">
+          <span class="live" title="Online"></span>
+          <span style="font-size:11px;color:#a78bfa;font-weight:700" id="tools-cnt">17 tools</span>
+        </div>
+      </div>
+      <div class="connectors" id="connectors-bar">
+        <div class="conn" style="opacity:0.5"><span class="ico">⏳</span><span class="nm">Carregando...</span></div>
+      </div>
+      <div class="tokens">
+        <div class="tk"><div class="tk-l">Tokens hoje</div><div class="tk-v tk-purple" id="tk-today">—</div></div>
+        <div class="tk"><div class="tk-l">Custo USD</div><div class="tk-v tk-green" id="tk-usd">$0.0000</div></div>
+        <div class="tk"><div class="tk-l">Custo BRL</div><div class="tk-v tk-amber" id="tk-brl">R$0,00</div></div>
       </div>
     </div>
-    <!-- Barra de Conectores MCP (carrega dinamicamente, só conectados) -->
-    <div class="connectors" id="connectors-bar">
-      <div class="conn" style="opacity:0.5"><span class="ico">⏳</span><span class="nm">Carregando...</span></div>
-    </div>
-    <div class="tokens">
-      <div class="tk"><div class="tk-l">Tokens hoje</div><div class="tk-v tk-purple" id="tk-today">—</div></div>
-      <div class="tk"><div class="tk-l">Custo USD</div><div class="tk-v tk-green" id="tk-usd">$0.0000</div></div>
-      <div class="tk"><div class="tk-l">Custo BRL</div><div class="tk-v tk-amber" id="tk-brl">R$0,00</div></div>
-    </div>
-  </div>
-  <div class="msgs" id="msgs">
-    <div class="empty" id="empty">
-      <div class="empty-i">🤖</div>
-      <div class="empty-t">Sou a Daniela <span class="realtime-badge">V22 FULL</span></div>
-      <div class="empty-d">IA executora <strong style="color:#a78bfa">psicologia.doc</strong> · 17 tools · conectores MCP herdados do seu Claude.<br><br>
-      Clique no <strong style="color:#a78bfa">+</strong> acima pra adicionar mais conectores (ElevenLabs, HeyGen, YouTube, Instagram, TikTok, etc).</div>
-      <div class="suggest">
-        <div class="sg" onclick="sugest('Liste todos seus conectores ativos com use_count')">📡 Conectores</div>
-        <div class="sg" onclick="sugest('Crie uma calculadora moderna dark com histórico')">🧮 Calculadora</div>
-        <div class="sg" onclick="sugest('Crie um app realtime: contador de visitas público com botão +1, lista de últimas 5 visitas, persiste no Supabase. Slug: contador-publico')">⚡ App 24/7</div>
-        <div class="sg" onclick="sugest('Liste apps que você criou')">📦 Apps</div>
+    <div class="msgs" id="msgs">
+      <div class="empty" id="empty">
+        <div class="empty-i">🤖</div>
+        <div class="empty-t">Sou a Daniela <span class="realtime-badge">V22 FULL</span></div>
+        <div class="empty-d">17 tools · conectores MCP herdados do Claude. Quando eu criar um app, ele <strong style="color:#34d399">aparece automaticamente do lado direito</strong> pra você testar.</div>
+        <div class="suggest">
+          <div class="sg" onclick="sugest('Liste todos seus conectores ativos')">📡 Conectores</div>
+          <div class="sg" onclick="sugest('Crie uma calculadora moderna dark com histórico')">🧮 Calculadora</div>
+          <div class="sg" onclick="openPreview('https://repovazio.vercel.app/apps/voto-cores.html','voto-cores',true)">🎨 Voto de Cores</div>
+          <div class="sg" onclick="openPreview('https://repovazio.vercel.app/apps/contador-publico.html','contador-publico',true)">🔢 Contador 24/7</div>
+          <div class="sg" onclick="sugest('Liste apps que você criou')">📦 Apps</div>
+        </div>
       </div>
     </div>
-  </div>
-  <div class="input">
-    <div class="in-row">
-      <button class="atk" onclick="document.getElementById('file').click()" title="Anexar">📎</button>
-      <input type="file" id="file" style="display:none" accept="image/*,.pdf,.txt,.md,.json,.js,.ts" onchange="onFile(event)">
-      <textarea class="in" id="in" placeholder="Mensagem para Daniela..." rows="1"></textarea>
-      <button class="send" id="send" onclick="send()">➤</button>
+    <div class="input">
+      <div class="in-row">
+        <button class="atk" onclick="document.getElementById('file').click()" title="Anexar">📎</button>
+        <input type="file" id="file" style="display:none" accept="image/*,.pdf,.txt,.md,.json,.js,.ts" onchange="onFile(event)">
+        <textarea class="in" id="in" placeholder="Mensagem para Daniela..." rows="1"></textarea>
+        <button class="send" id="send" onclick="send()">➤</button>
+      </div>
+      <div class="foot">Daniela <strong>V22-FULL</strong> · gpt-4.1-mini · <a href="/conectores.html">Gerenciar conectores</a></div>
     </div>
-    <div class="foot">Daniela <strong>V22-FULL</strong> · gpt-4.1-mini · Edge 24/7 · <a href="/conectores.html">Gerenciar conectores</a></div>
   </div>
+
+  <!-- RIGHT: PREVIEW IFRAME -->
+  <div class="preview-pane">
+    <div class="preview-hdr">
+      <button class="preview-btn preview-back-mobile" onclick="togglePreviewMobile()" title="Voltar ao chat">←</button>
+      <div class="preview-title" id="preview-title">📦 Preview <span class="badge-rt" id="preview-badge" style="display:none">24/7</span></div>
+      <div class="preview-url" id="preview-url">—</div>
+      <button class="preview-btn" onclick="reloadPreview()" title="Recarregar">🔄</button>
+      <a class="preview-btn" id="preview-open" href="#" target="_blank" rel="noopener" title="Abrir em nova aba">↗</a>
+      <button class="preview-btn" onclick="closePreview()" title="Fechar">✕</button>
+    </div>
+    <div class="preview-empty" id="preview-empty">
+      <div class="preview-empty-i">📱</div>
+      <div class="preview-empty-t">Preview do App</div>
+      <div class="preview-empty-d">Quando Daniela criar um app, ele aparece aqui automaticamente. Você pode interagir com ele em tempo real.</div>
+    </div>
+    <iframe class="preview-frame" id="preview-frame" src="about:blank" style="display:none" allow="clipboard-read; clipboard-write"></iframe>
+  </div>
+
 </div>
 <div class="toast" id="toast"></div>
 
@@ -142,117 +200,158 @@ const SESSION_ID = "ses_" + Date.now() + "_" + Math.random().toString(36).slice(
 let msgs = [];
 let attached = null;
 let busy = false;
-let connectorsMap = {};
+let currentAppUrl = null;
 
-document.getElementById("in").addEventListener("keydown", function(e) {
-  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
+document.getElementById("in").addEventListener("keydown", function(e){
+  if(e.key === "Enter" && !e.shiftKey){ e.preventDefault(); send(); }
 });
-document.getElementById("in").addEventListener("input", function(e) {
+document.getElementById("in").addEventListener("input", function(e){
   e.target.style.height = "auto";
   e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
 });
 
-function toast(msg, err) {
+function toast(msg, err){
   const t = document.getElementById("toast");
   t.textContent = msg;
-  t.className = "toast show" + (err?" err":"");
-  setTimeout(function(){ t.className = "toast"+(err?" err":""); }, 2800);
+  t.className = "toast show" + (err ? " err" : "");
+  setTimeout(function(){ t.className = "toast" + (err ? " err" : ""); }, 2800);
 }
-function sugest(t) { document.getElementById("in").value = t; send(); }
+function sugest(t){ document.getElementById("in").value = t; send(); }
 function escapeHtml(t){return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/'/g,"&#39;").replace(/"/g,"&quot;");}
 
-async function loadConnectors() {
-  try {
+/* ---- PREVIEW PANE CONTROL ---- */
+function openPreview(url, name, isRealtime){
+  currentAppUrl = url;
+  document.getElementById("app").classList.add("split");
+  document.getElementById("app").classList.remove("preview-min");
+  document.getElementById("preview-empty").style.display = "none";
+  const fr = document.getElementById("preview-frame");
+  fr.style.display = "block";
+  fr.src = url;
+  document.getElementById("preview-url").textContent = url;
+  document.getElementById("preview-open").href = url;
+  document.getElementById("preview-title").innerHTML = "📦 " + escapeHtml(name||"App") + (isRealtime ? ' <span class="badge-rt">24/7</span>' : "");
+  document.getElementById("preview-badge").style.display = isRealtime ? "inline-block" : "none";
+}
+function reloadPreview(){
+  if(!currentAppUrl) return;
+  const fr = document.getElementById("preview-frame");
+  fr.src = "about:blank";
+  setTimeout(function(){ fr.src = currentAppUrl + (currentAppUrl.includes("?")?"&":"?") + "_=" + Date.now(); }, 60);
+}
+function closePreview(){
+  currentAppUrl = null;
+  document.getElementById("app").classList.remove("split");
+  document.getElementById("preview-frame").src = "about:blank";
+  document.getElementById("preview-frame").style.display = "none";
+  document.getElementById("preview-empty").style.display = "flex";
+}
+function togglePreviewMobile(){
+  document.getElementById("app").classList.toggle("preview-min");
+}
+
+/* ---- CONNECTORS ---- */
+async function loadConnectors(){
+  try{
     const r = await fetch(CONN_API + "/connected", { headers: { apikey: ANON, Authorization: "Bearer " + ANON } });
     const d = await r.json();
     const conns = d.connectors || [];
     const bar = document.getElementById("connectors-bar");
-    
-    if (!conns.length) {
+    if(!conns.length){
       bar.innerHTML = '<a href="/conectores.html" class="conn conn-add" title="Adicionar conector">+</a>';
       return;
     }
-
-    // Mapeia para uso em pulseConnector
-    connectorsMap = {};
-    conns.forEach(function(c) { connectorsMap[c.name] = c; });
-
-    let html = conns.map(function(c) {
-      const titleAttr = (c.display_name || c.name) + (c.account_info ? " · " + c.account_info : "");
-      return '<div class="conn active" data-c="' + escapeHtml(c.name) + '" title="' + escapeHtml(titleAttr) + '">' +
+    let html = conns.map(function(c){
+      const ti = (c.display_name || c.name) + (c.account_info ? " · " + c.account_info : "");
+      return '<div class="conn active" data-c="' + escapeHtml(c.name) + '" title="' + escapeHtml(ti) + '">' +
              '<span class="ico">' + (c.icon || '🔌') + '</span>' +
              '<span class="nm">' + escapeHtml(c.display_name || c.name) + '</span>' +
              '<span class="dot"></span></div>';
     }).join("");
-    
-    // Botão "+" no final pra adicionar mais conectores
     html += '<a href="/conectores.html" class="conn conn-add" title="Adicionar conector">+</a>';
     bar.innerHTML = html;
-  } catch(e) {
-    document.getElementById("connectors-bar").innerHTML = 
-      '<a href="/conectores.html" class="conn conn-add" title="Conectores">+</a>';
+  }catch(e){
+    document.getElementById("connectors-bar").innerHTML = '<a href="/conectores.html" class="conn conn-add" title="Conectores">+</a>';
   }
 }
 
-function renderUrls(text) {
+/* ---- URL DETECTION + AUTO PREVIEW ---- */
+function renderUrls(text){
   const safe = escapeHtml(text);
-  return safe.replace(/(https?:\/\/[^\s)<]+)/g, function(u) {
-    if(u.indexOf("/apps/") !== -1 || u.indexOf("/daniela-app/") !== -1 || u.indexOf("/app-runtime/") !== -1) {
-      let slug = u.split("/").pop().replace(".html","").split("?")[0];
-      const isRealtime = u.indexOf("/app-runtime/") !== -1;
-      return '<div class="preview"><div class="preview-l">' + (isRealtime ? "⚡ App 24/7 (backend)" : "📱 App hospedado") + '</div><div class="preview-u">' + u + '</div><a href="' + u + '" target="_blank" rel="noopener" class="preview-b">Abrir ' + (slug || "app") + ' →</a></div>';
+  return safe.replace(/(https?:\/\/[^\s)<]+)/g, function(u){
+    if(u.indexOf("/apps/") !== -1 || u.indexOf("/daniela-app/") !== -1 || u.indexOf("/app-runtime/") !== -1){
+      const slug = u.split("/").pop().replace(".html","").split("?")[0];
+      const isRT = u.indexOf("/app-runtime/") !== -1 || u.indexOf("realtime") !== -1;
+      const escUrl = u.replace(/'/g,"\\'");
+      return '<div class="preview" onclick="openPreview(\''+escUrl+'\',\''+slug+'\','+isRT+')">'+
+        '<div class="preview-l">'+(isRT?"⚡ App 24/7 (clique pra abrir →)":"📱 App hospedado (clique pra abrir →)")+'</div>'+
+        '<div class="preview-u">'+u+'</div>'+
+        '<div class="preview-actions">'+
+        '<button class="preview-b" onclick="event.stopPropagation();openPreview(\''+escUrl+'\',\''+slug+'\','+isRT+')">▶ Abrir aqui</button>'+
+        '<a class="preview-b alt" href="'+u+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">↗ Nova aba</a>'+
+        '</div></div>';
     }
-    return '<a href="' + u + '" target="_blank" rel="noopener">' + u + '</a>';
+    return '<a href="'+u+'" target="_blank" rel="noopener">'+u+'</a>';
   });
 }
 
-function pulseConnector(name) {
-  const el = document.querySelector('.conn[data-c="' + name + '"]');
-  if(el) {
+function pulseConnector(name){
+  const el = document.querySelector('.conn[data-c="'+name+'"]');
+  if(el){
     el.classList.add("busy");
     setTimeout(function(){ el.classList.remove("busy"); el.classList.add("active"); }, 1500);
   }
 }
-function pulseConnectorsForTool(toolName) {
-  const map = {
-    web_search:"web", web_fetch:"web", browser_visit:"web",
-    github_read:"github", github_list:"github", github_write:"github",
-    vercel_deploy_status:"vercel", vercel_force_deploy:"vercel",
+function pulseConnectorsForTool(toolName){
+  const map = {web_search:"web",web_fetch:"web",browser_visit:"web",
+    github_read:"github",github_list:"github",github_write:"github",
+    vercel_deploy_status:"vercel",vercel_force_deploy:"vercel",
     create_static_app:["supabase","vercel","github"],
     create_realtime_app:["supabase","vercel","github"],
-    list_static_apps:"supabase", list_realtime_apps:"supabase",
-    list_connectors:"supabase",
-    supabase_sql:"supabase", load_skills:"supabase",
-    health_check:"openai", get_token_usage:"supabase"
-  };
+    list_static_apps:"supabase",list_realtime_apps:"supabase",
+    list_connectors:"supabase",supabase_sql:"supabase",
+    load_skills:"supabase",health_check:"openai",get_token_usage:"supabase"};
   const items = map[toolName];
   if(Array.isArray(items)) items.forEach(pulseConnector);
   else if(items) pulseConnector(items);
 }
 
-function addMsg(role, content, tools) {
+function addMsg(role, content, tools){
   const m = document.getElementById("msgs");
   const ex = document.getElementById("empty");
   if(ex) ex.remove();
-  const av = role==="user" ? "U" : "D";
-  const cls = role==="user" ? "u" : "d";
-  const bub = role==="user" ? "" : "d";
+  const av = role === "user" ? "U" : "D";
+  const cls = role === "user" ? "u" : "d";
+  const bub = role === "user" ? "" : "d";
   const div = document.createElement("div");
   div.className = "msg";
   let toolsHtml = "";
-  if(tools && tools.length) {
+  if(tools && tools.length){
     toolsHtml = '<div class="bub tools">⚙️ ' + tools.map(function(t){return t.name;}).join(" → ") + '</div>';
     tools.forEach(function(t){ pulseConnectorsForTool(t.name); });
   }
   div.innerHTML = '<div class="msg-av '+cls+'">'+av+'</div><div style="flex:1;min-width:0"><div class="bub '+bub+'">'+(role==="assistant"?renderUrls(content):escapeHtml(content))+'</div>'+toolsHtml+'</div>';
   m.appendChild(div);
   m.scrollTop = m.scrollHeight;
+
+  // AUTO-OPEN PREVIEW se Daniela menciona URL de app
+  if(role === "assistant"){
+    const match = content.match(/https?:\/\/[^\s)]+\/apps\/([a-z0-9-]+)\.html/);
+    const matchRT = content.match(/https?:\/\/[^\s)]+\/app-runtime\/([a-z0-9-]+)/);
+    if(match || matchRT){
+      const m2 = match || matchRT;
+      const url = m2[0];
+      const slug = m2[1];
+      const isRT = !!matchRT || /realtime|24\/7|backend/i.test(content);
+      setTimeout(function(){ openPreview(url, slug, isRT); }, 300);
+    }
+  }
 }
 
-function setTyping(on) {
+function setTyping(on){
   const ex = document.getElementById("typing");
   if(ex) ex.remove();
-  if(on) {
+  if(on){
     const m = document.getElementById("msgs");
     const div = document.createElement("div");
     div.className = "msg"; div.id = "typing";
@@ -261,10 +360,10 @@ function setTyping(on) {
   }
 }
 
-function onFile(e) {
+function onFile(e){
   const f = e.target.files[0]; if(!f) return;
   const r = new FileReader();
-  if(f.type.indexOf("image/") === 0) {
+  if(f.type.indexOf("image/") === 0){
     r.onload = function(){ attached = {name:f.name, image:r.result, size:f.size}; toast("📎 " + f.name); };
     r.readAsDataURL(f);
   } else {
@@ -274,20 +373,20 @@ function onFile(e) {
   e.target.value = "";
 }
 
-async function refreshTokens() {
-  try {
+async function refreshTokens(){
+  try{
     const r = await fetch(EDGE+"?action=usage&user_id=tafita81", {headers:{apikey:ANON,Authorization:"Bearer "+ANON}});
     const d = await r.json();
-    if(d && typeof d.today_total !== "undefined") {
+    if(d && typeof d.today_total !== "undefined"){
       document.getElementById("tk-today").textContent = (d.today_total||0).toLocaleString("pt-BR");
       const usd = parseFloat(d.today_cost||0);
       document.getElementById("tk-usd").textContent = "$" + usd.toFixed(4);
       document.getElementById("tk-brl").textContent = "R$" + (usd*5.5).toFixed(2).replace(".",",");
     }
-  } catch(e) {}
+  }catch(e){}
 }
 
-async function send() {
+async function send(){
   if(busy) return;
   const ta = document.getElementById("in");
   const text = ta.value.trim();
@@ -301,13 +400,13 @@ async function send() {
   setTyping(true);
 
   const body = {messages: msgs, session_id: SESSION_ID, user_id: "tafita81"};
-  if(attached) {
+  if(attached){
     if(attached.image) body.image = attached.image;
-    else if(attached.content) { body.fileName = attached.name; body.fileContent = attached.content; body.fileSize = attached.size; }
+    else if(attached.content){ body.fileName = attached.name; body.fileContent = attached.content; body.fileSize = attached.size; }
   }
   attached = null;
 
-  try {
+  try{
     const r = await fetch(EDGE, {
       method:"POST",
       headers:{"Content-Type":"application/json",apikey:ANON,Authorization:"Bearer "+ANON},
@@ -315,17 +414,17 @@ async function send() {
     });
     const d = await r.json();
     setTyping(false);
-    if(d.reply) {
+    if(d.reply){
       addMsg("assistant", d.reply, d.tools_used);
       msgs.push({role:"assistant", content: d.reply});
-      if(d.cost_usd !== undefined) {
+      if(d.cost_usd !== undefined){
         toast("✅ " + ((d.tokens && d.tokens.total) || 0) + " tokens · $" + (d.cost_usd||0).toFixed(5));
       }
       refreshTokens();
     } else {
       addMsg("assistant", "⚠️ " + JSON.stringify(d).slice(0,200));
     }
-  } catch(e) {
+  }catch(e){
     setTyping(false);
     addMsg("assistant", "❌ Erro: " + e.message);
     toast("Erro: " + e.message, true);
@@ -338,7 +437,7 @@ async function send() {
 loadConnectors();
 refreshTokens();
 setInterval(refreshTokens, 12000);
-setInterval(loadConnectors, 30000);  // recarrega conectores a cada 30s
+setInterval(loadConnectors, 60000);
 </script>
 </body>
 </html>
