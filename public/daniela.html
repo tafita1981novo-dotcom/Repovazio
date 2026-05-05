@@ -903,6 +903,87 @@ async function loadConnectors() {
   } catch(e) {}
 }
 
+// ===== SESSOES MODAL =====
+var _sessPage=0, _sessAll=[];
+
+async function loadSessModal(append) {
+  var list = document.getElementById('sess-list');
+  if (!append) {
+    _sessAll = []; _sessPage = 0;
+    list.innerHTML = '<div style="color:#6060a0;font-size:12px;text-align:center;padding:20px">Carregando...</div>';
+  }
+  try {
+    var r = await fetch(EDGE + '?action=sessions&user_id=tafita81&limit=15');
+    var sessions = await r.json();
+    if (!sessions || sessions.length === 0) {
+      if (!append) list.innerHTML = '<div style="color:#6060a0;font-size:12px;text-align:center;padding:20px">Nenhuma sessao salva ainda.</div>';
+      var mb = document.getElementById('sess-more'); if (mb) mb.style.display = 'none';
+      return;
+    }
+    _sessAll = append ? _sessAll.concat(sessions) : sessions;
+    var mb = document.getElementById('sess-more');
+    if (mb) mb.style.display = sessions.length < 15 ? 'none' : '';
+    var rows = '';
+    for (var i = 0; i < _sessAll.length; i++) {
+      var s = _sessAll[i];
+      var dt = s.updated_at ? new Date(s.updated_at).toLocaleString('pt-BR') : '';
+      var prov = s.provider || 'ai';
+      var ico = prov === 'groq' ? '[gratis]' : prov === 'gemini' ? '[gem]' : '[ai]';
+      var title = ((s.title || 'sem titulo').substring(0, 60)).replace(/&/g, 'and').replace(/</g, 'LT').replace(/>/g, 'GT');
+      var safeId = encodeURIComponent(s.id || '');
+      var safeTitle = encodeURIComponent(title);
+      rows += '<div onclick="resumeSess(decodeURIComponent(' + "'" + safeId + "'" + '),decodeURIComponent(' + "'" + safeTitle + "'" + '))" ';
+      rows += 'style="background:#060610;border:1px solid #1e1e2e;border-radius:10px;padding:11px;cursor:pointer;margin-bottom:5px" ';
+      rows += 'onmouseover="this.style.borderColor=\'#7c3aed\'" onmouseout="this.style.borderColor=\'#1e1e2e\'">';
+      rows += '<div style="display:flex;align-items:center;gap:7px;margin-bottom:3px">';
+      rows += '<span style="font-size:11px;color:#6060a0">' + ico + '</span>';
+      rows += '<span style="font-size:13px;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + title + '</span>';
+      rows += '<span style="font-size:10px;color:#6060a0">' + (s.msg_count || 0) + ' msgs</span>';
+      rows += '</div><div style="font-size:10px;color:#6060a0">' + dt + ' - ' + prov + '</div></div>';
+    }
+    list.innerHTML = rows;
+  } catch(e) {
+    list.innerHTML = '<div style="color:#ef4444;padding:12px">Erro: ' + e.message + '</div>';
+  }
+}
+
+function loadMoreSess() { _sessPage++; loadSessModal(true); }
+
+function newSess() {
+  sessionId = 'sess_' + Date.now();
+  messages = [];
+  document.getElementById('msgs').innerHTML = '<div class="msg msg-ai"><div class="avatar avatar-ai">🤖</div><div><div class="msg-bubble">Nova sessao! Como posso ajudar?</div></div></div>';
+  var lbl = document.getElementById('sess-label');
+  if (lbl) lbl.textContent = 'nova sessao';
+  document.getElementById('sess-ov').style.display = 'none';
+  toast('Nova sessao iniciada!');
+}
+
+async function resumeSess(id, title) {
+  document.getElementById('sess-ov').style.display = 'none';
+  sessionId = id;
+  toast('Carregando: ' + title.substring(0, 25) + '...');
+  try {
+    var r = await fetch(EDGE, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        messages: [{role: 'user', content: 'load_session id: ' + id + ' e faca um resumo do que foi feito para continuar'}],
+        model: currentModel, user_id: 'tafita81', session_id: 'resume_' + Date.now()
+      })
+    });
+    var d = await r.json();
+    messages = [{role: 'assistant', content: d.reply || ''}];
+    document.getElementById('msgs').innerHTML = '';
+    var lbl = document.getElementById('sess-label');
+    if (lbl) lbl.textContent = '[Sessao] ' + title.substring(0, 40);
+    addMsg('ai', 'Sessao retomada: ' + title + '\n\n' + (d.reply || 'Continue!'), d.tools_used || [], d.model || currentModel);
+    if (d.tokens) document.getElementById('st-tokens').textContent = fmt(d.tokens.total || 0);
+    toast('Sessao retomada!');
+  } catch(e) { toast('Erro: ' + e.message, true); }
+}
+// ===== FIM SESSOES =====
+
 // INIT
 window.addEventListener('load', () => {
   onModelChange('groq:llama-3.1-8b-instant');
