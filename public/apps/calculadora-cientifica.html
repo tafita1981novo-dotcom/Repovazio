@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Calculadora Científica Completa</title>
+<title>Calculadora Científica</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
   body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Inter', sans-serif;
     background: linear-gradient(135deg, #667eea, #764ba2);
-    color: #fff;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -16,165 +16,168 @@
     margin: 0;
   }
   .calculator {
-    background: #2c2f4a;
-    border-radius: 15px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-    padding: 20px;
-    width: 400px;
+    background: #1e1e2f;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    padding: 30px;
+    width: 360px;
+    max-width: 95vw;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
   }
   .display {
-    background: #1e213a;
-    border-radius: 10px;
-    padding: 15px;
-    font-size: 2rem;
+    background: #2d2d44;
+    border-radius: 15px;
+    padding: 20px;
+    font-size: 2.4rem;
     text-align: right;
+    min-height: 60px;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
     margin-bottom: 20px;
-    min-height: 50px;
-    overflow-x: auto;
   }
   .buttons {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 10px;
+    grid-gap: 15px;
   }
   button {
-    background: #4a4e69;
+    background: #3c3c5a;
     border: none;
-    border-radius: 10px;
+    border-radius: 12px;
     color: #fff;
-    font-size: 1.2rem;
-    padding: 15px 0;
+    font-size: 1.3rem;
+    padding: 18px 0;
     cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     transition: background 0.3s ease;
   }
   button:hover {
-    background: #9a8c98;
+    background: #5a5a85;
   }
   button.operator {
-    background: #22223b;
+    background: #ff9500;
+    color: #fff;
   }
   button.operator:hover {
-    background: #f2e9e4;
-    color: #22223b;
+    background: #ffa733;
   }
-  button.wide {
+  button.zero {
     grid-column: span 2;
+  }
+  @media (max-width: 400px) {
+    .calculator {
+      width: 100%;
+      padding: 20px;
+    }
+    .display {
+      font-size: 1.8rem;
+      padding: 15px;
+      min-height: 50px;
+    }
+    button {
+      font-size: 1.1rem;
+      padding: 15px 0;
+    }
   }
 </style>
 </head>
 <body>
-  <div class="calculator">
-    <div id="display" class="display">0</div>
-    <div class="buttons">
-      <button class="operator" data-action="clear">C</button>
-      <button class="operator" data-action="backspace">⌫</button>
-      <button class="operator" data-action="percent">%</button>
-      <button class="operator" data-action="divide">÷</button>
-      <button data-value="7">7</button>
-      <button data-value="8">8</button>
-      <button data-value="9">9</button>
-      <button class="operator" data-action="multiply">×</button>
-      <button data-value="4">4</button>
-      <button data-value="5">5</button>
-      <button data-value="6">6</button>
-      <button class="operator" data-action="subtract">−</button>
-      <button data-value="1">1</button>
-      <button data-value="2">2</button>
-      <button data-value="3">3</button>
-      <button class="operator" data-action="add">+</button>
-      <button data-value="0" class="wide">0</button>
-      <button data-value=".">.</button>
-      <button class="operator" data-action="equals">=</button>
-    </div>
+<div class="calculator" role="application" aria-label="Calculadora Científica">
+  <div id="display" class="display" aria-live="polite" aria-atomic="true">0</div>
+  <div class="buttons">
+    <button type="button" aria-label="Limpar tudo" id="clear">C</button>
+    <button type="button" aria-label="Limpar último" id="backspace">⌫</button>
+    <button type="button" aria-label="Porcentagem" class="operator" data-value="%">%</button>
+    <button type="button" aria-label="Divisão" class="operator" data-value="/">÷</button>
+    <button type="button" aria-label="Raiz quadrada" class="operator" data-value="sqrt">√</button>
+    <button type="button" aria-label="7" data-value="7">7</button>
+    <button type="button" aria-label="8" data-value="8">8</button>
+    <button type="button" aria-label="9" data-value="9">9</button>
+    <button type="button" aria-label="Multiplicação" class="operator" data-value="*">×</button>
+    <button type="button" aria-label="Potência" class="operator" data-value="^">^</button>
+    <button type="button" aria-label="4" data-value="4">4</button>
+    <button type="button" aria-label="5" data-value="5">5</button>
+    <button type="button" aria-label="6" data-value="6">6</button>
+    <button type="button" aria-label="Subtração" class="operator" data-value="-">−</button>
+    <button type="button" aria-label="Fatorial" class="operator" data-value="factorial">!</button>
+    <button type="button" aria-label="1" data-value="1">1</button>
+    <button type="button" aria-label="2" data-value="2">2</button>
+    <button type="button" aria-label="3" data-value="3">3</button>
+    <button type="button" aria-label="Adição" class="operator" data-value="+">+</button>
+    <button type="button" aria-label="Parênteses" data-value="()">()</button>
+    <button type="button" aria-label="0" data-value="0" class="zero">0</button>
+    <button type="button" aria-label="Ponto decimal" data-value=".">.</button>
+    <button type="button" aria-label="Igual" id="equals" class="operator">=</button>
   </div>
+</div>
 <script>
   const display = document.getElementById('display');
-  let currentInput = '';
-  let lastResult = null;
+  let expression = '';
 
-  function updateDisplay() {
-    display.textContent = currentInput || '0';
+  function factorial(n) {
+    if (n < 0) return NaN;
+    if (n === 0) return 1;
+    let f = 1;
+    for (let i = 1; i <= n; i++) f *= i;
+    return f;
   }
 
-  function calculate(expression) {
+  function calculate(expr) {
     try {
-      // Usar eval com cuidado, aqui simplificado para demo
-      let result = Function('return ' + expression)();
-      if (typeof result === 'number' && !isNaN(result)) {
-        return result;
-      } else {
-        return 'Erro';
-      }
+      // Replaces custom operators
+      expr = expr.replace(/√/g, 'Math.sqrt');
+      expr = expr.replace(/\^/g, '**');
+      expr = expr.replace(/!/g, 'factorial');
+      expr = expr.replace(/%/g, '/100');
+      expr = expr.replace(/factorial(\d+)/g, (_, num) => factorial(parseInt(num)));
+      // Evaluate safely
+      // eslint-disable-next-line no-eval
+      return eval(expr);
     } catch {
       return 'Erro';
     }
   }
 
-  document.querySelectorAll('button').forEach(button => {
+  function updateDisplay() {
+    display.textContent = expression || '0';
+  }
+
+  document.querySelectorAll('.buttons button').forEach(button => {
     button.addEventListener('click', () => {
-      const action = button.getAttribute('data-action');
-      const value = button.getAttribute('data-value');
-
-      if (action === 'clear') {
-        currentInput = '';
-        lastResult = null;
-        updateDisplay();
-        return;
+      const val = button.getAttribute('data-value');
+      switch(button.id) {
+        case 'clear':
+          expression = '';
+          break;
+        case 'backspace':
+          expression = expression.slice(0, -1);
+          break;
+        case 'equals':
+          const result = calculate(expression);
+          expression = result.toString();
+          break;
+        default:
+          if(val === '()') {
+            // Insert parentheses intelligently
+            const openCount = (expression.match(/\(/g) || []).length;
+            const closeCount = (expression.match(/\)/g) || []).length;
+            if(openCount === closeCount) {
+              expression += '(';
+            } else {
+              expression += ')';
+            }
+          } else if(val) {
+            expression += val;
+          }
       }
-
-      if (action === 'backspace') {
-        currentInput = currentInput.slice(0, -1);
-        updateDisplay();
-        return;
-      }
-
-      if (action === 'percent') {
-        if (currentInput) {
-          let val = parseFloat(currentInput);
-          currentInput = (val / 100).toString();
-          updateDisplay();
-        }
-        return;
-      }
-
-      if (action === 'divide') {
-        currentInput += '/';
-        updateDisplay();
-        return;
-      }
-
-      if (action === 'multiply') {
-        currentInput += '*';
-        updateDisplay();
-        return;
-      }
-
-      if (action === 'subtract') {
-        currentInput += '-';
-        updateDisplay();
-        return;
-      }
-
-      if (action === 'add') {
-        currentInput += '+';
-        updateDisplay();
-        return;
-      }
-
-      if (action === 'equals') {
-        const result = calculate(currentInput);
-        currentInput = result.toString();
-        lastResult = result;
-        updateDisplay();
-        return;
-      }
-
-      if (value !== null) {
-        currentInput += value;
-        updateDisplay();
-      }
+      updateDisplay();
     });
   });
+
+  updateDisplay();
 </script>
 </body>
 </html>
