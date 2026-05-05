@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Timer Pomodoro</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .light-mode {
+            background-color: #ffffff;
+            color: #000000;
+        }
+        .timer {
+            font-size: 5rem;
+            margin-bottom: 2rem;
+        }
+        .controls {
+            display: flex;
+            gap: 1rem;
+        }
+        button {
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        .dark-mode-toggle {
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="timer" id="timer">25:00</div>
+    <div class="controls">
+        <button onclick="startTimer()">Iniciar</button>
+        <button onclick="stopTimer()">Parar</button>
+        <button onclick="resetTimer()">Resetar</button>
+    </div>
+    <div class="dark-mode-toggle">
+        <label>
+            <input type="checkbox" onchange="toggleDarkMode()"> Modo Escuro
+        </label>
+    </div>
+
+    <script>
+        let timerInterval;
+        let isWorkSession = true;
+        let timeLeft = 25 * 60;
+
+        function updateDisplay() {
+            const minutes = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+            const seconds = (timeLeft % 60).toString().padStart(2, '0');
+            document.getElementById('timer').textContent = `${minutes}:${seconds}`;
+        }
+
+        function startTimer() {
+            if (!timerInterval) {
+                timerInterval = setInterval(() => {
+                    if (timeLeft > 0) {
+                        timeLeft--;
+                        updateDisplay();
+                    } else {
+                        clearInterval(timerInterval);
+                        timerInterval = null;
+                        isWorkSession = !isWorkSession;
+                        timeLeft = isWorkSession ? 25 * 60 : 5 * 60;
+                        updateDisplay();
+                    }
+                }, 1000);
+            }
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+
+        function resetTimer() {
+            stopTimer();
+            isWorkSession = true;
+            timeLeft = 25 * 60;
+            updateDisplay();
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('light-mode');
+        }
+
+        // Inicializa com modo escuro ativado
+        document.addEventListener('DOMContentLoaded', () => {
+            updateDisplay();
+        });
+    </script>
+</body>
+</html>
