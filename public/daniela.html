@@ -191,30 +191,30 @@ pre:hover .code-copy{opacity:1}
   
   <!-- MODEL SELECTOR -->
   <div class="model-selector" title="Escolha o modelo de IA">
-    <select id="model-select" onchange="onModelChange(this.value)">
-      <optgroup label="🧠 DeepSeek (DEFAULT)">
-        <option value="deepseek-chat" selected>DeepSeek Chat (padrão)</option>
-        <option value="deepseek-reasoner">DeepSeek R1 Reasoner</option>
-      </optgroup>
-      <optgroup label="🆓 Groq (GRÁTIS — com tools)">
-        <option value="groq:llama-3.1-8b-instant">Llama 3.1 8b (grátis ⚡)</option>
-        <option value="groq:meta-llama/llama-4-scout-17b-16e-instruct">Llama 4 Scout 17b (grátis)</option>
-        <option value="groq:qwen/qwen3-32b">Qwen3 32b (grátis)</option>
+          <select id="model-select" onchange="onModelChange(this.value)">
+      <optgroup label="🧠 DeepSeek (default)">
+        <option value="deepseek-chat" selected>DeepSeek V3 ⭐ PADRÃO</option>
+        <option value="deepseek-reasoner">DeepSeek R1 (raciocínio)</option>
       </optgroup>
       <optgroup label="🌟 Google Gemini">
         <option value="gemini:gemini-2.5-flash">Gemini 2.5 Flash</option>
         <option value="gemini:gemini-2.0-flash">Gemini 2.0 Flash</option>
       </optgroup>
-      <optgroup label="💰 OpenAI (fallback final)">
-        <option value="gpt-4.1-mini">gpt-4.1-mini</option>
-        <option value="gpt-4o-mini">gpt-4o-mini (rápido)</option>
-        <option value="gpt-4.1">gpt-4.1 (poderoso)</option>
+      <optgroup label="🆓 Groq (GRÁTIS)">
+        <option value="groq:llama-3.1-8b-instant">Llama 3.1 8b (ultra rápido)</option>
+        <option value="groq:meta-llama/llama-4-scout-17b-16e-instruct">Llama 4 Scout 17b</option>
+        <option value="groq:qwen/qwen3-32b">Qwen3 32b</option>
+      </optgroup>
+      <optgroup label="💰 OpenAI (backup)">
+        <option value="gpt-4.1-mini">GPT-4.1-mini</option>
+        <option value="gpt-4o-mini">GPT-4o-mini</option>
+        <option value="gpt-4.1">GPT-4.1</option>
       </optgroup>
     </select>
   </div>
   
-  <div id="model-badge" class="model-badge">🧠 DeepSeek Chat</div>
-  <div class="tools-badge">📦 31 tools</div>
+  <div id="model-badge" class="model-badge">🧠 DeepSeek V3</div>
+  <div class="tools-badge">📦 30 tools</div>
   
   <div class="header-actions">
     <button class="hbtn" onclick="toggleSessions()" id="btn-sessions" title="Sessões anteriores">📚 Sessões</button>
@@ -233,7 +233,7 @@ pre:hover .code-copy{opacity:1}
   <div class="stat"><div class="label">TOKENS HOJE</div><div class="value" id="stat-tokens">—</div></div>
   <div class="stat"><div class="label">CUSTO USD</div><div class="value blue" id="stat-usd">—</div></div>
   <div class="stat"><div class="label">CUSTO BRL</div><div class="value orange" id="stat-brl">—</div></div>
-  <div class="stat"><div class="label">MODELO</div><div class="value purple" id="stat-model">DeepSeek</div></div>
+  <div class="stat"><div class="label">MODELO</div><div class="value purple" id="stat-model">4.1-mini</div></div>
 </div>
 
 <!-- MAIN -->
@@ -300,7 +300,7 @@ pre:hover .code-copy{opacity:1}
     </div>
 
     <div class="footer">
-      <span>Daniela <span class="footer-model" id="footer-model">V26-MULTIMODEL</span> · <a href="/conectores.html">Gerenciar conectores</a></span>
+      <span>Daniela <span class="footer-model" id="footer-model">V26.3 · DeepSeek Default</span> · <a href="/conectores.html">Gerenciar conectores</a></span>
       <span id="footer-session" style="color:var(--text3)">sessão nova</span>
     </div>
   </div>
@@ -355,18 +355,20 @@ const toolEmojis = {
 function onModelChange(val) {
   currentModel = val;
   const labels = {
-    'deepseek-chat':'🧠 DeepSeek Chat','deepseek-reasoner':'🧠 DeepSeek R1',
-    'groq:llama-3.1-8b-instant':'🆓 Llama 3.1 8b','groq:meta-llama/llama-4-scout-17b-16e-instruct':'🆓 Llama 4 Scout',
-    'groq:qwen/qwen3-32b':'🆓 Qwen3 32b',
+    'deepseek-chat':'🧠 DeepSeek V3','deepseek-reasoner':'🧠 DeepSeek R1',
     'gemini:gemini-2.5-flash':'🌟 Gemini 2.5','gemini:gemini-2.0-flash':'🌟 Gemini 2.0',
-    'gpt-4.1-mini':'🤖 gpt-4.1-mini','gpt-4o-mini':'🤖 gpt-4o-mini','gpt-4.1':'🤖 gpt-4.1',
+    'groq:llama-3.1-8b-instant':'🆓 Llama 3.1 8b',
+    'groq:meta-llama/llama-4-scout-17b-16e-instruct':'🆓 Llama 4 Scout',
+    'groq:qwen/qwen3-32b':'🆓 Qwen3 32b',
+    'gpt-4.1-mini':'🤖 GPT-4.1-mini','gpt-4o-mini':'🤖 GPT-4o-mini','gpt-4.1':'🤖 GPT-4.1',
   };
   document.getElementById('model-badge').textContent = labels[val] || val;
   const shortLabels = {
     'deepseek-chat':'DeepSeek','deepseek-reasoner':'DS-R1',
-    'groq:llama-3.1-8b-instant':'Llama8b','groq:meta-llama/llama-4-scout-17b-16e-instruct':'Llama4s',
-    'groq:qwen/qwen3-32b':'Qwen32b',
-    'gemini:gemini-2.5-flash':'Gem2.5','gemini:gemini-2.0-flash':'Gem2.0',
+    'gemini:gemini-2.5-flash':'Gem 2.5','gemini:gemini-2.0-flash':'Gem 2.0',
+    'groq:llama-3.1-8b-instant':'Llama 8b',
+    'groq:meta-llama/llama-4-scout-17b-16e-instruct':'Llama 4S',
+    'groq:qwen/qwen3-32b':'Qwen3',
     'gpt-4.1-mini':'4.1-mini','gpt-4o-mini':'4o-mini','gpt-4.1':'4.1',
   };
   document.getElementById('stat-model').textContent = shortLabels[val] || val;
