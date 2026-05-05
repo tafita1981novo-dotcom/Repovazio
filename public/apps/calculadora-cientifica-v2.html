@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Calculadora Científica · Daniela AI</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a14;--bg2:#0f0f1e;--bg3:#151528;--bg4:#1a1a35;--border:#252545;--text:#e8e8f0;--text2:#b0b0cc;--text3:#6060a0;--purple:#7c3aed;--purple2:#9d6eff;--green:#10b981;--red:#ef4444;--yellow:#f59e0b;--blue:#3b82f6;--cyan:#06b6d4;--grad1:linear-gradient(135deg,#7c3aed 0%,#06b6d4 100%);--grad2:linear-gradient(135deg,#1a1a35 0%,#0f0f1e 100%);--shadow:0 8px 32px rgba(0,0,0,.4);--glow:0 0 20px rgba(124,58,237,.15)}
+body{background:var(--bg);color:var(--text);font-family:'SF Pro Display',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background-image:radial-gradient(ellipse at 20% 50%,rgba(124,58,237,.06) 0%,transparent 50%),radial-gradient(ellipse at 80% 20%,rgba(6,182,212,.04) 0%,transparent 50%)}
+.calculator{width:420px;background:var(--bg2);border:1px solid var(--border);border-radius:24px;overflow:hidden;box-shadow:var(--shadow),var(--glow);position:relative}
+.calculator::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--grad1);border-radius:24px 24px 0 0}
+.header{padding:16px 20px 8px;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:8px}
+.logo-icon{width:28px;height:28px;background:var(--grad1);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff}
+.logo-text{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px}
+.mode-tabs{display:flex;gap:2px;background:var(--bg);border-radius:8px;padding:2px}
+.mode-tab{padding:5px 10px;border:none;background:none;color:var(--text3);font-size:10px;font-weight:600;cursor:pointer;border-radius:6px;transition:all .2s}
+.mode-tab.active{background:var(--purple);color:#fff}
+.display{padding:12px 20px 16px;position:relative}
+.history{font-size:12px;color:var(--text3);text-align:right;min-height:18px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:'JetBrains Mono',monospace}
+.result{font-size:42px;font-weight:300;text-align:right;color:var(--text);min-height:52px;overflow-x:auto;overflow-y:hidden;white-space:nowrap;font-family:'JetBrains Mono','SF Mono',monospace;letter-spacing:-1px;scrollbar-width:none;padding:4px 0}
+.result::-webkit-scrollbar{display:none}
+.memory-bar{display:flex;gap:6px;padding:0 20px 8px}
+.mem-tag{font-size:9px;font-weight:700;color:var(--cyan);background:rgba(6,182,212,.1);border:1px solid rgba(6,182,212,.2);border-radius:4px;padding:1px 6px;display:none}
+.mem-tag.visible{display:inline-block}
+.angle-mode{font-size:9px;font-weight:700;color:var(--yellow);background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);border-radius:4px;padding:1px 6px}
+.sci-row{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;padding:0 12px 4px}
+.keys{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:8px 12px 16px}
+.btn{border:none;border-radius:12px;font-size:18px;font-weight:500;cursor:pointer;transition:all .15s;font-family:'SF Pro Display',system-ui,sans-serif;position:relative;overflow:hidden;height:56px;display:flex;align-items:center;justify-content:center}
+.btn:active{transform:scale(.95)}
+.btn-num{background:var(--bg3);color:var(--text);border:1px solid var(--border)}
+.btn-num:hover{background:var(--bg4);border-color:#303060}
+.btn-op{background:var(--bg4);color:var(--purple2);font-weight:600;border:1px solid rgba(124,58,237,.2)}
+.btn-op:hover{background:rgba(124,58,237,.15);border-color:rgba(124,58,237,.4)}
+.btn-eq{background:var(--grad1);color:#fff;font-weight:700;font-size:22px;border:none;box-shadow:0 4px 15px rgba(124,58,237,.3)}
+.btn-eq:hover{box-shadow:0 6px 25px rgba(124,58,237,.5)}
+.btn-fn{background:var(--bg);color:var(--text2);font-size:11px;font-weight:600;border:1px solid var(--border);height:36px;border-radius:8px;text-transform:uppercase;letter-spacing:.5px}
+.btn-fn:hover{background:var(--bg3);color:var(--text)}
+.btn-fn.active{background:rgba(124,58,237,.15);color:var(--purple2);border-color:rgba(124,58,237,.3)}
+.btn-clear{background:rgba(239,68,68,.08);color:var(--red);border:1px solid rgba(239,68,68,.15)}
+.btn-clear:hover{background:rgba(239,68,68,.15)}
+.btn-wide{grid-column:span 2}
+.footer{padding:8px 16px 12px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border)}
+.footer-text{font-size:9px;color:var(--text3);font-weight:600;letter-spacing:1px;text-transform:uppercase}
+.footer-badge{font-size:9px;color:var(--green);background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);border-radius:4px;padding:2px 8px;font-weight:700}
+@media(max-width:460px){.calculator{width:100%;border-radius:20px}.result{font-size:34px}.btn{height:50px;font-size:16px}}
+</style>
+</head>
+<body>
+<div class="calculator">
+  <div class="header">
+    <div class="logo"><div class="logo-icon">D</div><div class="logo-text">Calculadora Científica</div></div>
+    <div class="mode-tabs">
+      <button class="mode-tab active" onclick="setMode('deg')">DEG</button>
+      <button class="mode-tab" onclick="setMode('rad')">RAD</button>
+    </div>
+  </div>
+  <div class="display">
+    <div class="history" id="history"></div>
+    <div class="result" id="display">0</div>
+  </div>
+  <div class="memory-bar">
+    <span class="mem-tag" id="mem-ind">M</span>
+    <span class="angle-mode" id="angle-ind">DEG</span>
+  </div>
+  <div class="sci-row" id="sci-btns">
+    <button class="btn btn-fn" onclick="fn('sin')">sin</button>
+    <button class="btn btn-fn" onclick="fn('cos')">cos</button>
+    <button class="btn btn-fn" onclick="fn('tan')">tan</button>
+    <button class="btn btn-fn" onclick="fn('log')">log</button>
+    <button class="btn btn-fn" onclick="fn('ln')">ln</button>
+    <button class="btn btn-fn" onclick="fn('sqrt')">√</button>
+    <button class="btn btn-fn" onclick="fn('cbrt')">∛</button>
+    <button class="btn btn-fn" onclick="fn('pow2')">x²</button>
+    <button class="btn btn-fn" onclick="fn('pow3')">x³</button>
+    <button class="btn btn-fn" onclick="fn('inv')">1/x</button>
+    <button class="btn btn-fn" onclick="fn('fact')">n!</button>
+    <button class="btn btn-fn" onclick="fn('pi')">π</button>
+    <button class="btn btn-fn" onclick="fn('e')">e</button>
+    <button class="btn btn-fn" onclick="fn('exp')">eˣ</button>
+    <button class="btn btn-fn" onclick="fn('pow')">xʸ</button>
+    <button class="btn btn-fn" onclick="fn('abs')">|x|</button>
+    <button class="btn btn-fn" onclick="fn('pct')">%</button>
+    <button class="btn btn-fn" onclick="memOp('ms')">MS</button>
+    <button class="btn btn-fn" onclick="memOp('mr')">MR</button>
+    <button class="btn btn-fn" onclick="memOp('mc')">MC</button>
+  </div>
+  <div class="keys">
+    <button class="btn btn-clear" onclick="clearAll()">AC</button>
+    <button class="btn btn-op" onclick="op('(')">(</button>
+    <button class="btn btn-op" onclick="op(')')">)</button>
+    <button class="btn btn-op" onclick="op('/')">÷</button>
+    <button class="btn btn-num" onclick="num('7')">7</button>
+    <button class="btn btn-num" onclick="num('8')">8</button>
+    <button class="btn btn-num" onclick="num('9')">9</button>
+    <button class="btn btn-op" onclick="op('*')">×</button>
+    <button class="btn btn-num" onclick="num('4')">4</button>
+    <button class="btn btn-num" onclick="num('5')">5</button>
+    <button class="btn btn-num" onclick="num('6')">6</button>
+    <button class="btn btn-op" onclick="op('-')">−</button>
+    <button class="btn btn-num" onclick="num('1')">1</button>
+    <button class="btn btn-num" onclick="num('2')">2</button>
+    <button class="btn btn-num" onclick="num('3')">3</button>
+    <button class="btn btn-op" onclick="op('+')">+</button>
+    <button class="btn btn-num" onclick="toggleSign()">±</button>
+    <button class="btn btn-num" onclick="num('0')">0</button>
+    <button class="btn btn-num" onclick="num('.')">.</button>
+    <button class="btn btn-eq" onclick="calc()">=</button>
+  </div>
+  <div class="footer">
+    <span class="footer-text">Daniela AI · psicologia.doc</span>
+    <span class="footer-badge">V26.7</span>
+  </div>
+</div>
+<script>
+let expr='',lastResult='0',mem=0,hasMem=false,isDeg=true,newNum=true;
+const D=document.getElementById('display'),H=document.getElementById('history'),MI=document.getElementById('mem-ind'),AI=document.getElementById('angle-ind');
+function upd(){D.textContent=expr||lastResult||'0';D.scrollLeft=D.scrollWidth;}
+function num(n){if(newNum&&n!=='.'){expr='';newNum=false;}if(n==='.'&&expr.includes('.')&&!expr.includes('('))return;expr+=n;upd();}
+function op(o){newNum=false;if(expr===''&&lastResult!=='0')expr=lastResult;expr+=o;upd();}
+function clearAll(){expr='';lastResult='0';newNum=true;H.textContent='';upd();}
+function toggleSign(){if(expr){const m=expr.match(/-?[\d.]+$/);if(m){const n=parseFloat(m[0]);expr=expr.slice(0,m.index)+String(-n);upd();}}else if(lastResult!=='0'){lastResult=String(-parseFloat(lastResult));upd();}}
+function toRad(x){return isDeg?x*Math.PI/180:x;}
+function fromRad(x){return isDeg?x*180/Math.PI:x;}
+function factorial(n){if(n<0)return NaN;if(n<=1)return 1;let r=1;for(let i=2;i<=n;i++)r*=i;return r;}
+function fn(f){
+  let v=expr?parseFloat(expr):parseFloat(lastResult);
+  let r;newNum=true;
+  switch(f){
+    case'sin':r=Math.sin(toRad(v));break;case'cos':r=Math.cos(toRad(v));break;case'tan':r=Math.tan(toRad(v));break;
+    case'log':r=Math.log10(v);break;case'ln':r=Math.log(v);break;
+    case'sqrt':r=Math.sqrt(v);break;case'cbrt':r=Math.cbrt(v);break;
+    case'pow2':r=v*v;break;case'pow3':r=v*v*v;break;
+    case'inv':r=1/v;break;case'fact':r=factorial(Math.round(v));break;
+    case'pi':expr=String(Math.PI);upd();return;case'e':expr=String(Math.E);upd();return;
+    case'exp':r=Math.exp(v);break;case'pow':op('^');return;
+    case'abs':r=Math.abs(v);break;case'pct':r=v/100;break;
+    default:return;
+  }
+  H.textContent=`${f}(${v}) =`;lastResult=formatNum(r);expr='';upd();
+}
+function memOp(op){
+  const v=expr?parseFloat(expr):parseFloat(lastResult);
+  if(op==='ms'){mem=v;hasMem=true;MI.classList.add('visible');}
+  else if(op==='mr'&&hasMem){expr=String(mem);newNum=true;upd();}
+  else if(op==='mc'){mem=0;hasMem=false;MI.classList.remove('visible');}
+}
+function setMode(m){isDeg=m==='deg';AI.textContent=m.toUpperCase();document.querySelectorAll('.mode-tab').forEach(t=>{t.classList.toggle('active',t.textContent===m.toUpperCase());});}
+function formatNum(n){if(isNaN(n))return'Erro';if(!isFinite(n))return'∞';if(Math.abs(n)>1e15||Math.abs(n)<1e-10&&n!==0)return n.toExponential(8);const s=String(parseFloat(n.toPrecision(12)));return s;}
+function calc(){
+  if(!expr)return;
+  try{
+    let e=expr.replace(/\^/g,'**');
+    e=e.replace(/(\d+)!/g,'factorial($1)');
+    const safeEval=new Function('factorial','PI','E','return '+e);
+    const r=safeEval(factorial,Math.PI,Math.E);
+    H.textContent=expr+' =';lastResult=formatNum(r);expr='';newNum=true;upd();
+  }catch(err){H.textContent='Erro na expressão';lastResult='Erro';expr='';newNum=true;upd();}
+}
+document.addEventListener('keydown',e=>{
+  if(e.key>='0'&&e.key<='9')num(e.key);
+  else if(e.key==='.')num('.');
+  else if(e.key==='+')op('+');
+  else if(e.key==='-')op('-');
+  else if(e.key==='*')op('*');
+  else if(e.key==='/')op('/');
+  else if(e.key==='('||e.key===')')op(e.key);
+  else if(e.key==='Enter'||e.key==='=')calc();
+  else if(e.key==='Escape'||e.key==='c'||e.key==='C')clearAll();
+  else if(e.key==='Backspace'){expr=expr.slice(0,-1);upd();}
+});
+</script>
+</body>
+</html>
