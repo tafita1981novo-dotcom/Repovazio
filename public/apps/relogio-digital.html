@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body {
+  font-family: Arial;
+  display: flex;
+  height: 100vh;
+  justify-content: center;
+  align-items: center;
+  background-color: #121212;
+  color: white;
+  transition: 0.3s;
+}
+.clock {
+  font-size: 5em;
+  text-align: center;
+}
+.toggle {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  padding: 10px 20px;
+  cursor: pointer;
+  border: none;
+  background: #444;
+  color: white;
+  border-radius: 5px;
+}
+</style>
+</head>
+<body>
+<div class="clock" id="clock"></div>
+<button class="toggle" onclick="toggleDarkMode()">Dark Mode</button>
+<script>
+function updateClock() {
+  const now = new Date();
+  const timeString = now.toLocaleTimeString();
+  document.getElementById('clock').textContent = timeString;
+}
+function toggleDarkMode() {
+  document.body.classList.toggle('dark-mode');
+}
+updateClock();
+setInterval(updateClock, 1000);
+</script>
+</body>
+</html>
