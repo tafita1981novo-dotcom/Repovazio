@@ -299,8 +299,25 @@ pre:hover .code-copy{opacity:1}
       </div>
     </div>
 
-    <div class="footer">
-      <span>Daniela <span class="footer-model" id="footer-model">V26-MULTIMODEL</span> · <a href="/conectores.html">Gerenciar conectores</a></span>
+    
+<!-- MODEL STATUS MONITOR -->
+<div id="model-status-bar" style="background:var(--bg2);border-top:1px solid var(--border);padding:4px 12px;display:flex;gap:8px;overflow-x:auto;flex-shrink:0;font-size:10px;scrollbar-width:none;align-items:center">
+  <span style="color:var(--text3);white-space:nowrap;font-weight:600">⚡ MODELOS:</span>
+  <span id="ms-deepseek" class="ms-chip" title="DeepSeek Chat">🚀 DS <span class="ms-status">...</span></span>
+  <span id="ms-gemini" class="ms-chip" title="Gemini 2.5">🌟 Gem <span class="ms-status">...</span></span>
+  <span id="ms-groq" class="ms-chip" title="Groq Llama">🆓 Groq <span class="ms-status">...</span></span>
+  <span id="ms-openai" class="ms-chip" title="OpenAI gpt-4.1-mini">🤖 OAI <span class="ms-status">...</span></span>
+  <span style="margin-left:auto;color:var(--text3)" id="ms-last-update"></span>
+</div>
+<style>
+.ms-chip{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:1px 6px;white-space:nowrap;cursor:default}
+.ms-chip.available{border-color:rgba(34,197,94,0.4);color:var(--green)}
+.ms-chip.limited{border-color:rgba(239,68,68,0.4);color:var(--red)}
+.ms-chip.unknown{border-color:var(--border);color:var(--text3)}
+</style>
+
+  <div class="footer">
+      <span>Daniela <span class="footer-model" id="footer-model">V26.3 · DeepSeek</span> · <a href="/conectores.html">Gerenciar conectores</a></span>
       <span id="footer-session" style="color:var(--text3)">sessão nova</span>
     </div>
   </div>
@@ -362,6 +379,8 @@ function onModelChange(val) {
     'gemini:gemini-2.5-flash':'🌟 Gemini 2.5','gemini:gemini-2.0-flash':'🌟 Gemini 2.0',
   };
   document.getElementById('model-badge').textContent = labels[val] || val;
+  // Indicar se houve fallback
+  document.getElementById('model-badge').title = currentModel !== val ? `Preferido: ${currentModel} → Usando: ${val}` : val;
   const shortLabels = {
     'deepseek:deepseek-chat':'DeepSeek','deepseek:deepseek-reasoner':'DS-R',
     'gpt-4.1-mini':'4.1-mini','gpt-4o-mini':'4o-mini','gpt-4.1':'GPT-4.1',
@@ -664,6 +683,7 @@ async function sendMessage() {
     
     // Update stats
     if (d.tokens) loadStats();
+    updateModelStatusFromResponse(d);
     
     // Terminal output
     if (document.getElementById('terminal-area').classList.contains('open') && d.tools_used?.length) {
@@ -696,6 +716,72 @@ async function loadStats() {
 }
 
 // ── INIT ──
+
+// Monitor de rate limits em tempo real
+async function pollModelStatus() {
+  try {
+    const r = await fetch(EDGE + '?action=model_status');
+    if (!r.ok) return;
+    const d = await r.json();
+    const models = d.models || [];
+    const modelMap = {
+      'deepseek-chat': 'ms-deepseek',
+      'gemini:gemini-2.5-flash': 'ms-gemini',
+      'groq:llama-3.1-8b-instant': 'ms-groq',
+      'gpt-4.1-mini': 'ms-openai'
+    };
+    for (const [model, elId] of Object.entries(modelMap)) {
+      const info = models.find(m => m.model === model);
+      const el = document.getElementById(elId);
+      if (!el || !info) continue;
+      const statusEl = el.querySelector('.ms-status');
+      if (info.available) {
+        el.className = 'ms-chip available';
+        statusEl.textContent = '✅';
+        el.title = model + ' — disponível';
+      } else {
+        el.className = 'ms-chip limited';
+        const secs = info.resets_in_seconds || 0;
+        statusEl.textContent = `⏱${secs}s`;
+        el.title = model + ` — rate limited, reset em ${secs}s`;
+      }
+    }
+    const upd = document.getElementById('ms-last-update');
+    if (upd) upd.textContent = new Date().toLocaleTimeString('pt-BR');
+  } catch(e) {}
+}
+
+// Polling a cada 10 segundos
+setInterval(pollModelStatus, 10000);
+setTimeout(pollModelStatus, 2000); // primeira vez após 2s
+
+// Atualizar status após receber resposta (inclui model_status na resposta)
+function updateModelStatusFromResponse(resp) {
+  if (!resp.model_status) return;
+  const modelMap = {
+    'deepseek-chat': 'ms-deepseek',
+    'gemini:gemini-2.5-flash': 'ms-gemini',
+    'groq:llama-3.1-8b-instant': 'ms-groq',
+    'gpt-4.1-mini': 'ms-openai'
+  };
+  for (const info of resp.model_status) {
+    const elId = modelMap[info.model];
+    if (!elId) continue;
+    const el = document.getElementById(elId);
+    if (!el) continue;
+    const statusEl = el.querySelector('.ms-status');
+    if (info.available) {
+      el.className = 'ms-chip available'; statusEl.textContent = '✅';
+    } else {
+      el.className = 'ms-chip limited'; statusEl.textContent = `⏱${info.resets_in}s`;
+    }
+  }
+  // Mostrar fallback log se houve troca de modelo
+  if (resp.switched && resp.fallback_log?.length) {
+    console.log('[Daniela Fallback]', resp.fallback_log.join('\n'));
+  }
+}
+
 window.addEventListener('load', async () => {
   loadStats();
   loadConnectors();
