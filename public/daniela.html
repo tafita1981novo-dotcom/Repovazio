@@ -354,7 +354,7 @@ pre:hover .code-copy{opacity:1}
       <div class="empty-state" id="empty-state">
         <div class="empty-avatar">🤖</div>
         <div class="empty-title">Sou a Daniela</div>
-        <div class="empty-badge">✅ V26-MULTIMODEL · 30 tools</div>
+        <div class="empty-badge">✅ V26.4 · 36 tools</div>
         <div class="empty-desc">Multi-model (OpenAI/Groq grátis/Gemini), MCP real, sessões, browser, deploy automático, Notion e muito mais. Crio apps, codifico, navego na web como humano.</div>
         <div class="chips">
           <div class="chip" onclick="sendChip('📡 status dos conectores e tokens')">📡 Status geral</div>
@@ -423,10 +423,10 @@ pre:hover .code-copy{opacity:1}
 
   <div id="model-status-bar" style="background:var(--bg2);border-top:1px solid var(--border);padding:4px 12px;display:flex;gap:8px;overflow-x:auto;flex-shrink:0;font-size:10px;scrollbar-width:none;align-items:center">
   <span style="color:var(--text3);white-space:nowrap;font-weight:600">⚡ MODELOS:</span>
-  <span id="ms-deepseek" class="ms-chip" title="DeepSeek Chat">🚀 DS <span class="ms-status">...</span></span>
-  <span id="ms-gemini" class="ms-chip" title="Gemini 2.5">🌟 Gem <span class="ms-status">...</span></span>
-  <span id="ms-groq" class="ms-chip" title="Groq Llama">🆓 Groq <span class="ms-status">...</span></span>
+  <span id="ms-gemini" class="ms-chip" title="Gemini 2.5 Flash (padrão)">🌟 Gem <span class="ms-status">...</span></span>
+  <span id="ms-groq" class="ms-chip" title="Groq Llama 3.1 8b">🆓 Groq <span class="ms-status">...</span></span>
   <span id="ms-openai" class="ms-chip" title="OpenAI gpt-4.1-mini">🤖 OAI <span class="ms-status">...</span></span>
+  <span id="ms-deepseek" class="ms-chip" title="DeepSeek Chat (precisa saldo)">🧠 DS <span class="ms-status">...</span></span>
   <span style="margin-left:auto;color:var(--text3)" id="ms-last-update"></span>
 </div>
 <style>
@@ -496,7 +496,7 @@ function onModelChange(val) {
     'gpt-4.1-mini':'🤖 gpt-4.1-mini','gpt-4o-mini':'🤖 gpt-4o-mini','gpt-4.1':'🤖 gpt-4.1',
     'groq:llama-3.1-8b-instant':'⚡ Llama 3.1 8b','groq:meta-llama/llama-4-scout-17b-16e-instruct':'⚡ Llama 4 Scout',
     'groq:qwen/qwen3-32b':'⚡ Qwen3 32b',
-    'gemini:gemini-2.5-flash':'🌟 Gemini 2.5','gemini:gemini-2.0-flash':'🌟 Gemini 2.0',
+    'gemini:gemini-2.5-flash':'🌟 Gemini 2.5 ⭐','gemini:gemini-2.0-flash':'🌟 Gemini 2.0',
   };
   document.getElementById('document.getElementById('model-badge').textContent = labels[val] || val;
   // Indicar se houve fallback
@@ -847,10 +847,10 @@ async function pollModelStatus() {
     const d = await r.json();
     const models = d.models || [];
     const modelMap = {
-      'deepseek-chat': 'ms-deepseek',
       'gemini:gemini-2.5-flash': 'ms-gemini',
       'groq:llama-3.1-8b-instant': 'ms-groq',
-      'gpt-4.1-mini': 'ms-openai'
+      'gpt-4.1-mini': 'ms-openai',
+      'deepseek:deepseek-chat': 'ms-deepseek'
     };
     for (const [model, elId] of Object.entries(modelMap)) {
       const info = models.find(m => m.model === model);
@@ -880,11 +880,15 @@ setTimeout(pollModelStatus, 2000); // primeira vez após 2s
 // Atualizar status após receber resposta (inclui model_status na resposta)
 function updateModelStatusFromResponse(resp) {
   if (!resp.model_status) return;
+  // Mostrar aviso de fallback apenas se realmente mudou de provider
+  const prefProvider = (resp.preferred_model||'').split(':')[0];
+  const usedProvider = (resp.provider||'').split(':')[0];
+  const reallySwitch = resp.switched && prefProvider !== usedProvider && resp.preferred_model !== resp.model;
   const modelMap = {
-    'deepseek-chat': 'ms-deepseek',
     'gemini:gemini-2.5-flash': 'ms-gemini',
     'groq:llama-3.1-8b-instant': 'ms-groq',
-    'gpt-4.1-mini': 'ms-openai'
+    'gpt-4.1-mini': 'ms-openai',
+    'deepseek:deepseek-chat': 'ms-deepseek'
   };
   for (const info of resp.model_status) {
     const elId = modelMap[info.model];
@@ -899,7 +903,7 @@ function updateModelStatusFromResponse(resp) {
     }
   }
   // Mostrar fallback log se houve troca de modelo
-  if (resp.switched && resp.fallback_log?.length) {
+  if (reallySwitch && resp.fallback_log?.length) {
     console.log('[Daniela Fallback]', resp.fallback_log.join('\n'));
   }
 }
