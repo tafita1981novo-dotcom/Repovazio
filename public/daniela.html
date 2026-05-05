@@ -177,6 +177,95 @@ pre:hover .code-copy{opacity:1}
 /* ── THEME TOGGLE & misc ── */
 .spin{animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* ===== SPLIT PANE LAYOUT ===== */
+.app-split { display: flex; flex-direction: row; flex: 1; min-height: 0; overflow: hidden; }
+.chat-pane { display: flex; flex-direction: column; flex: 1; min-width: 0; min-height: 0; transition: flex 0.3s ease; }
+.browser-pane {
+  display: none; flex-direction: column; min-height: 0;
+  background: #090912; border-left: 1px solid var(--border);
+  flex: 0 0 480px; max-width: 50vw; overflow: hidden;
+  transition: flex 0.3s ease;
+}
+.browser-pane.open { display: flex; }
+.bp-header {
+  background: #0e0e1a; border-bottom: 1px solid var(--border);
+  padding: 6px 10px; display: flex; gap: 6px; align-items: center; flex-shrink: 0;
+}
+.bp-url {
+  flex: 1; background: #13131f; border: 1px solid var(--border); border-radius: 6px;
+  padding: 5px 10px; color: var(--text1); font-size: 12px; outline: none;
+  font-family: monospace;
+}
+.bp-url:focus { border-color: var(--accent); }
+.bp-btn { background: #1a1a2e; border: 1px solid var(--border); color: var(--text2);
+  border-radius: 6px; padding: 5px 10px; cursor: pointer; font-size: 11px; font-weight: 600;
+  transition: all 0.2s; white-space: nowrap; }
+.bp-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+.bp-screenshot {
+  flex: 1; overflow: auto; display: flex; align-items: flex-start;
+  justify-content: center; padding: 8px; background: #06060f;
+}
+.bp-screenshot img { max-width: 100%; border-radius: 6px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+.bp-screenshot .bp-placeholder {
+  color: var(--text3); text-align: center; padding: 40px 20px; font-size: 13px;
+  display: flex; flex-direction: column; gap: 12px; align-items: center;
+}
+.bp-screenshot .bp-placeholder span { font-size: 32px; }
+.bp-controls {
+  border-top: 1px solid var(--border); padding: 6px 10px;
+  display: flex; gap: 6px; flex-wrap: wrap; flex-shrink: 0; background: #0e0e1a;
+}
+.bp-action { background: #1a1a2e; border: 1px solid var(--border); color: var(--text2);
+  border-radius: 5px; padding: 4px 8px; font-size: 10px; cursor: pointer;
+  font-weight: 600; white-space: nowrap; transition: all 0.15s; }
+.bp-action:hover { background: #7c3aed; color: #fff; border-color: #7c3aed; }
+.bp-status { font-size: 10px; color: var(--text3); padding: 0 4px; }
+.bp-info { flex-shrink: 0; background: #0a0a14; border-top: 1px solid var(--border);
+  max-height: 120px; overflow-y: auto; padding: 6px 10px; font-size: 11px; }
+.bp-info-row { color: var(--text2); padding: 1px 0; }
+.bp-info-row strong { color: var(--accent); }
+
+/* ===== TOKEN MONITOR ===== */
+.token-monitor {
+  flex-shrink: 0; background: var(--bg2); border-top: 1px solid var(--border);
+  padding: 0 12px; font-size: 10px;
+}
+.tm-row { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0; scrollbar-width: none; align-items: center; }
+.tm-model { display: flex; gap: 4px; align-items: center; background: #0e0e1a;
+  border: 1px solid var(--border); border-radius: 5px; padding: 2px 8px; white-space: nowrap;
+  cursor: default; }
+.tm-model.active { border-color: #10a37f; background: #0a150f; }
+.tm-model.limited { border-color: #ef4444; background: #150a0a; }
+.tm-model .tm-name { color: var(--text2); font-weight: 700; }
+.tm-model .tm-tok { color: var(--text3); }
+.tm-model .tm-cost { color: #f59e0b; }
+.tm-model .tm-reset { color: #ef4444; font-weight: 700; }
+.tm-model .tm-ok { color: #10a37f; }
+.tm-label { color: var(--text3); font-weight: 700; white-space: nowrap; }
+.tm-total { margin-left: auto; color: var(--text2); white-space: nowrap; }
+
+/* ===== FILE UPLOAD MELHORADO ===== */
+.file-drop-zone {
+  position: absolute; inset: 0; background: rgba(124,58,237,0.15);
+  border: 3px dashed var(--accent); border-radius: 12px;
+  display: none; z-index: 50; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 700; color: var(--accent);
+  flex-direction: column; gap: 8px;
+}
+.file-drop-zone.active { display: flex; }
+.file-preview {
+  background: #0e0e1a; border: 1px solid var(--border); border-radius: 8px;
+  padding: 6px 10px; margin: 0 12px; display: flex; align-items: center;
+  gap: 8px; font-size: 11px; color: var(--text2);
+}
+.file-preview .fp-icon { font-size: 16px; }
+.file-preview .fp-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-preview .fp-size { color: var(--text3); }
+.file-preview .fp-remove { background: none; border: none; color: var(--text3); cursor: pointer; padding: 0; font-size: 14px; }
+.file-preview .fp-remove:hover { color: #ef4444; }
+.file-preview .fp-status { font-size: 10px; color: #10a37f; font-weight: 600; }
+
 </style>
 </head>
 <body>
@@ -192,23 +281,23 @@ pre:hover .code-copy{opacity:1}
   <!-- MODEL SELECTOR -->
   <div class="model-selector" title="Escolha o modelo de IA — fallback automático se houver rate limit">
     <select id="model-select" onchange="onModelChange(this.value)">
-      <optgroup label="🧠 DeepSeek (PADRÃO)">
-        <option value="deepseek:deepseek-chat" selected>deepseek-chat ⭐ PADRÃO</option>
-        <option value="deepseek:deepseek-reasoner">deepseek-reasoner (raciocínio)</option>
+      <optgroup label="🌟 Google Gemini (PADRÃO)">
+        <option value="gemini:gemini-2.5-flash" selected>Gemini 2.5 Flash ⭐ padrão</option>
+        <option value="gemini:gemini-2.0-flash">Gemini 2.0 Flash</option>
       </optgroup>
-      <optgroup label="⚡ Groq (GRÁTIS)">
+      <optgroup label="🆓 Groq (GRÁTIS)">
         <option value="groq:llama-3.1-8b-instant">Llama 3.1 8b (grátis, rápido)</option>
         <option value="groq:meta-llama/llama-4-scout-17b-16e-instruct">Llama 4 Scout 17b (grátis)</option>
         <option value="groq:qwen/qwen3-32b">Qwen3 32b (grátis)</option>
       </optgroup>
-      <optgroup label="🌟 Google Gemini">
-        <option value="gemini:gemini-2.5-flash">Gemini 2.5 Flash ($0.15/1M)</option>
-        <option value="gemini:gemini-2.0-flash">Gemini 2.0 Flash ($0.10/1M)</option>
-      </optgroup>
-      <optgroup label="🤖 OpenAI (fallback final)">
+      <optgroup label="🤖 OpenAI">
         <option value="gpt-4.1-mini">gpt-4.1-mini ($0.40/1M)</option>
         <option value="gpt-4o-mini">gpt-4o-mini ($0.15/1M)</option>
         <option value="gpt-4.1">gpt-4.1 (premium)</option>
+      </optgroup>
+      <optgroup label="🧠 DeepSeek (precisa saldo)">
+        <option value="deepseek:deepseek-chat">DeepSeek Chat</option>
+        <option value="deepseek:deepseek-reasoner">DeepSeek Reasoner</option>
       </optgroup>
     </select>
   </div>
@@ -301,7 +390,38 @@ pre:hover .code-copy{opacity:1}
 
     
 <!-- MODEL STATUS MONITOR -->
-<div id="model-status-bar" style="background:var(--bg2);border-top:1px solid var(--border);padding:4px 12px;display:flex;gap:8px;overflow-x:auto;flex-shrink:0;font-size:10px;scrollbar-width:none;align-items:center">
+
+  <!-- TOKEN MONITOR REAL TIME -->
+  <div class="token-monitor" id="token-monitor">
+    <div class="tm-row">
+      <span class="tm-label">⚡ TOKENS:</span>
+      <div class="tm-model" id="tm-gemini" title="Google Gemini">
+        <span class="tm-name">🌟Gem</span>
+        <span class="tm-tok" id="tm-tok-gemini">0</span>
+        <span class="tm-cost" id="tm-cost-gemini">$0</span>
+        <span class="tm-ok" id="tm-st-gemini">✅</span>
+      </div>
+      <div class="tm-model" id="tm-groq" title="Groq">
+        <span class="tm-name">🆓Groq</span>
+        <span class="tm-tok" id="tm-tok-groq">0</span>
+        <span class="tm-ok" id="tm-st-groq">✅</span>
+      </div>
+      <div class="tm-model" id="tm-openai" title="OpenAI">
+        <span class="tm-name">🤖OAI</span>
+        <span class="tm-tok" id="tm-tok-openai">0</span>
+        <span class="tm-cost" id="tm-cost-openai">$0</span>
+        <span class="tm-ok" id="tm-st-openai">✅</span>
+      </div>
+      <div class="tm-model" id="tm-deepseek" title="DeepSeek">
+        <span class="tm-name">🧠DS</span>
+        <span class="tm-tok" id="tm-tok-deepseek">0</span>
+        <span class="tm-ok" id="tm-st-deepseek">⚠️</span>
+      </div>
+      <span class="tm-total" id="tm-total">Total: 0 tokens · $0.00</span>
+    </div>
+  </div>
+
+  <div id="model-status-bar" style="background:var(--bg2);border-top:1px solid var(--border);padding:4px 12px;display:flex;gap:8px;overflow-x:auto;flex-shrink:0;font-size:10px;scrollbar-width:none;align-items:center">
   <span style="color:var(--text3);white-space:nowrap;font-weight:600">⚡ MODELOS:</span>
   <span id="ms-deepseek" class="ms-chip" title="DeepSeek Chat">🚀 DS <span class="ms-status">...</span></span>
   <span id="ms-gemini" class="ms-chip" title="Gemini 2.5">🌟 Gem <span class="ms-status">...</span></span>
@@ -352,7 +472,7 @@ let sessionId = 'sess_' + Date.now();
 let isLoading = false;
 let pendingFile = null;
 let pendingImage = null;
-let currentModel = 'deepseek:deepseek-chat';
+let currentModel = 'gemini:gemini-2.5-flash';
 let currentAppUrl = null;
 let allConnectors = [];
 
@@ -378,7 +498,7 @@ function onModelChange(val) {
     'groq:qwen/qwen3-32b':'⚡ Qwen3 32b',
     'gemini:gemini-2.5-flash':'🌟 Gemini 2.5','gemini:gemini-2.0-flash':'🌟 Gemini 2.0',
   };
-  document.getElementById('model-badge').textContent = labels[val] || val;
+  document.getElementById('document.getElementById('model-badge').textContent = labels[val] || val;
   // Indicar se houve fallback
   document.getElementById('model-badge').title = currentModel !== val ? `Preferido: ${currentModel} → Usando: ${val}` : val;
   const shortLabels = {
@@ -683,6 +803,8 @@ async function sendMessage() {
     
     // Update stats
     if (d.tokens) loadStats();
+    updateTokenMonitor(d);
+    processBrowserPaneFromReply(d.reply||'', d.tools_used||[]);
     updateModelStatusFromResponse(d);
     
     // Terminal output
@@ -783,10 +905,377 @@ function updateModelStatusFromResponse(resp) {
 }
 
 window.addEventListener('load', async () => {
+  initFileUpload();
   loadStats();
   loadConnectors();
   document.getElementById('footer-session').textContent = `📝 ${sessionId.substring(0,12)}`;
 });
+
+// ============= BROWSER PANE =============
+let bpCurrentUrl = '';
+let bpLastScreenshot = '';
+
+function bpOpen() {
+  document.getElementById('browser-pane').classList.add('open');
+  // Envolver em split se ainda não foi
+  const main = document.querySelector('main') || document.querySelector('.app-body');
+  if(main && !main.classList.contains('app-split')) main.classList.add('app-split');
+  localStorage.setItem('bp_open','1');
+}
+function bpClose() {
+  document.getElementById('browser-pane').classList.remove('open');
+  localStorage.removeItem('bp_open');
+}
+function bpUpdateScreenshot(url, title='') {
+  const el = document.getElementById('bp-screenshot');
+  el.innerHTML = `<img src="${url}" alt="Screenshot" onerror="this.parentElement.innerHTML='<div class=bp-placeholder><span>❌</span><div>Screenshot indisponível</div></div>'">`;
+  if(title) document.getElementById('bp-url-input').value = bpCurrentUrl;
+  document.getElementById('bp-status').textContent = title ? `✅ ${title.substring(0,50)}` : '✅ Carregado';
+  bpLastScreenshot = url;
+  bpOpen();
+}
+function bpShowInfo(text) {
+  const el = document.getElementById('bp-info');
+  if(!text) { el.style.display='none'; return; }
+  el.style.display='block';
+  el.innerHTML = text.split('\n').slice(0,8).map(l=>`<div class="bp-info-row">${l}</div>`).join('');
+}
+function bpNavigate() {
+  let url = document.getElementById('bp-url-input').value.trim();
+  if(!url) return;
+  if(!url.startsWith('http')) url = 'https://' + url;
+  bpCurrentUrl = url;
+  document.getElementById('bp-status').textContent = '⏳ Navegando...';
+  bpOpen();
+  // Enviar para Daniela navegar
+  sendQuickMessage(`navegue para ${url} e tire um screenshot`);
+}
+function bpRefresh() {
+  if(bpCurrentUrl) bpNavigate();
+  else sendQuickMessage('tire um screenshot da página atual');
+}
+function bpSend(msg) { bpOpen(); sendQuickMessage(msg); }
+function bpAsk(question, prefix) {
+  const val = prompt(question);
+  if(val) { bpOpen(); sendQuickMessage(prefix + val); }
+}
+function sendQuickMessage(text) {
+  const inp = document.getElementById('chat-input') || document.querySelector('.chat-input');
+  if(inp) { inp.value = text; inp.dispatchEvent(new Event('input')); }
+  // Usar a função de enviar
+  if(typeof sendMessage === 'function') {
+    const origVal = inp?.value;
+    if(inp) inp.value = text;
+    sendMessage();
+  }
+}
+
+// Interceptar respostas para atualizar browser pane
+const _origProcessResponse = window._processResponse || null;
+function processBrowserPaneFromReply(reply, toolsUsed) {
+  if(!toolsUsed || !toolsUsed.length) return;
+  
+  const screenshotTool = toolsUsed.find(t => t.name === 'browser_screenshot');
+  const navTool = toolsUsed.find(t => t.name === 'browser_navigate');
+  
+  if(screenshotTool) {
+    // Extrair URL do screenshot da resposta
+    const m = reply.match(/URL:\s*(https?:\/\/\S+)/);
+    if(m) {
+      bpUpdateScreenshot(m[1]);
+      const titleM = reply.match(/Titulo:\s*([^\n]+)/);
+      if(titleM) bpShowInfo(`📄 ${titleM[1]}`);
+    }
+  }
+  if(navTool && navTool.args?.url) {
+    bpCurrentUrl = navTool.args.url;
+    document.getElementById('bp-url-input').value = navTool.args.url;
+    bpOpen();
+    // Extrair info
+    const infoLines = [];
+    const linkM = reply.match(/href['":].*?["']([^'"]+)['"]/g);
+    if(linkM) infoLines.push(`🔗 ${linkM.length} links encontrados`);
+    const btnM = reply.match(/button['":].*?["']([^'"]+)['"]/g);
+    if(btnM) infoLines.push(`🔘 ${btnM.length} botões encontrados`);
+    if(infoLines.length) bpShowInfo(infoLines.join('\n'));
+  }
+}
+
+// ============= FILE UPLOAD REAL =============
+let pendingFiles = [];
+
+function initFileUpload() {
+  const dropZone = document.getElementById('file-drop-zone');
+  const body = document.body;
+  
+  body.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('active'); });
+  body.addEventListener('dragleave', (e) => { if(!e.relatedTarget || !body.contains(e.relatedTarget)) dropZone.classList.remove('active'); });
+  body.addEventListener('drop', async (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('active');
+    const files = Array.from(e.dataTransfer.files);
+    for(const f of files) await processFile(f);
+  });
+
+  // Botão de upload existente
+  const uploadBtn = document.getElementById('upload-btn') || document.querySelector('[title*="upload"]') || document.querySelector('[title*="arquivo"]');
+  if(uploadBtn) {
+    // Criar input oculto
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.multiple = true;
+    fileInput.accept = '.pdf,.zip,.png,.jpg,.jpeg,.webp,.gif,.docx,.xlsx,.csv,.txt,.json,.html,.py,.js,.ts';
+    fileInput.style.display = 'none';
+    document.body.appendChild(fileInput);
+    uploadBtn.onclick = () => fileInput.click();
+    fileInput.onchange = async (e) => {
+      for(const f of e.target.files) await processFile(f);
+      fileInput.value = '';
+    };
+  }
+}
+
+async function processFile(file) {
+  const maxSize = 15 * 1024 * 1024; // 15MB
+  if(file.size > maxSize) { showToast(`Arquivo muito grande: ${file.name} (max 15MB)`, true); return; }
+  
+  const ext = file.name.split('.').pop().toLowerCase();
+  const isImage = ['png','jpg','jpeg','webp','gif','bmp'].includes(ext);
+  const isPDF = ext === 'pdf';
+  const isZip = ['zip','rar','tar','gz'].includes(ext);
+  const isDoc = ['docx','doc'].includes(ext);
+  const isCSV = ['csv','tsv'].includes(ext);
+  const isText = ['txt','json','html','css','js','ts','py','md','yaml','yml'].includes(ext);
+  
+  // Mostrar preview
+  const fileId = 'f_' + Date.now();
+  showFilePreview(fileId, file.name, file.size, 'Lendo...');
+  
+  try {
+    if(isImage) {
+      // Enviar como imagem para análise
+      const base64 = await fileToBase64(file);
+      updateFilePreview(fileId, 'Enviando para análise visual...');
+      await sendFileMessage(file.name, null, base64, `Analise esta imagem "${file.name}" e descreva o que você vê.`);
+      updateFilePreview(fileId, '✅ Analisado');
+    } else if(isPDF) {
+      updateFilePreview(fileId, 'Extraindo texto do PDF...');
+      const base64 = await fileToBase64(file);
+      await sendFileMessage(file.name, null, base64, `Este é o PDF "${file.name}" em base64. Analise o conteúdo e me diga o que está neste documento.`, true);
+      updateFilePreview(fileId, '✅ Processado');
+    } else if(isZip) {
+      updateFilePreview(fileId, 'Extraindo ZIP...');
+      await processZip(file, fileId);
+    } else if(isText || isCSV) {
+      const text = await file.text();
+      updateFilePreview(fileId, 'Enviando conteúdo...');
+      await sendFileMessage(file.name, text, null, `Analise o arquivo "${file.name}" com o seguinte conteúdo:\n\n${text.substring(0, 8000)}`);
+      updateFilePreview(fileId, '✅ Enviado');
+    } else {
+      const base64 = await fileToBase64(file);
+      await sendFileMessage(file.name, null, base64, `Recebi o arquivo "${file.name}" (${ext}). Analise e processe este arquivo.`, true);
+      updateFilePreview(fileId, '✅ Enviado');
+    }
+    // Salvar no banco
+    saveFileTranscription(file.name, fileId);
+  } catch(e) {
+    updateFilePreview(fileId, '❌ Erro: ' + e.message);
+  }
+}
+
+async function processZip(file, fileId) {
+  try {
+    // Usar JSZip via CDN
+    if(!window.JSZip) {
+      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
+    }
+    const zip = await JSZip.loadAsync(file);
+    const files = Object.keys(zip.files).filter(n => !zip.files[n].dir);
+    updateFilePreview(fileId, `ZIP: ${files.length} arquivos`);
+    let summary = `ZIP "${file.name}" contém ${files.length} arquivos:\n\n`;
+    let textContent = '';
+    for(const name of files.slice(0, 20)) {
+      const ext = name.split('.').pop().toLowerCase();
+      if(['txt','json','js','ts','py','html','css','md','csv'].includes(ext)) {
+        try {
+          const content = await zip.files[name].async('string');
+          textContent += `\n\n=== ${name} ===\n${content.substring(0, 2000)}`;
+        } catch(e) {}
+      }
+      summary += `  - ${name}\n`;
+    }
+    if(files.length > 20) summary += `  ... e mais ${files.length - 20} arquivos`;
+    const msg = summary + (textContent ? `\n\nConteúdo de texto extraído:${textContent.substring(0,6000)}` : '');
+    await sendFileMessage(file.name, msg, null, `Analisei o ZIP "${file.name}". Aqui está o conteúdo:\n\n${msg.substring(0,8000)}`);
+    updateFilePreview(fileId, `✅ ${files.length} arquivos extraídos`);
+  } catch(e) {
+    updateFilePreview(fileId, '❌ Erro ao extrair: ' + e.message);
+  }
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result.split(',')[1]);
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
+
+async function sendFileMessage(filename, textContent, base64, userMessage, isPDF=false) {
+  // Adicionar mensagem do usuário no chat
+  addMessage('user', userMessage || `Arquivo: ${filename}`);
+  
+  // Preparar body
+  const messages = [...chatHistory, { role: 'user', content: userMessage || `Arquivo: ${filename}` }];
+  
+  const body = {
+    messages,
+    model: currentModel,
+    session_id: sessionId,
+    user_id: 'tafita81',
+  };
+  
+  if(base64) {
+    const ext = filename.split('.').pop().toLowerCase();
+    const isImage = ['png','jpg','jpeg','webp','gif'].includes(ext);
+    if(isImage) {
+      body.image = `data:image/${ext};base64,${base64}`;
+    } else {
+      body.file_base64 = base64;
+      body.file_name = filename;
+    }
+  }
+  
+  setLoading(true);
+  try {
+    const r = await fetch(EDGE, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    const d = await r.json();
+    const reply = d.reply || '(sem resposta)';
+    addMessage('assistant', reply, d.tools_used || []);
+    chatHistory.push({role:'user', content: userMessage || `Arquivo: ${filename}`});
+    chatHistory.push({role:'assistant', content: reply});
+    updateModelStatusFromResponse(d);
+    updateTokenMonitor(d);
+    if(d.tokens) loadStats();
+  } catch(e) {
+    addMessage('assistant', `Erro ao processar arquivo: ${e.message}`);
+  }
+  setLoading(false);
+}
+
+function showFilePreview(id, name, size, status) {
+  const sizeStr = size > 1024*1024 ? (size/1024/1024).toFixed(1)+'MB' : (size/1024).toFixed(0)+'KB';
+  const ext = name.split('.').pop().toLowerCase();
+  const icons = {pdf:'📄',zip:'🗜️',png:'🖼️',jpg:'🖼️',jpeg:'🖼️',docx:'📝',xlsx:'📊',csv:'📊',txt:'📃',json:'🔧',py:'🐍',js:'⚡',ts:'⚡',default:'📁'};
+  const icon = icons[ext] || icons.default;
+  const preview = document.createElement('div');
+  preview.id = id;
+  preview.className = 'file-preview';
+  preview.innerHTML = `<span class="fp-icon">${icon}</span><span class="fp-name">${name}</span><span class="fp-size">${sizeStr}</span><span class="fp-status" id="${id}-status">${status}</span><button class="fp-remove" onclick="this.parentElement.remove()">✕</button>`;
+  const chatInputArea = document.querySelector('.input-area') || document.querySelector('.chat-input-wrapper');
+  if(chatInputArea) chatInputArea.insertBefore(preview, chatInputArea.firstChild);
+}
+
+function updateFilePreview(id, status) {
+  const el = document.getElementById(id + '-status');
+  if(el) el.textContent = status;
+}
+
+async function saveFileTranscription(filename, fileId) {
+  // Salvar no ia_cache para memória futura
+  try {
+    await fetch(EDGE, { method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ _action: 'save_file_ref', filename, fileId, session_id: sessionId }) });
+  } catch(e) {}
+}
+
+function loadScript(src) {
+  return new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = src; s.onload = res; s.onerror = rej;
+    document.head.appendChild(s);
+  });
+}
+
+// ============= TOKEN MONITOR REAL =============
+let tmTotals = { gemini: 0, groq: 0, openai: 0, deepseek: 0, cost: 0 };
+let tmSession = { tokens: 0, cost: 0 };
+
+function updateTokenMonitor(resp) {
+  if(!resp) return;
+  const prov = resp.provider || '';
+  const model = resp.model || '';
+  const tokens = resp.tokens?.total || 0;
+  const cost = resp.cost_usd || 0;
+  
+  // Acumular por provider
+  if(prov === 'gemini') { tmTotals.gemini += tokens; updateTmEl('gemini', tmTotals.gemini, cost); }
+  else if(prov === 'groq') { tmTotals.groq += tokens; updateTmEl('groq', tmTotals.groq, 0); }
+  else if(prov === 'openai') { tmTotals.openai += tokens; updateTmEl('openai', tmTotals.openai, cost); }
+  else if(prov === 'deepseek') { tmTotals.deepseek += tokens; updateTmEl('deepseek', tmTotals.deepseek, cost); }
+  
+  tmSession.tokens += tokens;
+  tmSession.cost += cost;
+  document.getElementById('tm-total').textContent = 
+    `Total: ${tmSession.tokens.toLocaleString()}tok · $${tmSession.cost.toFixed(4)}`;
+  
+  // Atualizar status dos modelos
+  if(resp.model_status) {
+    for(const ms of resp.model_status) {
+      const key = ms.model?.includes('gemini') ? 'gemini' : 
+                  ms.model?.includes('groq') ? 'groq' :
+                  ms.model?.startsWith('gpt') ? 'openai' : 'deepseek';
+      const stEl = document.getElementById(`tm-st-${key}`);
+      const mEl = document.getElementById(`tm-${key}`);
+      if(!stEl || !mEl) continue;
+      if(ms.available) {
+        stEl.textContent = '✅'; mEl.className = 'tm-model active';
+      } else {
+        stEl.textContent = `⏱${ms.resets_in}s`; mEl.className = 'tm-model limited';
+        // Countdown
+        startCountdown(stEl, ms.resets_in);
+      }
+    }
+  }
+}
+
+function updateTmEl(key, tokens, cost) {
+  const tokEl = document.getElementById(`tm-tok-${key}`);
+  const costEl = document.getElementById(`tm-cost-${key}`);
+  if(tokEl) tokEl.textContent = tokens >= 1000 ? (tokens/1000).toFixed(1)+'k' : tokens;
+  if(costEl && cost > 0) costEl.textContent = '$' + cost.toFixed(4);
+}
+
+function startCountdown(el, seconds) {
+  let s = seconds;
+  const interval = setInterval(() => {
+    s--;
+    if(s <= 0) { el.textContent = '✅'; el.closest('.tm-model').className = 'tm-model active'; clearInterval(interval); }
+    else el.textContent = `⏱${s}s`;
+  }, 1000);
+}
+
+// Polling de stats a cada 30s
+async function pollTokenStats() {
+  try {
+    const r = await fetch(EDGE + '?action=usage&user_id=tafita81');
+    if(!r.ok) return;
+    const d = await r.json();
+    if(d.total_tokens) {
+      document.getElementById('tm-total').textContent = 
+        `Hoje: ${(d.total_tokens||0).toLocaleString()}tok · $${(d.total_cost_usd||0).toFixed(4)}`;
+    }
+  } catch(e) {}
+}
+setInterval(pollTokenStats, 30000);
+setTimeout(pollTokenStats, 3000);
+
+// Restaurar estado browser pane
+if(localStorage.getItem('bp_open') === '1') {
+  setTimeout(() => { document.getElementById('browser-pane')?.classList.add('open'); }, 500);
+}
+
 </script>
 </body>
 </html>
