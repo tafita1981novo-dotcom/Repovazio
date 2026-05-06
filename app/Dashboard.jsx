@@ -460,21 +460,20 @@ export default function App(){
         const d=await r.json();
         if(d.id){
           const cfg=JSON.parse(localStorage.getItem("doc_cfg")||"{}");
-          const tr=await fetch("https://tpjvalzwkqwttvmszvie.supabase.co/rest/v1/ia_cache?cache_key=in.(secret:YOUTUBE_ACCESS_TOKEN,secret:ELEVENLABS_API_KEY,secret:HEYGEN_API_KEY)&select=cache_key,value",{
-            headers:{apikey:"eyJhbGciOiJIUzI1NiIsImtpZCI6Iks2T29uVnpZTDF2bGYwSEoiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwanZhbHp3a3F3dHR2bXN6dmllIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NDQ5Mjg5MywiZXhwIjoyMDYwMDY4ODkzfQ.kdul_aRxvvbxDqN-fvMjMi5X1yN7N5K1G0rXFP2sVMg"}
-          });
+          const tr=await fetch("https://tpjvalzwkqwttvmszvie.supabase.co/functions/v1/daniela-admin");
           if(tr.ok){
-            const tokens=await tr.json();
-            for(const t of tokens){
-              const key=t.cache_key.replace("secret:","");
-              if(key==="YOUTUBE_ACCESS_TOKEN")cfg.youtube=t.value;
-              if(key==="ELEVENLABS_API_KEY")cfg.elevenlabs=t.value;
-              if(key==="HEYGEN_API_KEY")cfg.heygen=t.value;
+            const td=await tr.json();
+            if(td.ok&&td.cfg){
+              if(td.cfg.YOUTUBE_ACCESS_TOKEN)cfg.youtube=td.cfg.YOUTUBE_ACCESS_TOKEN;
+              if(td.cfg.ELEVENLABS_API_KEY)cfg.elevenlabs=td.cfg.ELEVENLABS_API_KEY;
+              if(td.cfg.HEYGEN_API_KEY)cfg.heygen=td.cfg.HEYGEN_API_KEY;
+              if(td.cfg._channel)cfg._yt_channel=td.cfg._channel;
+              if(td.cfg._channel_id)cfg._yt_channel_id=td.cfg._channel_id;
+              if(td.cfg._subs)cfg._yt_subs=td.cfg._subs;
+              cfg._auto_loaded=new Date().toISOString();
+              localStorage.setItem("doc_cfg",JSON.stringify(cfg));
+              console.log("Tokens auto-carregados via daniela-admin:",Object.keys(cfg));
             }
-            cfg._yt_channel=d.name;cfg._yt_channel_id=d.id;cfg._yt_subs=d.subscribers;
-            cfg._auto_loaded=new Date().toISOString();
-            localStorage.setItem("doc_cfg",JSON.stringify(cfg));
-            console.log("Tokens auto-carregados:",Object.keys(cfg));
           }
         }
       }catch(e){console.log("Auto-load:",e.message);}
