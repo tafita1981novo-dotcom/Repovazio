@@ -3,19 +3,14 @@ on:
   workflow_dispatch:
     inputs:
       audio_url:
-        description: 'URL do áudio MP3'
         required: true
       pipeline_id:
-        description: 'ID do pipeline'
         required: true
       title:
-        description: 'Título do vídeo'
         required: true
       style:
-        description: 'Estilo'
         default: 'documentary'
       short_id:
-        description: 'ID do short'
         default: ''
 
 jobs:
@@ -24,48 +19,37 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Setup FFmpeg
-        run: sudo apt-get install -y ffmpeg python3-pip python3-pil
+        run: sudo apt-get install -y ffmpeg python3-pip python3-pil inkscape
 
-      - name: Generate background image
+      - name: Generate background
         run: |
           set -e
           python3 << 'PYEOF'
           import os
-          style = os.environ.get('STYLE', 'documentary')
-          title = os.environ.get('TITLE', 'Psicologia')
-          BG = {'documentary':'#0a0a1a','cartoon':'#6c5ce7','cinematic_case':'#0d0d0d','shorts_vertical':'#000000','series_binge':'#0a0a1a'}
-          ACC = {'documentary':'#9b59b6','cartoon':'#fdcb6e','cinematic_case':'#e74c3c','shorts_vertical':'#ff4757','series_binge':'#9b59b6'}
-          bg = BG.get(style, '#0a0a1a')
-          acc = ACC.get(style, '#9b59b6')
-          is_short = style == 'shorts_vertical'
-          W, H = (1080, 1920) if is_short else (1920, 1080)
-          title_clean = title[:60].replace('&','&amp;').replace('<','&lt;').replace('>','&gt;')
-          svg = f'''<svg xmlns='http://www.w3.org/2000/svg' width='{W}' height='{H}'>
-          <defs>
-            <linearGradient id='g' x1='0%' y1='0%' x2='100%' y2='100%'>
-              <stop offset='0%' style='stop-color:{bg}'/>
-              <stop offset='100%' style='stop-color:{bg}99'/>
-            </linearGradient>
-            <filter id='blur'><feGaussianBlur stdDeviation='40'/></filter>
-          </defs>
+          style=os.environ.get('STYLE','documentary')
+          title=os.environ.get('TITLE','Psicologia')
+          BG={'documentary':'#0a0a1a','cartoon':'#6c5ce7','cinematic_case':'#0d0d0d','shorts_vertical':'#000000','series_binge':'#0a0a1a'}
+          ACC={'documentary':'#9b59b6','cartoon':'#fdcb6e','cinematic_case':'#e74c3c','shorts_vertical':'#ff4757','series_binge':'#9b59b6'}
+          bg=BG.get(style,'#0a0a1a');acc=ACC.get(style,'#9b59b6')
+          W,H=(1080,1920) if style=='shorts_vertical' else (1920,1080)
+          tc=title[:60].replace('&','&amp;').replace('<','&lt;').replace('>','&gt;')
+          svg=f'''<svg xmlns='http://www.w3.org/2000/svg' width='{W}' height='{H}'>
+          <defs><linearGradient id='g' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' style='stop-color:{bg}'/><stop offset='100%' style='stop-color:{bg}99'/></linearGradient><filter id='blur'><feGaussianBlur stdDeviation='40'/></filter></defs>
           <rect width='{W}' height='{H}' fill='url(#g)'/>
           <circle cx='{W//2}' cy='{H//3}' r='{min(W,H)//4}' fill='{acc}' opacity='0.08' filter='url(#blur)'/>
-          <text x='{W//2}' y='{H//10}' font-family='Arial Black,Arial' font-size='{W//60}' fill='{acc}' text-anchor='middle' letter-spacing='10' opacity='0.7'>PSICOLOGIA.DOC</text>
-          <text x='{W//2}' y='{H//2}' font-family='Georgia,serif' font-size='{W//22 if len(title)>40 else W//18}' fill='white' text-anchor='middle' dominant-baseline='middle' font-weight='bold'>{title_clean}</text>
-          <rect x='{W//2-80}' y='{H//2+W//15}' width='160' height='5' fill='{acc}' rx='3'/>
-          </svg>'''
-          with open('background.svg', 'w') as f: f.write(svg)
-          print(f'SVG criado: {W}x{H}')
+          <text x='{W//2}' y='{H//10}' font-family='Arial Black' font-size='{W//60}' fill='{acc}' text-anchor='middle' letter-spacing='10' opacity='0.7'>PSICOLOGIA.DOC</text>
+          <text x='{W//2}' y='{H//2}' font-family='Georgia' font-size='{W//22 if len(title)>40 else W//18}' fill='white' text-anchor='middle' dominant-baseline='middle' font-weight='bold'>{tc}</text>
+          <rect x='{W//2-80}' y='{H//2+W//15}' width='160' height='5' fill='{acc}' rx='3'/></svg>'''
+          open('bg.svg','w').write(svg);print(f'SVG {W}x{H}')
           PYEOF
         env:
           STYLE: ${{ inputs.style }}
           TITLE: ${{ inputs.title }}
 
-      - name: Convert SVG to PNG
+      - name: SVG to PNG
         run: |
           set -e
-          sudo apt-get install -y inkscape
-          inkscape --export-type=png --export-filename=background.png --export-width=1920 --export-height=1080 background.svg
+          inkscape --export-type=png --export-filename=bg.png --export-width=1920 --export-height=1080 bg.svg
 
       - name: Download audio
         run: |
@@ -73,59 +57,31 @@ jobs:
           wget -q -O audio.mp3 '${{ inputs.audio_url }}'
           ls -lh audio.mp3
 
-      - name: Get audio duration
-        id: duration
-        run: |
-          set -e
-          DURATION=$(ffprobe -v quiet -print_format compact=print_wrappers=0:nokey=1 -show_entries format=duration audio.mp3 | head -1)
-          echo "duration=$DURATION" >> $GITHUB_OUTPUT
-          echo "Audio: ${DURATION}s"
-
       - name: Render MP4
         run: |
           set -e
           STYLE='${{ inputs.style }}'
           if [ "$STYLE" = "shorts_vertical" ]; then VF="scale=1080:1920,setsar=1"; else VF="scale=1920:1080,setsar=1"; fi
-          ffmpeg -y -loop 1 -framerate 1 -i background.png -i audio.mp3 -vf "$VF" -c:v libx264 -preset ultrafast -tune stillimage -pix_fmt yuv420p -c:a aac -b:a 128k -shortest -movflags +faststart output.mp4
-          ls -lh output.mp4
+          ffmpeg -y -loop 1 -framerate 1 -i bg.png -i audio.mp3 -vf "$VF" -c:v libx264 -preset ultrafast -tune stillimage -pix_fmt yuv420p -c:a aac -b:a 128k -shortest -movflags +faststart out.mp4
+          ls -lh out.mp4
 
-      - name: Upload MP4 to Supabase Storage
+      - name: Upload via proxy
         run: |
           set -e
           PIPELINE_ID='${{ inputs.pipeline_id }}'
           SHORT_ID='${{ inputs.short_id }}'
           TITLE='${{ inputs.title }}'
-          SAFE_TITLE=$(echo "$TITLE" | tr ' ' '_' | tr -cd '[a-zA-Z0-9_]' | head -c 30)
+          SAFE=$(echo "$TITLE" | tr ' ' '_' | tr -cd '[a-zA-Z0-9_]' | head -c 30)
           TS=$(date +%s)
-          FILENAME="${TS}_${SAFE_TITLE}.mp4"
-          MP4_URL="$SUPABASE_URL/storage/v1/object/public/videos/$FILENAME"
-          
-          echo "⏫ Uploading to: videos/$FILENAME"
-          HTTP_CODE=$(curl -s -o upload_response.json -w "%{http_code}" -X POST             "$SUPABASE_URL/storage/v1/object/videos/$FILENAME"             -H "Authorization: Bearer $SUPABASE_SERVICE_KEY"             -H "Content-Type: video/mp4"             -H "x-upsert: true"             --data-binary @output.mp4)
-          echo "HTTP $HTTP_CODE"
-          cat upload_response.json || true
+          FN="${TS}_${SAFE}.mp4"
+          PROXY_URL="$SUPABASE_URL/functions/v1/mp4-upload?filename=$FN&pipeline_id=$PIPELINE_ID"
+          if [ -n "$SHORT_ID" ]; then PROXY_URL="$PROXY_URL&short_id=$SHORT_ID"; fi
+          echo "⏫ POST -> $PROXY_URL"
+          HTTP=$(curl -s -o resp.json -w "%{http_code}" -X POST "$PROXY_URL" -H "Content-Type: application/octet-stream" --data-binary @out.mp4)
+          echo "HTTP $HTTP"
+          cat resp.json
           echo
-          if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
-            echo "❌ Upload failed!"
-            exit 1
-          fi
-          echo "✅ MP4 URL: $MP4_URL"
-          
-          if [ -n "$PIPELINE_ID" ]; then
-            echo "📝 Atualizando content_pipeline #$PIPELINE_ID..."
-            HTTP_CODE2=$(curl -s -o patch_response.json -w "%{http_code}" -X PATCH               "$SUPABASE_URL/rest/v1/content_pipeline?id=eq.$PIPELINE_ID"               -H "Authorization: Bearer $SUPABASE_SERVICE_KEY"               -H "apikey: $SUPABASE_SERVICE_KEY"               -H "Content-Type: application/json"               -H "Prefer: return=representation"               -d "{"mp4_url":"$MP4_URL","status":"mp4_ready"}")
-            echo "PATCH HTTP $HTTP_CODE2"
-            cat patch_response.json || true
-            echo
-          fi
-          
-          if [ -n "$SHORT_ID" ]; then
-            curl -s -X PATCH "$SUPABASE_URL/rest/v1/shorts_pipeline?id=eq.$SHORT_ID"               -H "Authorization: Bearer $SUPABASE_SERVICE_KEY" -H "apikey: $SUPABASE_SERVICE_KEY"               -H "Content-Type: application/json" -H "Prefer: return=minimal"               -d "{"mp4_url":"$MP4_URL","status":"mp4_ready"}"
-          fi
-          
-          echo "🚀 Acionando youtube-publisher..."
-          curl -s -X POST "$SUPABASE_URL/functions/v1/youtube-publisher"             -H "Content-Type: application/json" -d '{"action":"publish_pending"}'
-          echo
+          if [ "$HTTP" -ne 200 ]; then exit 1; fi
+          echo "✅ Upload completo"
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
