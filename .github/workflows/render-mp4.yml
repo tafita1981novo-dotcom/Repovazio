@@ -64,6 +64,14 @@ jobs:
           echo "duration=$DURATION_INT" >> $GITHUB_OUTPUT
           echo "Duracao audio: $DURATION s"
 
+      - name: Download HTML (force as text)
+        if: inputs.video_html_url != ''
+        run: |
+          curl -s -L -o video.html "${{ inputs.video_html_url }}"
+          ls -lh video.html
+          head -c 200 video.html
+          echo
+
       - name: Path A - Record HTML via Playwright (30fps)
         if: inputs.video_html_url != ''
         env:
@@ -91,8 +99,11 @@ jobs:
             });
             const page = await context.newPage();
             page.on('pageerror', err => console.log('PAGE_ERROR:', err.message));
-            await page.goto(url, { waitUntil: 'load', timeout: 60000 });
-            await page.waitForTimeout(800);
+            // Baixar HTML como texto (Supabase serve como text/plain)
+            const fs = require('fs');
+            const html = fs.readFileSync('video.html', 'utf8');
+            await page.setContent(html, { waitUntil: 'load', timeout: 60000 });
+            await page.waitForTimeout(1500);
             await page.waitForTimeout((dur + 1) * 1000);
             await page.close();
             await context.close();
