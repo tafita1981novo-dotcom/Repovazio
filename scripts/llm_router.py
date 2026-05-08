@@ -13,18 +13,13 @@ import os, json, time, urllib.request, urllib.error
 
 
 class LLMRouter:
-    # ENGINES 2026 - 6 fallback chain. Same NVIDIA_API_KEY unlocks 4 top models on Nvidia Build.
-    # Order: speed-first (Groq) -> Nvidia diversified models -> OpenAI last resort (paid)
     ENGINES = [
-        # 1. PRIMARY: Groq Llama 3.3 70B - 250ms, 14.4k req/dia FREE
-        ("groq",                 "GROQ_API_KEY",   "https://api.groq.com/openai/v1",      "llama-3.3-70b-versatile"),
-        # 2-5. NVIDIA BUILD - same NVIDIA_API_KEY, FREE ILIMITADO 2026
-        ("nvidia_deepseek_v4",   "NVIDIA_API_KEY", "https://integrate.api.nvidia.com/v1", "deepseek-ai/deepseek-v4-pro"),
-        ("nvidia_qwen35",        "NVIDIA_API_KEY", "https://integrate.api.nvidia.com/v1", "qwen/qwen3.5-397b-a17b"),
-        ("nvidia_llama4",        "NVIDIA_API_KEY", "https://integrate.api.nvidia.com/v1", "meta/llama-4-maverick-17b-128e-instruct"),
-        ("nvidia_llama33",       "NVIDIA_API_KEY", "https://integrate.api.nvidia.com/v1", "meta/llama-3.3-70b-instruct"),
-        # 6. LAST RESORT: OpenAI gpt-4o-mini (paid - raramente atingido)
-        ("openai_mini",          "OPENAI_API_KEY", "https://api.openai.com/v1",           "gpt-4o-mini"),
+        # 1. DeepSeek V4 Pro via Nvidia Build - DEFAULT 2026, FREE ILIMITADO (1.6T params)
+        ("nvidia_deepseek_v4",   "NVIDIA_API_KEY",   "https://integrate.api.nvidia.com/v1",    "deepseek-ai/deepseek-v4-pro"),
+        # 2. Groq Llama 3.3 70B - fallback gratis (14.4k req/dia FREE, ~250ms)
+        ("groq",                 "GROQ_API_KEY",     "https://api.groq.com/openai/v1",         "llama-3.3-70b-versatile"),
+        # 3. OpenAI gpt-4o-mini - ULTIMO RECURSO (paid, raramente alcancado)
+        ("openai_mini",          "OPENAI_API_KEY",   "https://api.openai.com/v1",              "gpt-4o-mini"),
     ]
 
     def __init__(self, prefer_engine=None):
