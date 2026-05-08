@@ -72,6 +72,14 @@ jobs:
           head -c 200 video.html
           echo
 
+      - name: Patch HTML transitions (v8.3 fix - elimina overlap 1s entre cenas)
+        if: inputs.video_html_url != ''
+        run: |
+          # Reduz transition opacity de 1s/.6s/1.2s/.5s pra 0.3s (transicao snappy)
+          sed -i 's/transition:opacity [0-9.]*s/transition:opacity 0.3s/g' video.html
+          # Verifica
+          grep -o 'transition:opacity [0-9.]*s' video.html | sort -u | head -5 || echo "(no transition found - ok)"
+
       - name: Path A - Record HTML via Playwright (30fps)
         if: inputs.video_html_url != ''
         env:
