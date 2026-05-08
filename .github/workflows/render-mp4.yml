@@ -19,10 +19,10 @@ on:
         description: 'ID do short (opcional)'
         default: ''
       video_html_url:
-        description: 'URL do HTML cinematografico (do video-generator). Se vazio, fallback SVG estatico 30fps'
+        description: 'URL do HTML cinematografico (do video-generator). Vazio = fallback SVG 30fps'
         default: ''
       music_url:
-        description: 'URL da musica de fundo (opcional, mixada -18dB)'
+        description: 'URL musica de fundo (opcional, mixada -16dB)'
         default: ''
 
 jobs:
@@ -30,30 +30,30 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      - name: Setup
+      - name: Setup deps
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq ffmpeg python3-pil inkscape
-          node --version
+
+      - name: Setup Playwright (only if HTML URL given)
+        if: inputs.video_html_url != ''
+        run: |
           npm init -y >/dev/null
           npm install playwright@1.47.0 --silent
-          npx playwright install chromium --with-deps 2>&1 | tail -5
+          npx playwright install chromium --with-deps 2>&1 | tail -3
 
       - name: Download audio
         run: |
           wget -q -O audio.mp3 "${{ inputs.audio_url }}"
           ls -lh audio.mp3
-          ffprobe -v quiet -show_streams audio.mp3 | head -20
 
       - name: Download music (opcional)
         env:
           MUSIC_URL: ${{ inputs.music_url }}
         run: |
-          if [ -n "$MUSIC_URL" ] && [ "$MUSIC_URL" != "" ] && [[ "$MUSIC_URL" != placeholder* ]]; then
-            wget -q -O music.mp3 "$MUSIC_URL" || echo "music download failed, continuing without music"
+          if [ -n "$MUSIC_URL" ] && [[ "$MUSIC_URL" != placeholder* ]]; then
+            wget -q -O music.mp3 "$MUSIC_URL" --timeout=10 || rm -f music.mp3
             [ -f music.mp3 ] && ls -lh music.mp3
-          else
-            echo "No music URL provided"
           fi
 
       - name: Get audio duration
@@ -62,105 +62,98 @@ jobs:
           DURATION=$(ffprobe -v quiet -show_entries format=duration -of csv=p=0 audio.mp3 | head -1)
           DURATION_INT=$(printf "%.0f" "$DURATION")
           echo "duration=$DURATION_INT" >> $GITHUB_OUTPUT
-          echo "duration_real=$DURATION" >> $GITHUB_OUTPUT
-          echo "Duracao audio: $DURATION s ($DURATION_INT s arredondado)"
+          echo "Duracao audio: $DURATION s"
 
-      - name: Record cinematic HTML via Playwright OR fallback SVG
+      - name: Path A - Record HTML via Playwright (30fps)
+        if: inputs.video_html_url != ''
         env:
           VIDEO_HTML_URL: ${{ inputs.video_html_url }}
           STYLE: ${{ inputs.style }}
-          TITLE: ${{ inputs.title }}
           DUR: ${{ steps.duration.outputs.duration }}
         run: |
-          set +e
-          if [ -n "$VIDEO_HTML_URL" ] && [ "$VIDEO_HTML_URL" != "" ]; then
-            echo "=== Path A: Recording HTML via Playwright at 30fps ==="
-            cat > record.js <<'JSEOF'
-            const { chromium } = require('playwright');
-            (async () => {
-              const url = process.env.VIDEO_HTML_URL;
-              const dur = parseInt(process.env.DUR || '720');
-              const style = process.env.STYLE || 'documentary';
-              const isShort = style === 'shorts_vertical';
-              const W = isShort ? 1080 : 1920;
-              const H = isShort ? 1920 : 1080;
-              console.log(`Recording ${url} at ${W}x${H} for ${dur}s`);
-              const browser = await chromium.launch({
-                headless: true,
-                args: ['--disable-web-security', '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--autoplay-policy=no-user-gesture-required']
-              });
-              const context = await browser.newContext({
-                viewport: { width: W, height: H },
-                deviceScaleFactor: 1,
-                recordVideo: { dir: '.', size: { width: W, height: H } }
-              });
-              const page = await context.newPage();
-              page.on('console', msg => console.log('PAGE:', msg.text()));
-              page.on('pageerror', err => console.log('PAGE_ERROR:', err.message));
-              await page.goto(url, { waitUntil: 'load', timeout: 60000 });
-              await page.waitForTimeout(800);
-              const totalMs = (dur + 1) * 1000;
-              console.log(`Recording for ${totalMs}ms`);
-              await page.waitForTimeout(totalMs);
-              await page.close();
-              await context.close();
-              await browser.close();
-              console.log('Recording done');
-            })().catch(e => { console.error(e); process.exit(1); });
-            JSEOF
-            timeout $((${DUR} + 60)) node record.js
-            RC=$?
-            echo "Playwright exit: $RC"
-            if [ $RC -eq 0 ]; then
-              ls -lh *.webm 2>/dev/null
-              WEBM=$(ls *.webm 2>/dev/null | head -1)
-              if [ -n "$WEBM" ]; then
-                mv "$WEBM" raw_video.webm
-                echo "raw_video.webm ready ($(stat -c%s raw_video.webm) bytes)"
-              fi
-            fi
-          fi
-          if [ ! -f raw_video.webm ]; then
-            echo "=== Path B: Fallback SVG estatico 30fps ==="
-            python3 - <<PYEOF
+          cat > record.js << 'JSEOF'
+          const { chromium } = require('playwright');
+          (async () => {
+            const url = process.env.VIDEO_HTML_URL;
+            const dur = parseInt(process.env.DUR || '720');
+            const style = process.env.STYLE || 'documentary';
+            const isShort = style === 'shorts_vertical';
+            const W = isShort ? 1080 : 1920;
+            const H = isShort ? 1920 : 1080;
+            console.log('Recording ' + url + ' at ' + W + 'x' + H + ' for ' + dur + 's');
+            const browser = await chromium.launch({
+              headless: true,
+              args: ['--disable-web-security','--no-sandbox','--disable-setuid-sandbox','--disable-dev-shm-usage','--autoplay-policy=no-user-gesture-required']
+            });
+            const context = await browser.newContext({
+              viewport: { width: W, height: H },
+              recordVideo: { dir: '.', size: { width: W, height: H } }
+            });
+            const page = await context.newPage();
+            page.on('pageerror', err => console.log('PAGE_ERROR:', err.message));
+            await page.goto(url, { waitUntil: 'load', timeout: 60000 });
+            await page.waitForTimeout(800);
+            await page.waitForTimeout((dur + 1) * 1000);
+            await page.close();
+            await context.close();
+            await browser.close();
+            console.log('Recording done');
+          })().catch(e => { console.error(e); process.exit(1); });
+          JSEOF
+          timeout $((DUR + 90)) node record.js
+          ls -lh *.webm 2>/dev/null
+          WEBM=$(ls *.webm 2>/dev/null | head -1)
+          [ -n "$WEBM" ] && mv "$WEBM" raw_video.webm
+          [ -f raw_video.webm ] && echo "raw_video.webm OK ($(stat -c%s raw_video.webm) bytes)"
+
+      - name: Path B - Generate static SVG fallback
+        if: inputs.video_html_url == ''
+        env:
+          STYLE: ${{ inputs.style }}
+          TITLE: ${{ inputs.title }}
+        run: |
+          python3 << 'PYEOF'
           import os
           style = os.environ.get('STYLE','documentary')
           title = os.environ.get('TITLE','Psicologia')
-          BG={'documentary':'#0a0a1a','cinematic_case':'#0d0d0d','shorts_vertical':'#000000','series_binge':'#0a0a1a'}
-          ACC={'documentary':'#9b59b6','cinematic_case':'#e74c3c','shorts_vertical':'#ff4757','series_binge':'#9b59b6'}
-          bg=BG.get(style,'#0a0a1a'); acc=ACC.get(style,'#9b59b6')
-          is_short = style=='shorts_vertical'
-          W,H = (1080,1920) if is_short else (1920,1080)
+          BG = {'documentary':'#0a0a1a','cinematic_case':'#0d0d0d','shorts_vertical':'#000000','series_binge':'#0a0a1a'}
+          ACC = {'documentary':'#9b59b6','cinematic_case':'#e74c3c','shorts_vertical':'#ff4757','series_binge':'#9b59b6'}
+          bg = BG.get(style,'#0a0a1a')
+          acc = ACC.get(style,'#9b59b6')
+          is_short = style == 'shorts_vertical'
+          W, H = (1080, 1920) if is_short else (1920, 1080)
           tc = title[:80].replace('&','&amp;').replace('<','&lt;').replace('>','&gt;')
-          fs = W//22 if len(title)>40 else W//16
-          svg = f"""<svg xmlns='http://www.w3.org/2000/svg' width='{W}' height='{H}'>
+          fs = W // 22 if len(title) > 40 else W // 16
+          svg = f'''<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}">
           <defs>
-              <radialGradient id='g' cx='50%' cy='40%' r='80%'>
-              <stop offset='0%' style='stop-color:{acc};stop-opacity:0.35'/>
-              <stop offset='60%' style='stop-color:{bg}'/>
-              <stop offset='100%' style='stop-color:#000'/>
-              </radialGradient>
-              <filter id='b'><feGaussianBlur stdDeviation='60'/></filter>
+            <radialGradient id="g" cx="50%" cy="40%" r="80%">
+              <stop offset="0%" style="stop-color:{acc};stop-opacity:0.35"/>
+              <stop offset="60%" style="stop-color:{bg}"/>
+              <stop offset="100%" style="stop-color:#000"/>
+            </radialGradient>
+            <filter id="b"><feGaussianBlur stdDeviation="60"/></filter>
           </defs>
-          <rect width='{W}' height='{H}' fill='url(#g)'/>
-          <circle cx='{W//2}' cy='{H//3}' r='{min(W,H)//3}' fill='{acc}' opacity='0.10' filter='url(#b)'/>
-          <circle cx='{W//4}' cy='{H*2//3}' r='{min(W,H)//4}' fill='{acc}' opacity='0.06' filter='url(#b)'/>
-          <text x='{W//2}' y='{H//8}' font-family='Georgia,serif' font-size='{W//55}' fill='{acc}' text-anchor='middle' letter-spacing='10' opacity='0.8' font-weight='300'>PSICOLOGIA.DOC</text>
-          <text x='{W//2}' y='{H//2}' font-family='Georgia,serif' font-size='{fs}' fill='white' text-anchor='middle' dominant-baseline='middle' font-weight='bold'>{tc}</text>
-          <rect x='{W//2-100}' y='{H//2 + fs//2 + 30}' width='200' height='6' fill='{acc}' rx='3'/>
-          <text x='{W//2}' y='{H*9//10}' font-family='Georgia,serif' font-size='{W//75}' fill='white' text-anchor='middle' opacity='0.5' letter-spacing='5'>psicologia.doc</text>
-          </svg>"""
+          <rect width="{W}" height="{H}" fill="url(#g)"/>
+          <circle cx="{W//2}" cy="{H//3}" r="{min(W,H)//3}" fill="{acc}" opacity="0.10" filter="url(#b)"/>
+          <circle cx="{W//4}" cy="{H*2//3}" r="{min(W,H)//4}" fill="{acc}" opacity="0.06" filter="url(#b)"/>
+          <text x="{W//2}" y="{H//8}" font-family="Georgia,serif" font-size="{W//55}" fill="{acc}" text-anchor="middle" letter-spacing="10" opacity="0.8" font-weight="300">PSICOLOGIA.DOC</text>
+          <text x="{W//2}" y="{H//2}" font-family="Georgia,serif" font-size="{fs}" fill="white" text-anchor="middle" dominant-baseline="middle" font-weight="bold">{tc}</text>
+          <rect x="{W//2-100}" y="{H//2 + fs//2 + 30}" width="200" height="6" fill="{acc}" rx="3"/>
+          <text x="{W//2}" y="{H*9//10}" font-family="Georgia,serif" font-size="{W//75}" fill="white" text-anchor="middle" opacity="0.5" letter-spacing="5">psicologia.doc</text>
+          </svg>'''
           open('background.svg','w').write(svg)
+          print(f'SVG {W}x{H} OK')
           PYEOF
-            IS_SHORT='false'; W=1920; H=1080
-            if [ "${{ inputs.style }}" = "shorts_vertical" ]; then IS_SHORT='true'; W=1080; H=1920; fi
-            inkscape --export-type=png --export-filename=background.png --export-width=$W --export-height=$H background.svg 2>/dev/null
-            if [ ! -f background.png ]; then
-              python3 -c "from PIL import Image; Image.new('RGB',($W,$H),'#0a0a1a').save('background.png')"
-            fi
-            ls -lh background.png
+          if [ "${{ inputs.style }}" = "shorts_vertical" ]; then
+            W=1080; H=1920
+          else
+            W=1920; H=1080
           fi
-          set -e
+          inkscape --export-type=png --export-filename=background.png --export-width=$W --export-height=$H background.svg 2>/dev/null
+          if [ ! -f background.png ]; then
+            python3 -c "from PIL import Image; Image.new('RGB',($W,$H),'#0a0a1a').save('background.png')"
+          fi
+          ls -lh background.png
 
       - name: Mix audio (narration + music) stereo 48kHz
         run: |
@@ -170,13 +163,12 @@ jobs:
               -filter_complex "[0:a]aresample=48000,volume=1.0[narr];[1:a]aresample=48000,volume=0.16,aloop=loop=-1:size=2e9[mus];[narr][mus]amix=inputs=2:duration=first:dropout_transition=2,loudnorm=I=-16:TP=-1.5:LRA=11" \
               -ar 48000 -ac 2 -c:a aac -b:a 192k mixed_audio.m4a
           else
-            echo "Narration only (stereo 48kHz)"
+            echo "Narration only stereo 48kHz"
             ffmpeg -y -i audio.mp3 \
               -af "aresample=48000,loudnorm=I=-16:TP=-1.5:LRA=11" \
               -ar 48000 -ac 2 -c:a aac -b:a 192k mixed_audio.m4a
           fi
           ls -lh mixed_audio.m4a
-          ffprobe -v quiet -show_streams mixed_audio.m4a | head -25
 
       - name: Render final MP4 1080p 30fps H.264 CRF 18
         run: |
@@ -187,7 +179,7 @@ jobs:
             VF="scale=1920:1080:flags=lanczos,setsar=1,fps=30"
           fi
           if [ -f raw_video.webm ]; then
-            echo "=== Encoding cinematic HTML capture (Playwright webm -> mp4) ==="
+            echo "Encoding cinematic HTML capture (Playwright webm)"
             ffmpeg -y -i raw_video.webm -i mixed_audio.m4a \
               -vf "$VF" \
               -c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p -profile:v high -level 4.1 \
@@ -196,7 +188,7 @@ jobs:
               -metadata artist="psicologia.doc" \
               output.mp4
           else
-            echo "=== Encoding fallback (PNG estatico 30fps) ==="
+            echo "Encoding fallback PNG estatico 30fps"
             ffmpeg -y -loop 1 -framerate 30 -i background.png -i mixed_audio.m4a \
               -vf "$VF" \
               -c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p -profile:v high -level 4.1 -tune stillimage \
@@ -219,13 +211,11 @@ jobs:
         run: |
           set -e
           if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_SERVICE_KEY" ]; then
-            echo "ERRO: secrets SUPABASE_URL / SUPABASE_SERVICE_KEY ausentes"
-            exit 1
+            echo "ERRO: secrets ausentes"; exit 1
           fi
           SAFE_TITLE=$(echo "$TITLE" | tr ' ' '_' | tr -cd '[:alnum:]_' | head -c 30)
           TS=$(date +%s)
           FILENAME="${TS}_${SAFE_TITLE}_v8.mp4"
-          echo "Upload: $FILENAME"
           UP_HTTP=$(curl -s -o /tmp/up.json -w "%{http_code}" \
             -X POST "$SUPABASE_URL/storage/v1/object/videos/$FILENAME" \
             -H "Authorization: Bearer $SUPABASE_SERVICE_KEY" \
@@ -234,19 +224,18 @@ jobs:
             -H "x-upsert: true" \
             --data-binary @output.mp4)
           echo "Upload HTTP: $UP_HTTP"
-          cat /tmp/up.json; echo
           if [ "$UP_HTTP" != "200" ] && [ "$UP_HTTP" != "201" ] && [ "$UP_HTTP" != "409" ]; then
-            echo "FALHA upload"; exit 1
+            cat /tmp/up.json; exit 1
           fi
           MP4_URL="$SUPABASE_URL/storage/v1/object/public/videos/$FILENAME"
           echo "MP4_URL=$MP4_URL"
           FILE_SIZE=$(stat -c%s output.mp4)
           DURATION=$(ffprobe -v quiet -show_entries format=duration -of csv=p=0 output.mp4)
-          cat > /tmp/patch.json <<JSON_EOF
+          cat > /tmp/patch.json << JSON_EOF
           {"mp4_url":"$MP4_URL","status":"mp4_ready","video_style":"$STYLE","metadata":{"render_version":"v8_cinematic","fps":30,"resolution":"1080p","audio":"stereo_48k_192kbps","encoder":"libx264_crf18_slow","file_size":$FILE_SIZE,"duration_seconds":$DURATION}}
           JSON_EOF
           cat /tmp/patch.json
-          if [ -n "$PIPELINE_ID" ]; then
+          if [ -n "$PIPELINE_ID" ] && [ "$PIPELINE_ID" != "999999" ]; then
             P_HTTP=$(curl -s -o /tmp/p.json -w "%{http_code}" \
               -X PATCH "$SUPABASE_URL/rest/v1/content_pipeline?id=eq.$PIPELINE_ID" \
               -H "Authorization: Bearer $SUPABASE_SERVICE_KEY" \
@@ -254,16 +243,14 @@ jobs:
               -H "Content-Type: application/json" \
               -H "Prefer: return=minimal" \
               --data @/tmp/patch.json)
-            echo "Pipeline $PIPELINE_ID: $P_HTTP"
+            echo "Pipeline patch: $P_HTTP"
           fi
           if [ -n "$SHORT_ID" ]; then
-            S_HTTP=$(curl -s -o /tmp/s.json -w "%{http_code}" \
-              -X PATCH "$SUPABASE_URL/rest/v1/shorts_pipeline?id=eq.$SHORT_ID" \
+            curl -s -X PATCH "$SUPABASE_URL/rest/v1/shorts_pipeline?id=eq.$SHORT_ID" \
               -H "Authorization: Bearer $SUPABASE_SERVICE_KEY" \
               -H "apikey: $SUPABASE_SERVICE_KEY" \
               -H "Content-Type: application/json" \
               -H "Prefer: return=minimal" \
-              --data @/tmp/patch.json)
-            echo "Short $SHORT_ID: $S_HTTP"
+              --data @/tmp/patch.json
           fi
           echo "Done v8."
