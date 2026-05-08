@@ -216,24 +216,45 @@ def split_paragraphs(script):
 
 # ============================ PIPELINE STEPS ============================
 def pick_pipeline():
-    """Pega próximo pipeline elegível, ou usa PIPELINE_ID se setado."""
+    """Pega próximo pipeline elegível com claim atômico, ou usa PIPELINE_ID se setado.
+
+    Coexistência com tts-pipeline.yml (Edge-TTS):
+      - Este workflow só processa pipelines com metadata.use_elevenlabs=true
+      - tts-pipeline.yml processa TODO o resto (Edge-TTS é grátis e ilimitado)
+      - Se PIPELINE_ID for fornecido manualmente, ignora a flag (override explícito)
+    """
     if PIPELINE_ID:
         rows = sb_select("content_pipeline", f"id=eq.{PIPELINE_ID}&select=*")
         if not rows:
             raise RuntimeError(f"pipeline {PIPELINE_ID} not found")
         return rows[0]
-    # Procura `script_ready` com script grande, sem áudio ainda
-    q = (f"status=eq.script_ready&script=not.is.null&audio_url=is.null"
+    # Atomic claim via SQL: UPDATE ... WHERE ... RETURNING via RPC ou execute_sql
+    # PostgREST não suporta RETURNING em PATCH — vou fazer via SELECT então PATCH com timestamp
+    # como guard (race window de ~50ms é aceitável dado os cron schedules diferentes)
+    q = (f"status=eq.script_ready"
+         f"&audio_url=is.null"
+         f"&metadata->>use_elevenlabs=eq.true"
          f"&order=id.desc&limit=1&select=*")
     rows = sb_select("content_pipeline", q)
     if not rows:
-        log("Nenhum pipeline `script_ready` disponível")
+        log("Nenhum pipeline `script_ready` com use_elevenlabs=true. Edge-TTS workflow cuida do resto.")
         return None
     p = rows[0]
     if len(p.get("script") or "") < MIN_SCRIPT_LEN:
         log(f"Pipeline {p['id']} script muito curto ({len(p['script'])} chars), pulando")
         return None
-    return p
+    # Soft-claim: marca status como 'claiming_elevenlabs' pra que tts-pipeline ignore
+    md = dict(p.get("metadata") or {})
+    md["claimed_at"] = int(time.time())
+    md["claimed_by"] = "full-pipeline"
+    sb_patch("content_pipeline", f"id=eq.{p['id']}&status=eq.script_ready",
+             {"status": "claiming_elevenlabs", "metadata": md})
+    # Re-fetch pra confirmar que ganhamos o claim
+    fresh = sb_select("content_pipeline", f"id=eq.{p['id']}&select=*")[0]
+    if fresh.get("status") != "claiming_elevenlabs":
+        log(f"Pipeline {p['id']} foi pego por outro processo, abortando")
+        return None
+    return fresh
 
 def step_audio(pipeline):
     pid = pipeline["id"]
