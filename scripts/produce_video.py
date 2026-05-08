@@ -197,9 +197,9 @@ def condense_for_short(script, target_platform, char_min=680, char_max=760):
     """
     if target_platform not in ("instagram_reels", "tiktok_short", "youtube_shorts", "pinterest_pin"):
         return script  # long-form, sem condensacao
-    if len(script) <= target_chars:
+    if len(script) <= char_max:
         return script
-    log(f"  CONDENSE: target={target_platform} chars={len(script)}->{target_chars} via Groq")
+    log(f"  CONDENSE: target={target_platform} chars={len(script)}->{char_min}-{char_max} via Groq")
     char_target = (char_min + char_max) // 2
     sys_prompt = f"""You are a viral PT-BR Shorts copywriter for psychology content.
 Take the long-form script and CONDENSE it into a vertical short between {char_min} and {char_max} characters (target ~{char_target}).
