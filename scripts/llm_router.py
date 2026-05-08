@@ -13,9 +13,22 @@ import os, json, time, urllib.request, urllib.error
 
 
 class LLMRouter:
+    # Free LLM fallback chain 2026.
+    # Order: fastest+most-reliable first, paid fallback last.
+    # Engines with missing env vars are silently skipped (router tries the next one).
+    # When NVIDIA_API_KEY is set, 4 different Nvidia Build models are tried automatically
+    # if the previous one is rate-limited or down (V4Pro -> Qwen3 -> Llama -> Minimax).
     ENGINES = [
-        ("groq",                 "GROQ_API_KEY",     "https://api.groq.com/openai/v1",         "llama-3.3-70b-versatile"),
+        # 1. Groq Cloud - PRIMARY (free 14.4k req/dia, ~250ms latency)
+        ("groq_llama_3_3_70b",   "GROQ_API_KEY",     "https://api.groq.com/openai/v1",         "llama-3.3-70b-versatile"),
+        # 2. DeepSeek direto (creditos iniciais gratis, depois ~$0.14/1M tokens)
+        ("deepseek_direct",      "DEEPSEEK_API_KEY", "https://api.deepseek.com/v1",            "deepseek-chat"),
+        # 3-6. Nvidia Build - FREE ILIMITADO 2026 (multiple models, same NVIDIA_API_KEY)
         ("nvidia_deepseek_v4",   "NVIDIA_API_KEY",   "https://integrate.api.nvidia.com/v1",    "deepseek-ai/deepseek-v3.1"),
+        ("nvidia_qwen3_235b",    "NVIDIA_API_KEY",   "https://integrate.api.nvidia.com/v1",    "qwen/qwen3-235b-a22b"),
+        ("nvidia_llama_3_3_70b", "NVIDIA_API_KEY",   "https://integrate.api.nvidia.com/v1",    "meta/llama-3.3-70b-instruct"),
+        ("nvidia_minimax_m2",    "NVIDIA_API_KEY",   "https://integrate.api.nvidia.com/v1",    "minimax/minimax-m2"),
+        # 7. OpenAI - paid last resort
         ("openai_mini",          "OPENAI_API_KEY",   "https://api.openai.com/v1",              "gpt-4o-mini"),
     ]
 
