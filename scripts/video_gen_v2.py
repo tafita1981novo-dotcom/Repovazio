@@ -184,13 +184,35 @@ EMOTION_VOICE = {
 }
 
 def gen_audio_edge_tts(text, emotion, output_path):
-    import edge_tts
+    """Generate audio with retry + gTTS fallback for resilience."""
     voice, rate, pitch = EMOTION_VOICE.get(emotion, EMOTION_VOICE['calmo'])
-    async def _gen():
-        comm = edge_tts.Communicate(text, voice, rate=rate, pitch=pitch)
-        await comm.save(output_path)
-    asyncio.run(_gen())
-    # Get actual duration
+    last_err = None
+    # Try Edge TTS up to 3 times
+    for attempt in range(3):
+        try:
+            import edge_tts
+            async def _gen():
+                comm = edge_tts.Communicate(text, voice, rate=rate, pitch=pitch)
+                await comm.save(output_path)
+            asyncio.run(_gen())
+            # Verify file was created
+            if os.path.exists(output_path) and os.path.getsize(output_path) > 100:
+                break
+            raise RuntimeError("edge_tts produced empty file")
+        except Exception as e:
+            last_err = e
+            print(f"  [tts] edge-tts attempt {attempt+1} failed: {type(e).__name__}: {str(e)[:100]}")
+            time.sleep(2)
+    else:
+        # All Edge TTS attempts failed - use gTTS fallback
+        print(f"  [tts] falling back to gTTS")
+        try:
+            from gtts import gTTS
+            tts = gTTS(text=text, lang='pt', tld='com.br', slow=False)
+            tts.save(output_path)
+        except Exception as e:
+            raise RuntimeError(f"All TTS engines failed. Edge: {last_err}. gTTS: {e}")
+    # Get actual duration via ffprobe
     r = subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'format=duration',
                         '-of', 'default=noprint_wrappers=1:nokey=1', output_path],
                        capture_output=True, text=True)
