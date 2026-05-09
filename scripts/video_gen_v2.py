@@ -117,16 +117,24 @@ def call_llm_with_fallback(messages, response_format=None):
 def segment_scenes(script, target_platform, total_duration_s):
     is_short = any(s in target_platform.lower() for s in ['short', 'reel', 'tiktok', 'pin'])
     aspect = '9:16' if is_short else '16:9'
-    avg_scene_dur = 4 if is_short else 5
-    n_scenes_target = max(6, int(total_duration_s / avg_scene_dur))
+    
+    # Base scene count on SCRIPT SIZE, not arbitrary duration target
+    # Target ~12-18 chars/sec narration speed; ~4-6 sec per scene
+    estimated_dur_s = len(script) / 14.5  # PT-BR speech rate
+    target_scene_dur = 5 if is_short else 6
+    n_scenes_ideal = max(4, int(estimated_dur_s / target_scene_dur))
+    # Hard caps to keep render time + cost reasonable
+    max_scenes = 15 if is_short else 30
+    n_scenes_target = min(n_scenes_ideal, max_scenes)
+    
+    print(f"  [seg] script={len(script)}c -> est {estimated_dur_s:.0f}s -> {n_scenes_target} scenes (cap {max_scenes})")
     
     prompt = f"""Voce eh diretor visual do canal Psych2Go (9 milhoes de inscritos). Vai segmentar este roteiro de psicologia em cenas visuais para um video {aspect}.
 
 ROTEIRO COMPLETO:
 {script}
 
-DURACAO TOTAL: {total_duration_s} segundos
-NUMERO DE CENAS ALVO: {n_scenes_target}
+NUMERO DE CENAS: EXATAMENTE {n_scenes_target} CENAS. NEM MAIS, NEM MENOS.
 PLATAFORMA: {target_platform}
 
 REGRAS CRITICAS PARA O ESTILO PSYCH2GO:
@@ -135,7 +143,8 @@ REGRAS CRITICAS PARA O ESTILO PSYCH2GO:
 3. Fundos: minimalistas, cores pastel suaves (rosa pessego, azul ceu, verde menta, lavanda)
 4. Expressoes faciais devem CASAR com a emocao da narracao naquele trecho
 5. Variar enquadramento entre: close de rosto, plano medio, silhueta, mao em close-up, perfil
-6. Cada cena dura entre 3 e 6 segundos
+6. Cada cena DEVE conter 2-4 frases inteiras (NAO 1 palavra solta). Distribua o roteiro INTEIRO entre as {n_scenes_target} cenas.
+7. NAO crie cenas com menos de 30 caracteres de narracao
 
 Para CADA cena retorne:
 - "narration": fragmento curto do roteiro (literal, sem mudar palavras) que vai ser narrado naquela cena
@@ -165,18 +174,44 @@ NAO USE TEXTO NA IMAGEM. NAO MENCIONE PALAVRAS NO PROMPT. So personagens, expres
     return data['scenes'], data.get('background_music_mood', 'calmo_reflexivo')
 
 # -------------- Flux Schnell Nvidia: image generation --------------
-def gen_image_flux(prompt, output_path, width=768, height=1344, retries=3):
-    """9:16 portrait = 768x1344. 16:9 landscape = 1344x768."""
-    # Reforço anti-texto
+def _is_image_valid(path, min_brightness=15, max_brightness=245):
+    """Reject black, white, or single-color images that Flux sometimes returns."""
+    try:
+        # Use ffprobe to get average frame brightness via signalstats
+        r = subprocess.run([
+            'ffmpeg', '-i', str(path), '-vf',
+            'signalstats,metadata=print:key=lavfi.signalstats.YAVG',
+            '-f', 'null', '-'
+        ], capture_output=True, text=True, timeout=10)
+        # Parse YAVG from stderr
+        import re
+        m = re.search(r'YAVG=([\d.]+)', r.stderr)
+        if m:
+            yavg = float(m.group(1))
+            if yavg < min_brightness:
+                print(f"  [flux validate] ✗ image too DARK (yavg={yavg:.0f} < {min_brightness}): {path}")
+                return False
+            if yavg > max_brightness:
+                print(f"  [flux validate] ✗ image too BRIGHT (yavg={yavg:.0f} > {max_brightness}): {path}")
+                return False
+            return True
+    except Exception as e:
+        print(f"  [flux validate] could not analyze {path}: {e}")
+    # If validation fails for any reason, accept the image (don't block render)
+    return True
+
+def gen_image_flux(prompt, output_path, width=768, height=1344, retries=4):
+    """9:16 portrait = 768x1344. 16:9 landscape = 1344x768.
+    Validates image isn't black/empty; retries with new seed if so."""
     safe_prompt = (prompt + ", clean illustration, no text, no words, no letters, no signs, no captions, no typography, no writing")[:1000]
-    payload = {
-        'prompt': safe_prompt,
-        'cfg_scale': 0,
-        'width': width, 'height': height,
-        'seed': random.randint(0, 1000000),
-        'steps': 4, 'mode': 'base'
-    }
     for attempt in range(retries):
+        payload = {
+            'prompt': safe_prompt,
+            'cfg_scale': 0,
+            'width': width, 'height': height,
+            'seed': random.randint(1, 1000000),
+            'steps': 4, 'mode': 'base'
+        }
         try:
             r = requests.post('https://ai.api.nvidia.com/v1/genai/black-forest-labs/flux.1-schnell',
                 headers={'Authorization': f'Bearer {NVIDIA_KEY}', 'Accept': 'application/json'},
@@ -186,11 +221,16 @@ def gen_image_flux(prompt, output_path, width=768, height=1344, retries=3):
                 if 'artifacts' in d and d['artifacts']:
                     img_b64 = d['artifacts'][0]['base64']
                     Path(output_path).write_bytes(base64.b64decode(img_b64))
-                    return True
-            print(f"[flux retry {attempt+1}] {r.status_code}: {r.text[:200]}")
+                    # Validate not black/empty
+                    if _is_image_valid(output_path):
+                        return True
+                    print(f"  [flux retry {attempt+1}] image rejected by validator")
+                    time.sleep(1)
+                    continue
+            print(f"  [flux retry {attempt+1}] HTTP {r.status_code}: {r.text[:200]}")
             time.sleep(2)
         except Exception as e:
-            print(f"[flux err] {e}")
+            print(f"  [flux err {attempt+1}] {type(e).__name__}: {e}")
             time.sleep(2)
     return False
 
