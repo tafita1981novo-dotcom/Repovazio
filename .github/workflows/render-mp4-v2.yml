@@ -31,7 +31,7 @@ jobs:
         run: sudo apt-get update -qq && sudo apt-get install -y ffmpeg && ffmpeg -version | head -1
 
       - name: Install Python deps
-        run: pip install --quiet edge-tts>=7.2.0 gtts>=2.5.0 requests==2.31.0
+        run: pip install --quiet edge-tts==7.2.8 gTTS==2.5.4 requests==2.31.0
 
       - name: Resolve pipeline IDs
         id: pids
@@ -76,12 +76,26 @@ jobs:
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: |
           IFS=',' read -ra PIDS <<< "${{ steps.pids.outputs.pids }}"
+          FAILED=0
+          TOTAL=0
           for pid in "${PIDS[@]}"; do
             if [ -n "$pid" ]; then
+              TOTAL=$((TOTAL+1))
               echo ""
               echo "============================================"
-              echo "🎬 Rendering pipeline #$pid (V2 Psych2Go)"
+              echo "🎬 Pipeline #$pid (V2 Psych2Go) - $TOTAL of ${#PIDS[@]}"
               echo "============================================"
-              python3 scripts/video_gen_v2.py "$pid" || echo "❌ Pipeline #$pid failed (continuing)"
+              if ! python3 scripts/video_gen_v2.py "$pid"; then
+                echo "❌ Pipeline #$pid FAILED"
+                FAILED=$((FAILED+1))
+              fi
             fi
           done
+          echo ""
+          echo "============================================"
+          echo "Summary: $((TOTAL-FAILED))/$TOTAL succeeded, $FAILED failed"
+          echo "============================================"
+          # Fail the workflow only if ALL pipelines failed (so we can see partial wins in batch mode)
+          if [ "$FAILED" -gt 0 ] && [ "$FAILED" -eq "$TOTAL" ]; then
+            exit 1
+          fi
