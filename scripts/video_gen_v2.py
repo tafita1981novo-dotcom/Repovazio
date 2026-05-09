@@ -54,10 +54,9 @@ OPENAI_KEY = os.environ.get('OPENAI_API_KEY', '')
 
 LLM_CHAIN = [
     # (provider, model, endpoint, key, timeout_s, max_tokens)
-    ('groq',   'llama-3.3-70b-versatile',     'https://api.groq.com/openai/v1/chat/completions',     GROQ_KEY,   60,  6000),
-    ('groq',   'llama-3.1-8b-instant',        'https://api.groq.com/openai/v1/chat/completions',     GROQ_KEY,   60,  6000),
-    ('nvidia', 'meta/llama-3.3-70b-instruct', 'https://integrate.api.nvidia.com/v1/chat/completions', NVIDIA_KEY, 120, 6000),
-    ('openai', 'gpt-4o-mini',                  'https://api.openai.com/v1/chat/completions',          OPENAI_KEY, 90,  6000),
+    ('groq',   'llama-3.3-70b-versatile',     'https://api.groq.com/openai/v1/chat/completions',     GROQ_KEY,   90,  12000),
+    ('openai', 'gpt-4o-mini',                  'https://api.openai.com/v1/chat/completions',          OPENAI_KEY, 120, 12000),
+    ('nvidia', 'meta/llama-3.3-70b-instruct', 'https://integrate.api.nvidia.com/v1/chat/completions', NVIDIA_KEY, 120, 8000),
 ]
 
 def call_llm_with_fallback(messages, response_format=None):
@@ -66,7 +65,7 @@ def call_llm_with_fallback(messages, response_format=None):
         if not key:
             print(f"  [llm] skip {provider}/{model} (no key)")
             continue
-        for attempt in range(2):
+        for attempt in range(3):
             try:
                 payload = {
                     'model': model,
@@ -76,19 +75,43 @@ def call_llm_with_fallback(messages, response_format=None):
                 }
                 if response_format:
                     payload['response_format'] = response_format
-                print(f"  [llm] try {provider}/{model} (timeout={timeout}s, attempt {attempt+1})")
+                print(f"  [llm] try {provider}/{model} (timeout={timeout}s, attempt {attempt+1}, max_tok={max_tok})")
                 t0 = time.time()
                 r = requests.post(endpoint,
                     headers={'Authorization': f'Bearer {key}', 'Content-Type': 'application/json'},
                     json=payload, timeout=timeout)
+                # Handle rate limit with exponential backoff
+                if r.status_code == 429:
+                    backoff = 5 * (2 ** attempt)  # 5, 10, 20s
+                    print(f"  [llm] 429 rate limit on {provider}, sleeping {backoff}s")
+                    time.sleep(backoff)
+                    last_err = RuntimeError(f"429 rate limit on {provider}")
+                    continue
+                # Handle payload too large by skipping this model
+                if r.status_code == 413:
+                    print(f"  [llm] 413 payload too large for {provider}/{model}, skipping to next provider")
+                    last_err = RuntimeError(f"413 payload too large for {model}")
+                    break  # next provider
                 r.raise_for_status()
                 content = r.json()['choices'][0]['message']['content']
                 print(f"  [llm] ✓ {provider}/{model} returned {len(content)} chars in {time.time()-t0:.1f}s")
+                # Validate JSON parses if response_format requested
+                if response_format and response_format.get('type') == 'json_object':
+                    try:
+                        json.loads(content)
+                    except json.JSONDecodeError as je:
+                        print(f"  [llm] ⚠ {provider}/{model} returned malformed JSON ({len(content)} chars, error at char {je.pos}), retrying")
+                        last_err = je
+                        continue
                 return content
+            except requests.exceptions.HTTPError as e:
+                last_err = e
+                print(f"  [llm] ✗ {provider}/{model} attempt {attempt+1}: HTTP {e.response.status_code}: {e.response.text[:120]}")
+                time.sleep(3)
             except Exception as e:
                 last_err = e
                 print(f"  [llm] ✗ {provider}/{model} attempt {attempt+1}: {type(e).__name__}: {str(e)[:120]}")
-                time.sleep(2)
+                time.sleep(3)
     raise RuntimeError(f"All LLM attempts failed. Last: {last_err}")
 
 def segment_scenes(script, target_platform, total_duration_s):
