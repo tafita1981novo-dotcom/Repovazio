@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>🧠 Análise Viral 95+ · psicologia.doc</title>
+<title>🧠 Análise Viral 95+ · Memória Eterna · psicologia.doc</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0a0a0a;--bgc:#161616;--bge:#1f1f1f;--bd:#2a2a2a;--tx:#e5e5e5;--tm:#9b9b9b;--td:#666;--ac:#6366f1;--g:linear-gradient(135deg,#6366f1,#8b5cf6,#ec4899);--good:#22c55e;--mid:#eab308;--bad:#ef4444;--neon:#22d3ee}
+:root{--bg:#0a0a0a;--bgc:#161616;--bge:#1f1f1f;--bd:#2a2a2a;--tx:#e5e5e5;--tm:#9b9b9b;--td:#666;--ac:#6366f1;--g:linear-gradient(135deg,#6366f1,#8b5cf6,#ec4899);--good:#22c55e;--mid:#eab308;--bad:#ef4444;--neon:#22d3ee;--gold:#fbbf24;--lab:#a78bfa}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{background:var(--bg);color:var(--tx);font-family:'Inter',-apple-system,system-ui,sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased}
 body::before{content:'';position:fixed;inset:0;background:radial-gradient(circle at 20% 0%,rgba(99,102,241,.08),transparent 50%),radial-gradient(circle at 80% 100%,rgba(236,72,153,.06),transparent 50%);pointer-events:none;z-index:0}
@@ -20,14 +20,25 @@ h1{font-size:clamp(28px,5vw,46px);font-weight:800;line-height:1.1;background:var
 .sub b{color:var(--tx)}
 .sub code{background:var(--bge);padding:1px 7px;border-radius:5px;font-family:ui-monospace,monospace;font-size:13px;color:var(--neon)}
 
-.brain-banner{background:linear-gradient(135deg,rgba(34,211,238,.08),rgba(99,102,241,.08));border:1px solid rgba(34,211,238,.25);border-radius:14px;padding:20px;margin:24px 0;display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:center}
-.brain-banner .icon{font-size:42px}
-.brain-banner h2{font-size:16px;font-weight:800;margin-bottom:4px;color:var(--neon)}
-.brain-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-top:8px}
-.bs{background:rgba(0,0,0,.3);border-radius:8px;padding:8px 10px}
-.bs-label{font-size:10px;color:var(--tm);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
-.bs-val{font-size:18px;font-weight:800;color:var(--tx);font-variant-numeric:tabular-nums;margin-top:2px}
-.bs-val small{font-size:11px;color:var(--tm);font-weight:500}
+.eternal-banner{background:linear-gradient(135deg,rgba(167,139,250,.10),rgba(34,211,238,.06),rgba(251,191,36,.08));border:1px solid rgba(167,139,250,.3);border-radius:14px;padding:20px;margin:24px 0;display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:center;position:relative;overflow:hidden}
+.eternal-banner::before{content:'';position:absolute;top:-50%;right:-10%;width:300px;height:300px;background:radial-gradient(circle,rgba(167,139,250,.15),transparent 70%);pointer-events:none}
+.eternal-banner .icon{font-size:46px;position:relative;z-index:1}
+.eternal-banner h2{font-size:16px;font-weight:800;margin-bottom:4px;background:linear-gradient(135deg,var(--lab),var(--neon),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent;position:relative;z-index:1}
+.eternal-banner .pulse{display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,.15);color:var(--good);padding:2px 10px;border-radius:100px;font-size:11px;font-weight:700;margin-left:8px;border:1px solid rgba(34,197,94,.3)}
+.eternal-banner .pulse::before{content:'';width:6px;height:6px;background:var(--good);border-radius:50%;animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.2)}}
+.brain-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-top:10px;position:relative;z-index:1}
+.bs{background:rgba(0,0,0,.3);border-radius:8px;padding:8px 10px;border:1px solid rgba(167,139,250,.15)}
+.bs-label{font-size:9px;color:var(--tm);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+.bs-val{font-size:17px;font-weight:800;color:var(--tx);font-variant-numeric:tabular-nums;margin-top:2px;line-height:1}
+.bs-val small{font-size:10px;color:var(--tm);font-weight:500}
+.bs.gold .bs-val{color:var(--gold)}
+.bs.neon .bs-val{color:var(--neon)}
+.bs.lab .bs-val{color:var(--lab)}
+
+.cron-strip{margin-top:14px;padding:10px 12px;background:rgba(0,0,0,.3);border-radius:8px;border:1px dashed rgba(34,197,94,.3);font-size:12px;color:var(--tm);position:relative;z-index:1}
+.cron-strip b{color:var(--good)}
+.cron-strip code{background:rgba(0,0,0,.4);padding:1px 5px;border-radius:4px;font-size:11px;color:var(--neon);font-family:ui-monospace,monospace}
 
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:0 0 24px}
 .stat{background:var(--bgc);border:1px solid var(--bd);border-radius:12px;padding:16px 18px}
@@ -45,7 +56,11 @@ h1{font-size:clamp(28px,5vw,46px);font-weight:800;line-height:1.1;background:var
 
 .card{background:var(--bgc);border:1px solid var(--bd);border-radius:16px;overflow:hidden;transition:border-color .2s;position:relative}
 .card:hover{border-color:#3a3a3a}
-.card.has-iter::before{content:'⚡ ITERADO';position:absolute;top:12px;right:12px;background:var(--neon);color:#000;font-size:10px;font-weight:800;padding:3px 8px;border-radius:100px;z-index:5;letter-spacing:.05em}
+.card-flags{position:absolute;top:12px;right:12px;display:flex;flex-direction:column;gap:4px;z-index:5;align-items:flex-end}
+.flag{font-size:10px;font-weight:800;padding:3px 8px;border-radius:100px;letter-spacing:.05em}
+.flag.iter{background:var(--neon);color:#000}
+.flag.sci{background:var(--lab);color:#fff}
+.flag.voice{background:var(--gold);color:#000}
 .player{background:#000;aspect-ratio:9/16;position:relative;overflow:hidden}
 .player.long{aspect-ratio:16/9}
 .player video{width:100%;height:100%;object-fit:cover;display:block}
@@ -60,6 +75,23 @@ h1{font-size:clamp(28px,5vw,46px);font-weight:800;line-height:1.1;background:var
 h2.t{font-size:18px;font-weight:700;padding:8px 18px 0;line-height:1.3}
 .verdict{padding:16px 18px;margin:14px 18px;background:linear-gradient(135deg,rgba(99,102,241,.08),rgba(139,92,246,.04));border-left:3px solid var(--ac);border-radius:8px;font-size:14px;line-height:1.55;color:#d5d5d5}
 
+.science-card{margin:14px 18px;padding:16px;background:linear-gradient(135deg,rgba(167,139,250,.08),rgba(99,102,241,.04));border-left:3px solid var(--lab);border-radius:8px}
+.science-card .label{font-size:10px;color:var(--lab);font-weight:800;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.science-card .auth{margin-left:auto;background:rgba(167,139,250,.2);color:var(--lab);padding:2px 8px;border-radius:100px;font-size:10px}
+.science-card .citation{font-size:13px;font-weight:700;color:#e5e5e5;margin-bottom:6px}
+.science-card .finding{font-size:12px;line-height:1.55;color:#b0b0b0;font-style:italic}
+.science-card .meta-line{display:flex;gap:10px;margin-top:8px;font-size:11px;color:var(--tm);font-variant-numeric:tabular-nums}
+.science-card .meta-line b{color:var(--lab)}
+
+.voice-plan{margin:14px 18px;padding:16px;background:linear-gradient(135deg,rgba(251,191,36,.06),rgba(34,211,238,.04));border-left:3px solid var(--gold);border-radius:8px}
+.voice-plan .label{font-size:10px;color:var(--gold);font-weight:800;text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.voice-plan .scores{display:flex;gap:12px;margin-bottom:10px}
+.vps{background:rgba(0,0,0,.3);padding:6px 10px;border-radius:6px;font-size:11px;color:var(--tm)}
+.vps b{color:var(--gold);font-size:14px;font-weight:800}
+.voice-segs{display:flex;flex-wrap:wrap;gap:4px}
+.vseg{padding:3px 8px;border-radius:100px;font-size:10px;font-weight:600;background:rgba(251,191,36,.12);color:var(--gold);border:1px solid rgba(251,191,36,.25);cursor:help}
+.vseg.intense{background:rgba(236,72,153,.12);color:#ec4899;border-color:rgba(236,72,153,.25)}
+
 .scores{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:14px 18px}
 .sc{text-align:center;background:var(--bge);border:1px solid var(--bd);border-radius:10px;padding:12px 6px}
 .sc.feat{background:linear-gradient(135deg,rgba(99,102,241,.12),rgba(236,72,153,.06));border-color:rgba(99,102,241,.3)}
@@ -70,7 +102,7 @@ h2.t{font-size:18px;font-weight:700;padding:8px 18px 0;line-height:1.3}
 .iter-history{padding:14px 18px;background:rgba(34,211,238,.04);border-top:1px solid var(--bd);border-bottom:1px solid var(--bd);margin-top:8px}
 .iter-history .label{font-size:11px;color:var(--neon);font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px}
 .iter-chart{display:flex;align-items:flex-end;gap:4px;height:60px;margin-bottom:8px}
-.iter-bar{flex:1;background:linear-gradient(180deg,var(--neon),var(--ac));border-radius:4px 4px 0 0;position:relative;display:flex;align-items:flex-start;justify-content:center;padding-top:4px;transition:all .2s}
+.iter-bar{flex:1;background:linear-gradient(180deg,var(--neon),var(--ac));border-radius:4px 4px 0 0;position:relative;display:flex;align-items:flex-start;justify-content:center;padding-top:4px;transition:all .2s;min-width:24px}
 .iter-bar.regress{background:linear-gradient(180deg,var(--bad),#7c2d2d)}
 .iter-bar.no-change{background:linear-gradient(180deg,var(--mid),#7c5e1d)}
 .iter-bar-label{font-size:10px;font-weight:800;color:#000;text-shadow:0 1px 0 rgba(255,255,255,.4)}
@@ -117,17 +149,32 @@ footer a:hover{color:var(--tx)}
 <body>
 <div class="container">
 <header>
-<div class="brand">🧠 psicologia.doc · Daniela Coelho · Sistema Autônomo 95+</div>
-<h1>Análise Viral · Cérebro Auto-Evolutivo</h1>
-<p class="sub">Pipeline autônomo que <b>itera roteiros até score 95+</b>, valida copyright/demonetização antes de publicar, aprende com cada iteração via DeepSeek V4 Pro. Comparado com canais top mundial em psicologia (38.78M subs · 4.87B views referência). Trigger manual: <code>gh workflow run quality-loop.yml -f pipeline_id=N</code></p>
+<div class="brand">🧠 psicologia.doc · Daniela Coelho · Sistema Autônomo Eterno</div>
+<h1>Memória Eterna · Ciência · Voz Emocional · Score 95+</h1>
+<p class="sub">Pipeline 100% gratuito que <b>itera roteiros até score 95+</b>, integra <b>pesquisa científica real</b> de revistas top mundial em cada vídeo, mapeia <b>voz emocional contextual</b> por segmento, valida copyright/demonetização, e <b>aprende a cada minuto via DeepSeek V4 Pro</b> — funcionando 24/7 mesmo com app fechado via <code>pg_cron</code>. Comparado com 38.78M subs de canais top mundial em psicologia.</p>
 </header>
 
-<div class="brain-banner">
-  <div class="icon">🧠</div>
-  <div>
-    <h2>CÉREBRO AUTO-EVOLUTIVO · ATIVO</h2>
-    <div style="color:var(--tm);font-size:13px">Aprende a cada iteração. Cresce para infinito. Aplica padrões dos virais top em cada novo vídeo.</div>
+<div class="eternal-banner">
+  <div class="icon">🧠♾️</div>
+  <div style="position:relative;z-index:1;width:100%">
+    <h2>MEMÓRIA ETERNA AUTO-EVOLUTIVA <span class="pulse">RODANDO 24/7</span></h2>
+    <div style="color:var(--tm);font-size:13px;line-height:1.5">Cérebro auto-otimizante: prioriza insights por uplift real, decai padrões falhos, gera meta-insights. <b style="color:var(--lab)">100% DeepSeek V4 Pro</b> · <b style="color:var(--neon)">Edge TTS grátis</b> · Nunca usa OpenAI mini. Nunca para.</div>
     <div class="brain-grid" id="brain-stats"></div>
+    <div class="cron-strip">
+      ⚡ <b>Rodando agora autonomamente:</b> 
+      <code>brain-optimize</code> a cada 1min · 
+      <code>auto-iterate</code> a cada 5min · 
+      <code>safety-recheck</code> a cada 10min · 
+      <code>render-trigger</code> de hora em hora · 
+      <code>videos-page-publisher</code> de hora em hora · 
+      <code>analytics-collector</code> a cada 5min · 
+      <code>brain-learn</code> a cada 30min · 
+      <code>cases-research</code> diário às 6h · 
+      <code>profile-optimizer</code> diário às 4h · 
+      <code>social-publisher</code> a cada 30min · 
+      <code>brain-tick</code> a cada 1min
+      <span style="color:var(--good)"> · Total: <b id="cron-count">11 jobs ativos</b></span>
+    </div>
   </div>
 </div>
 
@@ -141,28 +188,34 @@ footer a:hover{color:var(--tx)}
 
 <div class="grid" id="grid"></div>
 
-<footer><p>psicologia.doc autonomous pipeline · <a href="https://github.com/tafita81/Repovazio" target="_blank">GitHub</a> · <a href="/videos-prontos.html">Galeria</a> · <a href="javascript:location.reload()">Atualizar</a></p></footer>
+<footer><p>psicologia.doc autonomous pipeline · 100% grátis para sempre · DeepSeek V4 Pro + Edge TTS + pg_cron · <a href="https://github.com/tafita81/Repovazio" target="_blank">GitHub</a> · <a href="/videos-prontos.html">Galeria</a> · <a href="javascript:location.reload()">Atualizar</a></p></footer>
 </div>
 
 <script>
-const VIDEOS_DATA=[{"id": 78, "title": "Apego Ansioso: Medo do Abandono [youtube_shorts]", "status": "published", "mp4_url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778262304_Apego_Ansioso_Medo_do_Abandono_v8.mp4", "analysis": {"hook_score": 85, "hook_critique": "Excelente uso de uma pergunta direta e identificável ('Você checa o celular a cada 5 minutos...?'), seguida de uma refutação poderosa ('não é amor, é um alarme falso'). Isso gera identificação imediata e curiosidade, típico de um hook de alto desempenho.", "top_strengths": ["Metáfora do 'software desatualizado' extremamente didática e memorável.", "Técnica prática e acionável ('reset dos 3 sentidos') que empodera o espectador.", "Chamada para ação (CTA) de salvar o vídeo e comentar 'SIM' para engajamento profundo."], "hashtags_brasil": ["#apegoansioso", "#psicologia", "#autoconhecimento", "#ansiedade", "#relacionamento", "#saudemental", "#psicologo"], "tiktok_virality": {"score": 95, "fyp_potential": 95, "predicted_views_30d": "1.000.000 - 5.000.000"}, "emotional_impact": 88, "top_improvements": ["Incluir um exemplo visual rápido da técnica sendo aplicada (ex: olhar ao redor, tocar o braço).", "Adicionar uma legenda com os passos da técnica ('1. Veja 3 coisas...') para reforço cognitivo.", "O gancho final para procurar um psicólogo, embora importante, poderia ser ligeiramente mais suave para não quebrar o ritmo de empoderamento."], "educational_value": 82, "overall_verdict_pt": "Conteúdo de altíssimo potencial viral. A combinação de um gancho emocional fortíssimo, uma metáfora de fácil compreensão e uma técnica de aplicação imediata é a fórmula de ouro para retenção e compartilhamento. A estrutura é perfeita para Shorts e Reels, com um CTA que impulsiona o algoritmo. Ajustes visuais mínimos podem elevar ainda mais a taxa de conclusão.", "youtube_monetization": {"score": 90, "cpm_brl_estimated": "R$ 15,00 - R$ 30,00", "monetization_blockers": [], "audience_retention_predicted_pct": 85}, "instagram_reels_appeal": {"score": 93, "saveability": 95, "shareability": 90}, "pinterest_pin_potential": {"score": 75, "search_keywords": ["apego ansioso", "medo de abandono", "técnica de grounding", "ansiedade no relacionamento", "saúde mental"]}, "thumbnail_suggestion_pt": "Close no rosto da criadora com expressão de preocupação, sobreposto por um ícone de alarme de incêndio e o texto 'ALARME FALSO NO CÉREBRO?' em letras garrafais amarelas e vermelhas.", "youtube_shorts_virality": {"score": 92, "rewatchability": 90, "predicted_views_30d": "500.000 - 2.000.000"}, "best_in_world_psychology": 70, "optimal_posting_time_brt": "Segunda-feira, 20:00"}, "ban_risk": null, "duration": 23.4, "video_url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778262164254_apego_ansioso__medo_do_abandono__yo.html", "iterations": [{"iter": 1, "after": 65, "before": 30, "status": "improved", "hook_strategy": "Pattern Interrupt + Curiosity Gap: Abertura com estatística de choque ('95% das pessoas sentem isso') combinada com uma afirmação contraintuitiva ('acham que é amor, mas é um alarme falso') para interromper o padrão de scroll e gerar curiosidade imediata."}, {"iter": 2, "after": 60, "before": 65, "status": "regressed", "hook_strategy": "Pattern interrupt com afirmação contraintuitiva e urgência temporal ('Seu cérebro pode estar te sabotando em 2 segundos'), seguida de quebra de expectativa ('Não é amor, é um alarme falso') para criar um curiosity gap nos primeiros 2 segundos."}, {"iter": 3, "after": 70, "before": 60, "status": "improved", "hook_strategy": "Pattern interrupt com afirmação contraintuitiva e pergunta direta na 2ª pessoa: 'Aposto que você checa o celular a cada 5 minutos com medo de ser abandonado. Isso não é amor, é um alarme falso no seu cérebro.' Combina identificação imediata com um 'curiosity gap' emocional, quebrando o padrão de scroll e gerando a necessidade de assistir até o final para entender o 'alarme falso'."}, {"iter": 4, "after": 70, "before": 70, "status": "no_change", "hook_strategy": "Pattern interrupt com pergunta direta na 2ª pessoa ('Você checa...?') seguida de validação emocional ('Calma...'), criando identificação em menos de 2 segundos e quebrando o scroll com uma afirmação contraintuitiva ('não é amor, é um alarme falso')."}], "voice_name": "EdgeTTS_MultiVoice_Groq_Emotion_v1", "demonet_risk": null, "quality_score": 70, "safety_passed": false, "render_version": "v8_cinematic", "safety_blockers": 0, "safety_warnings": 0, "target_platform": "youtube_shorts", "quality_iter_count": 4}, {"id": 35, "title": "Apego Ansioso: O medo do abandono", "status": "published", "mp4_url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778300966_Apego_Ansioso_O_medo_do_abando_v8.mp4", "analysis": {"hook_score": 65, "hook_critique": "A introdução é informativa, mas pouco dinâmica para um Short. A pergunta 'Meu parceiro(a) me ama o suficiente?' é relevante, porém a entrega é muito didática ('vamos entender...') e carece de um gancho visual ou emocional imediato que prenda nos primeiros 2 segundos.", "top_strengths": ["Conteúdo educacional de altíssimo valor, estruturado e baseado na teoria de Bowlby.", "Excelente uso de exemplos práticos e metáforas (termostato) que facilitam a identificação do público.", "Tom acolhedor e não culpabilizante, que constrói confiança com o espectador."], "hashtags_brasil": ["#apegoansioso", "#psicologia", "#relacionamento", "#medodeabandono", "#autoconhecimento"], "tiktok_virality": {"score": 55, "fyp_potential": 45, "predicted_views_30d": "3.000 - 10.000"}, "emotional_impact": 78, "top_improvements": ["Transformar o gancho inicial em uma cena curta e impactante (ex: alguém checando o celular ansiosamente) em vez de uma fala didática.", "Condensar a explicação teórica para caber em 60s com ritmo mais rápido, usando textos na tela para reforçar os 5 sinais.", "Adicionar uma chamada para ação mais direta e emocional no final, como 'Comenta aqui se você se identificou' para engajar o algoritmo."], "educational_value": 92, "overall_verdict_pt": "Um conteúdo de altíssima qualidade educacional e profundidade teórica, mas que precisa ser adaptado para a linguagem dinâmica dos Shorts. O roteiro atual é mais adequado para um vídeo longo. Para viralizar, é crucial sacrificar parte da aula expositiva por um gancho visual/emocional fortíssimo nos primeiros segundos e um ritmo de edição muito mais acelerado.", "youtube_monetization": {"score": 95, "cpm_brl_estimated": "R$ 8,00 - R$ 15,00", "monetization_blockers": [], "audience_retention_predicted_pct": 55}, "instagram_reels_appeal": {"score": 68, "saveability": 75, "shareability": 70}, "pinterest_pin_potential": {"score": 80, "search_keywords": ["apego ansioso relacionamento", "medo de abandono psicologia", "sinais de dependência emocional", "como lidar com insegurança amorosa", "estilos de apego adulto"]}, "thumbnail_suggestion_pt": "Imagem dividida: de um lado, uma pessoa com expressão ansiosa olhando o celular; do outro, a psicóloga com uma expressão acolhedora. Texto central em destaque: 'MEDO DE ABANDONO? Entenda o Apego Ansioso'.", "youtube_shorts_virality": {"score": 60, "rewatchability": 50, "predicted_views_30d": "5.000 - 15.000"}, "best_in_world_psychology": 70, "optimal_posting_time_brt": "Segunda-feira, 19h30"}, "ban_risk": 5, "duration": 53.4, "video_url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778300807903_apego_ansioso__o_medo_do_abandono.html", "iterations": null, "voice_name": "EdgeTTS_MultiVoice_Groq_Emotion_v1", "demonet_risk": 15, "quality_score": null, "safety_passed": true, "render_version": "v8_cinematic", "safety_blockers": 0, "safety_warnings": 2, "target_platform": "youtube_shorts", "quality_iter_count": 0}, {"id": 77, "title": "Apego Ansioso: Medo do Abandono [youtube_long]", "status": "published", "mp4_url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778264721_Apego_Ansioso_Medo_do_Abandono_v8.mp4", "analysis": {"hook_score": 65, "hook_critique": "O gancho inicial é direto e faz uma pergunta relevante, mas falta um elemento mais impactante ou emocional para prender imediatamente a atenção em um vídeo longo. Poderia se beneficiar de uma estatística chocante ou uma breve história pessoal.", "top_strengths": ["Estrutura de documentário completa e bem organizada, cobrindo causas, sintomas e soluções.", "Uso de metáforas eficazes (ex: software malicioso) para explicar conceitos psicológicos complexos.", "Forte chamada para ação e oferta de recursos, criando um senso de comunidade e jornada para o espectador."], "hashtags_brasil": ["#ApegoAnsioso", "#Psicologia", "#SaúdeMental", "#Relacionamentos", "#MedoDoAbandono", "#Autoestima", "#DesenvolvimentoPessoal"], "tiktok_virality": {"score": 25, "fyp_potential": 35, "predicted_views_30d": "10.000 - 30.000"}, "emotional_impact": 70, "top_improvements": ["Aumentar o impacto emocional com histórias pessoais mais detalhadas e visuais (ex: encenações) em vez de apenas narração.", "Incluir mais dados de estudos e referências visuais na tela para aumentar a credibilidade e o valor educacional percebido.", "O ritmo pode ser mais dinâmico; cortar algumas repetições e acelerar o storytelling para manter a retenção em 14 minutos."], "educational_value": 85, "overall_verdict_pt": "Um documentário sólido e informativo que cumpre bem o papel educacional sobre o apego ansioso. É um conteúdo perene e de alto valor para um nicho engajado, mas carece de um elemento viral ou de produção cinematográfica para se destacar globalmente. A força está na estrutura e na mensagem de esperança, sendo ideal para construção de autoridade no YouTube.", "youtube_monetization": {"score": 90, "cpm_brl_estimated": "R$ 8,00 - R$ 18,00", "monetization_blockers": ["Nenhum bloqueador evidente. Conteúdo educacional e sensível, mas sem violações claras das diretrizes."], "audience_retention_predicted_pct": 55}, "instagram_reels_appeal": {"score": 30, "saveability": 60, "shareability": 40}, "pinterest_pin_potential": {"score": 75, "search_keywords": ["apego ansioso", "medo de abandono", "relacionamento saudável", "teoria do apego", "autoestima", "saúde mental"]}, "thumbnail_suggestion_pt": "Imagem dividida: de um lado, uma pessoa com expressão de angústia e correntes simbólicas no peito; do outro, a mesma pessoa sorrindo e livre. Texto central em destaque: 'APEGO ANSIOSO: COMO SE LIBERTAR?'", "youtube_shorts_virality": {"score": 20, "rewatchability": 30, "predicted_views_30d": "5.000 - 15.000"}, "best_in_world_psychology": 40, "optimal_posting_time_brt": "Segunda-feira, 20:00"}, "ban_risk": null, "duration": 843.1, "video_url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778262451686_apego_ansioso__medo_do_abandono__yo.html", "iterations": null, "voice_name": "EdgeTTS_MultiVoice_Groq_Emotion_v1", "demonet_risk": null, "quality_score": null, "safety_passed": false, "render_version": "v8_cinematic", "safety_blockers": 0, "safety_warnings": 0, "target_platform": "youtube_long", "quality_iter_count": 0}];
-const BRAIN_DATA={"high_conf": 22, "iter_total": 4, "used_count": 60, "top_categories": [{"cat": "hook_pattern", "cnt": 6}, {"cat": "safety_rule", "cnt": 5}, {"cat": "monetization_tip", "cnt": 4}, {"cat": "hook_strategy_applied", "cnt": 4}, {"cat": "format_pattern", "cnt": 4}, {"cat": "emotional_pattern", "cnt": 3}, {"cat": "viral_pattern", "cnt": 3}], "total_insights": 29, "benchmarks_count": 10, "iter_best_uplift": 35, "benchmarks_subs_m": 38.7800000000000000, "benchmarks_views_b": 4.87, "safety_checks_done": 1};
+const VIDEOS_DATA=[{"id": 78, "title": "Apego Ansioso: Medo do Abandono [youtube_shorts]", "status": "published", "mp4_url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778262304_Apego_Ansioso_Medo_do_Abandono_v8.mp4", "science": {"id": 7, "doi": "10.1016/S0140-6736(16)30381-6", "year": 2016, "title": "Anxiety", "authors": "Craske MG, Stein MB", "journal": "The Lancet", "citation_pt": "Craske & Stein (2016), The Lancet — IF 168.9", "impact_factor": 168.90, "key_finding_pt": "Transtornos de ansiedade afetam 1 em cada 4 pessoas no mundo ao longo da vida e são o transtorno mental mais prevalente globalmente.", "authority_score": 99}, "analysis": {"hook_score": 85, "hook_critique": "Abertura forte com pergunta direta e identificação imediata da dor do público-alvo. A metáfora do 'alarme falso' é simples e eficaz, mas a transição para o dado da The Lancet poderia ser mais fluida.", "top_strengths": ["Técnica prática e acionável (reset dos 3 sentidos)", "Metáfora do software desatualizado altamente memorável", "Chamada para ação clara e empática (salvar, comentar, procurar ajuda)"], "hashtags_brasil": ["#apegoansioso", "#ansiedade", "#psicologia", "#saudemental", "#autoconhecimento"], "tiktok_virality": {"score": 88, "fyp_potential": 90, "predicted_views_30d": "100k - 500k"}, "emotional_impact": 88, "top_improvements": ["Incluir um gancho visual nos primeiros 2 segundos (ex: texto na tela com a pergunta)", "Demonstrar a técnica visualmente enquanto explica", "Adicionar uma transição sonora (ex: som de 'reset') para reforçar a metáfora"], "educational_value": 78, "overall_verdict_pt": "Conteúdo excelente para engajamento e valor educativo. A metáfora central é poderosa e a técnica é simples de aplicar, tornando o vídeo altamente compartilhável e salvavel. Pequenos ajustes visuais e sonoros podem elevar a retenção e o impacto, especialmente no TikTok e Reels.", "youtube_monetization": {"score": 92, "cpm_brl_estimated": "R$ 12-18", "monetization_blockers": ["Nenhum bloqueador evidente; conteúdo educativo e original."], "audience_retention_predicted_pct": 75}, "instagram_reels_appeal": {"score": 90, "saveability": 95, "shareability": 85}, "pinterest_pin_potential": {"score": 75, "search_keywords": ["apego ansioso", "medo de abandono", "técnica de grounding", "ansiedade", "saúde mental"]}, "thumbnail_suggestion_pt": "Close no rosto da criadora com expressão de preocupação, sobreposta por um ícone de alarme e o texto 'MEDO DE ABANDONO? Faça o RESET'.", "youtube_shorts_virality": {"score": 82, "rewatchability": 85, "predicted_views_30d": "50k - 200k"}, "best_in_world_psychology": 70, "optimal_posting_time_brt": "Segunda-feira, 19h"}, "ban_risk": null, "duration": 23.4, "video_url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778262164254_apego_ansioso__medo_do_abandono__yo.html", "iterations": [{"iter": 1, "after": 65, "before": 30, "status": "improved", "hook_strategy": "Pattern Interrupt + Curiosity Gap: Abertura com estatística de choque ('95% das pessoas sentem isso') combinada com uma afirmação contraintuitiva ('acham que é amor, mas é um alarme falso') para interromper o padrão de scroll e gerar curiosidade imediata.", "science_integration": null}, {"iter": 2, "after": 60, "before": 65, "status": "regressed", "hook_strategy": "Pattern interrupt com afirmação contraintuitiva e urgência temporal ('Seu cérebro pode estar te sabotando em 2 segundos'), seguida de quebra de expectativa ('Não é amor, é um alarme falso') para criar um curiosity gap nos primeiros 2 segundos.", "science_integration": null}, {"iter": 3, "after": 70, "before": 60, "status": "improved", "hook_strategy": "Pattern interrupt com afirmação contraintuitiva e pergunta direta na 2ª pessoa: 'Aposto que você checa o celular a cada 5 minutos com medo de ser abandonado. Isso não é amor, é um alarme falso no seu cérebro.' Combina identificação imediata com um 'curiosity gap' emocional, quebrando o padrão de scroll e gerando a necessidade de assistir até o final para entender o 'alarme falso'.", "science_integration": null}, {"iter": 4, "after": 70, "before": 70, "status": "no_change", "hook_strategy": "Pattern interrupt com pergunta direta na 2ª pessoa ('Você checa...?') seguida de validação emocional ('Calma...'), criando identificação em menos de 2 segundos e quebrando o scroll com uma afirmação contraintuitiva ('não é amor, é um alarme falso').", "science_integration": null}, {"iter": 5, "after": 70, "before": 70, "status": "no_change", "hook_strategy": "Cold open com pergunta direta na 2ª pessoa ('Você checa o celular a cada 5 minutos...?') seguida de uma refutação contraintuitiva ('não é amor, é um alarme falso'), criando um pattern interrupt que quebra o scroll e gera identificação imediata em menos de 2 segundos.", "science_integration": "A pesquisa foi citada logo após a validação emocional inicial: 'Segundo um estudo da The Lancet, uma das revistas médicas mais respeitadas do mundo, a ansiedade atinge 1 em cada 4 pessoas.' Isso contextualiza a experiência pessoal em um dado global de alta autoridade, aumentando a confiança e o impacto da mensagem sem interromper o fluxo narrativo."}], "voice_name": "EdgeTTS_MultiVoice_Groq_Emotion_v1", "voice_plan": {"segments": [{"rate": "+8%", "text": "Você checa o celular a cada 5 minutos com medo de ser deixado de lado?", "pitch": "+30Hz", "volume": "+10%", "emotion": "hook_pattern_interrupt", "reasoning": "Pergunta direta e provocativa que interrompe o scroll, criando identificação imediata e urgência.", "voice_name": "pt-BR-FranciscaNeural", "pause_after_ms": 350}, {"rate": "+5%", "text": "Mas você pode reprogramá-lo agora.", "pitch": "+15Hz", "volume": "+5%", "emotion": "curiosity_gap", "reasoning": "Sussurro intrigante que cria mistério e expectativa sobre a solução, mantendo o espectador engajado.", "voice_name": "pt-BR-ThalitaMultilingualNeural", "pause_after_ms": 400}, {"rate": "-5%", "text": "Calma, isso não é amor, é um alarme falso no seu cérebro. E não é culpa sua.", "pitch": "-10Hz", "volume": "+0%", "emotion": "validation_empathy", "reasoning": "Tom acolhedor e pausado para validar a dor do espectador, aliviando a culpa e gerando conexão emocional.", "voice_name": "pt-BR-FranciscaNeural", "pause_after_ms": 600}, {"rate": "+0%", "text": "Seu cérebro aprendeu a se proteger assim, como um software desatualizado que dispara o alerta de incêndio quando você só está esquentando o jantar.", "pitch": "+0Hz", "volume": "+5%", "emotion": "educational_authority", "reasoning": "Explicação firme e metafórica de um profissional, tornando o conceito científico acessível e visual.", "voice_name": "pt-BR-AntonioNeural", "pause_after_ms": 350}, {"rate": "-3%", "text": "Segundo um estudo da The Lancet, uma das revistas médicas mais respeitadas do mundo, a ansiedade atinge 1 em cada 4 pessoas.", "pitch": "+5Hz", "volume": "+8%", "emotion": "scientific_citation", "reasoning": "Citação respeitosa de fonte científica para dar credibilidade e normalizar a experiência do espectador.", "voice_name": "pt-BR-AntonioNeural", "pause_after_ms": 500}, {"rate": "+3%", "text": "Quando essa ansiedade bater, faça o 'reset dos 3 sentidos': nomeie 3 coisas que você vê, 3 que ouve e mova 3 partes do corpo.", "pitch": "+10Hz", "volume": "+5%", "emotion": "practical_tool", "reasoning": "Energia clara e direta ao ensinar a técnica prática, passo a passo, para aplicação imediata.", "voice_name": "pt-BR-FranciscaNeural", "pause_after_ms": 400}, {"rate": "-2%", "text": "Isso puxa seu cérebro de volta pro presente, desligando o alarme.", "pitch": "+20Hz", "volume": "+12%", "emotion": "emotional_climax", "reasoning": "Intensidade emocional no momento de virada, reforçando o alívio e a eficácia da técnica.", "voice_name": "pt-BR-ThalitaMultilingualNeural", "pause_after_ms": 500}, {"rate": "+10%", "text": "Salva esse vídeo pra usar quando precisar. Se isso te tocou, comenta 'SIM'.", "pitch": "+25Hz", "volume": "+15%", "emotion": "cta_engagement", "reasoning": "Chamada à ação com energia alta para engajar o espectador e aumentar a retenção do conteúdo.", "voice_name": "pt-BR-FranciscaNeural", "pause_after_ms": 250}, {"rate": "-5%", "text": "E se essa ansiedade for constante, procure um psicólogo. É o passo mais corajoso que você pode dar.", "pitch": "-5Hz", "volume": "+0%", "emotion": "disclaimer_professional", "reasoning": "Tom sério mas acolhedor para o disclaimer profissional, incentivando ajuda especializada com empatia.", "voice_name": "pt-BR-AntonioNeural", "pause_after_ms": 400}], "narrative_arc_score": 95, "voice_variety_score": 100}, "demonet_risk": null, "quality_score": 70, "safety_passed": false, "render_version": "v8_cinematic", "safety_blockers": 0, "safety_warnings": 0, "target_platform": "youtube_shorts", "quality_iter_count": 5}, {"id": 35, "title": "Apego Ansioso: O medo do abandono", "status": "published", "mp4_url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778300966_Apego_Ansioso_O_medo_do_abando_v8.mp4", "science": null, "analysis": {"hook_score": 65, "hook_critique": "A introdução é informativa, mas pouco dinâmica para um Short. A pergunta 'Meu parceiro(a) me ama o suficiente?' é relevante, porém a entrega é muito didática ('vamos entender...') e carece de um gancho visual ou emocional imediato que prenda nos primeiros 2 segundos.", "top_strengths": ["Conteúdo educacional de altíssimo valor, estruturado e baseado na teoria de Bowlby.", "Excelente uso de exemplos práticos e metáforas (termostato) que facilitam a identificação do público.", "Tom acolhedor e não culpabilizante, que constrói confiança com o espectador."], "hashtags_brasil": ["#apegoansioso", "#psicologia", "#relacionamento", "#medodeabandono", "#autoconhecimento"], "tiktok_virality": {"score": 55, "fyp_potential": 45, "predicted_views_30d": "3.000 - 10.000"}, "emotional_impact": 78, "top_improvements": ["Transformar o gancho inicial em uma cena curta e impactante (ex: alguém checando o celular ansiosamente) em vez de uma fala didática.", "Condensar a explicação teórica para caber em 60s com ritmo mais rápido, usando textos na tela para reforçar os 5 sinais.", "Adicionar uma chamada para ação mais direta e emocional no final, como 'Comenta aqui se você se identificou' para engajar o algoritmo."], "educational_value": 92, "overall_verdict_pt": "Um conteúdo de altíssima qualidade educacional e profundidade teórica, mas que precisa ser adaptado para a linguagem dinâmica dos Shorts. O roteiro atual é mais adequado para um vídeo longo. Para viralizar, é crucial sacrificar parte da aula expositiva por um gancho visual/emocional fortíssimo nos primeiros segundos e um ritmo de edição muito mais acelerado.", "youtube_monetization": {"score": 95, "cpm_brl_estimated": "R$ 8,00 - R$ 15,00", "monetization_blockers": [], "audience_retention_predicted_pct": 55}, "instagram_reels_appeal": {"score": 68, "saveability": 75, "shareability": 70}, "pinterest_pin_potential": {"score": 80, "search_keywords": ["apego ansioso relacionamento", "medo de abandono psicologia", "sinais de dependência emocional", "como lidar com insegurança amorosa", "estilos de apego adulto"]}, "thumbnail_suggestion_pt": "Imagem dividida: de um lado, uma pessoa com expressão ansiosa olhando o celular; do outro, a psicóloga com uma expressão acolhedora. Texto central em destaque: 'MEDO DE ABANDONO? Entenda o Apego Ansioso'.", "youtube_shorts_virality": {"score": 60, "rewatchability": 50, "predicted_views_30d": "5.000 - 15.000"}, "best_in_world_psychology": 70, "optimal_posting_time_brt": "Segunda-feira, 19h30"}, "ban_risk": 5, "duration": 53.4, "video_url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778300807903_apego_ansioso__o_medo_do_abandono.html", "iterations": null, "voice_name": "EdgeTTS_MultiVoice_Groq_Emotion_v1", "voice_plan": null, "demonet_risk": 15, "quality_score": null, "safety_passed": true, "render_version": "v8_cinematic", "safety_blockers": 0, "safety_warnings": 2, "target_platform": "youtube_shorts", "quality_iter_count": 0}, {"id": 77, "title": "Apego Ansioso: Medo do Abandono [youtube_long]", "status": "published", "mp4_url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778264721_Apego_Ansioso_Medo_do_Abandono_v8.mp4", "science": null, "analysis": {"hook_score": 65, "hook_critique": "O gancho inicial é direto e faz uma pergunta relevante, mas falta um elemento mais impactante ou emocional para prender imediatamente a atenção em um vídeo longo. Poderia se beneficiar de uma estatística chocante ou uma breve história pessoal.", "top_strengths": ["Estrutura de documentário completa e bem organizada, cobrindo causas, sintomas e soluções.", "Uso de metáforas eficazes (ex: software malicioso) para explicar conceitos psicológicos complexos.", "Forte chamada para ação e oferta de recursos, criando um senso de comunidade e jornada para o espectador."], "hashtags_brasil": ["#ApegoAnsioso", "#Psicologia", "#SaúdeMental", "#Relacionamentos", "#MedoDoAbandono", "#Autoestima", "#DesenvolvimentoPessoal"], "tiktok_virality": {"score": 25, "fyp_potential": 35, "predicted_views_30d": "10.000 - 30.000"}, "emotional_impact": 70, "top_improvements": ["Aumentar o impacto emocional com histórias pessoais mais detalhadas e visuais (ex: encenações) em vez de apenas narração.", "Incluir mais dados de estudos e referências visuais na tela para aumentar a credibilidade e o valor educacional percebido.", "O ritmo pode ser mais dinâmico; cortar algumas repetições e acelerar o storytelling para manter a retenção em 14 minutos."], "educational_value": 85, "overall_verdict_pt": "Um documentário sólido e informativo que cumpre bem o papel educacional sobre o apego ansioso. É um conteúdo perene e de alto valor para um nicho engajado, mas carece de um elemento viral ou de produção cinematográfica para se destacar globalmente. A força está na estrutura e na mensagem de esperança, sendo ideal para construção de autoridade no YouTube.", "youtube_monetization": {"score": 90, "cpm_brl_estimated": "R$ 8,00 - R$ 18,00", "monetization_blockers": ["Nenhum bloqueador evidente. Conteúdo educacional e sensível, mas sem violações claras das diretrizes."], "audience_retention_predicted_pct": 55}, "instagram_reels_appeal": {"score": 30, "saveability": 60, "shareability": 40}, "pinterest_pin_potential": {"score": 75, "search_keywords": ["apego ansioso", "medo de abandono", "relacionamento saudável", "teoria do apego", "autoestima", "saúde mental"]}, "thumbnail_suggestion_pt": "Imagem dividida: de um lado, uma pessoa com expressão de angústia e correntes simbólicas no peito; do outro, a mesma pessoa sorrindo e livre. Texto central em destaque: 'APEGO ANSIOSO: COMO SE LIBERTAR?'", "youtube_shorts_virality": {"score": 20, "rewatchability": 30, "predicted_views_30d": "5.000 - 15.000"}, "best_in_world_psychology": 40, "optimal_posting_time_brt": "Segunda-feira, 20:00"}, "ban_risk": null, "duration": 843.1, "video_url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778262451686_apego_ansioso__medo_do_abandono__yo.html", "iterations": null, "voice_name": "EdgeTTS_MultiVoice_Groq_Emotion_v1", "voice_plan": null, "demonet_risk": null, "quality_score": null, "safety_passed": false, "render_version": "v8_cinematic", "safety_blockers": 0, "safety_warnings": 0, "target_platform": "youtube_long", "quality_iter_count": 0}];
+const BRAIN_DATA={"pruned": 0, "high_conf": 22, "iter_total": 5, "used_count": 78, "avg_priority": 0.626, "uplift_total": 675.0, "science_max_if": 168.90, "science_papers": 20, "total_insights": 30, "voice_emotions": 10, "benchmarks_count": 10, "cron_jobs_active": 11, "iter_best_uplift": 35, "benchmarks_subs_m": 38.7800000000000000, "benchmarks_views_b": 4.87, "safety_checks_done": 1, "science_avg_authority": 94.6};
 const sc=n=>n>=70?'good':n>=40?'mid':'bad';
 const fd=s=>{const m=Math.floor(s/60),x=Math.round(s%60);return m>0?m+'m'+String(x).padStart(2,'0')+'s':x+'s'};
 const fp=p=>({youtube_long:'YouTube Long',youtube_shorts:'YouTube Shorts',tiktok_short:'TikTok',instagram_reels:'Reels',pinterest_pin:'Pinterest'})[p]||p;
+const intenseEmotions=['emotional_climax','cta_engagement','hook_pattern_interrupt'];
 
 function rb(){
   const b=BRAIN_DATA;
   document.getElementById('brain-stats').innerHTML=`
-    <div class="bs"><div class="bs-label">Insights</div><div class="bs-val">${b.total_insights}<small> aprendidos</small></div></div>
-    <div class="bs"><div class="bs-label">Confiança ≥85%</div><div class="bs-val">${b.high_conf}<small>/${b.total_insights}</small></div></div>
-    <div class="bs"><div class="bs-label">Aplicações</div><div class="bs-val">${b.used_count||0}<small>x usados</small></div></div>
-    <div class="bs"><div class="bs-label">Benchmarks</div><div class="bs-val">${b.benchmarks_subs_m}M<small> subs ref</small></div></div>
-    <div class="bs"><div class="bs-label">Views ref</div><div class="bs-val">${b.benchmarks_views_b}B<small> total</small></div></div>
-    <div class="bs"><div class="bs-label">Iterações</div><div class="bs-val">${b.iter_total}<small> rodadas</small></div></div>
-    <div class="bs"><div class="bs-label">Maior salto</div><div class="bs-val good">+${b.iter_best_uplift||0}<small> pts</small></div></div>
-    <div class="bs"><div class="bs-label">Safety checks</div><div class="bs-val">${b.safety_checks_done}<small> feitos</small></div></div>
+    <div class="bs lab"><div class="bs-label">Insights ativos</div><div class="bs-val">${b.total_insights}<small> / ${b.pruned} arquivados</small></div></div>
+    <div class="bs"><div class="bs-label">Conf ≥85%</div><div class="bs-val">${b.high_conf}<small>/${b.total_insights}</small></div></div>
+    <div class="bs neon"><div class="bs-label">Aplicações</div><div class="bs-val">${b.used_count||0}<small>x</small></div></div>
+    <div class="bs gold"><div class="bs-label">Uplift total</div><div class="bs-val">+${b.uplift_total}<small> pts</small></div></div>
+    <div class="bs"><div class="bs-label">Avg Priority</div><div class="bs-val">${b.avg_priority}</div></div>
+    <div class="bs lab"><div class="bs-label">Papers científicos</div><div class="bs-val">${b.science_papers}<small> · auth ${b.science_avg_authority}</small></div></div>
+    <div class="bs gold"><div class="bs-label">Max IF revista</div><div class="bs-val">${b.science_max_if}<small> Lancet</small></div></div>
+    <div class="bs"><div class="bs-label">Vozes mapeadas</div><div class="bs-val">${b.voice_emotions}<small> emoções</small></div></div>
+    <div class="bs neon"><div class="bs-label">Benchmarks</div><div class="bs-val">${b.benchmarks_subs_m}M<small> subs ref</small></div></div>
+    <div class="bs"><div class="bs-label">Views ref</div><div class="bs-val">${b.benchmarks_views_b}B</div></div>
+    <div class="bs"><div class="bs-label">Iterações</div><div class="bs-val">${b.iter_total}</div></div>
+    <div class="bs gold"><div class="bs-label">Maior salto</div><div class="bs-val good">+${b.iter_best_uplift||0}<small> pts</small></div></div>
   `;
+  document.getElementById('cron-count').textContent=`${b.cron_jobs_active} jobs ativos`;
 }
 
 function rs(vs){
@@ -171,12 +224,15 @@ function rs(vs){
   const am=Math.round(f.reduce((s,v)=>s+(v.analysis.youtube_monetization?.score||0),0)/f.length);
   const td=f.reduce((s,v)=>s+(v.duration||0),0);
   const totIter=f.reduce((s,v)=>s+(v.quality_iter_count||0),0);
+  const withSci=f.filter(v=>v.science).length;
+  const withVoice=f.filter(v=>v.voice_plan).length;
   document.getElementById('stats').innerHTML=`
-    <div class="stat"><div class="sl">Vídeos</div><div class="sv">${f.length}</div><div class="ss">Pipeline 100% grátis</div></div>
+    <div class="stat"><div class="sl">Vídeos analisados</div><div class="sv">${f.length}</div><div class="ss">100% grátis</div></div>
     <div class="stat"><div class="sl">Best-in-World média</div><div class="sv ${sc(ab)}">${ab}<span style="font-size:14px;color:var(--td)">/100</span></div><div class="ss">vs canais top mundial</div></div>
     <div class="stat"><div class="sl">Monet YouTube</div><div class="sv ${sc(am)}">${am}<span style="font-size:14px;color:var(--td)">/100</span></div><div class="ss">CPM R$ 8 – R$ 18</div></div>
-    <div class="stat"><div class="sl">Iter aplicadas</div><div class="sv">${totIter}</div><div class="ss">rewrite via cérebro</div></div>
-    <div class="stat"><div class="sl">Duração</div><div class="sv">${fd(td)}</div><div class="ss">${f.length} vídeos</div></div>
+    <div class="stat"><div class="sl">Com ciência</div><div class="sv" style="color:var(--lab)">${withSci}<span style="font-size:14px;color:var(--td)">/${f.length}</span></div><div class="ss">papers reais citados</div></div>
+    <div class="stat"><div class="sl">Voz emocional</div><div class="sv" style="color:var(--gold)">${withVoice}<span style="font-size:14px;color:var(--td)">/${f.length}</span></div><div class="ss">plano por segmento</div></div>
+    <div class="stat"><div class="sl">Iter aplicadas</div><div class="sv">${totIter}</div><div class="ss">via DeepSeek V4</div></div>
   `;
 }
 
@@ -192,14 +248,48 @@ function renderIterHistory(v){
   });
   return `
     <div class="iter-history">
-      <div class="label">⚡ Iteration History · ${v.quality_iter_count} iter aplicadas</div>
+      <div class="label">⚡ Histórico Iteração · ${v.quality_iter_count} aplicadas via DeepSeek V4</div>
       <div class="iter-chart">
         ${allPoints.map(p=>`<div class="iter-bar ${p.cls}" style="height:${scoreToHeight(p.score)}px" title="${p.label}: ${p.score}/100"><span class="iter-bar-label">${p.score}</span></div>`).join('')}
       </div>
       <div class="iter-info">
-        <span>Score atual: <b>${allPoints[allPoints.length-1].score}/100</b></span>
-        <span>Total uplift: <b class="good">+${allPoints[allPoints.length-1].score-(allPoints[0]?.score||0)} pts</b></span>
-        <span>Última estratégia: <b>${(v.iterations[v.iterations.length-1].hook_strategy||'').slice(0,60)}...</b></span>
+        <span>Atual: <b>${allPoints[allPoints.length-1].score}/100</b></span>
+        <span>Uplift: <b class="good">+${allPoints[allPoints.length-1].score-(allPoints[0]?.score||0)} pts</b></span>
+        <span>Última: <b style="color:var(--neon)">${(v.iterations[v.iterations.length-1].hook_strategy||'').slice(0,55)}...</b></span>
+      </div>
+    </div>
+  `;
+}
+
+function renderScience(v){
+  if(!v.science)return '';
+  const s=v.science;
+  return `
+    <div class="science-card">
+      <div class="label">📚 Pesquisa Científica Citada<span class="auth">autoridade ${s.authority_score}/100</span></div>
+      <div class="citation">${s.citation_pt||(s.authors+' ('+s.year+')')}</div>
+      <div class="finding">"${s.key_finding_pt}"</div>
+      <div class="meta-line">
+        <span><b>Revista:</b> ${s.journal}</span>
+        ${s.impact_factor?`<span><b>IF:</b> ${s.impact_factor}</span>`:''}
+        ${s.doi?`<span><b>DOI:</b> ${s.doi}</span>`:''}
+      </div>
+    </div>
+  `;
+}
+
+function renderVoicePlan(v){
+  if(!v.voice_plan||!v.voice_plan.segments)return '';
+  const vp=v.voice_plan;
+  return `
+    <div class="voice-plan">
+      <div class="label">🎙️ Plano Voz Emocional · ${vp.segments.length} segmentos</div>
+      <div class="scores">
+        <div class="vps">Arco narrativo: <b>${vp.narrative_arc_score||'?'}/100</b></div>
+        <div class="vps">Variedade voz: <b>${vp.voice_variety_score||'?'}/100</b></div>
+      </div>
+      <div class="voice-segs">
+        ${vp.segments.map((s,i)=>`<span class="vseg ${intenseEmotions.includes(s.emotion)?'intense':''}" title="${i+1}. ${(s.text||'').slice(0,60)}... → ${s.voice_name||'?'} (${s.rate||'+0%'} rate, ${s.pitch||'+0Hz'} pitch)">${(s.emotion||'').replace(/_/g,' ')}</span>`).join('')}
       </div>
     </div>
   `;
@@ -208,8 +298,8 @@ function renderIterHistory(v){
 function renderSafetyBadge(v){
   if(v.safety_passed===null||v.safety_passed===undefined)return '';
   const cls=v.safety_blockers>0?'block':v.safety_warnings>0?'warn':'safe';
-  const txt=v.safety_blockers>0?`🚫 ${v.safety_blockers} blockers`:v.safety_warnings>0?`⚠️ ${v.safety_warnings} warnings`:'✅ safe to publish';
-  return `<span class="safety-badge ${cls}">${txt}${v.ban_risk!==null?` · ban risk ${v.ban_risk}/100`:''}</span>`;
+  const txt=v.safety_blockers>0?`🚫 ${v.safety_blockers} blockers`:v.safety_warnings>0?`⚠️ ${v.safety_warnings} warnings`:'✅ safe';
+  return `<span class="safety-badge ${cls}">${txt}${v.ban_risk!==null?` · ban ${v.ban_risk}`:''}</span>`;
 }
 
 function rc(v){
@@ -220,7 +310,12 @@ function rc(v){
   const ig=a.instagram_reels_appeal||{};
   const pn=a.pinterest_pin_potential||{};
   const lo=v.target_platform==='youtube_long';
-  return `<article class="card ${v.quality_iter_count>0?'has-iter':''}" data-platform="${v.target_platform}">
+  const flags=[];
+  if(v.quality_iter_count>0)flags.push('<span class="flag iter">⚡ ITER ' + v.quality_iter_count + 'x</span>');
+  if(v.science)flags.push('<span class="flag sci">📚 CIÊNCIA</span>');
+  if(v.voice_plan)flags.push('<span class="flag voice">🎙️ VOZ EMO</span>');
+  return `<article class="card" data-platform="${v.target_platform}">
+    <div class="card-flags">${flags.join('')}</div>
     <div class="player ${lo?'long':''}"><video controls preload="metadata" src="${v.mp4_url}"></video></div>
     <div class="meta">
       <span class="pb">${fp(v.target_platform)}</span>
@@ -235,6 +330,8 @@ function rc(v){
       <div class="sc"><div class="sn ${sc(a.educational_value)}">${a.educational_value}</div><div class="scl">Educacional</div></div>
       <div class="sc"><div class="sn ${sc(a.emotional_impact)}">${a.emotional_impact}</div><div class="scl">Emocional</div></div>
     </div>
+    ${renderScience(v)}
+    ${renderVoicePlan(v)}
     ${renderIterHistory(v)}
     <div class="sec">
       <div class="st">📊 Performance por plataforma</div>
@@ -247,18 +344,17 @@ function rc(v){
       </div>
     </div>
     <div class="sec"><div class="st">✅ Top 3 Forças</div><ul class="bl str">${(a.top_strengths||[]).map(s=>`<li>${s}</li>`).join('')}</ul></div>
-    <div class="sec"><div class="st">⚠️ Top 3 Melhorias (próxima iteração)</div><ul class="bl imp">${(a.top_improvements||[]).map(s=>`<li>${s}</li>`).join('')}</ul></div>
-    <div class="sec"><div class="st">🏷️ Hashtags Brasil <span style="font-weight:400;color:var(--td);text-transform:none;font-size:11px;letter-spacing:0">(clique pra copiar)</span></div><div class="tags">${(a.hashtags_brasil||[]).map(h=>`<span class="tag" data-c="${h}">${h}</span>`).join('')}</div></div>
+    <div class="sec"><div class="st">⚠️ Top 3 Melhorias (próxima iter automática)</div><ul class="bl imp">${(a.top_improvements||[]).map(s=>`<li>${s}</li>`).join('')}</ul></div>
+    <div class="sec"><div class="st">🏷️ Hashtags BR</div><div class="tags">${(a.hashtags_brasil||[]).map(h=>`<span class="tag" data-c="${h}">${h}</span>`).join('')}</div></div>
     <div class="sec">
       <div class="sb"><div class="lb">🖼️ Thumbnail sugerida</div><div class="vl">${a.thumbnail_suggestion_pt||''}</div></div>
       <div class="sb" style="margin-top:8px"><div class="lb">📅 Melhor horário (BRT)</div><div class="vl">${a.optimal_posting_time_brt||''}</div></div>
-      <div class="sb" style="margin-top:8px"><div class="lb">🎯 Crítica do gancho</div><div class="vl">${a.hook_critique||''}</div></div>
     </div>
     <div class="actions">
       <a class="btn pri" href="${v.mp4_url}" download>⬇️ Download MP4</a>
       <a class="btn" href="${v.video_url}" target="_blank">👁️ HTML</a>
       <button class="btn" onclick="cah(${v.id})">🏷️ Copiar hashtags</button>
-      <a class="btn iterate" href="https://github.com/tafita81/Repovazio/actions/workflows/quality-loop.yml" target="_blank">⚡ Iterar até 95+</a>
+      <a class="btn iterate" href="https://github.com/tafita81/Repovazio/actions/workflows/quality-loop.yml" target="_blank">⚡ Forçar iter 95+</a>
     </div>
   </article>`;
 }
