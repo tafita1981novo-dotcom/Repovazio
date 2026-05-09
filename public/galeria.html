@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daniela Coelho — Galeria de Vídeos</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0a0a0f;color:#fff;line-height:1.5;padding:20px}
+.wrap{max-width:1400px;margin:0 auto}
+header{text-align:center;padding:30px 20px;background:linear-gradient(135deg,#ff6ec7,#7873f5);border-radius:20px;margin-bottom:30px}
+h1{font-size:2em;font-weight:800;margin-bottom:6px}
+.sub{opacity:.85;font-size:.95em}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:24px 0}
+.stat{background:rgba(255,255,255,.08);backdrop-filter:blur(10px);padding:18px;border-radius:14px;text-align:center;border:1px solid rgba(255,255,255,.1)}
+.stat .v{font-size:1.8em;font-weight:800;color:#ff6ec7}
+.stat .l{font-size:.8em;opacity:.7;margin-top:4px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px}
+.card{background:#15151f;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.08);transition:transform .2s}
+.card:hover{transform:translateY(-4px);border-color:#ff6ec7}
+.card video{width:100%;display:block;background:#000}
+.card .info{padding:14px}
+.card h3{font-size:.95em;font-weight:600;margin-bottom:8px;line-height:1.3}
+.card .meta{font-size:.75em;opacity:.65;display:flex;flex-wrap:wrap;gap:8px}
+.tag{background:rgba(255,110,199,.2);color:#ff6ec7;padding:2px 8px;border-radius:8px;font-size:.7em;font-weight:600}
+.tag.v2{background:rgba(120,115,245,.25);color:#a8a3ff}
+.empty{text-align:center;padding:60px 20px;opacity:.6}
+.loading{text-align:center;padding:40px;opacity:.7}
+.platform{font-size:.7em;opacity:.5;text-transform:uppercase;letter-spacing:.5px}
+@media(max-width:600px){.grid{grid-template-columns:1fr 1fr;gap:12px}h1{font-size:1.5em}.card .info{padding:10px}.card h3{font-size:.85em}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Daniela Coelho</h1>
+  <div class="sub">Vídeos no estilo Psych2Go · 100% gerados por IA · zero texto na tela</div>
+</header>
+<div class="stats" id="stats"><div class="loading">Carregando...</div></div>
+<div class="grid" id="grid"></div>
+</div>
+<script>
+const SB_URL = 'https://tpjvalzwkqwttvmszvie.supabase.co';
+const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwanZhbHp3a3F3dHR2bXN6dmllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcxNDI4ODQsImV4cCI6MjA2MjcxODg4NH0.LpMJrIRr7lfiF5ujL0R5o7MhGbVUyuIY9WXWwmGB0Js';
+
+async function load() {
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/content_pipeline?mp4_url=not.is.null&select=id,title,target_platform,mp4_url,metadata,created_at&order=id.desc&limit=100`, {
+      headers:{'apikey':SB_ANON,'Authorization':`Bearer ${SB_ANON}`}
+    });
+    const data = await r.json();
+    
+    // Stats
+    const v2 = data.filter(p => p.metadata?.video_gen_v2);
+    const totalDur = v2.reduce((s,p) => s + (parseFloat(p.metadata.video_gen_v2.duration_s)||0), 0);
+    const totalScenes = v2.reduce((s,p) => s + (parseInt(p.metadata.video_gen_v2.scenes)||0), 0);
+    document.getElementById('stats').innerHTML = `
+      <div class="stat"><div class="v">${data.length}</div><div class="l">vídeos prontos</div></div>
+      <div class="stat"><div class="v">${v2.length}</div><div class="l">estilo Psych2Go V2</div></div>
+      <div class="stat"><div class="v">${totalScenes}</div><div class="l">cenas IA</div></div>
+      <div class="stat"><div class="v">${Math.round(totalDur/60)}min</div><div class="l">duração total</div></div>`;
+    
+    // Grid
+    if (!data.length) {
+      document.getElementById('grid').innerHTML = '<div class="empty">Nenhum vídeo ainda.</div>';
+      return;
+    }
+    document.getElementById('grid').innerHTML = data.map(p => {
+      const v2meta = p.metadata?.video_gen_v2;
+      const isV2 = !!v2meta;
+      const platform = (p.target_platform||'').replace('_',' ');
+      const dur = v2meta ? Math.round(parseFloat(v2meta.duration_s)) : null;
+      const scenes = v2meta ? v2meta.scenes : null;
+      return `
+        <div class="card">
+          <video controls preload="metadata" poster="">
+            <source src="${p.mp4_url}" type="video/mp4">
+          </video>
+          <div class="info">
+            <h3>${p.title}</h3>
+            <div class="meta">
+              <span class="platform">${platform}</span>
+              ${isV2 ? '<span class="tag v2">V2 PSYCH2GO</span>' : '<span class="tag">V1</span>'}
+              ${dur ? `<span>· ${dur}s</span>` : ''}
+              ${scenes ? `<span>· ${scenes} cenas</span>` : ''}
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  } catch(e) {
+    document.getElementById('grid').innerHTML = `<div class="empty">Erro: ${e.message}</div>`;
+  }
+}
+load();
+setInterval(load, 30000);
+</script>
+</body>
+</html>
