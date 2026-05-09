@@ -1,0 +1,100 @@
+name: Series Generator + Long Iterate
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'series | iterate_to_95 | iterate_pipeline'
+        required: true
+        default: 'iterate_to_95'
+      theme:
+        description: 'Tema da serie (se action=series)'
+        default: 'Sinais de Manipulacao Emocional em Relacionamentos'
+      episodes:
+        description: 'Quantidade de episodios (se action=series)'
+        default: '5'
+      target_platform:
+        description: 'youtube_shorts | youtube_long | tiktok_short'
+        default: 'youtube_shorts'
+      pipeline_id:
+        description: 'ID pipeline para iterate_pipeline'
+        default: ''
+  schedule:
+    - cron: '0 */6 * * *'  # a cada 6h: tenta empurrar pipeline com menor score para 95+
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Execute action
+        env:
+          SB_URL: ${{ secrets.SUPABASE_URL }}
+          SB_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          ACTION: ${{ inputs.action || 'iterate_to_95' }}
+          THEME: ${{ inputs.theme }}
+          EPISODES: ${{ inputs.episodes }}
+          PLATFORM: ${{ inputs.target_platform }}
+          PIPELINE_ID: ${{ inputs.pipeline_id }}
+        run: |
+          set -e
+          echo "=== Action: $ACTION ==="
+          
+          if [ "$ACTION" = "series" ]; then
+            echo "Gerando serie '$THEME' com $EPISODES episodios..."
+            RESULT=$(curl -s --max-time 600 -X POST "$SB_URL/rest/v1/rpc/generate_content_series" \
+              -H "apikey: $SB_KEY" \
+              -H "Authorization: Bearer $SB_KEY" \
+              -H "Content-Type: application/json" \
+              -d "{\"p_theme\": \"$THEME\", \"p_episodes\": $EPISODES, \"p_target_platform\": \"$PLATFORM\"}")
+            echo "Serie criada:"
+            echo $RESULT | jq .
+          
+          elif [ "$ACTION" = "iterate_pipeline" ] && [ -n "$PIPELINE_ID" ]; then
+            echo "Iterando pipeline #$PIPELINE_ID ate 95..."
+            for i in 1 2 3 4 5 6 7 8; do
+              CURRENT=$(curl -s --max-time 240 -X POST "$SB_URL/rest/v1/rpc/analyze_viral" \
+                -H "apikey: $SB_KEY" -H "Authorization: Bearer $SB_KEY" \
+                -H "Content-Type: application/json" \
+                -d "{\"p_pipeline_id\": $PIPELINE_ID}" | jq -r '.best_in_world // 0')
+              echo "Iter $i: score atual = $CURRENT"
+              [ "$CURRENT" -ge 95 ] && echo "TARGET ATINGIDO!" && break
+              echo "Iterando..."
+              curl -s --max-time 240 -X POST "$SB_URL/rest/v1/rpc/iterate_quality" \
+                -H "apikey: $SB_KEY" -H "Authorization: Bearer $SB_KEY" \
+                -H "Content-Type: application/json" \
+                -d "{\"p_pipeline_id\": $PIPELINE_ID, \"p_target_score\": 95}" | jq -c '{hook_strategy, science_integration, expected_uplift}'
+              sleep 3
+            done
+            curl -s --max-time 60 -X POST "$SB_URL/rest/v1/rpc/run_safety_check" \
+              -H "apikey: $SB_KEY" -H "Authorization: Bearer $SB_KEY" \
+              -H "Content-Type: application/json" \
+              -d "{\"p_pipeline_id\": $PIPELINE_ID}" | jq .
+            curl -s --max-time 30 -X POST "$SB_URL/rest/v1/rpc/can_publish" \
+              -H "apikey: $SB_KEY" -H "Authorization: Bearer $SB_KEY" \
+              -H "Content-Type: application/json" \
+              -d "{\"p_pipeline_id\": $PIPELINE_ID}" | jq .
+          
+          else
+            echo "Iterando pipeline com menor score ate 95+..."
+            for i in 1 2 3 4 5; do
+              echo ""
+              echo "--- Tentativa $i ---"
+              RESULT=$(curl -s --max-time 240 -X POST "$SB_URL/rest/v1/rpc/auto_iterate_next_pipeline" \
+                -H "apikey: $SB_KEY" -H "Authorization: Bearer $SB_KEY" \
+                -H "Content-Type: application/json" \
+                -d "{}")
+              if echo $RESULT | jq -e '.no_pipeline_to_iterate' > /dev/null 2>&1; then
+                echo "Nada para iterar agora. Saindo."
+                break
+              fi
+              echo $RESULT | jq -c '{pipeline_id, score_before, analyze: .analyze.best_in_world}'
+              sleep 5
+            done
+          fi
+          
+          echo ""
+          echo "=== STATUS FINAL ==="
+          curl -s "$SB_URL/rest/v1/rpc/list_publishable_pipelines" \
+            -H "apikey: $SB_KEY" -H "Authorization: Bearer $SB_KEY" \
+            -X POST -d '{}' | jq .
