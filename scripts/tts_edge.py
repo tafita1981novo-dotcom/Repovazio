@@ -3,11 +3,11 @@
 psicologia.doc — TTS Pipeline com Edge TTS (Microsoft) + Groq Llama 3.3 70B
 GRÁTIS ILIMITADO. Voz neural PT-BR multi-voz com emoção dinâmica.
 
-Vozes PT-BR Edge TTS (16 disponíveis, todas FREE ilimitadas Microsoft):
-  Femininas (9): Francisca, Thalita, Brenda, Elza, Giovanna, Leila, Leticia, Manuela, Yara
-  Masculinas (7): Antonio, Donato, Fabio, Humberto, Julio, Nicolau, Valerio
-  → Cada video escolhe deterministicamente do pool por emoção (hash do PIPELINE_ID),
-    garantindo CONSISTÊNCIA dentro do video + VARIEDADE entre videos.
+Vozes PT-BR Edge TTS usadas:
+  - Francisca  (acolhedora, narradora padrão)
+  - Antonio    (sério, masculino, dados/análise/CTA)
+  - Thalita    (multilingual, neutra, esperança)
+  - Brenda     (jovem, hooks/intro)
 
 Fluxo:
   1. SQL: pega pipeline (PIPELINE_ID env ou próximo `script_ready`)
@@ -36,82 +36,80 @@ REPO = os.environ.get("GITHUB_REPOSITORY", "tafita81/Repovazio")
 H_SB = {"apikey": SBK, "Authorization": f"Bearer {SBK}"}
 H_SB_J = {**H_SB, "Content-Type": "application/json"}
 
-# Edge TTS PT-BR neural voices catalog (16 disponíveis, todas FREE ilimitadas Microsoft)
-# Female (9): Francisca, Thalita, Brenda, Elza, Giovanna, Leila, Leticia, Manuela, Yara
-# Male   (7): Antonio, Donato, Fabio, Humberto, Julio, Nicolau, Valerio
-PT_BR_VOICES_INFO = {
-    "FranciscaNeural": "F adult warm",        "ThalitaNeural":  "F adult neutral",
-    "BrendaNeural":    "F young energetic",   "ElzaNeural":     "F mature authoritative",
-    "GiovannaNeural":  "F adult friendly",    "LeilaNeural":    "F adult calm",
-    "LeticiaNeural":   "F young bright",      "ManuelaNeural":  "F adult professional",
-    "YaraNeural":      "F adult expressive",  "AntonioNeural":  "M adult serious",
-    "DonatoNeural":    "M adult calm",        "FabioNeural":    "M young enthusiastic",
-    "HumbertoNeural":  "M mature authoritative","JulioNeural":  "M adult neutral",
-    "NicolauNeural":   "M senior wise",       "ValerioNeural":  "M adult confident",
-}
-
-# Emotion → POOL of suitable voices. Each video gets a deterministic but varied cast.
-# Different videos rotate through the pool (hash-based), ensuring variety across catalogs
-# while maintaining consistency within a single video.
-EMOTION_VOICE = {
+# Emotion → voice POOLS (Edge TTS Microsoft, 16 PT-BR neural voices, 100% FREE ILIMITADO)
+# Each emotion has multiple compatible voice variants. A deterministic hash of
+# (pipeline_id + emotion) selects which variant to use per video, providing
+# variety across videos while maintaining consistency within a single video.
+#
+# All 16 PT-BR Neural voices: Francisca, Antonio, Thalita, Brenda, Donato, Elza,
+# Fabio, Giovanna, Humberto, Julio, Leila, Leticia, Manuela, Nicolau, Valerio, Yara
+EMOTION_VOICES = {
+    # Calm openers — warm feminine voices
     "INTRO_CALMO": [
         {"voice": "pt-BR-FranciscaNeural", "rate": "-5%",  "volume": "+0%"},
-        {"voice": "pt-BR-LeilaNeural",     "rate": "-3%",  "volume": "+0%"},
-        {"voice": "pt-BR-DonatoNeural",    "rate": "-5%",  "volume": "+0%"},
-        {"voice": "pt-BR-ThalitaNeural",   "rate": "-2%",  "volume": "+0%"},
+        {"voice": "pt-BR-LeticiaNeural",   "rate": "-5%",  "volume": "+0%"},
+        {"voice": "pt-BR-ManuelaNeural",   "rate": "-3%",  "volume": "+0%"},
+        {"voice": "pt-BR-GiovannaNeural",  "rate": "-5%",  "volume": "+0%"},
     ],
+    # Tense alerts — punchy masculine voices
     "ALERTA_TENSO": [
         {"voice": "pt-BR-AntonioNeural",   "rate": "+8%",  "volume": "+5%"},
-        {"voice": "pt-BR-HumbertoNeural",  "rate": "+6%",  "volume": "+5%"},
-        {"voice": "pt-BR-ValerioNeural",   "rate": "+8%",  "volume": "+4%"},
-        {"voice": "pt-BR-ElzaNeural",      "rate": "+7%",  "volume": "+5%"},
+        {"voice": "pt-BR-FabioNeural",     "rate": "+10%", "volume": "+5%"},
+        {"voice": "pt-BR-HumbertoNeural",  "rate": "+8%",  "volume": "+5%"},
+        {"voice": "pt-BR-ValerioNeural",   "rate": "+10%", "volume": "+5%"},
     ],
+    # Warm empathy — slow embracing feminine voices
     "EMPATIA_ACOLHEDOR": [
         {"voice": "pt-BR-FranciscaNeural", "rate": "-10%", "volume": "+0%"},
-        {"voice": "pt-BR-GiovannaNeural",  "rate": "-8%",  "volume": "+0%"},
-        {"voice": "pt-BR-YaraNeural",      "rate": "-7%",  "volume": "+0%"},
-        {"voice": "pt-BR-NicolauNeural",   "rate": "-8%",  "volume": "+0%"},
+        {"voice": "pt-BR-ElzaNeural",      "rate": "-12%", "volume": "+0%"},
+        {"voice": "pt-BR-LeilaNeural",     "rate": "-10%", "volume": "+0%"},
+        {"voice": "pt-BR-YaraNeural",      "rate": "-8%",  "volume": "+0%"},
     ],
+    # Cold analytical — neutral mature masculine voices
     "ANALITICO_FRIO": [
         {"voice": "pt-BR-AntonioNeural",   "rate": "+0%",  "volume": "+0%"},
-        {"voice": "pt-BR-ManuelaNeural",   "rate": "+0%",  "volume": "+0%"},
-        {"voice": "pt-BR-ElzaNeural",      "rate": "+0%",  "volume": "+0%"},
-        {"voice": "pt-BR-JulioNeural",     "rate": "+0%",  "volume": "+0%"},
+        {"voice": "pt-BR-NicolauNeural",   "rate": "+0%",  "volume": "+0%"},
+        {"voice": "pt-BR-DonatoNeural",    "rate": "+0%",  "volume": "+0%"},
+        {"voice": "pt-BR-JulioNeural",     "rate": "+2%",  "volume": "+0%"},
     ],
+    # Rising hope — multilingual modern feminine voices
     "ESPERANCA_CRESCENTE": [
         {"voice": "pt-BR-ThalitaNeural",   "rate": "+0%",  "volume": "+2%"},
-        {"voice": "pt-BR-LeticiaNeural",   "rate": "+2%",  "volume": "+2%"},
-        {"voice": "pt-BR-GiovannaNeural",  "rate": "+0%",  "volume": "+2%"},
-        {"voice": "pt-BR-FabioNeural",     "rate": "+1%",  "volume": "+2%"},
+        {"voice": "pt-BR-GiovannaNeural",  "rate": "+2%",  "volume": "+3%"},
+        {"voice": "pt-BR-LeticiaNeural",   "rate": "+0%",  "volume": "+2%"},
+        {"voice": "pt-BR-ManuelaNeural",   "rate": "+0%",  "volume": "+2%"},
     ],
+    # Urgent CTA — strong commanding masculine voices
     "CTA_URGENTE": [
         {"voice": "pt-BR-AntonioNeural",   "rate": "+12%", "volume": "+8%"},
-        {"voice": "pt-BR-ValerioNeural",   "rate": "+10%", "volume": "+8%"},
-        {"voice": "pt-BR-HumbertoNeural",  "rate": "+10%", "volume": "+7%"},
+        {"voice": "pt-BR-FabioNeural",     "rate": "+15%", "volume": "+10%"},
+        {"voice": "pt-BR-HumbertoNeural",  "rate": "+12%", "volume": "+8%"},
+        {"voice": "pt-BR-ValerioNeural",   "rate": "+14%", "volume": "+9%"},
     ],
+    # Energetic hook — young vibrant feminine voices
     "HOOK_ENERGICO": [
         {"voice": "pt-BR-BrendaNeural",    "rate": "+5%",  "volume": "+5%"},
-        {"voice": "pt-BR-FabioNeural",     "rate": "+6%",  "volume": "+5%"},
-        {"voice": "pt-BR-LeticiaNeural",   "rate": "+5%",  "volume": "+5%"},
+        {"voice": "pt-BR-GiovannaNeural",  "rate": "+8%",  "volume": "+5%"},
+        {"voice": "pt-BR-ThalitaNeural",   "rate": "+5%",  "volume": "+5%"},
+        {"voice": "pt-BR-LeticiaNeural",   "rate": "+6%",  "volume": "+5%"},
     ],
 }
+# Backward-compat alias (set membership checks still work via __contains__)
+EMOTION_VOICE = EMOTION_VOICES
 DEFAULT_EMOTION = "EMPATIA_ACOLHEDOR"
 
-def pick_voice_config(emotion, video_id=None):
-    """Pick voice config from emotion pool deterministically by video_id.
-    Same video → same voice per emotion (consistency).
-    Different videos → varied voices (rotation across the 16-voice catalog).
-    """
-    pool = EMOTION_VOICE.get(emotion) or EMOTION_VOICE[DEFAULT_EMOTION]
-    # Backward compat: if someone passed a single dict (legacy), return it
-    if isinstance(pool, dict):
-        return pool
-    if not pool:
-        return EMOTION_VOICE[DEFAULT_EMOTION][0]
-    if not video_id:
-        return pool[0]
-    h = hashlib.md5(f"{video_id}:{emotion}".encode()).digest()
-    return pool[h[0] % len(pool)]
+# Global seed used by pick_emotion_voice. Set in main() from pipeline_id so the
+# voice rotation is deterministic per video but varies across videos.
+_SEED_STR = "default_seed"
+
+def pick_emotion_voice(emotion: str, seed: str = None) -> dict:
+    """Pick a voice variant for the given emotion. Deterministic per (emotion, seed).
+    Same pipeline + same emotion always picks the same voice; different pipelines
+    rotate through the variants for natural variety across videos."""
+    options = EMOTION_VOICES.get(emotion, EMOTION_VOICES[DEFAULT_EMOTION])
+    s = seed if seed is not None else _SEED_STR
+    h = int(hashlib.sha256(f"{emotion}:{s}".encode()).hexdigest(), 16)
+    return options[h % len(options)]
 
 WORKDIR = Path("/tmp/tts_work")
 WORKDIR.mkdir(parents=True, exist_ok=True)
@@ -340,7 +338,7 @@ Output STRICT JSON: {"results":[{"id":"P0","emotion":"<CATEGORY>"},...]}"""
 async def gen_para_audio(idx, text, emotion):
     """Gera 1 MP3 com Edge TTS pra um parágrafo."""
     import edge_tts
-    cfg = pick_voice_config(emotion, PIPELINE_ID)
+    cfg = pick_emotion_voice(emotion, _SEED_STR)
     out = WORKDIR / f"p{idx:03d}.mp3"
     communicate = edge_tts.Communicate(
         text, cfg["voice"], rate=cfg["rate"], volume=cfg["volume"])
@@ -455,6 +453,12 @@ def dispatch_render_workflow(pipeline_id, audio_url, html_url, title, target_pla
 def main():
     pipe = claim_pipeline()
     pid = pipe["id"]
+    # Set voice rotation seed: each pipeline_id deterministically picks a unique
+    # combination from the 16 PT-BR Neural voice pool. Same video = same voices,
+    # different videos = different voice combinations (natural variety).
+    global _SEED_STR
+    _SEED_STR = str(pid)
+    log(f"[VOICES] _SEED_STR={_SEED_STR[:24]} (rotates across 16 PT-BR neural voices)")
     title = pipe["title"]
     script = pipe["script"]
     target = pipe.get("target_platform") or TARGET_PLATFORM
@@ -503,7 +507,7 @@ def main():
         "voice_name": "EdgeTTS_MultiVoice_Groq_Emotion_v1",
         "voice_id": "edge-tts-multi",
         "emotion_profile": json.dumps([{"para": i, "emotion": emotions[i],
-                                        "voice": pick_voice_config(emotions[i], PIPELINE_ID)["voice"]}
+                                        "voice": pick_emotion_voice(emotions[i], _SEED_STR)["voice"]}
                                        for i in range(len(paras))]),
         "metadata": {
             "audio_engine": "edge-tts-microsoft",
