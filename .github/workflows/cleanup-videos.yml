@@ -1,0 +1,85 @@
+name: cleanup-videos-bucket
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type DELETE to confirm wiping ALL files from videos bucket'
+        required: true
+        type: string
+      keep_v2:
+        description: 'Keep V2 files (videos/v2/*)? (true/false)'
+        required: false
+        type: string
+        default: 'true'
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: inputs.confirm == 'DELETE'
+    steps:
+      - name: Wipe storage bucket
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          KEEP_V2: ${{ inputs.keep_v2 }}
+        run: |
+          python3 -m pip install --quiet requests
+          python3 << 'PY'
+          import os, requests, sys
+          SB = os.environ['SUPABASE_URL']
+          KEY = os.environ['SUPABASE_SERVICE_KEY']
+          KEEP_V2 = os.environ.get('KEEP_V2', 'true') == 'true'
+          H = {'apikey': KEY, 'Authorization': f'Bearer {KEY}'}
+          
+          # List all files using PostgREST query on storage.objects (read allowed, only delete blocked)
+          r = requests.get(
+              f"{SB}/rest/v1/objects?bucket_id=eq.videos&select=name&limit=10000",
+              headers={**H, 'Accept-Profile': 'storage'}, timeout=60)
+          if r.status_code != 200:
+              # Fallback: use storage list API
+              print(f"Direct query failed ({r.status_code}), using storage list API")
+              # Storage list endpoint
+              r2 = requests.post(f"{SB}/storage/v1/object/list/videos",
+                  headers={**H, 'Content-Type':'application/json'},
+                  json={'limit':10000,'offset':0}, timeout=60)
+              files = [f['name'] for f in r2.json()] if r2.status_code == 200 else []
+              # Recursive list for subdirs
+              for prefix in ['v2/', 'thumbnails/']:
+                  rs = requests.post(f"{SB}/storage/v1/object/list/videos",
+                      headers={**H, 'Content-Type':'application/json'},
+                      json={'limit':10000,'offset':0,'prefix':prefix}, timeout=60)
+                  if rs.status_code == 200:
+                      files.extend([prefix + f['name'] for f in rs.json()])
+          else:
+              files = [o['name'] for o in r.json()]
+          
+          print(f"Found {len(files)} files in bucket 'videos'")
+          
+          # Filter
+          to_delete = [f for f in files if not (KEEP_V2 and f.startswith('v2/'))]
+          to_keep = [f for f in files if KEEP_V2 and f.startswith('v2/')]
+          print(f"Will delete: {len(to_delete)} | Will keep: {len(to_keep)}")
+          
+          if not to_delete:
+              print("Nothing to delete.")
+              sys.exit(0)
+          
+          # Delete in batches of 100 using bulk DELETE endpoint
+          deleted = 0
+          failed = 0
+          for i in range(0, len(to_delete), 100):
+              batch = to_delete[i:i+100]
+              rd = requests.delete(f"{SB}/storage/v1/object/videos",
+                  headers={**H, 'Content-Type':'application/json'},
+                  json={'prefixes': batch}, timeout=60)
+              if rd.status_code in (200, 204):
+                  deleted += len(batch)
+                  print(f"  ✓ Deleted batch {i//100 + 1}: {len(batch)} files")
+              else:
+                  failed += len(batch)
+                  print(f"  ✗ Batch {i//100 + 1} FAILED: {rd.status_code} - {rd.text[:200]}")
+          
+          print(f"\n✅ DONE. Deleted: {deleted} | Failed: {failed} | Kept (V2): {len(to_keep)}")
+          PY
