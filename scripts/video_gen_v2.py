@@ -184,37 +184,67 @@ EMOTION_VOICE = {
 }
 
 def gen_audio_edge_tts(text, emotion, output_path):
-    """Generate audio with retry + gTTS fallback for resilience."""
+    """Generate audio with TTS chain: Edge (1 try) -> gTTS -> OpenAI TTS."""
     voice, rate, pitch = EMOTION_VOICE.get(emotion, EMOTION_VOICE['calmo'])
-    last_err = None
-    # Try Edge TTS up to 3 times
-    for attempt in range(3):
+    errors = []
+    
+    # 1. Try Edge TTS once (often fails in GH Actions due to MS auth changes)
+    try:
+        import edge_tts
+        async def _gen():
+            comm = edge_tts.Communicate(text, voice, rate=rate, pitch=pitch)
+            await comm.save(output_path)
+        asyncio.run(_gen())
+        if os.path.exists(output_path) and os.path.getsize(output_path) > 100:
+            return _probe_duration(output_path)
+        raise RuntimeError("edge_tts produced empty file")
+    except Exception as e:
+        errors.append(f"edge-tts: {type(e).__name__}: {str(e)[:80]}")
+    
+    # 2. Try gTTS (free, reliable, no emotion control but works in GH Actions)
+    try:
+        from gtts import gTTS
+        # gTTS speed control via slow=True/False only; pick based on emotion
+        slow = emotion in ('contemplativo', 'melancolico', 'calmo')
+        tts = gTTS(text=text, lang='pt', tld='com.br', slow=slow)
+        tts.save(output_path)
+        if os.path.exists(output_path) and os.path.getsize(output_path) > 100:
+            print(f"  [tts] gTTS used (emotion={emotion}, slow={slow})")
+            return _probe_duration(output_path)
+        raise RuntimeError("gTTS produced empty file")
+    except Exception as e:
+        errors.append(f"gTTS: {type(e).__name__}: {str(e)[:80]}")
+    
+    # 3. Final fallback: OpenAI TTS-1 (paid but very cheap ~$0.015/1k chars)
+    if OPENAI_KEY:
         try:
-            import edge_tts
-            async def _gen():
-                comm = edge_tts.Communicate(text, voice, rate=rate, pitch=pitch)
-                await comm.save(output_path)
-            asyncio.run(_gen())
-            # Verify file was created
-            if os.path.exists(output_path) and os.path.getsize(output_path) > 100:
-                break
-            raise RuntimeError("edge_tts produced empty file")
+            voice_map_oa = {
+                'calmo': 'onyx', 'tenso': 'nova', 'empatia': 'nova',
+                'esperanca': 'shimmer', 'urgente': 'nova',
+                'contemplativo': 'onyx', 'melancolico': 'echo', 'alivio': 'shimmer'
+            }
+            r = requests.post('https://api.openai.com/v1/audio/speech',
+                headers={'Authorization': f'Bearer {OPENAI_KEY}', 'Content-Type': 'application/json'},
+                json={
+                    'model': 'tts-1',
+                    'input': text,
+                    'voice': voice_map_oa.get(emotion, 'nova'),
+                    'response_format': 'mp3',
+                    'speed': 1.0
+                }, timeout=60)
+            r.raise_for_status()
+            with open(output_path, 'wb') as f:
+                f.write(r.content)
+            print(f"  [tts] OpenAI TTS used (voice={voice_map_oa.get(emotion, 'nova')})")
+            return _probe_duration(output_path)
         except Exception as e:
-            last_err = e
-            print(f"  [tts] edge-tts attempt {attempt+1} failed: {type(e).__name__}: {str(e)[:100]}")
-            time.sleep(2)
-    else:
-        # All Edge TTS attempts failed - use gTTS fallback
-        print(f"  [tts] falling back to gTTS")
-        try:
-            from gtts import gTTS
-            tts = gTTS(text=text, lang='pt', tld='com.br', slow=False)
-            tts.save(output_path)
-        except Exception as e:
-            raise RuntimeError(f"All TTS engines failed. Edge: {last_err}. gTTS: {e}")
-    # Get actual duration via ffprobe
+            errors.append(f"openai-tts: {type(e).__name__}: {str(e)[:80]}")
+    
+    raise RuntimeError(f"ALL TTS engines failed: {' | '.join(errors)}")
+
+def _probe_duration(path):
     r = subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'format=duration',
-                        '-of', 'default=noprint_wrappers=1:nokey=1', output_path],
+                        '-of', 'default=noprint_wrappers=1:nokey=1', path],
                        capture_output=True, text=True)
     return float(r.stdout.strip()) if r.stdout.strip() else 0.0
 
