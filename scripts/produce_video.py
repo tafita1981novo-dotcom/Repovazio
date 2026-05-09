@@ -29,6 +29,58 @@ from pathlib import Path
 SBU = os.environ["SUPABASE_URL"].rstrip("/")
 SBK = os.environ["SUPABASE_SERVICE_KEY"]
 GROQ_KEY = os.environ["GROQ_API_KEY"]
+
+# === LLMRouter integration (DeepSeek V4 Pro DEFAULT, free fallback chain, 100% FREE) ===
+import sys as _sys
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+if _SCRIPT_DIR not in _sys.path:
+    _sys.path.insert(0, _SCRIPT_DIR)
+try:
+    from llm_router import LLMRouter as _LLMRouter
+    _ROUTER = _LLMRouter()
+    _ROUTER_OK = True
+except Exception as _e_imp:
+    _ROUTER = None
+    _ROUTER_OK = False
+    print(f"[produce_video] LLMRouter import failed: {_e_imp}; using direct Groq fallback only", flush=True)
+
+def llm_chat_compat(messages, response_format=None, temperature=0.4, max_tokens=2000, timeout=90):
+    """Unified LLM call: tries LLMRouter (DeepSeek V4 Pro #1, Nvidia chain free, OpenAI last resort)
+    falling back to direct Groq llama-3.3-70b-versatile if router missing/fails.
+    Returns the assistant content string. Raises RuntimeError if all paths fail.
+    """
+    # Path 1: LLMRouter (DeepSeek V4 Pro DEFAULT, max capabilities)
+    if _ROUTER_OK and _ROUTER:
+        try:
+            r = _ROUTER.chat(
+                messages=messages,
+                max_tokens=max_tokens,
+                temperature=temperature,
+                response_format=response_format,
+                timeout=timeout,
+            )
+            content = r.get("content") or ""
+            if content:
+                return content
+        except Exception as _e_router:
+            print(f"[produce_video] LLMRouter chain exhausted: {_e_router}; trying direct Groq", flush=True)
+
+    # Path 2: Direct Groq (legacy fallback)
+    body = {
+        "model": "llama-3.3-70b-versatile",
+        "messages": messages,
+        "temperature": temperature,
+        "max_tokens": max_tokens,
+    }
+    if response_format:
+        body["response_format"] = response_format
+    headers = {"Authorization": f"Bearer {GROQ_KEY}", "Content-Type": "application/json",
+               "User-Agent": "psicologia-doc/1.0"}
+    s, b, _h = http("https://api.groq.com/openai/v1/chat/completions",
+                    method="POST", headers=headers, body=body, timeout=timeout)
+    if s != 200:
+        raise RuntimeError(f"Groq direct failed HTTP {s}: {b[:200]}")
+    return json.loads(b)["choices"][0]["message"]["content"] or ""
 ELEVEN_KEY = os.environ["ELEVENLABS_API_KEY"]
 GH_PAT = os.environ.get("GH_PAT", "")
 PIPELINE_ID = os.environ.get("PIPELINE_ID", "").strip()
@@ -152,13 +204,14 @@ def classify_emotions(paragraphs):
         "temperature": 0.3,
         "max_tokens": 2000,
     }
-    headers = {"Authorization": f"Bearer {GROQ_KEY}", "Content-Type": "application/json"}
-    s, b, _ = http("https://api.groq.com/openai/v1/chat/completions", method="POST", headers=headers, body=body, timeout=60)
-    if s != 200:
-        log(f"WARN Groq classify failed {s}: {b[:300]}, fallback to default", level="WARN")
-        return [EMOTION_DEFAULT] * len(paragraphs)
     try:
-        content = json.loads(b)["choices"][0]["message"]["content"]
+        content = llm_chat_compat(
+            messages=body["messages"],
+            response_format=body.get("response_format"),
+            temperature=body["temperature"],
+            max_tokens=body["max_tokens"],
+            timeout=60,
+        )
         results = json.loads(content)["results"]
         out = [EMOTION_DEFAULT] * len(paragraphs)
         for r in results:
@@ -225,15 +278,14 @@ Output STRICT JSON: {{"short": "<text {char_min}-{char_max} chars>"}}"""
         "temperature": 0.7,
         "max_tokens": 500,
     }
-    headers = {"Authorization": f"Bearer {GROQ_KEY}", "Content-Type": "application/json",
-               "User-Agent": "psicologia-doc/1.0"}
-    s, b, _ = http("https://api.groq.com/openai/v1/chat/completions",
-                   method="POST", headers=headers, body=body, timeout=60)
-    if s != 200:
-        log(f"  Groq condense failed (HTTP {s}), fallback truncation")
-        return script[:char_max].rsplit(".", 1)[0] + "."
     try:
-        content = json.loads(b)["choices"][0]["message"]["content"]
+        content = llm_chat_compat(
+            messages=body["messages"],
+            response_format=body.get("response_format"),
+            temperature=body["temperature"],
+            max_tokens=body["max_tokens"],
+            timeout=60,
+        )
         result = json.loads(content)
         short = (result.get("short") or "").strip()
         if len(short) > char_max:
