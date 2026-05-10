@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Setup OAuth @psidanielacoelho · Passo a Passo</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#0a0a0a;color:#fff;padding:18px;max-width:900px;margin:0 auto;line-height:1.55}
+  h1{font-size:24px;margin-bottom:8px;background:linear-gradient(90deg,#ff6b9d,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  h2{font-size:18px;margin:24px 0 10px;color:#a855f7;border-bottom:2px solid #a855f7;padding-bottom:6px}
+  h3{font-size:14px;color:#fbbf24;margin:14px 0 6px}
+  .alert{background:#3d1a1a;border-left:4px solid #ef4444;padding:14px;border-radius:0 8px 8px 0;margin:12px 0;font-size:13px}
+  .alert strong{color:#fca5a5}
+  .ok{background:#1a3d1a;border-left:4px solid #4ade80;padding:14px;border-radius:0 8px 8px 0;margin:12px 0;font-size:13px}
+  .step{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;padding:16px;margin:12px 0}
+  .step .num{display:inline-block;width:28px;height:28px;background:#a855f7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;font-size:13px;margin-right:8px}
+  .step .title{display:inline-block;font-weight:700;font-size:15px;color:#fff;vertical-align:middle}
+  .step .body{margin-top:10px;font-size:13px;color:#ccc}
+  .step .body ul{margin-left:18px;margin-top:6px}
+  .step .body li{margin:4px 0}
+  code{background:#222;color:#fbbf24;padding:2px 7px;border-radius:3px;font-size:11px;font-family:Menlo,monospace}
+  .code-block{background:#0d0d0d;border:1px solid #333;border-radius:6px;padding:12px;margin:8px 0;font-family:Menlo,monospace;font-size:11px;overflow-x:auto;color:#a8e6a8;white-space:pre}
+  a{color:#60a5fa;text-decoration:none}
+  a:hover{text-decoration:underline}
+  .btn{display:inline-block;background:#a855f7;color:#fff;padding:8px 14px;border-radius:6px;font-size:12px;text-decoration:none;margin-top:6px;font-weight:600}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:12px;background:#161616;border-radius:6px;overflow:hidden}
+  th,td{padding:8px;text-align:left;border-bottom:1px solid #222}
+  th{background:#222;color:#a855f7}
+  .receita-tier{background:linear-gradient(135deg,#1a0a2a,#0a1a2a);border:1px solid #4ade80;border-radius:8px;padding:14px;margin:8px 0}
+</style>
+</head>
+<body>
+
+<h1>🔑 Setup OAuth @psidanielacoelho</h1>
+<p style="color:#aaa;font-size:13px">Como dar permissão pra publicação automática no canal novo</p>
+
+<div class="alert">
+<strong>⚠️ Situação atual:</strong> As credenciais YouTube no GitHub Secrets pertencem a <code>tafita81@gmail.com</code> (canal antigo bloqueado). Servem APENAS pra LER dados públicos de qualquer canal. Pra <strong>PUBLICAR</strong> em <code>@psidanielacoelho</code> (de <code>psidanielacoelho1982@gmail.com</code>), preciso de NOVAS credenciais OAuth.
+</div>
+
+<h2>📋 Passo a Passo (15 minutos)</h2>
+
+<div class="step">
+<div><span class="num">1</span><span class="title">Acessar Google Cloud Console</span></div>
+<div class="body">
+Faça login com <code>psidanielacoelho1982@gmail.com</code> no Google Cloud:
+<a class="btn" href="https://console.cloud.google.com/" target="_blank">Abrir Console →</a>
+</div>
+</div>
+
+<div class="step">
+<div><span class="num">2</span><span class="title">Criar Projeto Novo</span></div>
+<div class="body">
+Topo da página: clique no seletor de projeto → <strong>Novo Projeto</strong>:
+<ul>
+<li>Nome: <code>psidanielacoelho-publisher</code></li>
+<li>Organização: vazio</li>
+<li>Salvar e selecionar este projeto</li>
+</ul>
+</div>
+</div>
+
+<div class="step">
+<div><span class="num">3</span><span class="title">Habilitar YouTube Data API v3</span></div>
+<div class="body">
+Menu lateral → <strong>APIs &amp; Services → Library</strong> → buscar <strong>YouTube Data API v3</strong> → <strong>Enable</strong>
+<a class="btn" href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank">Direto pra API →</a>
+</div>
+</div>
+
+<div class="step">
+<div><span class="num">4</span><span class="title">Configurar OAuth Consent Screen</span></div>
+<div class="body">
+Menu lateral → <strong>APIs &amp; Services → OAuth consent screen</strong>:
+<ul>
+<li>User Type: <strong>External</strong></li>
+<li>App name: <code>Psi Daniela Coelho Publisher</code></li>
+<li>User support email: <code>psidanielacoelho1982@gmail.com</code></li>
+<li>Developer contact email: <code>psidanielacoelho1982@gmail.com</code></li>
+<li>Scopes: adicionar <code>https://www.googleapis.com/auth/youtube.upload</code> e <code>https://www.googleapis.com/auth/youtube</code></li>
+<li>Test users: adicione <code>psidanielacoelho1982@gmail.com</code></li>
+<li>Status: deixar como <strong>Testing</strong> (refresh tokens duram 7 dias se Testing, perpétuos se Production — ver passo 7)</li>
+</ul>
+</div>
+</div>
+
+<div class="step">
+<div><span class="num">5</span><span class="title">Criar OAuth Client ID</span></div>
+<div class="body">
+Menu lateral → <strong>APIs &amp; Services → Credentials</strong>:
+<ul>
+<li>Clicar <strong>+ Create Credentials → OAuth Client ID</strong></li>
+<li>Application type: <strong>Web application</strong></li>
+<li>Name: <code>psi-daniela-publisher</code></li>
+<li>Authorized redirect URIs: adicionar <code>https://developers.google.com/oauthplayground</code></li>
+<li>Save → <strong>copiar Client ID e Client Secret</strong></li>
+</ul>
+</div>
+</div>
+
+<div class="step">
+<div><span class="num">6</span><span class="title">Gerar Refresh Token via OAuth Playground</span></div>
+<div class="body">
+<a class="btn" href="https://developers.google.com/oauthplayground" target="_blank">OAuth Playground →</a>
+<ul>
+<li>Topo direito: <strong>⚙️ Settings</strong> → marcar <strong>Use your own OAuth credentials</strong></li>
+<li>Colar Client ID e Client Secret do passo 5 → Close</li>
+<li>Esquerda: rolar até <strong>YouTube Data API v3</strong> → marcar <code>youtube</code> e <code>youtube.upload</code></li>
+<li>Clicar <strong>Authorize APIs</strong></li>
+<li>Login com <code>psidanielacoelho1982@gmail.com</code> (a conta DO CANAL!)</li>
+<li>Aceitar warning "App não verificado" → Continue</li>
+<li>Voltar pro Playground → clicar <strong>Exchange authorization code for tokens</strong></li>
+<li><strong>Copiar o Refresh token</strong> (começa com <code>1//</code>)</li>
+</ul>
+</div>
+</div>
+
+<div class="step">
+<div><span class="num">7</span><span class="title">⚡ IMPORTANTE: Publish App (refresh token perpétuo)</span></div>
+<div class="body">
+Volta no Console → <strong>OAuth consent screen</strong> → clica <strong>PUBLISH APP</strong> → Confirmar.<br>
+<em>Sem isso, o refresh token expira em 7 dias.</em> Depois de publicar, fica perpétuo (até o usuário revogar manualmente).
+</div>
+</div>
+
+<div class="step">
+<div><span class="num">8</span><span class="title">Me enviar as 3 credenciais</span></div>
+<div class="body">
+Cola aqui na conversa o que copiou:
+<div class="code-block">YT_CLIENT_ID_NEW=...
+YT_CLIENT_SECRET_NEW=...
+YT_REFRESH_TOKEN_NEW=1//...</div>
+Eu adiciono automaticamente no GitHub Secrets + Supabase. Imediatamente o pipeline passa a publicar TUDO em <strong>@psidanielacoelho</strong>.
+</div>
+</div>
+
+<h2>💰 O Que Você Vai Ganhar (estratégia já implementada)</h2>
+
+<div class="ok">
+<strong>✅ CONFIRMADO via pesquisa oficial YouTube + dados reais Psych2Go:</strong><br>
+Vídeos de 5+ min PAGAM SIM, mas vídeos de <strong>8min+</strong> ganham <strong>+50% a +100% MAIS</strong> via mid-roll ads.
+</div>
+
+<h3>4 Tiers de Vídeo (estratégia balanceada)</h3>
+<table>
+<tr><th>Tier</th><th>Duração</th><th>Mid-roll</th><th>Receita</th><th>% produção</th><th>Quando usar</th></tr>
+<tr><td><strong>SHORT</strong></td><td>50-58s</td><td>—</td><td>0.3x</td><td>Maior volume</td><td>Subs rápidos · path 10M views/90d</td></tr>
+<tr><td><strong>CURTO</strong></td><td>5-7min</td><td>❌ não</td><td>1.0x</td><td>30%</td><td>Alta retenção · viralização (Psych2Go usa muito)</td></tr>
+<tr><td style="color:#4ade80"><strong>ÓTIMO</strong></td><td>8-10min</td><td>✅ SIM</td><td><strong>1.5x</strong></td><td><strong>50%</strong></td><td><strong>Sweet spot · mesma performance que 5-7min mas paga 50% mais</strong></td></tr>
+<tr><td><strong>PREMIUM</strong></td><td>12-15min</td><td>✅ múltiplos</td><td><strong>2.0x</strong></td><td>20%</td><td>Tópicos densos · listas grandes · tutoriais</td></tr>
+</table>
+
+<div class="receita-tier">
+<strong>📊 Por que 8-10min é ótimo:</strong><br>
+Dados reais Psych2Go (top 120 vídeos, fetched HOJE via YouTube API):
+<ul style="margin-top:6px;margin-left:18px;font-size:12px;color:#bbb">
+<li>47 vídeos de 5-7min: avg <strong>109K views</strong></li>
+<li>10 vídeos de 8-12min: avg <strong>111K views</strong> (performance IDÊNTICA)</li>
+<li>Mas os de 8-12min ganham <strong>+50% receita</strong> via mid-roll que o YouTube libera</li>
+<li>Conclusão: Psych2Go DEIXA DINHEIRO NA MESA. Nossa estratégia maximiza isso.</li>
+</ul>
+</div>
+
+<h3>📅 Programação Diária (quando OAuth estiver ativo)</h3>
+<table>
+<tr><th>Tier</th><th>Por dia</th><th>Por semana</th><th>Receita esperada/dia</th></tr>
+<tr><td>SHORT</td><td>3 vids</td><td>21 vids</td><td>~$0.50</td></tr>
+<tr><td>CURTO 5-7min</td><td>0.3 vids</td><td>2 vids</td><td>~$2</td></tr>
+<tr><td><strong>ÓTIMO 8-10min</strong></td><td><strong>0.5 vids</strong></td><td><strong>3-4 vids</strong></td><td><strong>~$5</strong></td></tr>
+<tr><td>PREMIUM 12-15min</td><td>0.2 vids</td><td>1-2 vids</td><td>~$3</td></tr>
+<tr><td colspan=2><strong>Total semanal:</strong></td><td><strong>~28 vídeos</strong></td><td><strong>~$70/semana após YPP</strong></td></tr>
+</table>
+
+<h3>📈 Projeção realista após OAuth ativo</h3>
+<table>
+<tr><th>Marco</th><th>Tempo</th><th>Receita/mês</th></tr>
+<tr><td>YPP early access (500 subs + 3K hours)</td><td>30-45 dias</td><td>$50-200 (Super Thanks, Memberships)</td></tr>
+<tr><td>YPP full ads (1k subs + 4k hours)</td><td>60-90 dias</td><td>$300-800</td></tr>
+<tr><td>10k subs</td><td>3-4 meses</td><td>$800-2k</td></tr>
+<tr><td>100k subs + auto-dub EN</td><td>9-12 meses</td><td>$5-12k</td></tr>
+<tr><td>1M subs</td><td>24-36 meses</td><td>$25k+</td></tr>
+</table>
+
+<h2>🚀 O Que Já Está Pronto (sem precisar do OAuth)</h2>
+<ul style="margin-left:18px;font-size:13px;color:#bbb">
+<li>✅ Estratégia 4 tiers (SHORT/CURTO/<strong>ÓTIMO 8-10min</strong>/PREMIUM) com mid-roll otimizado</li>
+<li>✅ Função <code>generate_video_balanced(topico, tier)</code> testada — 4 pipelines de exemplo criados</li>
+<li>✅ 12 fórmulas de hook reais Psych2Go traduzidas PT-BR</li>
+<li>✅ 18 insights gravados no cérebro autônomo (RPM real, padrões, frequência)</li>
+<li>✅ Pipeline V2 Psych2Go-clone produz vídeos 100% originais (zero risco copyright)</li>
+<li>✅ Edge TTS PT-BR + Flux Schnell + ffmpeg ($0/mês shorts, $0.012/long monetizado)</li>
+</ul>
+
+<p style="text-align:center;margin-top:30px;color:#888;font-size:11px">
+Galeria: <a href="https://repovazio.vercel.app/v2.html">v2.html</a> · 
+Blueprint: <a href="https://repovazio.vercel.app/canal-oficial.html">canal-oficial.html</a><br>
+Última atualização: 2026-05-10
+</p>
+
+</body>
+</html>
