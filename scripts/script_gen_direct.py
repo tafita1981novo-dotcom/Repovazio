@@ -53,7 +53,11 @@ def main():
     print(f"[gen] {len(pipes)} cinematograficos pending")
 
     ok = 0
-    for p in pipes:
+    import time
+    for idx, p in enumerate(pipes):
+        if idx > 0:
+            print(f"[gen] aguardando 35s pra evitar rate limit Groq...")
+            time.sleep(35)
         pid, title, plat, meta = p["id"], p["title"], p["target_platform"], p.get("metadata",{}) or {}
         voz = meta.get("voice_profile_required","feminina_calma_lenta")
         serie_nome = meta.get("serie_nome","Decifre a Mente")
