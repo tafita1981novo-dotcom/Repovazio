@@ -302,6 +302,25 @@ NAO USE TEXTO NA IMAGEM. So personagens, expressoes, ambientes."""
         print(f"  [seg] truncating {len(scenes)} -> {max_scenes} (LLM ignored cap)")
         scenes = scenes[:max_scenes]
     
+    # VIRAL MODE: validar total de narration chars >= 700c (~48s)
+    # Se LLM cortou narração demais, redistribui o script ORIGINAL pelas cenas
+    if is_viral:
+        total_narration = sum(len(s.get('narration','')) for s in scenes)
+        if total_narration < 700:
+            print(f"  [seg] WARN: narration total {total_narration}c < 700c. Redistribuindo script original pelas cenas.")
+            # Split script in N approximately equal chunks at sentence boundaries
+            n = len(scenes)
+            sentences = re.split(r'(?<=[.!?])\s+', script.strip())
+            chunks_per_scene = max(1, len(sentences) // n)
+            for i, s in enumerate(scenes):
+                start = i * chunks_per_scene
+                end = (i+1) * chunks_per_scene if i < n-1 else len(sentences)
+                new_narr = ' '.join(sentences[start:end]).strip()
+                if new_narr:
+                    s['narration'] = new_narr
+            new_total = sum(len(s.get('narration','')) for s in scenes)
+            print(f"  [seg] redistributed -> total {new_total}c across {n} scenes")
+    
     return scenes, data.get('background_music_mood', 'calmo_reflexivo')
 
 # -------------- Flux Schnell Nvidia: image generation --------------
