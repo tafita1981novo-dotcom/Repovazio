@@ -114,64 +114,133 @@ def call_llm_with_fallback(messages, response_format=None):
                 time.sleep(3)
     raise RuntimeError(f"All LLM attempts failed. Last: {last_err}")
 
+# ===== VIRAL MODE CONSTANTS =====
+# 50-58s = sweet spot algoritmo TikTok/Reels/Shorts em 2026
+VIRAL_TARGET_DUR = 55          # alvo central
+VIRAL_MIN_DUR = 50
+VIRAL_MAX_DUR = 58
+VIRAL_TARGET_CHARS = 800       # ~55s a 14.5 chars/s PT-BR
+VIRAL_N_SCENES = 8             # ~7s por cena (Psych2Go ritmo)
+
+def viralize_script(script_long):
+    """Resume script longo pra ~800 chars otimizado pra viralizar em 55s.
+    Estrutura: HOOK (3s) -> CONTEUDO (45s) -> CLIFFHANGER (7s)."""
+    prompt = f"""Voce eh roteirista de canal viral PT-BR de psicologia (estilo Psych2Go, 9M subs).
+Tarefa: condensar este roteiro num video VIRAL de 55 segundos exatos (~800 caracteres de narracao).
+
+ROTEIRO ORIGINAL:
+{script_long}
+
+ESTRUTURA OBRIGATORIA (replica formato dos virais 2026):
+1. HOOK (primeiros 3 segundos / ~45 chars): pergunta provocativa OU afirmacao chocante que prende ("Voce sabia que...", "99% das pessoas nao percebe...", "Se voce faz X, isso revela Y")
+2. CONTEUDO PRINCIPAL (45 segundos / ~650 chars): 3-4 pontos rapidos do roteiro original, na linguagem direta de TikTok
+3. CLIFFHANGER (7 segundos / ~100 chars): pergunta ou call-to-action que instiga ("Comenta aqui se voce ja passou", "Salva pra rever", "Voce se identifica com qual?")
+
+REGRAS:
+- LINGUAGEM DIRETA, FRASES CURTAS (max 12 palavras)
+- NADA de "neste video", "vamos falar", "como voces sabem"
+- USAR "voce" sempre, NUNCA "voces"
+- SEM cumprimentos. Comeca DIRETO no hook.
+- SEM despedidas. Termina no cliffhanger.
+
+Retorne APENAS JSON: {{"viral_script": "texto narrado completo em portugues"}}"""
+    content = call_llm_with_fallback(
+        messages=[
+            {'role':'system','content':'Voce eh roteirista de viral psicologia PT-BR. Retorne APENAS JSON valido.'},
+            {'role':'user','content':prompt}
+        ],
+        response_format={'type':'json_object'}
+    )
+    content = content.strip()
+    if content.startswith('```'):
+        content = re.sub(r'^```(?:json)?\n', '', content)
+        content = re.sub(r'\n```$', '', content)
+    data = json.loads(content)
+    return data['viral_script']
+
 def segment_scenes(script, target_platform, total_duration_s):
-    is_short = any(s in target_platform.lower() for s in ['short', 'reel', 'tiktok', 'pin'])
-    aspect = '9:16' if is_short else '16:9'
+    is_viral = any(s in target_platform.lower() for s in ['short','reel','tiktok','pin','viral'])
+    aspect = '9:16' if is_viral else '16:9'
     
-    # Base scene count on SCRIPT SIZE, not arbitrary duration target
-    # Target ~12-18 chars/sec narration speed; ~4-6 sec per scene
-    estimated_dur_s = len(script) / 14.5  # PT-BR speech rate
-    target_scene_dur = 5 if is_short else 6
-    n_scenes_ideal = max(4, int(estimated_dur_s / target_scene_dur))
-    # Hard caps to keep render time + cost reasonable
-    max_scenes = 15 if is_short else 30
-    n_scenes_target = min(n_scenes_ideal, max_scenes)
+    # ===== MODO VIRAL: target 55s, force 8 cenas, viralize script if needed =====
+    if is_viral:
+        # Se script muito longo, condensa pra formato viral primeiro
+        if len(script) > 950:
+            print(f"  [viral] script {len(script)}c -> condensando para ~{VIRAL_TARGET_CHARS}c")
+            script = viralize_script(script)
+            print(f"  [viral] viralized -> {len(script)}c")
+        # Cap forte: 8 cenas exatas para hit 50-58s
+        n_scenes_target = VIRAL_N_SCENES
+        target_scene_dur = round(VIRAL_TARGET_DUR / n_scenes_target, 1)  # ~6.9s
+        max_scenes = 9
+        viral_rules = f"""
+ESTRUTURA VIRAL OBRIGATORIA (50-58 SEGUNDOS TOTAIS):
+- Cena 1: HOOK forte (3s) - pergunta ou afirmacao que prende
+- Cenas 2-7: conteudo principal (~6-7s cada)  
+- Cena 8: CLIFFHANGER/CTA (5-7s) - instiga interacao
+
+DURACAO POR CENA: TODAS entre 5-8s. SOMA TOTAL deve ficar entre 50-58s."""
+    else:
+        # Long form (youtube): NAO usar este pipeline. Long form vira SERIE de 55s.
+        # Se chegar aqui com long form, ainda renderiza mas avisa.
+        estimated_dur_s = len(script) / 14.5
+        target_scene_dur = 6
+        n_scenes_ideal = max(4, int(estimated_dur_s / target_scene_dur))
+        max_scenes = 25  # menor cap pra render mais rapido
+        n_scenes_target = min(n_scenes_ideal, max_scenes)
+        viral_rules = ""
     
-    print(f"  [seg] script={len(script)}c -> est {estimated_dur_s:.0f}s -> {n_scenes_target} scenes (cap {max_scenes})")
+    print(f"  [seg] {target_platform} | {len(script)}c | {n_scenes_target} cenas alvo (cap {max_scenes}) | viral={is_viral}")
     
-    prompt = f"""Voce eh diretor visual do canal Psych2Go (9 milhoes de inscritos). Vai segmentar este roteiro de psicologia em cenas visuais para um video {aspect}.
+    prompt = f"""Voce eh diretor visual do canal Psych2Go (9 milhoes de inscritos). Vai segmentar este roteiro em cenas visuais para um video {aspect}.
 
 ROTEIRO COMPLETO:
 {script}
 
 NUMERO DE CENAS: EXATAMENTE {n_scenes_target} CENAS. NEM MAIS, NEM MENOS.
 PLATAFORMA: {target_platform}
+{viral_rules}
 
-REGRAS CRITICAS PARA O ESTILO PSYCH2GO:
-1. NUNCA gere prompt que peca texto, palavras, letras ou subtitulos na imagem
-2. Sempre tenha 1 personagem humanoide ilustrado como FOCO da imagem (mulher ou homem brasileiro de pele clara/morena/negra alternando, idade 20-45)
-3. Fundos: minimalistas, cores pastel suaves (rosa pessego, azul ceu, verde menta, lavanda)
-4. Expressoes faciais devem CASAR com a emocao da narracao naquele trecho
-5. Variar enquadramento entre: close de rosto, plano medio, silhueta, mao em close-up, perfil
-6. Cada cena DEVE conter 2-4 frases inteiras (NAO 1 palavra solta). Distribua o roteiro INTEIRO entre as {n_scenes_target} cenas.
-7. NAO crie cenas com menos de 30 caracteres de narracao
+REGRAS CRITICAS DO ESTILO PSYCH2GO (mesmo de canais virais mundiais):
+1. NUNCA peca texto, palavras, letras ou subtitulos na imagem
+2. Sempre 1 personagem humanoide ilustrado como FOCO (mulher ou homem brasileiro de pele clara/morena/negra alternando entre cenas, 20-40 anos)
+3. Fundos minimalistas, cores pastel suaves (rosa pessego, azul ceu, verde menta, lavanda, bege creme)
+4. Expressoes faciais MUITO expressivas casando com a emocao da narracao
+5. Variar enquadramento: close_face / medium / wide / silhouette / hands_close / profile
+6. Cada cena DEVE conter 2-4 frases inteiras. Distribua o roteiro INTEIRO entre as {n_scenes_target} cenas.
 
-Para CADA cena retorne:
-- "narration": fragmento curto do roteiro (literal, sem mudar palavras) que vai ser narrado naquela cena
-- "duration_s": 3-6 segundos (decida baseado no comprimento da narracao)
-- "image_prompt": descricao visual em INGLES (Flux entende ingles melhor) descrevendo SOMENTE a cena visual sem mencionar texto. Comece sempre com "minimalist illustration in Psych2Go style, soft pastel colors, clean background, no text, no words,"
-- "emotion": uma das emocoes [calmo, tenso, empatia, esperanca, urgente, contemplativo, melancolico, alivio]
-- "ken_burns": uma de [zoom_in, zoom_out, pan_left, pan_right, static]
-- "shot_type": uma de [close_face, medium, wide, silhouette, hands_close, profile]
+Para CADA cena retorne JSON com:
+- "narration": fragmento literal do roteiro (NAO mude palavras)
+- "duration_s": entre 5-8s
+- "image_prompt": descricao visual em INGLES comecando "minimalist 2D illustration in Psych2Go style, flat vector art, soft pastel colors, clean white or pastel background, no text no words no letters,"
+- "emotion": [calmo|tenso|empatia|esperanca|urgente|contemplativo|melancolico|alivio]
+- "ken_burns": [zoom_in|zoom_out|pan_left|pan_right|static]
+- "shot_type": [close_face|medium|wide|silhouette|hands_close|profile]
 
-Retorne APENAS JSON valido: {{"scenes": [...], "background_music_mood": "calmo_reflexivo|melancolico_esperancoso|tenso_curioso|empatico_morno"}}
+Retorne SOMENTE JSON valido: {{"scenes":[...], "background_music_mood":"calmo_reflexivo|melancolico_esperancoso|tenso_curioso|empatico_morno"}}
 
-NAO USE TEXTO NA IMAGEM. NAO MENCIONE PALAVRAS NO PROMPT. So personagens, expressoes, ambientes."""
+NAO USE TEXTO NA IMAGEM. So personagens, expressoes, ambientes."""
 
     content = call_llm_with_fallback(
         messages=[
-            {'role': 'system', 'content': 'Voce eh diretor visual do canal Psych2Go (9M subs). Estilo: personagens humanoides ilustrados, cores pastel, ZERO TEXTO na tela. Retorne SOMENTE JSON valido.'},
-            {'role': 'user', 'content': prompt}
+            {'role':'system','content':'Voce eh diretor visual do canal Psych2Go. Personagens humanoides ilustrados, cores pastel, ZERO TEXTO. Retorne APENAS JSON valido.'},
+            {'role':'user','content':prompt}
         ],
-        response_format={'type': 'json_object'}
+        response_format={'type':'json_object'}
     )
-    # Robust JSON parsing (some models may wrap in code fences)
     content = content.strip()
     if content.startswith('```'):
         content = re.sub(r'^```(?:json)?\n', '', content)
         content = re.sub(r'\n```$', '', content)
     data = json.loads(content)
-    return data['scenes'], data.get('background_music_mood', 'calmo_reflexivo')
+    scenes = data['scenes']
+    
+    # Hard cap pos-LLM (caso o modelo gerar mais cenas que o pedido)
+    if len(scenes) > max_scenes:
+        print(f"  [seg] truncating {len(scenes)} -> {max_scenes} (LLM ignored cap)")
+        scenes = scenes[:max_scenes]
+    
+    return scenes, data.get('background_music_mood', 'calmo_reflexivo')
 
 # -------------- Flux Schnell Nvidia: image generation --------------
 def _is_image_valid(path, min_brightness=15, max_brightness=245):
