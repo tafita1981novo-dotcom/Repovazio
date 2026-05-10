@@ -122,6 +122,42 @@ VIRAL_MAX_DUR = 58
 VIRAL_TARGET_CHARS = 800       # ~55s a 14.5 chars/s PT-BR
 VIRAL_N_SCENES = 8             # ~7s por cena (Psych2Go ritmo)
 
+def expand_short_to_viral(script_short, hook_hint=None, cliff_hint=None):
+    """Expande script curto para ~800 chars formato viral 55s.
+    Usa hooks/cliffhangers do split_long se disponiveis."""
+    extras = ""
+    if hook_hint: extras += f"\n\nHOOK SUGERIDO (use no inicio): {hook_hint}"
+    if cliff_hint: extras += f"\n\nCLIFFHANGER SUGERIDO (use no fim): {cliff_hint}"
+    
+    prompt = f"""Voce eh roteirista de canal viral PT-BR de psicologia (estilo Psych2Go, 9M subs).
+TAREFA: EXPANDIR este roteiro curto para um video VIRAL de 55 segundos exatos (~800 caracteres).
+
+ROTEIRO ATUAL (curto demais, {len(script_short)} chars):
+{script_short}{extras}
+
+REGRAS RIGIDAS:
+1. SCRIPT FINAL DEVE TER ENTRE 750 E 850 CARACTERES (nao mais, nao menos)
+2. PRESERVE 100% do conteudo original. Adicione exemplos concretos, detalhes psicologicos, situacoes reais.
+3. ESTRUTURA OBRIGATORIA: HOOK (45c, 3s) + CONTEUDO (650c, 45s) + CLIFFHANGER (100c, 7s)
+4. Linguagem direta TikTok: "voce", frases curtas (max 12 palavras), sem cumprimentos, sem despedidas
+5. HOOK chocante ou pergunta provocativa ja na primeira linha
+6. CLIFFHANGER instigante: pergunta + CTA ("Comenta aqui", "Salva pra ver depois")
+
+Retorne APENAS JSON: {{"viral_script": "texto narrado completo 750-850 chars"}}"""
+    content = call_llm_with_fallback(
+        messages=[
+            {'role':'system','content':'Voce eh roteirista viral PT-BR. EXPANDA scripts curtos para 750-850 chars. Retorne APENAS JSON valido.'},
+            {'role':'user','content':prompt}
+        ],
+        response_format={'type':'json_object'}
+    )
+    content = content.strip()
+    if content.startswith('```'):
+        content = re.sub(r'^```(?:json)?\n', '', content)
+        content = re.sub(r'\n```$', '', content)
+    data = json.loads(content)
+    return data['viral_script']
+
 def viralize_script(script_long):
     """Resume script longo pra ~800 chars otimizado pra viralizar em 55s.
     Estrutura: HOOK (3s) -> CONTEUDO (45s) -> CLIFFHANGER (7s)."""
@@ -169,6 +205,11 @@ def segment_scenes(script, target_platform, total_duration_s):
             print(f"  [viral] script {len(script)}c -> condensando para ~{VIRAL_TARGET_CHARS}c")
             script = viralize_script(script)
             print(f"  [viral] viralized -> {len(script)}c")
+        # Se script muito curto (de split_long ou similar), EXPANDE pra 800c
+        elif len(script) < 700:
+            print(f"  [viral] script {len(script)}c -> EXPANDING para ~{VIRAL_TARGET_CHARS}c")
+            script = expand_short_to_viral(script)
+            print(f"  [viral] expanded -> {len(script)}c")
         # Cap forte: 8 cenas exatas para hit 50-58s
         n_scenes_target = VIRAL_N_SCENES
         target_scene_dur = round(VIRAL_TARGET_DUR / n_scenes_target, 1)  # ~6.9s
