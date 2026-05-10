@@ -283,6 +283,82 @@ Retorne SOMENTE JSON valido: {{"scenes":[...], "background_music_mood":"calmo_re
 
 NAO USE TEXTO NA IMAGEM. So personagens, expressoes, ambientes."""
 
+    # ===== CHUNKED MODE: long scripts segmentados em pedaços (evita truncar JSON em max_tokens) =====
+    # Trigger: long_monetized OR script > 4000 chars
+    if (not is_viral) and (len(script) > 4000 or n_scenes_target > 30):
+        print(f"  [seg-chunked] Splitting script into chunks (script={len(script)}c, target={n_scenes_target} cenas)")
+        # Split script into N chunks at sentence boundaries
+        sentences = re.split(r'(?<=[.!?])\s+', script.strip())
+        target_chars_per_chunk = 1800  # gera ~16 cenas por chunk = JSON ~7-8K chars (cabe bem em max_tokens=6000)
+        scenes_per_chunk = max(8, min(20, n_scenes_target // max(1, len(script) // target_chars_per_chunk)))
+        
+        # Group sentences into chunks
+        chunks = []
+        current_chunk = ''
+        for sent in sentences:
+            if len(current_chunk) + len(sent) + 1 > target_chars_per_chunk and current_chunk:
+                chunks.append(current_chunk.strip())
+                current_chunk = sent
+            else:
+                current_chunk += (' ' if current_chunk else '') + sent
+        if current_chunk.strip():
+            chunks.append(current_chunk.strip())
+        
+        print(f"  [seg-chunked] {len(chunks)} chunks of ~{target_chars_per_chunk}c, {scenes_per_chunk} cenas each")
+        
+        all_scenes = []
+        music_mood_first = 'calmo_reflexivo'
+        for ci, chunk in enumerate(chunks):
+            chunk_n_scenes = scenes_per_chunk
+            chunk_prompt = f"""Voce eh diretor visual do canal Psych2Go. Segmente este TRECHO {ci+1}/{len(chunks)} em EXATAMENTE {chunk_n_scenes} cenas visuais 16:9.
+
+TRECHO DO ROTEIRO ({len(chunk)} chars):
+{chunk}
+
+REGRAS:
+- ZERO texto/palavras/letras nas imagens
+- 1 personagem humanoide ilustrado por cena (alternar mulher/homem, etnias brasileiras, idades 20-45)
+- Fundos pastel minimalistas
+- Variar enquadramento: close_face/medium/wide/silhouette/hands_close/profile
+- Cada cena: 2-3 frases do trecho
+
+Para CADA cena: {{"narration": "trecho literal", "duration_s": 5-8, "image_prompt": "minimalist 2D illustration Psych2Go style, flat vector, soft pastels, no text no words, [DESCRICAO]", "emotion": "calmo|tenso|empatia|esperanca|urgente|contemplativo|melancolico|alivio", "ken_burns": "zoom_in|zoom_out|pan_left|pan_right|static", "shot_type": "close_face|medium|wide|silhouette|hands_close|profile"}}
+
+Retorne SOMENTE JSON: {{"scenes":[...], "background_music_mood":"calmo_reflexivo|melancolico_esperancoso|tenso_curioso|empatico_morno"}}"""
+            
+            try:
+                chunk_content = call_llm_with_fallback(
+                    messages=[
+                        {'role':'system','content':'Diretor visual Psych2Go. Personagens ilustrados, pastel, ZERO TEXTO. SOMENTE JSON valido.'},
+                        {'role':'user','content': chunk_prompt}
+                    ],
+                    response_format={'type':'json_object'}
+                )
+                chunk_content = chunk_content.strip()
+                if chunk_content.startswith('```'):
+                    chunk_content = re.sub(r'^```(?:json)?\n','',chunk_content)
+                    chunk_content = re.sub(r'\n```$','',chunk_content)
+                chunk_data = json.loads(chunk_content)
+                chunk_scenes = chunk_data.get('scenes', [])
+                if ci == 0:
+                    music_mood_first = chunk_data.get('background_music_mood', 'calmo_reflexivo')
+                all_scenes.extend(chunk_scenes)
+                print(f"  [seg-chunked] chunk {ci+1}/{len(chunks)}: +{len(chunk_scenes)} cenas (total {len(all_scenes)})")
+            except Exception as e:
+                print(f"  [seg-chunked] chunk {ci+1} FAILED: {e} — skipping (continuing with what we have)")
+                continue
+        
+        if not all_scenes:
+            raise RuntimeError("All chunked segmentation failed")
+        
+        # Hard cap
+        if len(all_scenes) > max_scenes:
+            print(f"  [seg-chunked] truncating {len(all_scenes)} -> {max_scenes}")
+            all_scenes = all_scenes[:max_scenes]
+        
+        return all_scenes, music_mood_first
+    
+    # ===== SINGLE-CALL MODE (viral shorts ou scripts curtos) =====
     content = call_llm_with_fallback(
         messages=[
             {'role':'system','content':'Voce eh diretor visual do canal Psych2Go. Personagens humanoides ilustrados, cores pastel, ZERO TEXTO. Retorne APENAS JSON valido.'},
@@ -297,7 +373,7 @@ NAO USE TEXTO NA IMAGEM. So personagens, expressoes, ambientes."""
     data = json.loads(content)
     scenes = data['scenes']
     
-    # Hard cap pos-LLM (caso o modelo gerar mais cenas que o pedido)
+    # Hard cap pos-LLM
     if len(scenes) > max_scenes:
         print(f"  [seg] truncating {len(scenes)} -> {max_scenes} (LLM ignored cap)")
         scenes = scenes[:max_scenes]
