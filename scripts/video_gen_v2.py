@@ -222,14 +222,35 @@ ESTRUTURA VIRAL OBRIGATORIA (50-58 SEGUNDOS TOTAIS):
 
 DURACAO POR CENA: TODAS entre 5-8s. SOMA TOTAL deve ficar entre 50-58s."""
     else:
-        # Long form (youtube): NAO usar este pipeline. Long form vira SERIE de 55s.
-        # Se chegar aqui com long form, ainda renderiza mas avisa.
-        estimated_dur_s = len(script) / 14.5
-        target_scene_dur = 6
-        n_scenes_ideal = max(4, int(estimated_dur_s / target_scene_dur))
-        max_scenes = 25  # menor cap pra render mais rapido
-        n_scenes_target = min(n_scenes_ideal, max_scenes)
-        viral_rules = ""
+        # Long form (youtube/youtube_long/youtube_long_monetized)
+        is_long_monetized = 'monetized' in target_platform.lower() or 'youtube_long' in target_platform.lower()
+        if is_long_monetized:
+            # 15-18min monetized: pattern interrupt every 6-8s = ~120-150 cenas pra 16min
+            # Strip [MIDROLL_AD_SPOT] markers from script (those are for YouTube auto-ads, not voice)
+            script = script.replace('[MIDROLL_AD_SPOT]', ' ')
+            estimated_dur_s = len(script) / 14.5
+            target_scene_dur = 7  # 7s media = bom equilibrio entre variacao visual e custo Flux
+            n_scenes_ideal = max(80, int(estimated_dur_s / target_scene_dur))
+            max_scenes = 160  # cap pra render rodar em <30min no GH Actions
+            n_scenes_target = min(n_scenes_ideal, max_scenes)
+            viral_rules = """
+ESTRUTURA LONG-FORM MONETIZED YOUTUBE 15-18min (validada por dados de retencao 70%+ Psych2Go/Therapy in a Nutshell):
+- ALTERNAR PROTAGONISTA: nunca repetir mesma pessoa em mais de 3 cenas seguidas (anti-monotonia)
+- Pattern interrupt visual a cada 15-25s (mudanca brusca de angulo, cor de fundo, ou personagem)
+- Variar generos: 50% mulheres / 50% homens / silhuetas neutras
+- Variar etnias: clara/morena/negra alternando
+- Variar idades: 20-25, 30-35, 40-50
+- Variar cenarios: quarto, escritorio, parque, cafe, rua noite, casa minimalista
+- Cenas com ALTA emocao em momentos chave (ponto principal de cada subtopico)
+- DURACAO POR CENA: variar entre 5-12s (NAO uniformes - bom ritmo natural)"""
+        else:
+            # Legacy long form (sem monetizacao planejada)
+            estimated_dur_s = len(script) / 14.5
+            target_scene_dur = 6
+            n_scenes_ideal = max(4, int(estimated_dur_s / target_scene_dur))
+            max_scenes = 25
+            n_scenes_target = min(n_scenes_ideal, max_scenes)
+            viral_rules = ""
     
     print(f"  [seg] {target_platform} | {len(script)}c | {n_scenes_target} cenas alvo (cap {max_scenes}) | viral={is_viral}")
     
@@ -528,11 +549,14 @@ def run():
     script = p['script']
     title = p['title']
     target_platform = p['target_platform']
-    is_short = any(s in target_platform.lower() for s in ['short', 'reel', 'tiktok', 'pin'])
-    target_duration = 60 if is_short else 480
+    # 9:16 ONLY for vertical platforms (shorts/reels/tiktok/pin); long_monetized = 16:9
+    is_short = any(s in target_platform.lower() for s in ['short','reel','tiktok','pin'])
+    is_long_monetized = 'monetized' in target_platform.lower() or 'youtube_long' in target_platform.lower()
+    target_duration = 60 if is_short else (960 if is_long_monetized else 480)  # 16min long_monetized
     
     print(f"  Title: {title}")
-    print(f"  Platform: {target_platform} ({'SHORT 9:16' if is_short else 'LONG 16:9'})")
+    fmt = 'SHORT 9:16' if is_short else ('LONG_MONETIZED 16:9 16min' if is_long_monetized else 'LONG 16:9')
+    print(f"  Platform: {target_platform} ({fmt})")
     print(f"  Script: {len(script)} chars")
     
     print(f"\n[2/7] Segment script into scenes (DeepSeek V4 Pro)")
