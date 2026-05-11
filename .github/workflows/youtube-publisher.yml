@@ -1,0 +1,38 @@
+name: YouTube Publisher — Publicar mp4_ready
+on:
+  schedule:
+    - cron: "0 10,16,22 * * *"   # 3x por dia: 7h, 13h, 19h BRT
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Forçar publicação agora"
+        default: "false"
+
+env:
+  SBU: https://tpjvalzwkqwttvmszvie.supabase.co
+  SBK: ${{ secrets.SUPABASE_SERVICE_KEY }}
+  YT_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+  YT_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+  YT_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+  YT_CHANNEL_ID: UCyCkIpsVgME9yCj_oXJFheA
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      
+      - name: Install deps
+        run: pip install requests
+      
+      - name: Publicar vídeos mp4_ready no YouTube
+        run: python3 scripts/youtube_publisher.py
+      
+      - name: Report
+        if: always()
+        run: echo "Publisher concluido. Ver Supabase > content_pipeline (status=published)"
