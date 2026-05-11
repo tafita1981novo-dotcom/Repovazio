@@ -10,7 +10,7 @@ Vozes PT-BR Edge TTS usadas:
   - Brenda     (jovem, hooks/intro)
 
 Fluxo:
-  1. SQL: pega pipeline (PIPELINE_ID env ou próximo `script_ready`)
+  1. SQL: pega pipeline (PIPELINE_ID env ou próximo `ready_tts`)
   2. Quebra script em parágrafos
   3. Groq classifica emoção de cada parágrafo (6 categorias)
   4. Mapa emoção → (voz, rate, pitch, volume)
@@ -159,7 +159,7 @@ def sb_patch(table, query, payload):
     return json.loads(b) if b else []
 
 def claim_pipeline():
-    """Pega PIPELINE_ID env, OU próximo `script_ready` da target_platform."""
+    """Pega PIPELINE_ID env, OU próximo `ready_tts` da target_platform."""
     if PIPELINE_ID:
         rows = sb_select("content_pipeline",
                         f"id=eq.{PIPELINE_ID}&select=id,title,script,target_platform,duration_target_min,case_id,series_id,episode_number,metadata")
@@ -167,10 +167,10 @@ def claim_pipeline():
         return rows[0]
     # auto-pick by platform
     rows = sb_select("content_pipeline",
-        f"status=eq.script_ready&target_platform=eq.{TARGET_PLATFORM}"
+        f"status=eq.ready_tts&target_platform=eq.{TARGET_PLATFORM}"
         f"&select=id,title,script,target_platform,duration_target_min,case_id,series_id,episode_number,metadata"
         f"&order=id.desc&limit=1")
-    if not rows: raise SystemExit(f"no script_ready for {TARGET_PLATFORM}")
+    if not rows: raise SystemExit(f"no ready_tts for {TARGET_PLATFORM}")
     return rows[0]
 
 def condense_for_short(script, target_platform, char_min=800, char_max=860):
