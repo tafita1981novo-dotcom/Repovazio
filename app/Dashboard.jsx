@@ -1393,16 +1393,18 @@ function PageRanking({ranking:rankingProp,isRanking:isRankingProp}){
 function PageCases({cases:casesProp}){
   const[cases,setCases]=useState(casesProp);
   useEffect(()=>{
-    if(!cases?.cases?.length){
-      sbFetch("real_cases?order=created_at.desc&limit=20&select=*").then(rows=>{
-        if(rows?.length){
-          setCases({cases:rows.map(r=>({
-            channel:r.channel||r.title,achievement:r.achievement||r.description,
-            tactic:r.tactic||"Conteúdo emocional",metric:r.metric||r.views,apply:r.apply_tactic
-          })),tactics:[]});
-        }
-      }).catch(()=>{});
-    }
+    sbFetch("real_cases?order=virality_score.desc&limit=20&select=id,title,description,source,country,year,category,virality_score").then(rows=>{
+      if(rows?.length){
+        setCases({cases:rows.map(r=>({
+          channel:r.source||r.country||"BR",
+          achievement:r.title,
+          tactic:r.description?.substring(0,120)||"Caso real de psicologia",
+          metric:r.virality_score+"★",
+          apply:r.category||"psicologia",
+          year:r.year
+        })),tactics:[]});
+      }
+    }).catch(()=>{});
   },[]);
   return(
     <>
