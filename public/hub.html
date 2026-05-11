@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>psicologia.doc · Hub de Controle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#030308;--bg1:#08080f;--bg2:#0d0d1a;--bg3:#12122a;
+  --border:#1a1a3e;--border2:#252560;
+  --purple:#7c3aed;--purple2:#a855f7;--pink:#ec4899;
+  --green:#10b981;--yellow:#f59e0b;--red:#ef4444;--blue:#3b82f6;
+  --text:#e2e8f0;--muted:#4b5563;--sub:#6b7280;
+  --font:'Syne',sans-serif;--mono:'JetBrains Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;overflow-x:hidden}
+
+/* Background grid */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(124,58,237,0.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(124,58,237,0.04) 1px,transparent 1px);
+  background-size:40px 40px;pointer-events:none;z-index:0;
+}
+
+/* Glow blobs */
+.glow-blob{position:fixed;border-radius:50%;filter:blur(120px);pointer-events:none;z-index:0}
+.blob1{width:500px;height:500px;background:rgba(124,58,237,0.12);top:-150px;left:-100px}
+.blob2{width:400px;height:400px;background:rgba(236,72,153,0.08);bottom:-100px;right:-100px}
+
+/* Header */
+header{
+  position:sticky;top:0;z-index:100;
+  background:rgba(3,3,8,0.85);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  padding:14px 24px;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-icon{
+  width:38px;height:38px;border-radius:10px;
+  background:linear-gradient(135deg,var(--purple),var(--pink));
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;flex-shrink:0;
+}
+.logo-text{line-height:1.1}
+.logo-text strong{font-size:1rem;font-weight:800;color:var(--text)}
+.logo-text span{font-size:0.65rem;color:var(--muted);display:block;font-family:var(--mono)}
+.pulse-dot{
+  width:8px;height:8px;border-radius:50%;background:var(--green);
+  box-shadow:0 0 10px var(--green);
+  animation:pulse 2s ease-in-out infinite;
+  flex-shrink:0;
+}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.85)}}
+.header-stats{display:flex;gap:16px;align-items:center}
+.hstat{text-align:center}
+.hstat-n{font-size:1.1rem;font-weight:800;font-family:var(--mono);color:var(--purple2)}
+.hstat-l{font-size:0.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.nav-links{display:flex;gap:4px}
+.nav-links a{
+  padding:5px 10px;border-radius:6px;text-decoration:none;
+  font-size:0.72rem;font-weight:700;color:var(--muted);
+  transition:all .15s;border:1px solid transparent;
+}
+.nav-links a:hover{color:var(--text);background:var(--bg3);border-color:var(--border)}
+.nav-links a.active{color:var(--purple2);background:rgba(124,58,237,0.1);border-color:rgba(124,58,237,0.3)}
+
+/* Layout */
+.wrap{max-width:1300px;margin:0 auto;padding:24px 20px;position:relative;z-index:1}
+
+/* Status bar */
+.status-bar{
+  background:var(--bg2);border:1px solid var(--border);border-radius:12px;
+  padding:16px 20px;margin-bottom:24px;
+  display:flex;align-items:center;gap:20px;flex-wrap:wrap;
+}
+.status-bar .pulse-dot{margin-right:4px}
+.status-label{font-size:0.72rem;color:var(--muted);font-family:var(--mono)}
+.status-pipeline{display:flex;gap:16px;flex-wrap:wrap;margin-left:auto}
+.sp-item{display:flex;align-items:center;gap:6px;font-size:0.72rem;font-family:var(--mono)}
+.sp-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.sp-n{font-weight:700;font-size:.9rem}
+
+/* Section title */
+.section-title{
+  font-size:0.7rem;font-weight:700;color:var(--muted);
+  text-transform:uppercase;letter-spacing:2px;
+  margin-bottom:14px;padding-bottom:8px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;
+}
+.section-title span{color:var(--sub)}
+
+/* App grid */
+.app-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:32px}
+.app-card{
+  background:var(--bg2);border:1px solid var(--border);border-radius:12px;
+  padding:16px;cursor:pointer;text-decoration:none;
+  transition:all .18s;position:relative;overflow:hidden;display:block;
+}
+.app-card::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,var(--c1,var(--purple)),var(--c2,var(--pink)));
+  opacity:0;transition:opacity .18s;
+}
+.app-card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.app-card:hover::before{opacity:.06}
+.app-card .icon{font-size:1.8rem;margin-bottom:10px;position:relative}
+.app-card .name{font-size:.88rem;font-weight:800;color:var(--text);margin-bottom:4px;position:relative}
+.app-card .desc{font-size:.7rem;color:var(--sub);line-height:1.5;position:relative}
+.app-card .badge{
+  position:absolute;top:12px;right:12px;
+  padding:2px 8px;border-radius:20px;
+  font-size:.6rem;font-weight:700;text-transform:uppercase;font-family:var(--mono);
+}
+.badge-live{background:rgba(16,185,129,.15);color:var(--green);border:1px solid rgba(16,185,129,.3)}
+.badge-new{background:rgba(124,58,237,.15);color:var(--purple2);border:1px solid rgba(124,58,237,.3)}
+.badge-youtube{background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3)}
+
+/* Video row */
+.video-row{display:flex;flex-direction:column;gap:8px;margin-bottom:24px}
+.video-item{
+  background:var(--bg2);border:1px solid var(--border);border-radius:10px;
+  padding:12px 16px;display:flex;align-items:center;gap:14px;
+}
+.video-num{
+  width:28px;height:28px;border-radius:8px;
+  background:rgba(124,58,237,.15);color:var(--purple2);
+  font-family:var(--mono);font-size:.7rem;font-weight:700;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.video-info{flex:1;min-width:0}
+.video-title{font-size:.82rem;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.video-meta{font-size:.68rem;color:var(--sub);font-family:var(--mono);margin-top:2px}
+.video-status{
+  padding:3px 10px;border-radius:20px;font-size:.65rem;font-weight:700;
+  text-transform:uppercase;font-family:var(--mono);flex-shrink:0;
+}
+.vs-mp4{background:rgba(16,185,129,.12);color:var(--green);border:1px solid rgba(16,185,129,.25)}
+.vs-pub{background:rgba(59,130,246,.12);color:var(--blue);border:1px solid rgba(59,130,246,.25)}
+.vs-tts{background:rgba(245,158,11,.12);color:var(--yellow);border:1px solid rgba(245,158,11,.25)}
+
+/* YouTube alert */
+.yt-alert{
+  background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.25);
+  border-radius:12px;padding:16px 20px;margin-bottom:24px;
+  display:flex;align-items:flex-start;gap:14px;
+}
+.yt-icon{font-size:1.5rem;flex-shrink:0}
+.yt-body h3{font-size:.88rem;font-weight:800;color:var(--red);margin-bottom:4px}
+.yt-body p{font-size:.73rem;color:var(--sub);line-height:1.6}
+.yt-body .yt-token{
+  margin-top:10px;display:inline-flex;align-items:center;gap:6px;
+  background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);
+  border-radius:8px;padding:6px 12px;font-family:var(--mono);font-size:.68rem;color:var(--red);
+  cursor:pointer;transition:all .15s;
+}
+.yt-body .yt-token:hover{background:rgba(239,68,68,.2)}
+
+/* Stats row */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:24px}
+.stat-card{
+  background:var(--bg2);border:1px solid var(--border);border-radius:10px;
+  padding:14px;text-align:center;
+}
+.stat-n{font-size:2rem;font-weight:800;font-family:var(--mono);line-height:1}
+.stat-l{font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:6px}
+.n-green{color:var(--green)}
+.n-yellow{color:var(--yellow)}
+.n-blue{color:var(--blue)}
+.n-red{color:var(--red)}
+.n-purple{color:var(--purple2)}
+.n-muted{color:var(--sub)}
+
+/* Footer */
+footer{
+  border-top:1px solid var(--border);padding:20px 24px;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;
+  font-size:.68rem;color:var(--muted);font-family:var(--mono);position:relative;z-index:1;
+}
+.footer-links{display:flex;gap:12px}
+.footer-links a{color:var(--sub);text-decoration:none}
+.footer-links a:hover{color:var(--purple2)}
+
+/* Responsive */
+@media(max-width:640px){
+  header{flex-wrap:wrap;gap:10px}
+  .header-stats{display:none}
+  .nav-links{display:none}
+  .app-grid{grid-template-columns:1fr 1fr}
+  .stats-grid{grid-template-columns:repeat(3,1fr)}
+}
+
+/* Loading shimmer */
+.shimmer{
+  background:linear-gradient(90deg,var(--bg2) 25%,var(--bg3) 50%,var(--bg2) 75%);
+  background-size:200% 100%;
+  animation:shimmer 1.5s infinite;border-radius:4px;
+}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+</style>
+</head>
+<body>
+<div class="glow-blob blob1"></div>
+<div class="glow-blob blob2"></div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">🧠</div>
+    <div class="logo-text">
+      <strong>psicologia.doc</strong>
+      <span>@psidanielacoelho · Hub de Controle</span>
+    </div>
+    <div class="pulse-dot" title="Pipeline ativo"></div>
+  </div>
+
+  <div class="header-stats" id="header-stats">
+    <div class="hstat"><div class="hstat-n" id="h-pub">—</div><div class="hstat-l">Publicados</div></div>
+    <div class="hstat"><div class="hstat-n" id="h-ready">—</div><div class="hstat-l">Prontos</div></div>
+    <div class="hstat"><div class="hstat-n" id="h-gen">—</div><div class="hstat-l">Gerando</div></div>
+  </div>
+
+  <nav class="nav-links">
+    <a href="index.html" class="active">Hub</a>
+    <a href="admin.html">Admin</a>
+    <a href="videos-prontos.html">Vídeos</a>
+    <a href="producao.html">Produção</a>
+    <a href="cerebro.html">Cérebro</a>
+    <a href="daniela.html">Chat</a>
+    <a href="setup-tokens.html">Setup</a>
+  </nav>
+</header>
+
+<!-- MAIN -->
+<div class="wrap">
+
+  <!-- Status bar -->
+  <div class="status-bar">
+    <div class="pulse-dot"></div>
+    <span class="status-label">Pipeline ativo · Atualiza a cada 30s</span>
+    <div class="status-pipeline" id="status-pipeline">
+      <div class="sp-item"><div class="sp-dot" style="background:var(--green)"></div><span class="sp-n n-green" id="s-pub">—</span><span>publicados</span></div>
+      <div class="sp-item"><div class="sp-dot" style="background:var(--blue)"></div><span class="sp-n n-blue" id="s-mp4">—</span><span>mp4_ready</span></div>
+      <div class="sp-item"><div class="sp-dot" style="background:var(--yellow)"></div><span class="sp-n n-yellow" id="s-tts">—</span><span>tts</span></div>
+      <div class="sp-item"><div class="sp-dot" style="background:var(--purple2)"></div><span class="sp-n n-purple" id="s-gen">—</span><span>gerando</span></div>
+    </div>
+  </div>
+
+  <!-- YouTube alerta (mostrado se token pendente) -->
+  <div class="yt-alert" id="yt-alert" style="display:none">
+    <div class="yt-icon">🔴</div>
+    <div class="yt-body">
+      <h3>YouTube pendente — Publicação bloqueada</h3>
+      <p>O Refresh Token do YouTube ainda não foi configurado. Os <span id="yt-count">8</span> vídeos prontos aguardam publicação automática.</p>
+      <div class="yt-token" onclick="window.open('setup-tokens.html','_blank')">
+        🔑 Configurar token em setup-tokens.html →
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="section-title">📊 Pipeline <span id="last-update"></span></div>
+  <div class="stats-grid" id="stats-grid">
+    <div class="stat-card"><div class="stat-n n-green" id="stat-pub">—</div><div class="stat-l">Publicados</div></div>
+    <div class="stat-card"><div class="stat-n n-blue" id="stat-mp4">—</div><div class="stat-l">MP4 Prontos</div></div>
+    <div class="stat-card"><div class="stat-n n-yellow" id="stat-tts">—</div><div class="stat-l">Áudio TTS</div></div>
+    <div class="stat-card"><div class="stat-n n-purple" id="stat-gen">—</div><div class="stat-l">Gerando</div></div>
+    <div class="stat-card"><div class="stat-n n-red" id="stat-block">—</div><div class="stat-l">Bloqueados</div></div>
+    <div class="stat-card"><div class="stat-n n-muted" id="stat-arch">—</div><div class="stat-l">Arquivados</div></div>
+  </div>
+
+  <!-- Apps -->
+  <div class="section-title">⚡ Apps & Ferramentas</div>
+  <div class="app-grid">
+
+    <a href="admin.html" class="app-card" style="--c1:#7c3aed;--c2:#4f46e5">
+      <span class="badge badge-live">Live</span>
+      <div class="icon">⚙️</div>
+      <div class="name">Admin Dashboard</div>
+      <div class="desc">Pipeline completo, crons, LLM queue, logs e controle geral</div>
+    </a>
+
+    <a href="videos-prontos.html" class="app-card" style="--c1:#059669;--c2:#10b981">
+      <span class="badge badge-live">Live</span>
+      <div class="icon">🎬</div>
+      <div class="name">Vídeos Prontos</div>
+      <div class="desc">Galeria de vídeos mp4_ready aguardando publicação no YouTube</div>
+    </a>
+
+    <a href="producao.html" class="app-card" style="--c1:#d97706;--c2:#f59e0b">
+      <div class="icon">🚀</div>
+      <div class="name">Produção Cross-Platform</div>
+      <div class="desc">Status de distribuição YouTube, Instagram, TikTok, Pinterest</div>
+    </a>
+
+    <a href="galeria.html" class="app-card" style="--c1:#ec4899;--c2:#f43f5e">
+      <div class="icon">🖼️</div>
+      <div class="name">Galeria Daniela</div>
+      <div class="desc">Vitrine pública de vídeos publicados do canal @psidanielacoelho</div>
+    </a>
+
+    <a href="cerebro.html" class="app-card" style="--c1:#7c3aed;--c2:#a855f7">
+      <div class="icon">🧠</div>
+      <div class="name">Cérebro Eterno</div>
+      <div class="desc">Conhecimentos, aprendizados e memória permanente do sistema</div>
+    </a>
+
+    <a href="daniela.html" class="app-card" style="--c1:#0ea5e9;--c2:#3b82f6">
+      <span class="badge badge-new">Chat</span>
+      <div class="icon">💬</div>
+      <div class="name">Chat Daniela</div>
+      <div class="desc">Interface de conversa com a IA psicóloga Daniela Coelho</div>
+    </a>
+
+    <a href="conectores.html" class="app-card" style="--c1:#6366f1;--c2:#8b5cf6">
+      <div class="icon">🔌</div>
+      <div class="name">Conectores</div>
+      <div class="desc">Status de conexões: Supabase, GitHub, Vercel, NVIDIA, Groq</div>
+    </a>
+
+    <a href="mapa.html" class="app-card" style="--c1:#10b981;--c2:#06b6d4">
+      <div class="icon">🗺️</div>
+      <div class="name">Mapa do Sistema</div>
+      <div class="desc">Arquitetura visual do pipeline autônomo psicologia.doc</div>
+    </a>
+
+    <a href="videos-analise.html" class="app-card" style="--c1:#f59e0b;--c2:#ef4444">
+      <div class="icon">📊</div>
+      <div class="name">Análise de Vídeos</div>
+      <div class="desc">Analytics, retenção, CTR e performance do canal</div>
+    </a>
+
+    <a href="setup-tokens.html" class="app-card" style="--c1:#ef4444;--c2:#f97316">
+      <span class="badge badge-youtube">OAuth</span>
+      <div class="icon">🔑</div>
+      <div class="name">Setup Tokens</div>
+      <div class="desc">Configurar credenciais YouTube, Instagram, TikTok e WhatsApp</div>
+    </a>
+
+    <a href="canal-oficial.html" class="app-card" style="--c1:#ef4444;--c2:#dc2626">
+      <div class="icon">📺</div>
+      <div class="name">Canal Oficial</div>
+      <div class="desc">Acesso direto ao @psidanielacoelho no YouTube</div>
+    </a>
+
+    <a href="v2.html" class="app-card" style="--c1:#4f46e5;--c2:#7c3aed">
+      <span class="badge badge-new">V2</span>
+      <div class="icon">⚡</div>
+      <div class="name">Pipeline V2</div>
+      <div class="desc">Versão 2 do pipeline de vídeo com Psych2Go style</div>
+    </a>
+
+  </div>
+
+  <!-- Vídeos recentes prontos -->
+  <div class="section-title">🎬 Vídeos MP4 Prontos <span id="mp4-count"></span></div>
+  <div class="video-row" id="video-list">
+    <div style="color:var(--sub);font-size:.78rem;font-family:var(--mono);padding:12px">Carregando...</div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <span>psicologia.doc · @psidanielacoelho · Horizon 2027</span>
+  <div class="footer-links">
+    <a href="https://supabase.com/dashboard/project/tpjvalzwkqwttvmszvie" target="_blank">Supabase</a>
+    <a href="https://github.com/tafita81/Repovazio" target="_blank">GitHub</a>
+    <a href="https://vercel.com" target="_blank">Vercel</a>
+    <a href="https://www.youtube.com/@psidanielacoelho" target="_blank">YouTube</a>
+  </div>
+</footer>
+
+<script>
+const SBU = 'https://tpjvalzwkqwttvmszvie.supabase.co';
+const SBK = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwanZhbHp3a3F3dHR2bXN6dmllIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0Njg2OTIzMCwiZXhwIjoyMDYyNDQ1MjMwfQ.v8h1t7cjDvM2vxGpMr7sRlWEWvDSnBBpgjNPGDZ7Rlk';
+const H = {'apikey':SBK,'Authorization':'Bearer '+SBK};
+
+const STATUS_COLORS = {
+  published:'var(--blue)',mp4_ready:'var(--green)',
+  ready_tts:'var(--yellow)',audio_ready:'var(--yellow)',
+  pending_generation:'var(--purple2)',blocked_safety:'var(--red)',
+  archived:'var(--muted)',script_ready:'var(--purple2)',
+};
+
+async function fetchStats(){
+  try{
+    const r = await fetch(SBU+'/rest/v1/content_pipeline?select=status&limit=1000',{headers:H});
+    const d = await r.json();
+    const counts = {};
+    d.forEach(row => counts[row.status]=(counts[row.status]||0)+1);
+
+    const pub = counts.published||0;
+    const mp4 = counts.mp4_ready||0;
+    const tts = (counts.ready_tts||0)+(counts.audio_ready||0);
+    const gen = (counts.pending_generation||0)+(counts.script_ready||0)+(counts.llm_queued||0);
+    const block = counts.blocked_safety||0;
+    const arch = counts.archived||0;
+
+    document.getElementById('h-pub').textContent = pub;
+    document.getElementById('h-ready').textContent = mp4;
+    document.getElementById('h-gen').textContent = gen;
+    document.getElementById('s-pub').textContent = pub;
+    document.getElementById('s-mp4').textContent = mp4;
+    document.getElementById('s-tts').textContent = tts;
+    document.getElementById('s-gen').textContent = gen;
+    document.getElementById('stat-pub').textContent = pub;
+    document.getElementById('stat-mp4').textContent = mp4;
+    document.getElementById('stat-tts').textContent = tts;
+    document.getElementById('stat-gen').textContent = gen;
+    document.getElementById('stat-block').textContent = block;
+    document.getElementById('stat-arch').textContent = arch;
+
+    if(mp4>0){
+      document.getElementById('yt-alert').style.display='flex';
+      document.getElementById('yt-count').textContent = mp4;
+    }
+
+    document.getElementById('last-update').textContent = '· '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  }catch(e){console.error(e)}
+}
+
+async function fetchVideos(){
+  try{
+    const r = await fetch(SBU+'/rest/v1/content_pipeline?status=eq.mp4_ready&order=id.desc&limit=8&select=id,title,target_platform,created_at',{headers:H});
+    const d = await r.json();
+    const el = document.getElementById('video-list');
+    if(!d.length){el.innerHTML='<div style="color:var(--sub);font-size:.78rem;font-family:var(--mono);padding:12px">Nenhum vídeo mp4_ready no momento</div>';return;}
+    document.getElementById('mp4-count').textContent = '('+d.length+')';
+    el.innerHTML = d.map((v,i)=>`
+      <div class="video-item">
+        <div class="video-num">${String(v.id).padStart(3,'0')}</div>
+        <div class="video-info">
+          <div class="video-title">${v.title||'Sem título'}</div>
+          <div class="video-meta">${v.target_platform||'youtube'} · ${new Date(v.created_at).toLocaleDateString('pt-BR')}</div>
+        </div>
+        <span class="video-status vs-mp4">MP4 Pronto</span>
+      </div>
+    `).join('');
+
+    // Também mostrar publicados recentes
+    const r2 = await fetch(SBU+'/rest/v1/content_pipeline?status=eq.published&order=id.desc&limit=4&select=id,title,youtube_url,published_at',{headers:H});
+    const d2 = await r2.json();
+    if(d2.length){
+      el.innerHTML += d2.map(v=>`
+        <div class="video-item">
+          <div class="video-num">${String(v.id).padStart(3,'0')}</div>
+          <div class="video-info">
+            <div class="video-title">${v.title||'Sem título'}</div>
+            <div class="video-meta">Publicado · ${v.published_at?new Date(v.published_at).toLocaleDateString('pt-BR'):''}</div>
+          </div>
+          ${v.youtube_url?`<a href="${v.youtube_url}" target="_blank" class="video-status vs-pub" style="text-decoration:none">Ver →</a>`:
+          '<span class="video-status vs-pub">Publicado</span>'}
+        </div>
+      `).join('');
+    }
+  }catch(e){console.error(e)}
+}
+
+fetchStats();
+fetchVideos();
+setInterval(fetchStats, 30000);
+setInterval(fetchVideos, 60000);
+</script>
+</body>
+</html>
