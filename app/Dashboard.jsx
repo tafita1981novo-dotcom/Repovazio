@@ -407,7 +407,13 @@ function fmtCd(ms){if(ms<=0)return"agora";const t=Math.floor(ms/1000),h=Math.flo
 // APP
 // ═══════════════════════════════════════════════════════════════════
 export default function App(){
-  const[page,setPage]=useState("dashboard");
+  const[page,setPage]=useState(()=>{
+  if(typeof window!=="undefined"){
+    const p=new URLSearchParams(window.location.search).get("page");
+    if(p) return p;
+  }
+  return "dashboard";
+});
   const[sidebarOpen,setSidebar]=useState(false);
   const[darkMode,setDarkMode]=useState(true);
   const[dayNumber,setDayNumber]=useState(calcDay);
