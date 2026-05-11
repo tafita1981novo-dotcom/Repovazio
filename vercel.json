@@ -3,10 +3,10 @@
   "installCommand": "npm install",
   "framework": "nextjs",
   "regions": ["iad1"],
+  "rewrites": [
+    { "source": "/", "destination": "/hub.html" }
+  ],
   "crons": [
-    {
-      "path": "/api/cron",
-      "schedule": "0 6 * * *"
-    }
+    { "path": "/api/cron", "schedule": "0 6 * * *" }
   ]
 }
