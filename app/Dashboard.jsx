@@ -411,6 +411,83 @@ function fmtCd(ms){if(ms<=0)return"agora";const t=Math.floor(ms/1000),h=Math.flo
 
 // ═══════════════════════════════════════════════════════════════════
 // APP
+function PageHub({nav}){
+  const[pipe,setPipe]=useState({});const[pub,setPub]=useState(0);const[mp4,setMp4]=useState(0);const[tts,setTts]=useState(0);
+  useEffect(()=>{sbFetch("content_pipeline?select=status&limit=1000").then(rows=>{const c={};(rows||[]).forEach(r=>{c[r.status]=(c[r.status]||0)+1;});setPipe(c);setPub(c.published||0);setMp4(c.mp4_ready||0);setTts((c.ready_tts||0)+(c.audio_processing||0));});},[]);
+  const rec=Math.round(pub*1500*12/1000);
+  const INFRA=[
+    {h:"Admin Panel",u:"/admin.html",d:"Pipeline manager completo - EFs - Configuracoes - Logs",t:"ok"},
+    {h:"Supabase",u:"https://supabase.com/dashboard/project/tpjvalzwkqwttvmszvie",d:"PostgreSQL - Edge Functions - 15+ tabelas",t:"ok"},
+    {h:"GitHub",u:"https://github.com/tafita81/Repovazio",d:"tafita81/Repovazio - 38+ workflows - CI/CD auto",t:"ok"},
+    {h:"Vercel",u:"https://vercel.com/tafita81s-projects/repovazio",d:"repovazio.vercel.app - Next.js 14 - Env vars",t:"ok"},
+    {h:"YouTube Studio",u:"https://studio.youtube.com",d:"@psidanielacoelho - UCyCkIpsVgME9yCj_oXJFheA",t:"wa"},
+    {h:"Google Ads",u:"https://ads.google.com",d:"FASE 1 R$200 - In-stream ignoravel - 25-45 BR",t:"wa"},
+    {h:"OAuth Playground",u:"https://developers.google.com/oauthplayground",d:"Gerar YouTube Refresh Token - BLOQUEIO CRITICO",t:"er"},
+    {h:"Producao",u:"/producao.html",d:"Status fila de producao - Progresso por etapa",t:"in"},
+  ];
+  const TOOLS=[
+    {h:"Videos Prontos",u:"/videos-prontos.html",d:"Galeria publica - MP4/YT/audio - Auto 1h",t:"ok"},
+    {h:"Growth Engine",u:"/growth.html",d:"Progresso 1K subs - KPIs - Ads setup",t:"ok"},
+    {h:"Cerebro Monitor",u:"/cerebro.html",d:"Logs ao vivo - Automacoes - Gate V12",t:"ok"},
+    {h:"Analise Videos",u:"/videos-analise.html",d:"CTR - Views - Score viralidade",t:"in"},
+    {h:"Pipeline Manager",u:"/apps/pipeline-manager.html",d:"Gestao manual de status e bloqueados",t:"in"},
+    {h:"Galeria Imagens",u:"/galeria.html",d:"Thumbnails - Flux.1 Schnell NVIDIA",t:"in"},
+    {h:"Daniela IA",u:"/daniela.html",d:"Interface publica chat psicologia",t:"ok"},
+    {h:"Daniela Enhanced",u:"/apps/daniela-enhanced.html",d:"Interface V2 - Emocao Dinamica",t:"ok"},
+    {h:"Conectores",u:"/conectores.html",d:"OAuth status YouTube IG TikTok WA",t:"wa"},
+    {h:"Canal Oficial",u:"/canal-oficial.html",d:"@psidanielacoelho - Daniela Coelho",t:"ok"},
+    {h:"Setup Canal",u:"/setup-canal.html",d:"Guia configuracao OAuth e credenciais",t:"in"},
+    {h:"Mapa",u:"/mapa.html",d:"Mapa completo da arquitetura",t:"in"},
+  ];
+  const CRTAG={ok:"rgba(16,185,129,.2)",wa:"rgba(245,158,11,.15)",er:"rgba(244,63,94,.15)",in:"rgba(59,130,246,.14)"};
+  const CRTXTAG={ok:"#34d399",wa:"#fbbf24",er:"#fb7185",in:"#60a5fa"};
+  const C="#0e0e18",B="1px solid #1e1e35";
+  return<>
+    <div className="ph"><div className="pt">Hub Central</div><div className="ps">Todas as ferramentas e links em um lugar - admin, infra, pipeline, canal</div></div>
+    <div className="body">
+      {/* Pipeline ao vivo */}
+      <div style={{background:"linear-gradient(135deg,rgba(124,58,237,.14),rgba(6,182,212,.06))",border:B,borderRadius:14,padding:14,marginBottom:14}}>
+        <div style={{display:"flex",gap:16,flexWrap:"wrap",alignItems:"center"}}>
+          {[{l:"Publicados",v:pub,c:"#34d399",p:"conteudo"},{l:"MP4 Prontos",v:mp4,c:"#60a5fa",p:"conteudo"},{l:"Fila TTS",v:tts,c:"#a78bfa",p:"cerebro"},{l:"Gerando",v:pipe.pending_generation||0,c:"#94a3b8",p:"cerebro"},{l:"Bloqueados",v:pipe.blocked_safety||0,c:"#fb7185",p:"cerebro"},{l:"R$/mes Est.",v:"R$"+(rec.toLocaleString("pt-BR")),c:"#f59e0b",p:"monetizacao"}].map(k=><div key={k.l} onClick={()=>nav(k.p)} style={{textAlign:"center",cursor:"pointer"}}>
+            <div style={{fontSize:22,fontWeight:800,color:k.c,lineHeight:1}}>{k.v}</div>
+            <div style={{fontSize:9,color:"#64748b",marginTop:2}}>{k.l}</div>
+          </div>)}
+        </div>
+      </div>
+      {/* Admin e Infra */}
+      <div style={{fontSize:11,textTransform:"uppercase",letterSpacing:1,color:"#64748b",fontWeight:600,marginBottom:8}}>Administracao e Infra</div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:9,marginBottom:14}}>
+        {INFRA.map(i=><a key={i.h} href={i.u} target={i.u.startsWith("http")?"_blank":undefined} rel="noreferrer" style={{background:C,border:B,borderRadius:10,padding:11,textDecoration:"none",color:i.t==="er"?"#fb7185":"#e2e8f0",display:"block",transition:"all .15s",":hover":{transform:"translateY(-1px)"}}}>
+          <div style={{fontSize:12,fontWeight:700,marginBottom:3}}>{i.h}</div>
+          <div style={{fontSize:10,color:"#64748b",lineHeight:1.4,marginBottom:5}}>{i.d}</div>
+          <span style={{padding:"2px 7px",borderRadius:20,fontSize:9,fontWeight:600,background:CRTAG[i.t],color:CRTXTAG[i.t]}}>{i.t==="ok"?"Ativo":i.t==="wa"?"Configurar":i.t==="er"?"PENDENTE":"Monitor"}</span>
+        </a>)}
+      </div>
+      {/* Ferramentas Pipeline */}
+      <div style={{fontSize:11,textTransform:"uppercase",letterSpacing:1,color:"#64748b",fontWeight:600,marginBottom:8}}>Pipeline e Ferramentas</div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:8,marginBottom:14}}>
+        {TOOLS.map(i=><a key={i.h} href={i.u} style={{background:C,border:B,borderRadius:9,padding:10,textDecoration:"none",color:"#e2e8f0",display:"block",transition:"all .15s"}}>
+          <div style={{fontSize:11,fontWeight:700,marginBottom:2}}>{i.h}</div>
+          <div style={{fontSize:9,color:"#64748b",lineHeight:1.4,marginBottom:4}}>{i.d}</div>
+          <span style={{padding:"1px 6px",borderRadius:20,fontSize:9,fontWeight:600,background:CRTAG[i.t],color:CRTXTAG[i.t]}}>{i.t==="ok"?"Online":i.t==="wa"?"Configurar":"Monitor"}</span>
+        </a>)}
+      </div>
+      {/* Credenciais resumo */}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+        <div style={{background:C,border:B,borderRadius:12,padding:13}}>
+          <div style={{fontSize:10,textTransform:"uppercase",color:"#64748b",fontWeight:600,marginBottom:8}}>Credenciais Criticas</div>
+          {[["YOUTUBE_REFRESH_TOKEN","--","PENDENTE","#fb7185"],["INSTAGRAM_ACCESS_TOKEN","--","Nao config.","#f59e0b"],["TIKTOK_ACCESS_TOKEN","--","Nao config.","#f59e0b"],["WHATSAPP_TOKEN","--","Nao config.","#f59e0b"]].map(([k,s,d,c])=><div key={k} style={{display:"flex",gap:6,padding:"5px 8px",background:"#14142b",borderRadius:6,marginBottom:3,alignItems:"center"}}><code style={{fontSize:9,color:"#22d3ee",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{k}</code><span style={{fontSize:12,color:c}}>{s}</span><span style={{fontSize:9,color:"#64748b"}}>{d}</span></div>)}
+          <button onClick={()=>window.open("https://developers.google.com/oauthplayground")} style={{marginTop:8,width:"100%",background:"#f59e0b",color:"#000",border:"none",padding:"6px",borderRadius:7,fontSize:11,fontWeight:700,cursor:"pointer"}}>Abrir OAuth Playground (YT Token)</button>
+        </div>
+        <div style={{background:C,border:B,borderRadius:12,padding:13}}>
+          <div style={{fontSize:10,textTransform:"uppercase",color:"#64748b",fontWeight:600,marginBottom:8}}>Stack Ativo</div>
+          {[["LLM Principal","Llama 3.3 70B (NVIDIA/Groq)"],["TTS","Edge TTS Microsoft (gratis)"],["Imagens","Flux.1 Schnell (gratis)"],["Render","ffmpeg Ken Burns 30fps 1080p"],["Banco","Supabase PostgreSQL (free)"],["Deploy","Vercel + GitHub Actions"]].map(([k,v])=><div key={k} style={{display:"flex",gap:6,padding:"4px 0",borderBottom:"1px solid #1e1e35"}}><span style={{fontSize:10,color:"#64748b",minWidth:90}}>{k}</span><span style={{fontSize:10,fontWeight:600,color:"#38bdf8"}}>{v}</span></div>)}
+        </div>
+      </div>
+    </div>
+  </>;
+}
+
 export default function Dashboard(){
   const getPage=()=>{if(typeof window!=="undefined"){const p=new URLSearchParams(window.location.search).get("page");if(p)return p;}return"dashboard";};
   const[page,setPage]=useState(getPage);const[notifCount,setNotifCount]=useState(0);const[sb,setSb]=useState(true);
@@ -419,9 +496,9 @@ export default function Dashboard(){
   const NAV=[
     {s:"PRINCIPAL",items:[{id:"dashboard",i:"⊡",l:"Dashboard"},{id:"conteudo",i:"📄",l:"Conteúdo"},{id:"series",i:"🎬",l:"Séries"},{id:"ranking",i:"🌍",l:"Ranking Mundial"},{id:"monetizacao",i:"💰",l:"Monetização"}]},
     {s:"SISTEMA",items:[{id:"cerebro",i:"🧠",l:"Cérebro AO VIVO"},{id:"gerador",i:"✨",l:"Gerador Manual"},{id:"variacoes",i:"🔁",l:"Motor 1000x"},{id:"logs",i:"📋",l:"Logs"}]},
-    {s:"ESTRATÉGIA",items:[{id:"revelacao",i:"🎉",l:"Revelação 2027"},{id:"playlist",i:"📋",l:"Playlist 630d"},{id:"cases",i:"📈",l:"Cases Virais"},{id:"canais",i:"📡",l:"Canais"},{id:"whatsapp",i:"💬",l:"WhatsApp"},{id:"daniela",i:"🤖",l:"Chat Daniela"},{id:"config",i:"⚙️",l:"Config"}]},
+    {s:"ESTRATÉGIA",items:[{id:"hub",i:"🏠",l:"Hub Central"},{id:"revelacao",i:"🎉",l:"Revelação 2027"},{id:"playlist",i:"📋",l:"Playlist 630d"},{id:"cases",i:"📈",l:"Cases Virais"},{id:"canais",i:"📡",l:"Canais"},{id:"whatsapp",i:"💬",l:"WhatsApp"},{id:"daniela",i:"🤖",l:"Chat Daniela"},{id:"config",i:"⚙️",l:"Config"}]},
   ];
-  const PM={dashboard:PageDashboard,conteudo:PageConteudo,series:PageSeries,ranking:PageRanking,monetizacao:PageMonetizacao,cerebro:PageCerebro,gerador:PageGerador,variacoes:PageVariacoes,logs:PageLogs,revelacao:PageRevelacao,playlist:PagePlaylist,cases:PageCases,canais:PageCanais,whatsapp:PageWhatsApp,daniela:PageDanielaChat,config:PageConfig};
+  const PM={hub:PageHub,dashboard:PageDashboard,conteudo:PageConteudo,series:PageSeries,ranking:PageRanking,monetizacao:PageMonetizacao,cerebro:PageCerebro,gerador:PageGerador,variacoes:PageVariacoes,logs:PageLogs,revelacao:PageRevelacao,playlist:PagePlaylist,cases:PageCases,canais:PageCanais,whatsapp:PageWhatsApp,daniela:PageDanielaChat,config:PageConfig};
   const PC=PM[page]||PageDashboard;
   return<>
     <style>{`
