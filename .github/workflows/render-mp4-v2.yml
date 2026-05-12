@@ -1,102 +1,36 @@
-name: render-mp4-v2
+name: Render MP4 V2 (Flux + Ken Burns — Padrao Quantico)
 
 on:
   workflow_dispatch:
-    inputs:
-      pipeline_id:
-        description: 'Pipeline ID to render (single, leave blank for batch)'
-        required: false
-        type: string
-      batch_mp4_ready:
-        description: 'Re-render ALL pipelines status=mp4_ready (true/false)'
-        required: false
-        type: string
-        default: 'false'
-  repository_dispatch:
-    types: [render_v2]
+  schedule:
+    - cron: '0 */2 * * *'
 
 jobs:
-  render-v2:
+  render:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Python 3.11
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Install ffmpeg
-        run: sudo apt-get update -qq && sudo apt-get install -y ffmpeg && ffmpeg -version | head -1
+      - name: Install dependencies
+        run: |
+          pip install supabase requests pillow numpy
 
-      - name: Install Python deps
-        run: pip install --quiet edge-tts==7.2.8 gTTS==2.5.4 requests==2.31.0
-
-      - name: Resolve pipeline IDs
-        id: pids
+      - name: Render Quantum Videos (Flux + Ken Burns V2)
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-        run: |
-          python3 <<'PY'
-          import os, requests, json
-          PID = "${{ inputs.pipeline_id }}".strip()
-          BATCH = "${{ inputs.batch_mp4_ready }}" == "true"
-          PAYLOAD = json.loads('${{ toJson(github.event.client_payload) }}' or '{}') or {}
-
-          if PID:
-              pids = [int(PID)]
-          elif BATCH:
-              r = requests.get(
-                  f"{os.environ['SUPABASE_URL']}/rest/v1/content_pipeline?status=eq.mp4_ready&select=id&order=id.desc",
-                  headers={'apikey': os.environ['SUPABASE_SERVICE_KEY'],
-                           'Authorization': f"Bearer {os.environ['SUPABASE_SERVICE_KEY']}"}, timeout=30)
-              pids = [p['id'] for p in r.json()]
-          elif PAYLOAD.get('pipeline_id'):
-              pids = [int(PAYLOAD['pipeline_id'])]
-          else:
-              r = requests.get(
-                  f"{os.environ['SUPABASE_URL']}/rest/v1/content_pipeline?status=eq.mp4_ready&select=id&order=id.desc&limit=3",
-                  headers={'apikey': os.environ['SUPABASE_SERVICE_KEY'],
-                           'Authorization': f"Bearer {os.environ['SUPABASE_SERVICE_KEY']}"}, timeout=30)
-              data = r.json()
-              pids = [p['id'] for p in data] if isinstance(data, list) else []
-
-          out = ','.join(str(p) for p in pids)
-          with open(os.environ['GITHUB_OUTPUT'], 'a') as f: f.write(f"pids={out}\n")
-          print(f"Will render: {pids}")
-          PY
-
-      - name: Render videos (V2 Psych2Go style, ZERO TEXT)
-        env:
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
           NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: |
-          IFS=',' read -ra PIDS <<< "${{ steps.pids.outputs.pids }}"
-          FAILED=0
-          TOTAL=0
-          for pid in "${PIDS[@]}"; do
-            if [ -n "$pid" ]; then
-              TOTAL=$((TOTAL+1))
-              echo ""
-              echo "============================================"
-              echo "🎬 Pipeline #$pid (V2 Psych2Go) - $TOTAL of ${#PIDS[@]}"
-              echo "============================================"
-              if ! python3 scripts/video_gen_v2.py "$pid"; then
-                echo "❌ Pipeline #$pid FAILED"
-                FAILED=$((FAILED+1))
-              fi
-            fi
-          done
-          echo ""
-          echo "============================================"
-          echo "Summary: $((TOTAL-FAILED))/$TOTAL succeeded, $FAILED failed"
-          echo "============================================"
-          # Fail the workflow only if ALL pipelines failed (so we can see partial wins in batch mode)
-          if [ "$FAILED" -gt 0 ] && [ "$FAILED" -eq "$TOTAL" ]; then
-            exit 1
-          fi
+          python3 scripts/render_quantum_v2.py
+
+      - name: Report
+        if: always()
+        run: echo "Render quantico V2 concluido - $(date)"
