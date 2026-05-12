@@ -1,5 +1,8 @@
 name: Render MP4 v8 Cinematic
 
+# DEPRECATED: Use render-mp4-v2.yml (Flux + Ken Burns) para novas gerações.
+# Este workflow v8 usa Playwright+HTML e gera texto na tela - NÃO USAR para novos vídeos.
+# Mantido apenas para referência histórica.
 on:
   workflow_dispatch:
     inputs:
