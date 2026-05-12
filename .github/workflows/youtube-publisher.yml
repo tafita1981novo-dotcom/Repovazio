@@ -1,38 +1,166 @@
 name: YouTube Publisher — Publicar mp4_ready
 on:
-  schedule:
-    - cron: "0 10,16,22 * * *"   # 3x por dia: 7h, 13h, 19h BRT
   workflow_dispatch:
-    inputs:
-      force:
-        description: "Forçar publicação agora"
-        default: "false"
-
-env:
-  SBU: https://tpjvalzwkqwttvmszvie.supabase.co
-  SBK: ${{ secrets.SUPABASE_SERVICE_KEY }}
-  YT_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
-  YT_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
-  YT_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
-  YT_CHANNEL_ID: UCyCkIpsVgME9yCj_oXJFheA
+  schedule:
+    - cron: '0 */6 * * *'  # A cada 6h
 
 jobs:
   publish:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
     steps:
       - uses: actions/checkout@v4
       
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: '3.11'
       
-      - name: Install deps
-        run: pip install requests
+      - name: Install dependencies
+        run: pip install requests google-auth google-auth-httplib2 google-api-python-client --break-system-packages
       
-      - name: Publicar vídeos mp4_ready no YouTube
-        run: python3 scripts/youtube_publisher.py
-      
-      - name: Report
-        if: always()
-        run: echo "Publisher concluido. Ver Supabase > content_pipeline (status=published)"
+      - name: Publicar no YouTube — @psidanielacoelho
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+          YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+          YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+          YOUTUBE_CHANNEL_ID: UCyCkIpsVgME9yCj_oXJFheA
+        run: |
+          python3 - <<'PYTHON'
+import os, json, requests, time
+
+SBU  = os.environ['SUPABASE_URL']
+SBK  = os.environ['SUPABASE_SERVICE_ROLE_KEY']
+CID  = os.environ['YOUTUBE_CLIENT_ID']
+CSEC = os.environ['YOUTUBE_CLIENT_SECRET']
+RFTK = os.environ['YOUTUBE_REFRESH_TOKEN']
+CHID = os.environ['YOUTUBE_CHANNEL_ID']
+
+ALLOWED_CHANNEL = "UCyCkIpsVgME9yCj_oXJFheA"  # @psidanielacoelho
+BLOCKED_CHANNEL = "UCSH63tBfY6wEIdkC4u4zKdg"   # NUNCA PUBLICAR
+
+def get_access_token():
+    r = requests.post("https://oauth2.googleapis.com/token", data={
+        "client_id": CID, "client_secret": CSEC,
+        "refresh_token": RFTK, "grant_type": "refresh_token"
+    }, timeout=15)
+    if not r.ok:
+        raise Exception(f"Token error: {r.status_code} {r.text[:200]}")
+    return r.json()["access_token"]
+
+def verify_channel(token):
+    r = requests.get(
+        "https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true",
+        headers={"Authorization": f"Bearer {token}"}, timeout=15)
+    if not r.ok: return None
+    items = r.json().get("items", [])
+    for item in items:
+        cid = item["id"]
+        if cid == BLOCKED_CHANNEL:
+            print(f"🚫 CANAL BLOQUEADO DETECTADO: {cid}")
+            return None
+        if cid == ALLOWED_CHANNEL:
+            print(f"✅ Canal correto: {item['snippet']['title']} ({cid})")
+            return cid
+    print(f"⚠️ Canal desconhecido: {[i['id'] for i in items]}")
+    return None
+
+def sb_get(path):
+    r = requests.get(f"{SBU}/rest/v1/{path}",
+        headers={"Authorization": f"Bearer {SBK}", "apikey": SBK}, timeout=15)
+    return r.json()
+
+def sb_patch(id_, data):
+    r = requests.patch(f"{SBU}/rest/v1/content_pipeline?id=eq.{id_}",
+        headers={"Authorization": f"Bearer {SBK}", "apikey": SBK,
+                 "Content-Type": "application/json", "Prefer": "return=minimal"},
+        json=data, timeout=15)
+    return r.status_code
+
+# 1. Obter token e verificar canal
+try:
+    token = get_access_token()
+    channel = verify_channel(token)
+    if not channel:
+        print("❌ Token inválido ou canal bloqueado. Abortando.")
+        exit(1)
+except Exception as e:
+    print(f"❌ Erro de autenticação: {e}")
+    exit(1)
+
+# 2. Buscar mp4_ready para publicar (max 2 por run)
+videos = sb_get("content_pipeline?status=eq.mp4_ready&mp4_url=not.is.null&limit=2&order=id.asc&select=id,title,script,mp4_url,thumbnail_url,target_platform,metadata")
+print(f"\n{len(videos)} vídeo(s) prontos para publicar")
+
+for video in videos:
+    vid_id = video["id"]
+    title  = video["title"]
+    platform = video.get("target_platform","youtube_long")
+    mp4_url  = video["mp4_url"]
+    
+    print(f"\n📤 Publicando #{vid_id}: {title[:60]}")
+    
+    # Baixar o mp4
+    r = requests.get(mp4_url, stream=True, timeout=120)
+    if not r.ok:
+        print(f"  ❌ Falha ao baixar MP4: {r.status_code}")
+        continue
+    
+    with open(f"/tmp/video_{vid_id}.mp4", "wb") as f:
+        for chunk in r.iter_content(chunk_size=8192):
+            f.write(chunk)
+    
+    # Configurar privacidade e categoria
+    is_short = "short" in platform or "reel" in platform
+    privacy = "public"
+    category = "22"  # People & Blogs
+    tags = ["psicologia","daniela coelho","saúde mental","ansiedade","relacionamentos"]
+    
+    # Descrição baseada no script
+    desc = ""
+    if video.get("script"):
+        desc = video["script"][:4800] + "\n\n@psidanielacoelho"
+    
+    # Upload para YouTube
+    from googleapiclient.discovery import build
+    from googleapiclient.http import MediaFileUpload
+    from google.oauth2.credentials import Credentials
+    
+    creds = Credentials(token=token, refresh_token=RFTK,
+                       token_uri="https://oauth2.googleapis.com/token",
+                       client_id=CID, client_secret=CSEC)
+    yt = build("youtube","v3",credentials=creds,cache_discovery=False)
+    
+    body = {"snippet":{"title":title[:100],"description":desc,"tags":tags,"categoryId":category},
+            "status":{"privacyStatus":privacy,"selfDeclaredMadeForKids":False}}
+    
+    media = MediaFileUpload(f"/tmp/video_{vid_id}.mp4", mimetype="video/mp4", resumable=True, chunksize=5*1024*1024)
+    
+    try:
+        req_yt = yt.videos().insert(part="snippet,status", body=body, media_body=media)
+        response = None
+        while response is None:
+            status_upload, response = req_yt.next_chunk()
+            if status_upload:
+                print(f"  Upload: {int(status_upload.progress()*100)}%")
+        
+        yt_id = response["id"]
+        yt_url = f"https://www.youtube.com/watch?v={yt_id}"
+        print(f"  ✅ Publicado: {yt_url}")
+        
+        # Atualizar DB
+        sb_patch(vid_id, {
+            "status": "published",
+            "youtube_url": yt_url,
+            "metadata": {**(video.get("metadata") or {}),
+                        "youtube_id": yt_id, "published_at": time.strftime("%Y-%m-%dT%H:%M:%SZ")}
+        })
+    except Exception as e:
+        print(f"  ❌ Erro upload: {e}")
+        continue
+
+print("\n✅ Ciclo de publicação concluído")
+PYTHON
