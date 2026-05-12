@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Galeria Quantica | psicologia.doc</title>
+<style>
+:root{--bg:#06060F;--c1:#0e0e18;--c2:#14142b;--bd:#1e1e35;--acc:#7c3aed;--t:#e2e8f0;--dim:#64748b}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--t);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background:
+  linear-gradient(rgba(124,58,237,.02) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(124,58,237,.02) 1px,transparent 1px);
+  background-size:36px 36px;pointer-events:none;z-index:0}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+.hdr{position:sticky;top:0;z-index:100;background:rgba(6,6,15,.92);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--bd);padding:10px 22px;display:flex;align-items:center;gap:14px}
+.logo{font-size:15px;font-weight:800;background:linear-gradient(90deg,#c084fc,#38bdf8);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.live{width:6px;height:6px;background:#10b981;border-radius:50%;animation:blink 1.5s infinite;display:inline-block;margin-right:5px}
+.badge{padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;font-family:monospace}
+.badge-quantum{background:rgba(124,58,237,.25);color:#c084fc;border:1px solid rgba(124,58,237,.4)}
+.badge-score{background:rgba(16,185,129,.2);color:#34d399;border:1px solid rgba(16,185,129,.3)}
+.hbtns{display:flex;gap:7px;margin-left:auto}
+.hb{padding:4px 12px;border-radius:7px;font-size:11px;font-weight:700;text-decoration:none;border:1px solid var(--bd);color:#94a3b8;transition:all .15s}
+.hb:hover{border-color:#7c3aed;color:#c084fc}
+.hb-p{background:var(--acc);color:#fff;border-color:transparent}
+
+.wrap{max-width:1400px;margin:0 auto;padding:24px 22px;position:relative;z-index:1}
+
+/* Stats bar */
+.stats-bar{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:24px;padding:14px 18px;
+  background:var(--c1);border:1px solid var(--bd);border-radius:14px;align-items:center}
+.stat{text-align:center;min-width:60px}
+.stat-n{font-size:22px;font-weight:800;color:#c084fc;font-family:monospace;line-height:1}
+.stat-l{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+
+/* Filtros */
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.filter-btn{padding:6px 14px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;
+  border:1px solid var(--bd);background:transparent;color:#64748b;transition:all .15s}
+.filter-btn.active{background:var(--acc);color:#fff;border-color:transparent}
+.filter-btn:hover:not(.active){border-color:#475569;color:#e2e8f0}
+
+/* Section */
+.section-t{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--dim);
+  font-weight:600;margin:24px 0 12px;display:flex;align-items:center;gap:8px}
+.section-t::after{content:'';flex:1;height:1px;background:var(--bd)}
+
+/* Video Grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+
+/* Video Card */
+.vcard{background:var(--c1);border:1px solid var(--bd);border-radius:16px;overflow:hidden;
+  transition:all .2s;animation:fadeIn .3s ease both;cursor:pointer}
+.vcard:hover{border-color:#475569;transform:translateY(-3px);box-shadow:0 8px 32px rgba(0,0,0,.5)}
+.vcard.quantum{border-color:rgba(124,58,237,.3)}
+.vcard.quantum:hover{border-color:rgba(124,58,237,.6);box-shadow:0 8px 32px rgba(124,58,237,.2)}
+
+.vcard-thumb{position:relative;aspect-ratio:16/9;overflow:hidden;background:#0d0d1a}
+.vcard-thumb video{width:100%;height:100%;object-fit:cover}
+.vcard-thumb-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#06060F,#1A0A3E)}
+.vcard-badges{position:absolute;top:8px;left:8px;display:flex;gap:5px;flex-wrap:wrap}
+.vcard-play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.3);opacity:0;transition:opacity .2s}
+.vcard:hover .vcard-play{opacity:1}
+.play-ico{width:48px;height:48px;background:rgba(255,255,255,.9);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:18px;color:#06060F}
+
+.vcard-body{padding:14px}
+.vcard-title{font-size:13px;font-weight:700;color:#e2e8f0;line-height:1.35;margin-bottom:8px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.vcard-meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.vmeta{font-size:9px;color:var(--dim);padding:2px 7px;background:var(--c2);border-radius:20px;font-family:monospace}
+.vmeta.score-hi{background:rgba(16,185,129,.15);color:#34d399}
+.vmeta.quantum{background:rgba(124,58,237,.15);color:#c084fc}
+.vmeta.serie{background:rgba(56,189,248,.15);color:#38bdf8}
+
+.vcard-actions{display:flex;gap:6px}
+.vbtn{flex:1;padding:7px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;
+  border:1px solid var(--bd);background:transparent;color:#94a3b8;transition:all .15s;text-decoration:none;
+  text-align:center;display:flex;align-items:center;justify-content:center;gap:4px}
+.vbtn:hover{border-color:#7c3aed;color:#c084fc;background:rgba(124,58,237,.08)}
+.vbtn-dl{background:rgba(56,189,248,.1);border-color:rgba(56,189,248,.3);color:#38bdf8}
+.vbtn-yt{background:rgba(244,63,94,.1);border-color:rgba(244,63,94,.3);color:#f43f5e}
+
+/* Empty state */
+.empty{text-align:center;padding:60px 20px;color:var(--dim)}
+.empty-ico{font-size:48px;margin-bottom:12px;opacity:.4}
+
+/* Loader */
+#loader{display:flex;align-items:center;justify-content:center;padding:40px;gap:10px;color:var(--dim)}
+.spin{width:24px;height:24px;border:2px solid var(--bd);border-top-color:#7c3aed;border-radius:50%;animation:spin 1s linear infinite}
+
+/* Modal video player */
+.modal{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.9);
+  align-items:center;justify-content:center}
+.modal.open{display:flex}
+.modal-inner{max-width:900px;width:90%;background:var(--c1);border-radius:16px;overflow:hidden;
+  border:1px solid var(--bd);position:relative}
+.modal-close{position:absolute;top:10px;right:12px;background:rgba(0,0,0,.5);border:none;
+  color:#94a3b8;font-size:18px;cursor:pointer;width:32px;height:32px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;z-index:10}
+.modal-close:hover{color:#e2e8f0}
+.modal-video{width:100%;aspect-ratio:16/9}
+.modal-info{padding:14px}
+.modal-title{font-size:15px;font-weight:700;margin-bottom:6px}
+.modal-meta{font-size:11px;color:var(--dim);display:flex;gap:12px;flex-wrap:wrap}
+
+footer{text-align:center;padding:24px;font-size:10px;color:var(--dim);border-top:1px solid var(--bd);margin-top:32px}
+@media(max-width:600px){.grid{grid-template-columns:1fr}.stats-bar{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="hdr">
+  <div>
+    <div class="logo">psicologia.doc</div>
+    <div style="font-size:10px;color:var(--dim);margin-top:2px">
+      <span class="live"></span>Galeria Quantica &middot; Flux.1 Schnell + Ken Burns
+    </div>
+  </div>
+  <span class="badge badge-quantum">Sistema Quantico V2</span>
+  <div class="hbtns">
+    <a href="/dashboard" class="hb hb-p">Dashboard</a>
+    <a href="/videos-prontos.html" class="hb">Todos os Videos</a>
+    <a href="/hub.html" class="hb">Hub</a>
+  </div>
+</header>
+
+<div class="wrap">
+  <!-- Stats bar -->
+  <div class="stats-bar" id="stats-bar">
+    <div class="stat"><div class="stat-n" id="s-total">-</div><div class="stat-l">Total v2 Flux</div></div>
+    <div class="stat"><div class="stat-n" id="s-score95">-</div><div class="stat-l">Score 95+</div></div>
+    <div class="stat"><div class="stat-n" id="s-series">-</div><div class="stat-l">Series</div></div>
+    <div class="stat"><div class="stat-n" id="s-curtos">-</div><div class="stat-l">Shorts 60s</div></div>
+    <div style="flex:1"></div>
+    <div style="font-size:10px;color:var(--dim);text-align:right">
+      <div style="color:#c084fc;font-weight:700">Imagens Quanticas</div>
+      <div>Flux.1 Schnell NVIDIA + Ken Burns 30fps 1080p</div>
+      <div>Sistema: psicologia.doc V2 | Estilo: Psych2Go Quantico</div>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filters">
+    <button class="filter-btn active" data-filter="all" onclick="filtrar('all',this)">Todos</button>
+    <button class="filter-btn" data-filter="score95" onclick="filtrar('score95',this)">Score 95+</button>
+    <button class="filter-btn" data-filter="series" onclick="filtrar('series',this)">Series</button>
+    <button class="filter-btn" data-filter="shorts" onclick="filtrar('shorts',this)">Shorts 60s</button>
+    <button class="filter-btn" data-filter="long" onclick="filtrar('long',this)">Long Form</button>
+    <button class="filter-btn" data-filter="apego" onclick="filtrar('apego',this)">Apego</button>
+    <button class="filter-btn" data-filter="narcisismo" onclick="filtrar('narcisismo',this)">Narcisismo</button>
+    <button class="filter-btn" data-filter="trauma" onclick="filtrar('trauma',this)">Trauma</button>
+    <button class="filter-btn" data-filter="ansiedade" onclick="filtrar('ansiedade',this)">Ansiedade</button>
+  </div>
+
+  <!-- Loader -->
+  <div id="loader"><div class="spin"></div><span>Carregando videos quanticos...</span></div>
+
+  <!-- Secao Series -->
+  <div id="section-series" style="display:none">
+    <div class="section-t">Series com Imagens Quanticas</div>
+    <div class="grid" id="grid-series"></div>
+  </div>
+
+  <!-- Secao Principal -->
+  <div class="section-t" id="section-main-label" style="display:none">Videos Prontos</div>
+  <div class="grid" id="grid-main"></div>
+
+  <div id="empty" class="empty" style="display:none">
+    <div class="empty-ico">🎬</div>
+    <div style="font-size:14px;color:#94a3b8">Nenhum video encontrado com esse filtro</div>
+    <div style="font-size:11px;color:var(--dim);margin-top:6px">Experimente outro filtro ou aguarde o render completar</div>
+  </div>
+</div>
+
+<footer>
+  psicologia.doc &middot; @psidanielacoelho &middot; Sistema Quantico V2 &middot; Flux.1 Schnell + Ken Burns 30fps 1080p<br>
+  Estilo: Psych2Go Quantico &middot; Paleta por emocao &middot; Diversidade de personagens BR &middot; ZERO texto nas imagens
+</footer>
+
+<!-- Modal Player -->
+<div class="modal" id="modal" onclick="fecharModal(event)">
+  <div class="modal-inner">
+    <button class="modal-close" onclick="fecharModal(null,true)">x</button>
+    <video class="modal-video" id="modal-video" controls autoplay></video>
+    <div class="modal-info">
+      <div class="modal-title" id="modal-title"></div>
+      <div class="modal-meta" id="modal-meta"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SBU="https://tpjvalzwkqwttvmszvie.supabase.co";
+const SBK="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwanZhbHp3a3F3dHR2bXN6dmllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY4NjkyMzAsImV4cCI6MjA2MjQ0NTIzMH0.w45_lqUBd_9m8HEZSbNDHMb0kfKWq0Nwd1Dqf7V5NVc";
+
+let allVideos = [];
+let filterAtivo = 'all';
+
+// Series conhecidas
+const SERIES_MAP = {
+  'apego': {nome:'A Ciencia do Apego', cor:'#7C3AED', emoji:'💔'},
+  'narcisismo': {nome:'Mentes Narcisistas', cor:'#E11D48', emoji:'😈'},
+  'trauma': {nome:'Trauma Invisivel', cor:'#0D9488', emoji:'💔'},
+  'ansiedade': {nome:'Ansiedade e Panico', cor:'#F59E0B', emoji:'😰'},
+  'burnout': {nome:'Burnout', cor:'#FB7185', emoji:'🔥'},
+};
+
+function detectSerie(title) {
+  const t = title.toLowerCase();
+  if (t.includes('apego')) return 'apego';
+  if (t.includes('narcis')) return 'narcisismo';
+  if (t.includes('trauma')) return 'trauma';
+  if (t.includes('ansiedade') || t.includes('ansio')) return 'ansiedade';
+  if (t.includes('burnout')) return 'burnout';
+  return null;
+}
+
+function isQuantum(v) {
+  return v.mp4_url && v.mp4_url.includes('/v2/');
+}
+
+function isShort(v) {
+  return v.title && (v.title.includes('[60s]') || v.title.includes('60s') || v.title.includes('[Short]'));
+}
+
+function getScore(v) {
+  const m = v.metadata || {};
+  return parseFloat(m.gate_score || v.score || 0);
+}
+
+function getMetodo(v) {
+  if (!v.mp4_url) return null;
+  if (v.mp4_url.includes('/v2/')) return 'Flux+KenBurns V2';
+  if (v.mp4_url.includes('_v8.mp4')) return 'HTML Slides V8';
+  return 'Desconhecido';
+}
+
+async function carregarVideos() {
+  try {
+    const r = await fetch(SBU + "/rest/v1/content_pipeline?mp4_url=not.is.null&select=id,title,status,score,mp4_url,audio_url,youtube_url,metadata&order=id.desc&limit=200", {
+      headers: { apikey: SBK, Authorization: "Bearer " + SBK }
+    });
+    const data = await r.json();
+    // Filtrar apenas os quanticos (v2/)
+    allVideos = (data || []).filter(v => isQuantum(v));
+    
+    // Stats
+    document.getElementById('loader').style.display = 'none';
+    document.getElementById('s-total').textContent = allVideos.length;
+    document.getElementById('s-score95').textContent = allVideos.filter(v => getScore(v) >= 95).length;
+    document.getElementById('s-curtos').textContent = allVideos.filter(v => isShort(v)).length;
+    const series = new Set(allVideos.map(v => detectSerie(v.title)).filter(Boolean));
+    document.getElementById('s-series').textContent = series.size;
+    
+    renderizar(allVideos);
+  } catch(e) {
+    document.getElementById('loader').innerHTML = '<div style="color:#64748b;font-size:12px">Erro ao carregar. Verifique a conexao.</div>';
+  }
+}
+
+function filtrar(tipo, btn) {
+  filterAtivo = tipo;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  
+  let filtered = allVideos;
+  if (tipo === 'score95') filtered = allVideos.filter(v => getScore(v) >= 95);
+  else if (tipo === 'series') filtered = allVideos.filter(v => detectSerie(v.title));
+  else if (tipo === 'shorts') filtered = allVideos.filter(v => isShort(v));
+  else if (tipo === 'long') filtered = allVideos.filter(v => !isShort(v));
+  else if (['apego','narcisismo','trauma','ansiedade','burnout'].includes(tipo)) {
+    filtered = allVideos.filter(v => detectSerie(v.title) === tipo);
+  }
+  
+  renderizar(filtered);
+}
+
+function renderizar(videos) {
+  const gridMain = document.getElementById('grid-main');
+  const gridSeries = document.getElementById('grid-series');
+  const empty = document.getElementById('empty');
+  const sectionSeries = document.getElementById('section-series');
+  const sectionLabel = document.getElementById('section-main-label');
+  
+  gridMain.innerHTML = '';
+  gridSeries.innerHTML = '';
+  
+  if (videos.length === 0) {
+    empty.style.display = 'block';
+    sectionSeries.style.display = 'none';
+    sectionLabel.style.display = 'none';
+    return;
+  }
+  empty.style.display = 'none';
+  sectionLabel.style.display = 'flex';
+  
+  // Separar series dos standalone
+  const seriesVideos = videos.filter(v => detectSerie(v.title));
+  const soloVideos = videos.filter(v => !detectSerie(v.title));
+  
+  // Mostrar series agrupadas se filtro for 'all' ou 'series'
+  if ((filterAtivo === 'all' || filterAtivo === 'series') && seriesVideos.length > 0) {
+    sectionSeries.style.display = 'block';
+    seriesVideos.forEach((v, i) => gridSeries.appendChild(criarCard(v, i)));
+    if (filterAtivo === 'series') {
+      sectionLabel.style.display = 'none';
+      return;
+    }
+  } else {
+    sectionSeries.style.display = 'none';
+  }
+  
+  const mainList = filterAtivo === 'all' ? soloVideos : videos;
+  sectionLabel.textContent = filterAtivo === 'all' ? 'Videos Standalone' : 
+    (SERIES_MAP[filterAtivo]?.nome || 'Videos Filtrados');
+  
+  if (mainList.length === 0 && filterAtivo === 'all') {
+    sectionLabel.style.display = 'none';
+  } else {
+    mainList.forEach((v, i) => gridMain.appendChild(criarCard(v, i)));
+  }
+}
+
+function criarCard(v, index) {
+  const score = getScore(v);
+  const metodo = getMetodo(v);
+  const serie = detectSerie(v.title);
+  const serieInfo = serie ? SERIES_MAP[serie] : null;
+  const isQ = isQuantum(v);
+  const isS = isShort(v);
+  
+  const card = document.createElement('div');
+  card.className = 'vcard' + (isQ ? ' quantum' : '');
+  card.style.animationDelay = (index * 0.05) + 's';
+  
+  // Badge de tipo
+  let badgesHTML = '';
+  if (isQ) badgesHTML += '<span class="badge badge-quantum" style="font-size:8px">Flux+KB V2</span>';
+  if (score >= 95) badgesHTML += '<span class="badge badge-score" style="font-size:8px">' + score.toFixed(1) + '</span>';
+  if (isS) badgesHTML += '<span class="badge" style="background:rgba(245,158,11,.2);color:#fbbf24;font-size:8px;border:1px solid rgba(245,158,11,.3)">60s Short</span>';
+  if (serieInfo) badgesHTML += '<span class="badge" style="background:rgba(56,189,248,.15);color:#38bdf8;font-size:8px;border:1px solid rgba(56,189,248,.3)">' + serieInfo.emoji + ' ' + serieInfo.nome.substring(0,12) + '</span>';
+  
+  card.innerHTML = \`
+    <div class="vcard-thumb" onclick="abrirModal('\${v.id}', '\${(v.mp4_url||'').replace(/'/g,'')}',' \${(v.title||'').replace(/'/g,'').replace(/"/g,'')}')">
+      <div class="vcard-thumb-placeholder">
+        <svg width="60" height="60" viewBox="0 0 100 100" fill="none" opacity="0.3">
+          <rect x="46" y="52" width="8" height="36" rx="4" fill="#7C3AED"/>
+          <path d="M20 20 C20 20 20 58 46 62" stroke="#7C3AED" stroke-width="8" stroke-linecap="round" fill="none"/>
+          <path d="M80 20 C80 20 80 58 54 62" stroke="#7C3AED" stroke-width="8" stroke-linecap="round" fill="none"/>
+          <rect x="16" y="16" width="68" height="8" rx="4" fill="#7C3AED"/>
+        </svg>
+      </div>
+      <div class="vcard-badges">\${badgesHTML}</div>
+      <div class="vcard-play"><div class="play-ico">▶</div></div>
+    </div>
+    <div class="vcard-body">
+      <div class="vcard-title">\${v.title||'Sem titulo'}</div>
+      <div class="vcard-meta">
+        <span class="vmeta \${score>=95?'score-hi':''}">\${score>0?score.toFixed(1)+'pts':'sem score'}</span>
+        <span class="vmeta \${isQ?'quantum':''}">
+          \${isQ?'Flux.1+KB':'Playlist HTML'}
+        </span>
+        <span class="vmeta">#\${v.id}</span>
+        <span class="vmeta" style="color:\${v.status==='mp4_ready'?'#34d399':v.status==='published'?'#38bdf8':'#64748b'}">\${v.status}</span>
+      </div>
+      <div class="vcard-actions">
+        \${v.mp4_url?'<a href="'+v.mp4_url+'" download class="vbtn vbtn-dl">&#8595; MP4</a>':''}
+        \${v.youtube_url?'<a href="'+v.youtube_url+'" target="_blank" class="vbtn vbtn-yt">&#9654; YouTube</a>':''}
+        \${v.audio_url?'<a href="'+v.audio_url+'" target="_blank" class="vbtn">&#9836; Audio</a>':''}
+      </div>
+    </div>
+  \`;
+  return card;
+}
+
+function abrirModal(id, url, title) {
+  if (!url || url.trim() === '') return;
+  const modal = document.getElementById('modal');
+  document.getElementById('modal-video').src = url;
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-meta').innerHTML = '<span>#'+id+'</span><span>Flux.1 Schnell + Ken Burns 30fps 1080p</span><span>Psych2Go Quantico V2</span>';
+  modal.classList.add('open');
+}
+
+function fecharModal(e, force) {
+  if (force || (e && e.target === document.getElementById('modal'))) {
+    document.getElementById('modal').classList.remove('open');
+    const vid = document.getElementById('modal-video');
+    vid.pause();
+    vid.src = '';
+  }
+}
+
+document.addEventListener('keydown', e => { if(e.key==='Escape') fecharModal(null,true); });
+
+carregarVideos();
+setInterval(carregarVideos, 60000);
+</script>
+</body>
+</html>
