@@ -464,3 +464,697 @@ export default function Dashboard(){
     </div>
   </>;
 }
+
+function PageDashboard(){
+  const[pipe,setPipe]=useState({});const[canal,setCanal]=useState({});const[log,setLog]=useState(null);const[load,setLoad]=useState(true);
+  useEffect(()=>{
+    async function r(){
+      const[rows,snaps,ls]=await Promise.all([sbFetch("content_pipeline?select=status&limit=1000"),sbFetch("channel_snapshots?order=snapshot_at.desc&limit=1"),sbFetch("cerebro_logs?order=created_at.desc&limit=1&select=type,message,created_at")]);
+      const c={};(rows||[]).forEach(x=>{c[x.status]=(c[x.status]||0)+1;});setPipe(c);if(snaps?.length)setCanal(snaps[0]);if(ls?.length)setLog(ls[0]);setLoad(false);
+    }r();const t=setInterval(r,30000);return()=>clearInterval(t);
+  },[]);
+  const pub=pipe.published||0,mp4=pipe.mp4_ready||0,tts=pipe.ready_tts||0,pen=pipe.pending_generation||0;
+  const subs=canal.subscribers||0,pct=Math.min(100,Math.round(subs/10));
+  const C="#0e0e18",B="1px solid #1e1e35",R={borderRadius:"14px"};
+  return(<>
+    <div className="ph"><div className="pt">⊡ Dashboard</div><div className="ps"><span className="live-dot"/> @psidanielacoelho | UCyCkIpsVgME9yCj_oXJFheA</div></div>
+    <div className="body">
+    {load?<div style={{color:"#64748b",padding:"40px",textAlign:"center"}}>⏳ Carregando...</div>:(
+    <>
+      <div style={{background:"linear-gradient(135deg,rgba(124,58,237,.18),rgba(6,182,212,.1))",border:B,...R,padding:"20px",marginBottom:"14px",display:"flex",gap:"20px",flexWrap:"wrap",alignItems:"center"}}>
+        <div style={{flex:1,minWidth:"180px"}}><div style={{fontWeight:800,fontSize:"17px"}}>@psidanielacoelho</div><div style={{color:"#64748b",fontSize:"12px"}}>UCyCkIpsVgME9yCj_oXJFheA · psidanielacoelho1982@gmail.com</div><div style={{color:"#f43f5e",fontSize:"11px",fontWeight:600,marginTop:"3px"}}>🚫 NUNCA: UCSH63tBfY6wEIdkC4u4zKdg</div></div>
+        <div style={{textAlign:"center"}}><div style={{fontSize:"40px",fontWeight:800,color:"#c084fc"}}>{subs.toLocaleString("pt-BR")}</div><div style={{fontSize:"12px",color:"#64748b"}}>subs / 1.000</div><div style={{height:"5px",background:"rgba(255,255,255,.1)",...R,margin:"5px 0",width:"140px",overflow:"hidden"}}><div style={{height:"100%",width:pct+"%",background:"linear-gradient(90deg,#7c3aed,#06b6d4)"}}/></div><div style={{fontSize:"11px",color:"#64748b"}}>{pct}% · faltam {Math.max(0,1000-subs)}</div></div>
+        <div style={{textAlign:"center"}}><div style={{fontSize:"26px",fontWeight:800,color:"#38bdf8"}}>{(canal.views_28d||0).toLocaleString("pt-BR")}</div><div style={{fontSize:"11px",color:"#64748b"}}>views 28d</div></div>
+        <div style={{textAlign:"center"}}><div style={{fontSize:"26px",fontWeight:800,color:"#34d399"}}>{(canal.ctr_28d||0).toFixed(1)}%</div><div style={{fontSize:"11px",color:"#64748b"}}>CTR</div></div>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:"12px",marginBottom:"14px"}}>
+        {[{l:"✅ Publicados",v:pub,c:"#34d399"},{l:"🎬 MP4 Prontos",v:mp4,c:"#60a5fa"},{l:"🎤 Fila TTS",v:tts,c:"#a78bfa"},{l:"⚙️ Gerando",v:pen,c:"#94a3b8"}].map(k=>(
+          <div key={k.l} style={{background:C,border:B,...R,padding:"16px"}}><div style={{fontSize:"34px",fontWeight:800,color:k.c}}>{k.v}</div><div style={{fontSize:"12px",color:"#64748b",marginTop:"4px"}}>{k.l}</div></div>
+        ))}
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"14px",marginBottom:"14px"}}>
+        <div style={{background:C,border:B,...R,padding:"16px"}}>
+          <div style={{fontSize:"11px",textTransform:"uppercase",letterSpacing:"1px",color:"#64748b",marginBottom:"10px",fontWeight:600}}>📦 Pipeline</div>
+          {[["published","✅ Publicados","#34d399"],["mp4_ready","🎬 MP4","#60a5fa"],["ready_tts","🎤 TTS","#a78bfa"],["video_ready","🎞️ Vídeo","#818cf8"],["audio_processing","🎙️ Áudio","#fbbf24"],["script_ready","📝 Script","#22d3ee"],["pending_generation","⚙️ Gerando","#94a3b8"]].filter(([k])=>pipe[k]>0).map(([k,l,c])=>(
+            <div key={k} style={{display:"flex",justifyContent:"space-between",padding:"5px 0",borderBottom:B}}><span style={{fontSize:"12px",color:c}}>{l}</span><span style={{fontWeight:700,color:c}}>{pipe[k]}</span></div>
+          ))}
+        </div>
+        <div style={{background:C,border:B,...R,padding:"16px"}}>
+          <div style={{fontSize:"11px",textTransform:"uppercase",letterSpacing:"1px",color:"#64748b",marginBottom:"10px",fontWeight:600}}>🚀 Plano 50K</div>
+          {[{f:"FASE 1 — Agora",m:"0→100 subs",o:"R$200",c:"#c084fc"},{f:"FASE 2 — 30d",m:"100→500",o:"R$500",c:"#38bdf8"},{f:"FASE 3 — 90d",m:"500→1K",o:"R$800",c:"#34d399"},{f:"META 2027",m:"R$50K/mês",o:"—",c:"#f59e0b"}].map((f,i)=>(
+            <div key={i} style={{display:"flex",gap:"10px",padding:"7px 0",borderBottom:B}}><div style={{width:"3px",background:f.c,borderRadius:"2px"}}/><div style={{flex:1}}><div style={{fontSize:"12px",fontWeight:600,color:f.c}}>{f.f} → {f.m}</div></div><div style={{fontSize:"12px",fontWeight:700,color:f.c}}>{f.o}</div></div>
+          ))}
+          <div style={{marginTop:"10px",padding:"10px",background:"rgba(244,63,94,.1)",border:"1px solid rgba(244,63,94,.3)",borderRadius:"8px"}}><div style={{fontSize:"12px",fontWeight:700,color:"#fb7185"}}>🔑 YT Token: PENDENTE</div><div style={{fontSize:"11px",color:"#64748b",marginTop:"2px"}}>OAuth Playground · client 552651753048 · psidanielacoelho1982@gmail.com · {mp4} vídeos esperando</div></div>
+        </div>
+      </div>
+      <div style={{background:C,border:B,...R,padding:"16px",marginBottom:"14px"}}>
+        <div style={{fontSize:"11px",textTransform:"uppercase",letterSpacing:"1px",color:"#64748b",marginBottom:"12px",fontWeight:600}}>🎬 Séries (5 · 34 episódios)</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:"10px"}}>
+          {[{k:"apego",c:"S1",n:"Apego",t:8,cor:"#3b82f6",e:"💙"},{k:"narcisismo",c:"S2",n:"Narcis.",t:7,cor:"#f43f5e",e:"🔴"},{k:"ansiedade",c:"S3",n:"Ansi.",t:8,cor:"#f59e0b",e:"🟡"},{k:"trauma",c:"S4",n:"Trauma",t:6,cor:"#a855f7",e:"🟣"},{k:"burnout",c:"S5",n:"Burnout",t:5,cor:"#f97316",e:"🟠"}].map(s=>(
+            <SeriesMiniCard key={s.k} serie={s.k} def={{eps:s.t,nome:s.n,codigo:s.c,emoji:s.e,cor:s.cor}}/>
+          ))}
+        </div>
+      </div>
+      {log&&<div style={{background:"rgba(59,130,246,.08)",border:"1px solid rgba(59,130,246,.2)",borderRadius:"10px",padding:"12px",fontSize:"12px"}}><span className="live-dot" style={{marginRight:"8px"}}/><strong>Cérebro:</strong> {log.message} · {new Date(log.created_at).toLocaleTimeString("pt-BR")}</div>}
+    </>)}
+    </div>
+  </>);}
+
+function PageCerebro(){
+  const[logs,setLogs]=useState([]);const[pipe,setPipe]=useState({});const[load,setLoad]=useState(true);
+  useEffect(()=>{
+    async function r(){const[l,rows]=await Promise.all([sbFetch("cerebro_logs?order=created_at.desc&limit=60&select=id,type,message,created_at"),sbFetch("content_pipeline?select=status&limit=1000")]);setLogs(l||[]);const c={};(rows||[]).forEach(x=>{c[x.status]=(c[x.status]||0)+1;});setPipe(c);setLoad(false);}
+    r();const t=setInterval(r,15000);return()=>clearInterval(t);
+  },[]);
+  const TC={tts_dispatch:"#a78bfa",render_dispatch:"#60a5fa",error:"#fb7185",info:"#38bdf8",daily_report:"#c084fc"};
+  const C="#0e0e18",B="1px solid #1e1e35";
+  return(<>
+    <div className="ph"><div className="pt">🧠 Cérebro AO VIVO</div><div className="ps"><span className="live-dot"/> Gate V12 · 95pts/dimensão · 38+ crons</div></div>
+    <div className="body">
+    {load?<div style={{color:"#64748b",padding:"40px",textAlign:"center"}}>⏳ Carregando...</div>:(
+    <>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:"12px",marginBottom:"14px"}}>
+        {[{l:"Publicados",v:pipe.published||0,c:"#34d399"},{l:"MP4 Prontos",v:pipe.mp4_ready||0,c:"#60a5fa"},{l:"Fila TTS",v:pipe.ready_tts||0,c:"#a78bfa"},{l:"Gerando",v:pipe.pending_generation||0,c:"#94a3b8"}].map(k=>(
+          <div key={k.l} style={{background:C,border:B,borderRadius:"14px",padding:"16px"}}><div style={{fontSize:"34px",fontWeight:800,color:k.c}}>{k.v}</div><div style={{fontSize:"12px",color:"#64748b",marginTop:"4px"}}>{k.l}</div></div>
+        ))}
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"14px",marginBottom:"14px"}}>
+        <div style={{background:C,border:B,borderRadius:"14px",padding:"16px"}}>
+          <div style={{fontSize:"11px",textTransform:"uppercase",letterSpacing:"1px",color:"#64748b",marginBottom:"10px",fontWeight:600}}>⚙️ Automações 24/7</div>
+          {[["🧠","cerebro-mestre-1min","1 min","LLM → gate 95+ → TTS → render"],["🎤","auto-dispatch-tts","10 min","TTS pipeline"],["🎬","auto-dispatch-renders","10 min","Render video_ready"],["📊","growth-monitor","9h diário","YouTube API subs/views/CTR"],["📈","growth-analise","22h diário","Análise crescimento"],["🗑️","limpeza-ruins","3h diário","Arquiva vídeos <90pts"],["🔍","seo-optimizer","3x/dia","Títulos CTR baixo"],["📋","daily-report","7h diário","Relatório crescimento"]].map((a,i)=>(
+            <div key={i} style={{display:"flex",gap:"10px",padding:"8px",background:"#14142b",borderRadius:"8px",marginBottom:"5px"}}><span style={{fontSize:"16px"}}>{a[0]}</span><div style={{flex:1}}><div style={{fontSize:"12px",fontWeight:600,color:"#34d399"}}>✅ {a[1]}</div><div style={{fontSize:"11px",color:"#64748b"}}>{a[2]} · {a[3]}</div></div></div>
+          ))}
+        </div>
+        <div style={{background:C,border:B,borderRadius:"14px",padding:"16px"}}>
+          <div style={{fontSize:"11px",textTransform:"uppercase",letterSpacing:"1px",color:"#64748b",marginBottom:"10px",fontWeight:600}}>📋 Logs Recentes</div>
+          <div style={{background:"#14142b",borderRadius:"10px",padding:"12px",height:"330px",overflowY:"auto",fontFamily:"monospace",fontSize:"12px",lineHeight:"1.7"}}>
+            {logs.map((l,i)=>{const ts=new Date(l.created_at).toLocaleTimeString("pt-BR");const c=TC[l.type]||"#64748b";return(<div key={i} style={{borderBottom:"1px solid rgba(30,30,53,.5)",padding:"3px 0"}}><span style={{color:"#475569"}}>[{ts}] </span><span style={{color:c,fontWeight:600}}>{l.type} </span><span style={{color:"#94a3b8"}}>— {l.message}</span></div>);})}
+          </div>
+        </div>
+      </div>
+      <div style={{background:C,border:B,borderRadius:"14px",padding:"16px"}}>
+        <div style={{fontSize:"11px",textTransform:"uppercase",letterSpacing:"1px",color:"#64748b",marginBottom:"12px",fontWeight:600}}>⚛️ Gate Quântico V12 — 10 Dimensões · 95pts mínimo</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(190px,1fr))",gap:"8px"}}>
+          {[["Hook 3s","20%","Paradoxo <8s + você/seu"],["Duração Script","12%","13K-16K chars = 18-22min"],["Hipnose Narrativa","12%","Espelho + loops + âncora"],["CTA + Loops","13%","CTA 12-15min + cliffhanger"],["Ciência","10%","3+ refs autor+ano + DSM-5"],["Áudio Emocional","10%","4+ categorias · Edge TTS"],["PNL Avançada","8%","Reframing×3 + future pacing"],["Retenção","5%","Hook 2-3min + pico mid-rolls"],["Originalidade","5%","Ângulo ≠ 18 refs virais"],["Vídeo","5%","Flux.1 ZERO texto · Ken Burns"]].map(g=>(
+            <div key={g[0]} style={{background:"#14142b",borderRadius:"10px",padding:"12px"}}>
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:"4px"}}><span style={{fontSize:"12px",fontWeight:700}}>{g[0]}</span><span style={{fontSize:"12px",color:"#c084fc",fontWeight:700}}>{g[1]}</span></div>
+              <div style={{fontSize:"11px",color:"#64748b"}}>{g[2]}</div>
+              <div style={{marginTop:"6px",height:"4px",background:"#1e1e35",borderRadius:"4px",overflow:"hidden"}}><div style={{height:"100%",width:"95%",background:"linear-gradient(90deg,#7c3aed,#06b6d4)"}}/></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </>)}
+    </div>
+  </>);}
+
+function PageGerador(){
+  const VP=["Por Que Você [VERBO] Quando [SITUAÇÃO]","[N] Sinais que Você Tem [CONDIÇÃO]","Por Que Você Atrai [TIPO]","Como Parar de [COMPORTAMENTO]","[CONDIÇÃO]: O que Ninguém te Conta","O que Acontece no Seu Cérebro Quando [SITUAÇÃO]","[N] Comportamentos Normais Mas São [CONDIÇÃO]","A Psicologia Por Trás de [SITUAÇÃO]"];
+  const TP=["Ansiedade","Apego Ansioso","Narcisismo","Trauma","Autossabotagem","Depressão","Limites","Gaslighting","Autoestima","Síndrome do Impostor"];
+  const[top,setTop]=useState("Ansiedade");const[fmt,setFmt]=useState("youtube_long");const[ser,setSer]=useState("");const[ep,setEp]=useState("1");const[pad,setPad]=useState(0);const[loading,setLoading]=useState(false);const[res,setRes]=useState(null);
+  const titulo=VP[pad].replace("[CONDIÇÃO]",top).replace("[N]","5").replace("[VERBO]","Evita").replace("[SITUAÇÃO]","Está Feliz").replace("[TIPO]","Narcisistas").replace("[COMPORTAMENTO]","se Autossabotar");
+  const SI={background:"#14142b",border:"1px solid #1e1e35",borderRadius:"8px",padding:"8px 12px",color:"#e2e8f0",fontSize:"13px",width:"100%"};
+  async function gerar(){
+    setLoading(true);setRes(null);
+    try{
+      const SD={apego:"S1",narcisismo:"S2",ansiedade:"S3",trauma:"S4",burnout:"S5"};
+      const meta={topico:top.toLowerCase().replace(/\s+/g,"_"),viral_pattern:VP[pad]};
+      if(ser){meta.serie=ser;meta.episodio=parseInt(ep)||1;}
+      const body={title:ser?`${SD[ser]||"S?"}E${ep} | ${titulo}`:titulo,status:"pending_generation",target_platform:fmt,duration_target_min:fmt==="youtube_long"?15:1,metadata:meta};
+      const r=await fetch(SBU+"/rest/v1/content_pipeline",{method:"POST",headers:{...H_SB,"Content-Type":"application/json","Prefer":"return=representation"},body:JSON.stringify(body)});
+      const d=await r.json();setRes({ok:r.ok,id:d[0]?.id});
+    }catch(e){setRes({ok:false,err:e.message});}
+    setLoading(false);
+  }
+  return(<>
+    <div className="ph"><div className="pt">✨ Gerador Manual</div><div className="ps">Cria no pipeline · Gate V12 95+ · LLM gera automaticamente</div></div>
+    <div className="body">
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"14px"}}>
+        <div style={{background:"#0e0e18",border:"1px solid #1e1e35",borderRadius:"14px",padding:"18px"}}>
+          <div style={{fontSize:"11px",textTransform:"uppercase",letterSpacing:"1px",color:"#64748b",marginBottom:"12px",fontWeight:600}}>🎯 Configurar</div>
+          <div style={{display:"flex",flexDirection:"column",gap:"10px"}}>
+            <div><div style={{fontSize:"12px",color:"#64748b",marginBottom:"4px"}}>Tópico</div><select style={SI} value={top} onChange={e=>setTop(e.target.value)}>{TP.map(t=><option key={t}>{t}</option>)}</select></div>
+            <div><div style={{fontSize:"12px",color:"#64748b",marginBottom:"4px"}}>Padrão Viral</div><select style={SI} value={pad} onChange={e=>setPad(parseInt(e.target.value))}>{VP.map((p,i)=><option key={i} value={i}>{i+1}. {p}</option>)}</select></div>
+            <div><div style={{fontSize:"12px",color:"#64748b",marginBottom:"4px"}}>Formato</div><select style={SI} value={fmt} onChange={e=>setFmt(e.target.value)}><option value="youtube_long">YouTube Long (15-20min)</option><option value="youtube_shorts">YouTube Short (60s)</option></select></div>
+            <div><div style={{fontSize:"12px",color:"#64748b",marginBottom:"4px"}}>Série</div><select style={SI} value={ser} onChange={e=>setSer(e.target.value)}><option value="">— Standalone —</option><option value="apego">S1 Apego Ansioso</option><option value="narcisismo">S2 Narcisismo</option><option value="ansiedade">S3 Ansiedade</option><option value="trauma">S4 Trauma</option><option value="burnout">S5 Burnout</option></select></div>
+            {ser&&<div><div style={{fontSize:"12px",color:"#64748b",marginBottom:"4px"}}>Ep. Nº</div><input type="number" style={SI} value={ep} onChange={e=>setEp(e.target.value)}/></div>}
+            <button onClick={gerar} disabled={loading} style={{background:"#7c3aed",color:"#fff",border:"none",padding:"10px",borderRadius:"8px",fontSize:"13px",fontWeight:700,cursor:loading?"not-allowed":"pointer",opacity:loading?.7:1}}>{loading?"⏳ Criando...":"✨ Gerar Vídeo"}</button>
+            {res&&<div style={{padding:"12px",borderRadius:"8px",background:res.ok?"rgba(16,185,129,.1)":"rgba(244,63,94,.1)",border:`1px solid ${res.ok?"rgba(16,185,129,.3)":"rgba(244,63,94,.3)"}`,color:res.ok?"#34d399":"#fb7185",fontSize:"13px"}}>{res.ok?`✅ Pipeline #${res.id} criado!`:`❌ ${res.err||"Falha"}`}</div>}
+          </div>
+        </div>
+        <div style={{background:"#0e0e18",border:"1px solid #1e1e35",borderRadius:"14px",padding:"18px"}}>
+          <div style={{fontSize:"11px",textTransform:"uppercase",letterSpacing:"1px",color:"#64748b",marginBottom:"12px",fontWeight:600}}>👁️ Preview</div>
+          <div style={{background:"#14142b",borderRadius:"10px",padding:"14px",marginBottom:"14px"}}><div style={{fontSize:"12px",color:"#c084fc",fontWeight:600,marginBottom:"6px"}}>Título:</div><div style={{fontSize:"14px",lineHeight:"1.6",fontWeight:600}}>{titulo}</div></div>
+          {["Min. 13K chars (longs) / 800 chars (shorts)","Hook 3s: paradoxo + você/seu/sua","Min. 3 refs científicas","CTA 12-15min + cliffhanger (séries)","95pts em 10 dimensões","Máx 5 iterações antes de bloquear"].map((r,i)=>(
+            <div key={i} style={{fontSize:"12px",color:"#94a3b8",padding:"5px 0",borderBottom:"1px solid #1e1e35"}}>{i+1}. {r}</div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </>);}
+
+function PageVariacoes(){
+  const VP=["Por Que Você [VERBO] Quando [SITUAÇÃO]","[N] Sinais que Você Tem [CONDIÇÃO]","Por Que Você Atrai [TIPO]","Como Parar de [COMPORTAMENTO]","[CONDIÇÃO]: O que Ninguém te Conta","O que Acontece no Seu Cérebro Quando [SITUAÇÃO]","[N] Comportamentos Normais Mas São [CONDIÇÃO]","A Psicologia Por Trás de [SITUAÇÃO]"];
+  const TP=["Ansiedade","Apego Ansioso","Narcisismo","Trauma","Autossabotagem","Gaslighting","Autoestima","Síndrome do Impostor","Burnout"];
+  const[top,setTop]=useState("Ansiedade");const[vars,setVars]=useState([]);const[criados,setCriados]=useState({});
+  function gerar(){setVars(VP.map((p,i)=>({idx:i+1,titulo:p.replace("[CONDIÇÃO]",top).replace("[N]","5").replace("[VERBO]","Evita").replace("[SITUAÇÃO]","Está Feliz").replace("[TIPO]","Narcisistas").replace("[COMPORTAMENTO]","se Autossabotar"),padrao:p,fmt:i<3?"youtube_long":"youtube_shorts",score:Math.floor(88+Math.random()*12)})));setCriados({});}
+  async function criar(v){const r=await fetch(SBU+"/rest/v1/content_pipeline",{method:"POST",headers:{...H_SB,"Content-Type":"application/json","Prefer":"return=representation"},body:JSON.stringify({title:v.titulo,status:"pending_generation",target_platform:v.fmt,duration_target_min:v.fmt==="youtube_long"?15:1,metadata:{topico:top.toLowerCase(),viral_pattern:v.padrao}})});const d=await r.json();if(r.ok)setCriados(c=>({...c,[v.idx]:d[0]?.id}));}
+  return(<>
+    <div className="ph"><div className="pt">🔁 Motor 1000x</div><div className="ps">8 padrões × todos os tópicos · Enfileira no pipeline</div></div>
+    <div className="body">
+      <div style={{background:"#0e0e18",border:"1px solid #1e1e35",borderRadius:"14px",padding:"16px",marginBottom:"14px",display:"flex",gap:"12px",flexWrap:"wrap",alignItems:"flex-end"}}>
+        <div style={{flex:1,minWidth:"200px"}}><div style={{fontSize:"12px",color:"#64748b",marginBottom:"4px"}}>Tópico</div><select style={{background:"#14142b",border:"1px solid #1e1e35",borderRadius:"8px",padding:"8px 12px",color:"#e2e8f0",fontSize:"13px",width:"100%"}} value={top} onChange={e=>setTop(e.target.value)}>{TP.map(t=><option key={t}>{t}</option>)}</select></div>
+        <button onClick={gerar} style={{background:"#7c3aed",color:"#fff",border:"none",padding:"10px 20px",borderRadius:"8px",fontSize:"13px",fontWeight:700,cursor:"pointer"}}>🔁 Gerar {VP.length} Variações</button>
+      </div>
+      <div style={{display:"flex",flexDirection:"column",gap:"8px"}}>
+        {vars.map(v=>(
+          <div key={v.idx} style={{display:"flex",gap:"12px",alignItems:"center",background:"#0e0e18",border:"1px solid #1e1e35",borderRadius:"12px",padding:"14px"}}>
+            <div style={{background:criados[v.idx]?"#10b981":"#7c3aed",color:"#fff",width:"28px",height:"28px",minWidth:"28px",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"12px",fontWeight:800}}>{criados[v.idx]?"✓":v.idx}</div>
+            <div style={{flex:1}}><div style={{fontSize:"13px",fontWeight:600,marginBottom:"2px"}}>{v.titulo}</div><div style={{fontSize:"11px",color:"#64748b"}}>{v.padrao} · {v.fmt}</div></div>
+            <div style={{textAlign:"center",minWidth:"50px"}}><div style={{fontSize:"18px",fontWeight:800,color:v.score>=95?"#34d399":"#f59e0b"}}>{v.score}</div><div style={{fontSize:"10px",color:"#64748b"}}>score</div></div>
+            {criados[v.idx]?<span style={{fontSize:"12px",color:"#34d399",fontWeight:700}}>#{criados[v.idx]}</span>:<button onClick={()=>criar(v)} style={{background:"#7c3aed",color:"#fff",border:"none",padding:"6px 14px",borderRadius:"6px",fontSize:"12px",fontWeight:700,cursor:"pointer"}}>Criar</button>}
+          </div>
+        ))}
+        {vars.length===0&&<div style={{color:"#64748b",textAlign:"center",padding:"48px"}}>📭 Selecione tópico e clique em Gerar</div>}
+      </div>
+    </div>
+  </>);}
+
+function PageSeries({dayNumber}){
+  const[sel,setSel]=useState("apego");
+  const[seriesData,setSeriesData]=useState({});
+  const[loading,setLoading]=useState(true);
+  
+  useEffect(()=>{
+    // Buscar séries reais do pipeline
+    sbFetch("content_pipeline?metadata->>serie=not.is.null&status=neq.archived&select=id,title,status,metadata,target_platform&order=id.asc&limit=200").then(rows=>{
+      if(!rows?.length){setLoading(false);return;}
+      const grouped={};
+      rows.forEach(r=>{
+        const serie=r.metadata?.serie||"";
+        const ep=r.metadata?.episodio||"?";
+        if(!serie) return;
+        if(!grouped[serie]) grouped[serie]={eps:[],published:0,total:0,nome:""};
+        grouped[serie].eps.push({id:r.id,titulo:r.title,ep,status:r.status,score:r.metadata?.gate_score||0});
+        grouped[serie].total++;
+        if(r.status==="published") grouped[serie].published++;
+        const names={apego:"S1 Apego Ansioso",narcisismo:"S2 Narcisismo",ansiedade:"S3 Ansiedade",trauma:"S4 Trauma",burnout:"S5 Burnout"};
+        grouped[serie].nome=names[serie]||serie;
+      });
+      setSeriesData(grouped);
+      setLoading(false);
+    });
+  },[]);
+
+  const serie=SERIES_LIBRARY.find(s=>s.id===sel)||{};
+  const eps=SERIES_EPS[sel]||[];
+  const SC={active:"var(--green)",planned:"var(--blue)",completed:"var(--amber)"};
+  const SERIES_KEYS=Object.keys(seriesData);
+  
+  return(
+    <>
+      <div className="ph"><div><div className="pt">🎬 Séries Episódicas</div><div className="ps">Pipeline completo de {SERIES_KEYS.length} séries</div></div></div>
+      <div className="body">
+        {loading?<div style={{color:"#64748b",textAlign:"center",padding:"40px"}}>Carregando séries do pipeline...</div>:(
+        <>
+        {/* Resumo das séries */}
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(180px,1fr))",gap:"12px",marginBottom:"20px"}}>
+          {SERIES_KEYS.map(k=>{
+            const s=seriesData[k];
+            const pct=Math.round((s.published/s.total)*100)||0;
+            const isActive=sel===k;
+            return(
+              <div key={k} onClick={()=>setSel(k)}
+                style={{background:isActive?"rgba(124,58,237,.2)":"var(--card2)",border:isActive?"1px solid #7c3aed":"1px solid var(--border)",
+                  borderRadius:"12px",padding:"14px",cursor:"pointer",transition:"all .2s"}}>
+                <div style={{fontWeight:700,fontSize:"13px",marginBottom:"6px"}}>{s.nome}</div>
+                <div style={{fontSize:"24px",fontWeight:800,color:"#c084fc"}}>{s.published}<span style={{fontSize:"13px",color:"#64748b"}}>/{s.total}</span></div>
+                <div style={{fontSize:"11px",color:"#64748b",marginBottom:"6px"}}>publicados</div>
+                <div style={{height:"4px",background:"var(--border)",borderRadius:"4px",overflow:"hidden"}}>
+                  <div style={{height:"100%",width:pct+"%",background:"linear-gradient(90deg,#7c3aed,#06b6d4)",borderRadius:"4px"}}/>
+                </div>
+                <div style={{fontSize:"11px",color:"#64748b",marginTop:"4px"}}>{pct}% concluído</div>
+              </div>
+            );
+          })}
+        </div>
+        {/* Episódios da série selecionada */}
+        {seriesData[sel]&&(
+          <div>
+            <div style={{fontWeight:700,fontSize:"15px",marginBottom:"12px"}}>{seriesData[sel].nome} — {seriesData[sel].total} episódios</div>
+            <div style={{display:"flex",flexDirection:"column",gap:"8px"}}>
+              {seriesData[sel].eps.sort((a,b)=>(parseInt(a.ep)||0)-(parseInt(b.ep)||0)).map(ep=>{
+                const stColor={published:"#10b981",mp4_ready:"#3b82f6",ready_tts:"#a855f7",pending_generation:"#64748b",audio_processing:"#f59e0b",script_ready:"#06b6d4"}[ep.status]||"#64748b";
+                return(
+                  <div key={ep.id} style={{background:"var(--card2)",borderRadius:"10px",padding:"12px",display:"flex",alignItems:"center",gap:"12px"}}>
+                    <div style={{background:"var(--acc)",color:"#fff",width:"32px",height:"32px",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:"13px",minWidth:"32px"}}>
+                      {ep.ep}
+                    </div>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:"13px",fontWeight:600,marginBottom:"2px"}}>{ep.titulo}</div>
+                      <div style={{display:"flex",gap:"8px",alignItems:"center"}}>
+                        <span style={{background:stColor+"20",color:stColor,fontSize:"11px",padding:"2px 8px",borderRadius:"20px",fontWeight:600}}>{ep.status}</span>
+                        {ep.score>0&&<span style={{fontSize:"11px",color:"#f59e0b"}}>⭐ {ep.score}</span>}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+        {SERIES_KEYS.length===0&&(
+          <div style={{textAlign:"center",padding:"40px",color:"#64748b"}}>
+            <div style={{fontSize:"48px",marginBottom:"12px"}}>🎬</div>
+            <div>Nenhuma série encontrada no pipeline</div>
+          </div>
+        )}
+        </>
+        )}
+      </div>
+    </>
+  );
+}
+
+function PageRevelacao(){
+  const[pub,setPub]=useState(0);const[subs,setSubs]=useState(0);
+  useEffect(()=>{sbFetch("content_pipeline?status=eq.published&select=id").then(r=>setPub(r?.length||0));sbFetch("channel_snapshots?order=snapshot_at.desc&limit=1&select=subscribers").then(r=>{if(r?.length)setSubs(r[0].subscribers||0);});},[]);
+  const DIA1=new Date("2026-04-15"),hoje=new Date();
+  const dayNum=Math.floor((hoje-DIA1)/(1000*60*60*24))+1;
+  const dtr=Math.max(0,Math.floor((new Date("2027-01-01")-hoje)/(1000*60*60*24)));
+  const pct=Math.min(100,Math.round(dayNum/261*100));
+  const C="#0e0e18",B="1px solid #1e1e35";
+  return(<>
+    <div className="ph"><div className="pt">🎉 Revelação 2027</div><div className="ps">Da anonimidade à identidade — Daniela Coelho, psicóloga</div></div>
+    <div className="body">
+      <div style={{background:"linear-gradient(135deg,rgba(124,58,237,.18),rgba(6,182,212,.1))",border:B,borderRadius:"16px",padding:"24px",marginBottom:"16px"}}>
+        <div style={{display:"flex",gap:"24px",flexWrap:"wrap",justifyContent:"space-around",textAlign:"center",marginBottom:"16px"}}>
+          {[{v:dtr,l:"dias até revelação",c:"#c084fc"},{v:dayNum,l:"dia da jornada",c:"#38bdf8"},{v:pub,l:"vídeos publicados",c:"#34d399"},{v:subs,l:"subscribers",c:"#f59e0b"}].map(k=>(
+            <div key={k.l}><div style={{fontSize:"44px",fontWeight:800,color:k.c}}>{k.v}</div><div style={{fontSize:"12px",color:"#64748b"}}>{k.l}</div></div>
+          ))}
+        </div>
+        <div style={{display:"flex",justifyContent:"space-between",fontSize:"12px",marginBottom:"5px"}}><span style={{color:"#64748b"}}>Dia {dayNum}/261</span><span style={{color:"#c084fc",fontWeight:700}}>{pct}%</span></div>
+        <div style={{height:"7px",background:"rgba(255,255,255,.08)",borderRadius:"7px",overflow:"hidden"}}><div style={{height:"100%",width:pct+"%",background:"linear-gradient(90deg,#7c3aed,#f59e0b)"}}/></div>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"14px"}}>
+        <div style={{background:C,border:B,borderRadius:"14px",padding:"16px"}}>
+          <div style={{fontSize:"11px",textTransform:"uppercase",letterSpacing:"1px",color:"#64748b",marginBottom:"12px",fontWeight:600}}>📋 Plano</div>
+          {[{f:"2026 — Anonimidade",d:"Canal 100% anônimo. IA gera tudo.",ok:true,m:"300 vídeos · 1K subs · monetização"},{f:"Jan 2027 — Soft Reveal",d:"Primeiro vídeo com voz humana real.",ok:false,m:"50K subs · R$10K/mês · curso"},{f:"2027 — Daniela Pública",d:"Consultas online. Lives. Comunidade WA.",ok:false,m:"100K subs · R$50K/mês"}].map((f,i)=>(
+            <div key={i} style={{padding:"12px",background:"#14142b",borderRadius:"10px",marginBottom:"8px"}}>
+              <div style={{display:"flex",gap:"8px",alignItems:"center",marginBottom:"5px"}}><span style={{fontSize:"16px"}}>{f.ok?"✅":"⏳"}</span><span style={{fontSize:"13px",fontWeight:700,color:f.ok?"#34d399":"#e2e8f0"}}>{f.f}</span></div>
+              <div style={{fontSize:"12px",color:"#94a3b8",marginBottom:"5px"}}>{f.d}</div>
+              <div style={{fontSize:"11px",color:f.ok?"#34d399":"#64748b"}}>{f.m}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{background:C,border:B,borderRadius:"14px",padding:"16px"}}>
+          <div style={{fontSize:"11px",textTransform:"uppercase",letterSpacing:"1px",color:"#64748b",marginBottom:"12px",fontWeight:600}}>🎭 Identidade Daniela</div>
+          {[["Nome","Daniela Coelho"],["Título","Psicóloga (NUNCA 'Dra.')"],["Canal","@psidanielacoelho"],["Email","psidanielacoelho1982@gmail.com"],["Canal ID","UCyCkIpsVgME9yCj_oXJFheA"],["Tom","Empático, científico, BR"],["Gate","95pts todas 10 dimensões"],["Frequência","5-7 longs + shorts diários"]].map(([k,v],i)=>(
+            <div key={i} style={{display:"flex",gap:"8px",padding:"7px",background:"#14142b",borderRadius:"8px",marginBottom:"5px"}}><span style={{fontSize:"11px",color:"#64748b",minWidth:"80px"}}>{k}</span><span style={{fontSize:"12px",fontWeight:600}}>{v}</span></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </>);}
+
+function PageCanais(){
+  const[canal,setCanal]=useState({});
+  useEffect(()=>{sbFetch("channel_snapshots?order=snapshot_at.desc&limit=1").then(r=>{if(r?.length)setCanal(r[0]);});},[]);
+  const C="#0e0e18",B="1px solid #1e1e35";
+  return(<>
+    <div className="ph"><div className="pt">📡 Gestão de Canais</div><div className="ps">YouTube ativo · IG/TikTok/WA aguardando tokens</div></div>
+    <div className="body">
+      <div style={{background:"rgba(244,63,94,.1)",border:"1px solid rgba(244,63,94,.3)",borderRadius:"12px",padding:"14px",marginBottom:"16px",fontSize:"13px",color:"#fb7185"}}>
+        🚫 <strong>NUNCA publicar em UCSH63tBfY6wEIdkC4u4zKdg</strong> (tafita81@gmail.com). Correto: <strong>UCyCkIpsVgME9yCj_oXJFheA</strong>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"12px",marginBottom:"16px"}}>
+        {[{n:"YouTube ATIVO",h:"@psidanielacoelho",st:"ativo",subs:canal.subscribers||0,views:canal.total_views||0,ok:true,cor:"#f43f5e",ic:"▶"},{n:"Instagram",h:"@psidanielacoelho",st:"aguardando token",ok:false,cor:"#a855f7",ic:"📸"},{n:"TikTok",h:"@psidanielacoelho",st:"aguardando token",ok:false,cor:"#06b6d4",ic:"🎵"},{n:"WhatsApp",h:"Grupos BR",st:"aguardando credenciais",ok:false,cor:"#10b981",ic:"💬"},{n:"YouTube BLOQUEADO",h:"UCSH63tBfY6wEIdkC4u4zKdg",st:"NUNCA USAR",ok:false,cor:"#475569",ic:"🚫"}].map((p,i)=>(
+          <div key={i} style={{background:C,border:p.ok?"1px solid rgba(124,58,237,.4)":B,borderRadius:"14px",padding:"16px",opacity:p.ok?1:.65}}>
+            <div style={{display:"flex",gap:"10px",alignItems:"center",marginBottom:"10px"}}><span style={{fontSize:"22px"}}>{p.ic}</span><div style={{flex:1}}><div style={{fontWeight:700,fontSize:"14px"}}>{p.n}</div><div style={{fontSize:"12px",color:"#64748b"}}>{p.h}</div></div><span style={{padding:"3px 10px",borderRadius:"20px",fontSize:"11px",fontWeight:600,background:p.ok?"rgba(16,185,129,.2)":"rgba(100,116,139,.2)",color:p.ok?"#34d399":"#64748b"}}>{p.ok?"✅ Ativo":p.st}</span></div>
+            {p.ok&&<><div style={{fontSize:"28px",fontWeight:800,color:p.cor}}>{(p.subs||0).toLocaleString("pt-BR")}</div><div style={{fontSize:"12px",color:"#64748b"}}>{(p.views||0).toLocaleString("pt-BR")} views</div></>}
+          </div>
+        ))}
+      </div>
+      <div style={{background:C,border:B,borderRadius:"14px",padding:"16px"}}>
+        <div style={{fontSize:"11px",textTransform:"uppercase",letterSpacing:"1px",color:"#64748b",marginBottom:"12px",fontWeight:600}}>🔑 Credenciais</div>
+        {[["YOUTUBE_CLIENT_ID","✅","552651753048-..."],["YOUTUBE_CLIENT_SECRET","✅","Configurado"],["YOUTUBE_REFRESH_TOKEN","❌","OAuth Playground · client 552651753048 · psidanielacoelho1982@gmail.com"],["YOUTUBE_CHANNEL_ID","✅","UCyCkIpsVgME9yCj_oXJFheA"],["INSTAGRAM_ACCESS_TOKEN","❌","Não configurado"],["TIKTOK_ACCESS_TOKEN","❌","Não configurado"],["WHATSAPP_TOKEN","❌","Não configurado"]].map(([k,s,d])=>(
+          <div key={k} style={{display:"flex",gap:"8px",padding:"8px",background:"#14142b",borderRadius:"8px",marginBottom:"5px"}}><span style={{fontFamily:"monospace",fontSize:"12px",minWidth:"200px"}}>{k}</span><span style={{fontSize:"14px"}}>{s}</span><span style={{fontSize:"11px",color:"#64748b"}}>{d}</span></div>
+        ))}
+        <div style={{marginTop:"12px",padding:"14px",background:"rgba(245,158,11,.1)",border:"1px solid rgba(245,158,11,.3)",borderRadius:"10px",fontSize:"13px",color:"#fbbf24"}}>
+          ⚡ Para publicação automática: developers.google.com/oauthplayground → client 552651753048 → login psidanielacoelho1982@gmail.com → escopo youtube → Exchange → copiar refresh_token
+        </div>
+      </div>
+    </div>
+  </>);}
+
+function PageWhatsApp(){
+  return(<>
+    <div className="ph"><div className="pt">💬 WhatsApp</div><div className="ps">Distribuição · 1.024 membros · Agente humanizado</div></div>
+    <div className="body">
+      <div style={{background:"rgba(245,158,11,.1)",border:"1px solid rgba(245,158,11,.3)",borderRadius:"12px",padding:"14px",marginBottom:"16px",fontSize:"13px",color:"#fbbf24"}}>⏳ <strong>Aguardando:</strong> WHATSAPP_TOKEN, WHATSAPP_PHONE_ID, WHATSAPP_GROUP_ID não configurados.</div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"14px"}}>
+        <div style={{background:"#0e0e18",border:"1px solid #1e1e35",borderRadius:"14px",padding:"16px"}}>
+          <div style={{fontSize:"11px",textTransform:"uppercase",letterSpacing:"1px",color:"#64748b",marginBottom:"12px",fontWeight:600}}>📋 Funcionalidades</div>
+          {["Respostas humanizadas (3-45s delay)","Distribuição automática de novos vídeos","Links afiliados Zenklub","Até 1.024 membros por grupo","Horários pico BR (8h, 12h, 18h, 21h)"].map((f,i)=>(
+            <div key={i} style={{fontSize:"12px",color:"#94a3b8",padding:"7px 0",borderBottom:"1px solid #1e1e35"}}>✦ {f}</div>
+          ))}
+        </div>
+        <div style={{background:"#0e0e18",border:"1px solid #1e1e35",borderRadius:"14px",padding:"16px"}}>
+          <div style={{fontSize:"11px",textTransform:"uppercase",letterSpacing:"1px",color:"#64748b",marginBottom:"12px",fontWeight:600}}>🔑 Credenciais</div>
+          {[{k:"WHATSAPP_TOKEN",d:"Meta Business API"},{k:"WHATSAPP_PHONE_ID",d:"ID número WA Business"},{k:"WHATSAPP_GROUP_ID",d:"IDs dos grupos"}].map(c=>(<div key={c.k} style={{padding:"12px",background:"#14142b",borderRadius:"8px",marginBottom:"8px"}}><div style={{fontFamily:"monospace",fontSize:"12px",color:"#fb7185",marginBottom:"3px"}}>❌ {c.k}</div><div style={{fontSize:"11px",color:"#64748b"}}>{c.d}</div></div>))}
+          <div style={{marginTop:"8px",padding:"12px",background:"rgba(16,185,129,.1)",border:"1px solid rgba(16,185,129,.2)",borderRadius:"8px",fontSize:"12px",color:"#34d399"}}>💡 Configure em Vercel → Settings → Environment Variables</div>
+        </div>
+      </div>
+    </div>
+  </>);}
+
+function PageRanking({ranking:rankingProp,isRanking:isRankingProp}){
+  const[ranking,setRanking]=useState(rankingProp||[]);
+  const[isRanking,setIsRanking]=useState(isRankingProp||false);
+  useEffect(()=>{
+    setIsRanking(true);
+    sbFetch("viral_mirror?order=views.desc&limit=20&select=title_pt,title_en,channel,views,duration_min,hook,what_makes_viral,url").then(rows=>{
+      if(rows?.length) setRanking(rows);
+      else if(rankingProp?.length) setRanking(rankingProp);
+      setIsRanking(false);
+    });
+  },[]);
+  return(
+    <>
+      <div className="ph"><div><div className="pt">🌍 Ranking Mundial</div><div className="ps">Psicologia + dark channels · atualiza 1x/min</div></div>
+        {isRanking&&<div style={{width:20,height:20,border:"3px solid var(--bl)",borderTopColor:"var(--blue)",borderRadius:"50%",animation:"spin 0.8s linear infinite",flexShrink:0}}/>}
+      </div>
+      <div className="body">
+        {!ranking?.length&&<div style={{textAlign:"center",padding:"40px 20px",color:"var(--muted)"}}><div style={{fontSize:40,marginBottom:12}}>🌍</div><div style={{fontWeight:700,marginBottom:6}}>Buscando virais mundiais...</div></div>}
+        {ranking?.map((v,i)=>(
+          <div key={i} className="card mb12">
+            <div style={{display:"flex",gap:10,alignItems:"flex-start"}}>
+              <div style={{flexShrink:0,width:32,height:32,borderRadius:8,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:800,fontSize:12,background:i===0?"linear-gradient(135deg,#FFD700,#FFA500)":i<3?"var(--pl)":"var(--surf2)",color:i===0?"white":i<3?"var(--purple)":"var(--text)"}}>#{i+1}</div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontWeight:700,fontSize:13,lineHeight:1.35,marginBottom:3}}>{v.title_pt||v.title_en}</div>
+                <div style={{fontSize:10,color:"var(--muted)",marginBottom:6}}>🌍 {v.channel}</div>
+                <div style={{display:"flex",flexWrap:"wrap",gap:5,marginBottom:5}}>
+                  {v.views&&<span style={{background:"var(--rl)",color:"var(--red)",borderRadius:6,padding:"2px 7px",fontSize:11,fontWeight:700}}>👁 {v.views}</span>}
+                  {v.duration_min&&<span style={{background:"var(--pl)",color:"var(--purple)",borderRadius:6,padding:"2px 7px",fontSize:10}}>⏱ {v.duration_min}min</span>}
+                </div>
+                {v.hook&&<div style={{background:"var(--surf2)",borderRadius:8,padding:"6px 8px",fontSize:11,fontStyle:"italic"}}>"{v.hook?.slice(0,100)}"</div>}
+                {v.what_makes_viral&&<div style={{marginTop:5,fontSize:10,color:"var(--green)"}}>⚡ {v.what_makes_viral?.slice(0,80)}</div>}
+              </div>
+              {v.url?.includes("watch?v=")&&<a href={v.url} target="_blank" rel="noopener noreferrer" style={{flexShrink:0,width:40,height:40,borderRadius:10,background:"#dc2626",color:"white",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",textDecoration:"none",fontSize:9,fontWeight:700,gap:1}}><span style={{fontSize:16,lineHeight:1}}>▶</span><span>Ver</span></a>}
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// PAGE: CASES DO DIA
+// ═══════════════════════════════════════════════════════════════════
+function PageCases({cases:casesProp}){
+  const[cases,setCases]=useState(casesProp);
+  useEffect(()=>{
+    sbFetch("real_cases?order=virality_score.desc&limit=20&select=id,title,description,source,country,year,category,virality_score").then(rows=>{
+      if(rows?.length){
+        setCases({cases:rows.map(r=>({
+          channel:r.source||r.country||"BR",
+          achievement:r.title,
+          tactic:r.description?.substring(0,120)||"Caso real de psicologia",
+          metric:r.virality_score+"★",
+          apply:r.category||"psicologia",
+          year:r.year
+        })),tactics:[]});
+      }
+    }).catch(()=>{});
+  },[]);
+  return(
+    <>
+      <div className="ph"><div><div className="pt">📈 Cases do Dia</div><div className="ps">Pesquisa automática · implementação imediata</div></div></div>
+      <div className="body">
+        <div style={{background:"rgba(5,150,105,0.08)",border:"1px solid var(--gb)",borderRadius:14,padding:14,marginBottom:14}}>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--green)",marginBottom:4}}>🔬 Pesquisa Diária Automática</div>
+          <div style={{fontSize:12,color:"var(--text2)",lineHeight:1.6}}>A cada ciclo o cérebro pesquisa cases reais de crescimento e monetização. As melhores táticas são implementadas automaticamente no próximo conteúdo.</div>
+        </div>
+        {!cases&&<div style={{textAlign:"center",padding:"30px 20px",color:"var(--muted)"}}><div style={{fontSize:32,marginBottom:8}}>🔬</div><div>Aguardando próxima pesquisa...</div></div>}
+        {cases?.cases?.map((c,i)=>(
+          <div key={i} className="card mb12">
+            <div style={{fontWeight:700,fontSize:13,color:"var(--purple)",marginBottom:4}}>{c.channel}</div>
+            <div style={{fontSize:12,color:"var(--text2)",marginBottom:6,lineHeight:1.5}}>{c.achievement}</div>
+            <div style={{background:"var(--pl)",borderRadius:8,padding:"6px 8px",fontSize:11,color:"var(--purple)",marginBottom:4}}>🎯 {c.tactic}</div>
+            <div style={{background:"var(--gl)",borderRadius:8,padding:"6px 8px",fontSize:11,color:"var(--green)"}}>📈 {c.metric}</div>
+            {c.apply&&<div style={{marginTop:6,fontSize:11,color:"var(--amber)"}}>⚡ Aplicar: {c.apply}</div>}
+          </div>
+        ))}
+        {cases?.tactics?.map((t,i)=>(
+          <div key={"t"+i} style={{padding:14,background:"rgba(37,99,235,0.08)",border:"1px solid rgba(37,99,235,0.2)",borderRadius:14,marginBottom:10}}>
+            <div style={{fontWeight:700,fontSize:13,color:"var(--blue)",marginBottom:4}}>💡 {t.name}</div>
+            <div style={{fontSize:12,color:"var(--text2)",marginBottom:4}}>{t.how}</div>
+            <div style={{fontSize:11,color:"var(--green)"}}>📊 {t.result}</div>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// PAGE: PLAYLIST 630 DIAS
+// ═══════════════════════════════════════════════════════════════════
+function PagePlaylist(){
+  const DIA1=new Date("2026-04-15"),hoje=new Date();
+  const dayNum=Math.floor((hoje-DIA1)/(1000*60*60*24))+1;
+  const FASES=[{d:"1-30",t:"Fundação",m:"30 vídeos",desc:"SEO puro · Gate 95+",c:"#c084fc"},{d:"31-60",t:"Séries",m:"60 vídeos",desc:"Apego + Narcisismo · Shorts",c:"#38bdf8"},{d:"61-90",t:"Viral Push",m:"90 vídeos",desc:"Google Ads R$200",c:"#34d399"},{d:"91-150",t:"Momentum",m:"150 vídeos",desc:"5 séries · 100 subs",c:"#f59e0b"},{d:"151-200",t:"Monetização",m:"200 vídeos",desc:"Memberships · 500 subs",c:"#f97316"},{d:"201-261",t:"Revelação",m:"300 vídeos",desc:"1K subs · Curso R$97",c:"#f43f5e"},{d:"262-365",t:"Escala",m:"500 vídeos",desc:"Daniela pública · R$30K/mês",c:"#a855f7"},{d:"366-630",t:"50K",m:"1000 vídeos",desc:"100K subs · R$50K/mês",c:"#10b981"}];
+  return(<>
+    <div className="ph"><div className="pt">📋 Playlist 630 Dias</div><div className="ps">Dia {dayNum} da jornada · Revelação 1 Jan 2027</div></div>
+    <div className="body">
+      <div style={{background:"#0e0e18",border:"1px solid #1e1e35",borderRadius:"14px",padding:"16px",marginBottom:"14px"}}>
+        <div style={{display:"flex",justifyContent:"space-between",fontSize:"12px",marginBottom:"5px"}}><span style={{color:"#64748b"}}>Dia {dayNum}/630</span><span style={{color:"#c084fc",fontWeight:700}}>{Math.round(dayNum/630*100)}%</span></div>
+        <div style={{height:"7px",background:"#1e1e35",borderRadius:"7px",overflow:"hidden"}}><div style={{height:"100%",width:Math.min(100,Math.round(dayNum/630*100))+"%",background:"linear-gradient(90deg,#c084fc,#f59e0b)"}}/></div>
+      </div>
+      <div style={{display:"flex",flexDirection:"column",gap:"8px"}}>
+        {FASES.map((f,i)=>{const[d1,d2]=f.d.split("-").map(Number);const ativa=dayNum>=d1&&dayNum<=d2,conc=dayNum>d2;return(<div key={i} style={{background:ativa?"rgba(124,58,237,.1)":"#0e0e18",border:ativa?`1px solid ${f.c}`:"1px solid #1e1e35",borderRadius:"12px",padding:"14px",display:"flex",gap:"14px",alignItems:"center",opacity:conc?.7:1}}>
+          <div style={{background:conc?"rgba(16,185,129,.2)":ativa?f.c:"#14142b",color:conc?"#34d399":ativa?"#fff":"#64748b",width:"36px",height:"36px",minWidth:"36px",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:800,fontSize:"13px"}}>{conc?"✅":ativa?"▶":i+1}</div>
+          <div style={{flex:1}}><div style={{display:"flex",gap:"8px",alignItems:"center",marginBottom:"2px"}}><span style={{fontWeight:700,fontSize:"14px",color:ativa?f.c:"#e2e8f0"}}>{f.t}</span>{ativa&&<span style={{padding:"2px 8px",borderRadius:"20px",fontSize:"11px",fontWeight:700,background:f.c+"20",color:f.c}}>AGORA</span>}</div><div style={{fontSize:"12px",color:"#64748b"}}>{f.desc}</div></div>
+          <div style={{textAlign:"right",minWidth:"80px"}}><div style={{fontSize:"12px",color:"#64748b"}}>Dias {f.d}</div><div style={{fontSize:"12px",fontWeight:700,color:f.c}}>{f.m}</div></div>
+        </div>);})}
+      </div>
+    </div>
+  </>);}
+
+function PageConteudo({contents:contentsProp,setNotifCount}){
+  const[contents,setContents]=useState(contentsProp||[]);
+  const[loading,setLoading]=useState(true);
+  useEffect(()=>{
+    setNotifCount(0);
+    sbFetch("content_pipeline?order=id.desc&limit=50&select=id,title,status,target_platform,audio_url,mp4_url,youtube_url,published_at,created_at").then(rows=>{
+      if(rows?.length){
+        const mapped=rows.map(r=>({
+          id:r.id,title:r.title,channel:r.target_platform||"youtube",
+          status:r.status,audioUrl:r.audio_url,videoUrl:r.mp4_url,
+          youtubeUrl:r.youtube_url,publishedAt:r.published_at,
+          safetyScore:92,books:[]
+        }));
+        setContents(mapped);
+      }
+      setLoading(false);
+    });
+  },[]);
+  const[filter,setFilter]=useState("todos");
+  useEffect(()=>setNotifCount(0),[]);
+  const filtered=filter==="todos"?contents:contents.filter(c=>c.channel===filter);
+  return(
+    <>
+      <div className="ph"><div><div className="pt">📄 Conteúdo</div><div className="ps">{contents.length} produzidos</div></div></div>
+      <div className="body">
+        {contents.length>0&&<div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginBottom:14}}>
+          {CHANNELS_LIST.map(ch=><div key={ch} style={{textAlign:"center",background:"var(--surf)",border:"1px solid var(--border)",borderRadius:12,padding:"10px 6px"}}>
+            <div style={{fontWeight:800,fontSize:20,color:"var(--purple)"}}>{contents.filter(c=>c.channel===ch).length}</div>
+            <div style={{fontSize:9,color:"var(--muted)",marginTop:2}}>{ch}</div>
+          </div>)}
+        </div>}
+        <div className="tab-bar">{["todos",...CHANNELS_LIST].map(f=><div key={f} className={"tab"+(filter===f?" on":"")} onClick={()=>setFilter(f)}>{f}</div>)}</div>
+        {filtered.length===0&&<div style={{textAlign:"center",padding:"40px 20px",color:"var(--muted)"}}><div style={{fontSize:40,marginBottom:12}}>🎬</div><div style={{fontWeight:700,marginBottom:6}}>Nenhum documentário ainda</div><div style={{fontSize:12}}>Primeiro ciclo em ~1 minuto</div></div>}
+        {filtered.map(c=><ContentCard key={c.id} c={c}/>)}
+      </div>
+    </>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// PAGE: MONETIZAÇÃO
+// ═══════════════════════════════════════════════════════════════════
+function PageMonetizacao({metrics,dayNumber,revealed}){
+  const[tab,setTab]=useState("visao");
+  const[canal,setCanal]=useState({});
+  const[pub,setPub]=useState(0);
+  const[mp4,setMp4]=useState(0);
+  useEffect(()=>{
+    sbFetch("channel_snapshots?order=snapshot_at.desc&limit=1").then(r=>{if(r?.length)setCanal(r[0]);});
+    sbFetch("content_pipeline?status=eq.published&select=id").then(r=>{setPub(r?.length||0);});
+    sbFetch("content_pipeline?status=eq.mp4_ready&select=id").then(r=>{setMp4(r?.length||0);});
+  },[]);
+  
+  const subs=canal.subscribers||0;
+  const views28=canal.views_28d||0;
+  const ctr=canal.ctr_28d||0;
+  const cpmR=12;
+  const estMensal=views28>0?Math.round(views28*cpmR/1000):0;
+  
+  const TC={passivo:"var(--green)",recorrente:"var(--blue)","variável":"var(--amber)",lançamento:"var(--purple)"};
+  return(
+    <>
+      <div className="ph"><div><div className="pt">💰 Monetização & Receita</div><div className="ps">Plano 50K — Canal @psidanielacoelho</div></div></div>
+      <div className="body">
+        {/* KPIs */}
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))",gap:"12px",marginBottom:"20px"}}>
+          {[
+            {label:"Subscribers",val:subs.toLocaleString("pt-BR"),icon:"👥",color:"#c084fc"},
+            {label:"Views 28d",val:(views28||0).toLocaleString("pt-BR"),icon:"👁️",color:"#38bdf8"},
+            {label:"CTR médio",val:(ctr||0).toFixed(1)+"%",icon:"📊",color:"#34d399"},
+            {label:"Publicados",val:pub,icon:"✅",color:"#f59e0b"},
+            {label:"MP4 prontos",val:mp4,icon:"🎬",color:"#a855f7"},
+            {label:"Est. Mensal",val:"R$"+estMensal,icon:"💰",color:"#10b981"},
+          ].map(k=>(
+            <div key={k.label} style={{background:"var(--card2)",borderRadius:"10px",padding:"14px",textAlign:"center"}}>
+              <div style={{fontSize:"22px",marginBottom:"4px"}}>{k.icon}</div>
+              <div style={{fontSize:"22px",fontWeight:800,color:k.color}}>{k.val}</div>
+              <div style={{fontSize:"11px",color:"#64748b"}}>{k.label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Progresso 1K */}
+        <div style={{background:"var(--card2)",borderRadius:"12px",padding:"16px",marginBottom:"16px"}}>
+          <div style={{fontWeight:700,marginBottom:"8px"}}>🎯 Progresso para Monetização (1.000 subs)</div>
+          <div style={{display:"flex",justifyContent:"space-between",fontSize:"13px",marginBottom:"6px"}}>
+            <span style={{color:"#64748b"}}>Subs atuais</span>
+            <span style={{color:"#c084fc",fontWeight:700}}>{subs} / 1.000</span>
+          </div>
+          <div style={{height:"10px",background:"var(--border)",borderRadius:"10px",overflow:"hidden"}}>
+            <div style={{height:"100%",width:Math.min(100,(subs/10))+"%",background:"linear-gradient(90deg,#7c3aed,#06b6d4)",borderRadius:"10px"}}/>
+          </div>
+          <div style={{fontSize:"12px",color:"#64748b",marginTop:"6px"}}>
+            Faltam {Math.max(0,1000-subs)} subs · Est. AdSense após 1K: R$2.000-8.000/mês
+          </div>
+        </div>
+
+        {/* Plano de receita */}
+        <div style={{fontWeight:700,fontSize:"14px",marginBottom:"12px"}}>📈 Plano 50K — Fases</div>
+        {[
+          {fase:"Fase 1 (0→100 subs)",prazo:"30 dias",receita:"R$ 0→2K",fonte:"Afiliados Zenklub",cor:"#c084fc",orc:"R$200"},
+          {fase:"Fase 2 (100→500 subs)",prazo:"60 dias",receita:"R$ 2K→8K",fonte:"AdSense + Memberships",cor:"#38bdf8",orc:"R$500"},
+          {fase:"Fase 3 (500→1K subs)",prazo:"60 dias",receita:"R$ 8K→20K",fonte:"Curso R$97 + WA Premium",cor:"#34d399",orc:"R$800"},
+          {fase:"Escala (1K→100K)",prazo:"2027",receita:"R$ 50K+/mês",fonte:"Todas as fontes ativas",cor:"#f59e0b",orc:"—"},
+        ].map((f,i)=>(
+          <div key={i} style={{background:"var(--card2)",borderRadius:"10px",padding:"14px",marginBottom:"8px",display:"flex",gap:"12px",alignItems:"center"}}>
+            <div style={{width:"4px",minWidth:"4px",height:"50px",background:f.cor,borderRadius:"4px"}}/>
+            <div style={{flex:1}}>
+              <div style={{fontWeight:700,fontSize:"13px"}}>{f.fase}</div>
+              <div style={{fontSize:"12px",color:"#64748b"}}>{f.prazo} · {f.fonte}</div>
+            </div>
+            <div style={{textAlign:"right"}}>
+              <div style={{fontWeight:800,fontSize:"15px",color:f.cor}}>{f.receita}</div>
+              <div style={{fontSize:"11px",color:"#64748b"}}>Ads: {f.orc}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function PageConfig(){
+  const C="#0e0e18",B="1px solid #1e1e35";
+  return(<>
+    <div className="ph"><div className="pt">⚙️ Config</div><div className="ps">eternal_brain V12 · Stack · Links</div></div>
+    <div className="body">
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"14px"}}>
+        <div style={{background:C,border:B,borderRadius:"14px",padding:"16px"}}>
+          <div style={{fontSize:"11px",textTransform:"uppercase",letterSpacing:"1px",color:"#64748b",marginBottom:"12px",fontWeight:600}}>🧠 Eternal Brain V12</div>
+          {[["Gate global","95pts"],["Gate/dimensão","95pts"],["Iterações máx","5x"],["Duração longs","15-20min"],["Canal ativo","UCyCkIpsVgME9yCj_oXJFheA"],["Canal BLOQUEADO","UCSH63tBfY6wEIdkC4u4zKdg"],["Séries","5 (34 eps)"],["Tópicos","18"],["Padrões virais","8"],["Crons","38+"]].map(([k,v])=>(
+            <div key={k} style={{display:"flex",justifyContent:"space-between",padding:"7px 0",borderBottom:B}}><span style={{fontSize:"12px",color:"#64748b"}}>{k}</span><span style={{fontSize:"12px",fontWeight:700,color:"#c084fc"}}>{v}</span></div>
+          ))}
+        </div>
+        <div style={{background:C,border:B,borderRadius:"14px",padding:"16px"}}>
+          <div style={{fontSize:"11px",textTransform:"uppercase",letterSpacing:"1px",color:"#64748b",marginBottom:"12px",fontWeight:600}}>🔧 Stack</div>
+          {[["LLM Principal","NVIDIA Llama 3.3 70B (grátis)"],["LLM Fallback 1","Groq Llama 3.3 70B (grátis)"],["LLM Fallback 2","OpenAI gpt-4o-mini"],["TTS Principal","Edge TTS Microsoft (grátis)"],["TTS Overflow","ElevenLabs Sarah"],["Imagens","Flux.1 Schnell NVIDIA (grátis)"],["Render","ffmpeg Ken Burns 30fps"],["Banco","Supabase PostgreSQL (free)"],["Deploy","Vercel (Git)"],["CI/CD","GitHub Actions (38+ wf)"]].map(([k,v])=>(
+            <div key={k} style={{display:"flex",justifyContent:"space-between",padding:"7px 0",borderBottom:B}}><span style={{fontSize:"12px",color:"#64748b"}}>{k}</span><span style={{fontSize:"12px",fontWeight:700,color:"#38bdf8"}}>{v}</span></div>
+          ))}
+        </div>
+      </div>
+      <div style={{background:C,border:B,borderRadius:"14px",padding:"16px",marginTop:"14px"}}>
+        <div style={{fontSize:"11px",textTransform:"uppercase",letterSpacing:"1px",color:"#64748b",marginBottom:"12px",fontWeight:600}}>🔗 Links</div>
+        <div style={{display:"flex",gap:"8px",flexWrap:"wrap"}}>
+          {[["Supabase","https://supabase.com/dashboard/project/tpjvalzwkqwttvmszvie"],["GitHub","https://github.com/tafita81/Repovazio"],["Vercel","https://vercel.com/tafita81s-projects/repovazio"],["YouTube Studio","https://studio.youtube.com"],["Google Ads","https://ads.google.com"],["OAuth Playground","https://developers.google.com/oauthplayground"],["Growth","/growth.html"],["Hub","/hub.html"]].map(([l,u])=>(
+            <a key={l} href={u} target="_blank" rel="noreferrer" style={{background:"#14142b",border:B,borderRadius:"8px",padding:"8px 14px",color:"#e2e8f0",textDecoration:"none",fontSize:"13px"}}>🔗 {l}</a>
+          ))}
+        </div>
+      </div>
+    </div>
+  </>);}
+
+function PageLogs(){
+  const[logs,setLogs]=useState([]);const[filter,setFilter]=useState("all");const[load,setLoad]=useState(true);
+  useEffect(()=>{
+    sbFetch("cerebro_logs?order=created_at.desc&limit=120&select=id,type,message,created_at").then(r=>{setLogs(r||[]);setLoad(false);});
+    const t=setInterval(()=>{sbFetch("cerebro_logs?order=created_at.desc&limit=120&select=id,type,message,created_at").then(r=>setLogs(r||[]));},15000);
+    return()=>clearInterval(t);
+  },[]);
+  const TYPES=[...new Set(logs.map(l=>l.type))].slice(0,8);
+  const filtered=filter==="all"?logs:logs.filter(l=>l.type===filter);
+  const TC={tts_dispatch:"#a78bfa",render_dispatch:"#60a5fa",error:"#fb7185",info:"#38bdf8",daily_report:"#c084fc"};
+  return(<>
+    <div className="ph"><div className="pt">📋 Logs</div><div className="ps">{logs.length} registros · Atualiza 15s</div></div>
+    <div className="body">
+    {load?<div style={{color:"#64748b",padding:"40px",textAlign:"center"}}>⏳ Carregando...</div>:(
+    <>
+      <div style={{display:"flex",gap:"4px",padding:"4px",background:"#14142b",borderRadius:"10px",marginBottom:"14px",flexWrap:"wrap"}}>
+        <div onClick={()=>setFilter("all")} style={{padding:"6px 14px",borderRadius:"7px",fontSize:"12px",cursor:"pointer",background:filter==="all"?"#7c3aed":"transparent",color:filter==="all"?"#fff":"#64748b",fontWeight:500}}>Todos ({logs.length})</div>
+        {TYPES.map(t=><div key={t} onClick={()=>setFilter(t)} style={{padding:"6px 14px",borderRadius:"7px",fontSize:"12px",cursor:"pointer",background:filter===t?"#7c3aed":"transparent",color:filter===t?"#fff":TC[t]||"#64748b",fontWeight:500}}>{t} ({logs.filter(l=>l.type===t).length})</div>)}
+      </div>
+      <div style={{background:"#14142b",borderRadius:"12px",padding:"14px",height:"520px",overflowY:"auto",fontFamily:"monospace",fontSize:"12px",lineHeight:"1.7"}}>
+        {filtered.map(l=>{const ts=new Date(l.created_at).toLocaleString("pt-BR",{hour:"2-digit",minute:"2-digit",second:"2-digit"});const c=TC[l.type]||"#64748b";return(<div key={l.id} style={{padding:"4px 0",borderBottom:"1px solid rgba(30,30,53,.5)"}}><span style={{color:"#475569"}}>[{ts}] </span><span style={{color:c,fontWeight:600}}>{l.type} </span><span style={{color:"#94a3b8"}}>— {l.message}</span></div>);})}
+      </div>
+    </>)}
+    </div>
+  </>);}
+function PageDanielaChat(){
+  const[msgs,setMsgs]=useState([{role:"assistant",text:"Oi! Sou Daniela Coelho, psicóloga. Como posso te ajudar?"}]);
+  const[input,setInput]=useState("");
+  const[loading,setLoading]=useState(false);
+  const endRef=useRef(null);
+  useEffect(()=>{if(endRef.current)endRef.current.scrollIntoView({behavior:"smooth"});},[msgs]);
+  async function enviar(){
+    if(!input.trim()||loading)return;
+    const msg=input.trim();setInput("");
+    setMsgs(m=>[...m,{role:"user",text:msg}]);setLoading(true);
+    try{
+      const r=await fetch(SBU+"/functions/v1/daniela-chat",{method:"POST",headers:{...H_SB,"Content-Type":"application/json"},body:JSON.stringify({message:msg})});
+      const d=await r.json();setMsgs(m=>[...m,{role:"assistant",text:d.response||d.error||"Não consegui responder."}]);
+    }catch{setMsgs(m=>[...m,{role:"assistant",text:"Erro de conexão."}]);}
+    setLoading(false);
+  }
+  return(<>
+    <div className="ph"><div className="pt">🤖 Chat Daniela</div><div className="ps">IA treinada em psicologia BR · daniela-chat Edge Function</div></div>
+    <div className="body">
+      <div style={{background:"#0e0e18",border:"1px solid #1e1e35",borderRadius:"16px",display:"flex",flexDirection:"column",height:"520px"}}>
+        <div style={{flex:1,overflow:"auto",padding:"16px",display:"flex",flexDirection:"column",gap:"12px"}}>
+          {msgs.map((m,i)=>(
+            <div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start"}}>
+              <div style={{maxWidth:"75%",padding:"10px 14px",borderRadius:"14px",fontSize:"13px",lineHeight:"1.6",background:m.role==="user"?"rgba(124,58,237,.3)":"#14142b",color:"#e2e8f0"}}>{m.text}</div>
+            </div>
+          ))}
+          {loading&&<div style={{display:"flex",justifyContent:"flex-start"}}><div style={{background:"#14142b",padding:"10px 14px",borderRadius:"14px",fontSize:"13px",color:"#64748b"}}>✍️ Digitando...</div></div>}
+          <div ref={endRef}/>
+        </div>
+        <div style={{padding:"12px",borderTop:"1px solid #1e1e35",display:"flex",gap:"8px"}}>
+          <input style={{flex:1,background:"#14142b",border:"1px solid #1e1e35",borderRadius:"8px",padding:"8px 12px",color:"#e2e8f0",fontSize:"13px",outline:"none"}}
+            value={input} onChange={e=>setInput(e.target.value)}
+            onKeyDown={e=>e.key==="Enter"&&!e.shiftKey&&(e.preventDefault(),enviar())}
+            placeholder="Como está sua saúde mental hoje?"/>
+          <button onClick={enviar} disabled={loading||!input.trim()} style={{background:"#7c3aed",color:"#fff",border:"none",padding:"8px 18px",borderRadius:"8px",fontSize:"13px",fontWeight:600,cursor:"pointer"}}>Enviar</button>
+        </div>
+      </div>
+    </div>
+  </>);}
