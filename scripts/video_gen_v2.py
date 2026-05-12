@@ -532,8 +532,20 @@ def build_psych2go_prompt(scene_description: str, emotion: str, shot_type: str,
 
 def gen_image_flux(prompt, output_path, width=768, height=1344, retries=5, emotion="calmo", shot_type="medium", scene_index=0):
     """9:16 portrait = 768x1344. 16:9 landscape = 1344x768.
-    Validates image isn't black/empty; retries with new seed if so."""
-    safe_prompt = (prompt + ", NO text, NO words, NO letters, NO signs, NO labels, NO captions, NO watermarks, NO typography, NO writing, NO numbers, clean 2D flat illustration, Psych2Go style, single character focus, expressive face, pastel background")[:1000]
+    Usa sistema PSYCH2GO QUANTICO V2 — paleta por emocao, shot dinamico, ZERO texto.
+    Retries com seed variation + prompt refinement se necessario.
+    """
+    # ===== SISTEMA PSYCH2GO QUANTICO V2 =====
+    # Usar build_psych2go_prompt para gerar prompt otimizado
+    if callable(globals().get('build_psych2go_prompt')):
+        quantum_prompt = build_psych2go_prompt(prompt, emotion, shot_type, scene_index, (height > width))
+    else:
+        quantum_prompt = prompt
+    # Sufixo negativo absoluto
+    safe_prompt = (quantum_prompt + 
+        ", NO text NO words NO letters NO numbers NO watermarks "
+        "NO typography NO captions NO signs NO labels NO writing "
+        "NO subtitles NO UI NO watermark NO banner")[:1000]
     for attempt in range(retries):
         payload = {
             'prompt': safe_prompt,
