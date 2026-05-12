@@ -488,6 +488,102 @@ function PageHub({nav}){
   </>;
 }
 
+function PageRedesSociais({nav}){
+  const[status,setStatus]=useState(null);const[perfis,setPerfis]=useState(null);
+  useEffect(()=>{
+    fetch('/api/social').then(r=>r.json()).then(d=>{setStatus(d.status_redes);setPerfis(d.perfis_configurados);}).catch(()=>{});
+  },[]);
+  const C="#0e0e18",B="1px solid #1e1e35";
+  const PLATS=[
+    {id:"youtube",icon:"▶️",cor:"#ff0000",nome:"YouTube",handle:"@psidanielacoelho",url:"https://youtube.com/@psidanielacoelho",studio:"https://studio.youtube.com",status_key:"youtube"},
+    {id:"instagram",icon:"📸",cor:"#e1306c",nome:"Instagram",handle:"@psidanielacoelho",url:"https://instagram.com/psidanielacoelho",status_key:"instagram"},
+    {id:"tiktok",icon:"🎵",cor:"#010101",nome:"TikTok",handle:"@psidanielacoelho",url:"https://tiktok.com/@psidanielacoelho",status_key:"tiktok"},
+    {id:"pinterest",icon:"📌",cor:"#e60023",nome:"Pinterest",handle:"@psidanielacoelho",url:"https://pinterest.com/psidanielacoelho",status_key:"pinterest"},
+    {id:"whatsapp",icon:"💬",cor:"#25d366",nome:"WhatsApp",handle:"Comunidade 1024 membros",url:null,status_key:"whatsapp"},
+  ];
+  const ASSETS=[
+    {label:"Thumb Generator",url:"/brand/thumb-generator.html",desc:"8 templates de thumbnail prontos"},
+    {label:"YouTube Banner",url:"/brand/youtube-banner.html",desc:"2560x1440px com safe zone"},
+    {label:"Instagram Templates",url:"/brand/instagram-templates.html",desc:"Posts + Stories 4 de cada"},
+    {label:"Brand System",url:"/hub.html",desc:"Identidade visual completa"},
+  ];
+  const getStatus=(key)=>{const s=status?.[key]?.status||"nao_configurado";return s.includes("pendente")?"⏳ Token pendente":s==="ativo"?"✅ Ativo":"❌ "+s;};
+  return<>
+    <div className="ph">
+      <div className="pt">Redes Sociais</div>
+      <div className="ps">Controle total · Memória eterna · Auto-melhoria evolutiva · Identidade: Psicologia (jan/2027)</div>
+    </div>
+    <div className="body">
+      {/* Nota legal */}
+      <div style={{background:"rgba(124,58,237,.1)",border:"1px solid rgba(124,58,237,.25)",borderRadius:10,padding:"9px 14px",marginBottom:14,fontSize:11,color:"#c084fc",display:"flex",alignItems:"center",gap:8}}>
+        <span style={{fontSize:16}}>⚠️</span>
+        <div><strong>Identidade legal:</strong> Usar PSICOLOGIA como área (não psicóloga). Em 01/01/2027 o título de psicóloga estará disponível.</div>
+      </div>
+      {/* Plataformas */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:12,marginBottom:16}}>
+        {PLATS.map(p=><div key={p.id} style={{background:C,border:B,borderRadius:13,padding:14}}>
+          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+            <div style={{width:36,height:36,borderRadius:9,background:p.cor,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>{p.icon}</div>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:13,fontWeight:700,color:"#e2e8f0"}}>{p.nome}</div>
+              <div style={{fontSize:10,color:"#64748b",fontFamily:"monospace"}}>{p.handle}</div>
+            </div>
+            <div style={{fontSize:10,color:status?.[p.status_key]?.status==="ativo"?"#34d399":"#f59e0b",textAlign:"right"}}>{getStatus(p.status_key)}</div>
+          </div>
+          {/* Bio text */}
+          {perfis?.[p.id]&&<div style={{background:"#14142b",borderRadius:8,padding:9,marginBottom:8,fontSize:10,color:"#94a3b8",lineHeight:1.5,maxHeight:70,overflow:"hidden"}}>
+            {perfis[p.id].bio||perfis[p.id].descricao_canal||perfis[p.id].descricao||perfis[p.id].bio_principal||"—"}
+          </div>}
+          {/* Actions */}
+          <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+            {p.url&&<a href={p.url} target="_blank" rel="noreferrer" style={{fontSize:10,color:"#38bdf8",textDecoration:"none",padding:"3px 8px",background:"rgba(56,189,248,.1)",borderRadius:6}}>Ver perfil →</a>}
+            {p.studio&&<a href={p.studio} target="_blank" rel="noreferrer" style={{fontSize:10,color:"#a78bfa",textDecoration:"none",padding:"3px 8px",background:"rgba(167,139,250,.1)",borderRadius:6}}>Studio →</a>}
+            <button onClick={()=>window.open('/api/social?action='+p.id)} style={{fontSize:10,color:"#34d399",background:"rgba(52,211,153,.1)",border:"none",padding:"3px 8px",borderRadius:6,cursor:"pointer"}}>Copiar textos</button>
+          </div>
+        </div>)}
+      </div>
+      {/* Assets de marca */}
+      <div style={{fontSize:11,textTransform:"uppercase",letterSpacing:1,color:"#64748b",fontWeight:600,marginBottom:8}}>Assets Visuais</div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:8,marginBottom:16}}>
+        {ASSETS.map(a=><a key={a.label} href={a.url} target="_blank" rel="noreferrer" style={{background:C,border:B,borderRadius:10,padding:12,textDecoration:"none",display:"block",transition:"all .15s"}}>
+          <div style={{fontSize:12,fontWeight:700,color:"#e2e8f0",marginBottom:3}}>{a.label}</div>
+          <div style={{fontSize:10,color:"#64748b"}}>{a.desc}</div>
+        </a>)}
+      </div>
+      {/* Paleta de cores */}
+      <div style={{fontSize:11,textTransform:"uppercase",letterSpacing:1,color:"#64748b",fontWeight:600,marginBottom:8}}>Paleta de Marca</div>
+      <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:16}}>
+        {[["#06060F","Deep Void","BG principal"],["#5B21B6","Amethyst","Cor da marca"],["#7C3AED","Violet","Acento primário"],["#E11D48","Crimson","Acento emocional"],["#F59E0B","Neural Gold","Científico"],["#0D9488","Data Teal","Séries"],["#F0F4FF","Mind Frost","Texto"],["#C4B5FD","Mist","Subtítulo"]].map(([hex,nome,uso])=><div key={hex} style={{textAlign:"center"}}>
+          <div style={{width:44,height:44,borderRadius:9,background:hex,border:"1px solid rgba(255,255,255,.08)",marginBottom:4}}/>
+          <div style={{fontSize:9,color:"#e2e8f0",fontFamily:"monospace"}}>{nome}</div>
+          <div style={{fontSize:8,color:"#475569"}}>{hex}</div>
+        </div>)}
+      </div>
+      {/* Instruções manuais */}
+      <div style={{fontSize:11,textTransform:"uppercase",letterSpacing:1,color:"#64748b",fontWeight:600,marginBottom:8}}>Passos para Atualizar Perfis</div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+        {[
+          {plat:"YouTube Studio",steps:["studio.youtube.com com psidanielacoelho1982@gmail.com","Personalização → Informações básicas","Copiar nome e descrição de /api/social?action=youtube","Adicionar banner de /brand/youtube-banner.html","Salvar alterações"],cor:"#ff0000"},
+          {plat:"Instagram",steps:["App IG → Perfil → Editar perfil","Nome: Daniela Coelho | Psicologia","Bio: copiar de /api/social?action=instagram","Link: youtube.com/@psidanielacoelho","Categoria: Educação"],cor:"#e1306c"},
+          {plat:"TikTok",steps:["App TT → Perfil → Editar perfil","Nome: Daniela Coelho | Psicologia","Bio: copiar de /api/social?action=tiktok","Link: youtube.com/@psidanielacoelho"],cor:"#010101"},
+          {plat:"Pinterest",steps:["pinterest.com/psidanielacoelho → Editar","Nome: psicologia.doc | Daniela Coelho","Bio: copiar de /api/social?action=pinterest","Site: youtube.com/@psidanielacoelho","Criar 9 boards temáticos"],cor:"#e60023"},
+        ].map(item=><div key={item.plat} style={{background:C,border:B,borderRadius:10,padding:12}}>
+          <div style={{fontSize:11,fontWeight:700,color:item.cor,marginBottom:7,display:"flex",alignItems:"center",gap:6}}>{item.plat}</div>
+          {item.steps.map((s,i)=><div key={i} style={{fontSize:10,color:"#94a3b8",padding:"3px 0",display:"flex",gap:6}}><span style={{color:"#7c3aed",fontWeight:700,flexShrink:0}}>{i+1}.</span>{s}</div>)}
+        </div>)}
+      </div>
+      {/* Auto-melhoria */}
+      <div style={{marginTop:14,background:"rgba(16,185,129,.08)",border:"1px solid rgba(16,185,129,.18)",borderRadius:10,padding:12}}>
+        <div style={{fontSize:11,fontWeight:700,color:"#34d399",marginBottom:6}}>Auto-melhoria Evolutiva Ativa</div>
+        <div style={{fontSize:10,color:"#94a3b8",lineHeight:1.6}}>
+          O sistema monitora CTR dos thumbnails semanalmente e ajusta estilos automaticamente · Analisa horários de pico e adapta publicações · Verifica palavras-chave mais buscadas mensalmente · Registra cada evolução em cerebro_evolucao · Executa backup da memória diariamente
+        </div>
+        <button onClick={()=>fetch('/api/social?action=auto_melhorar').then(r=>r.json()).then(d=>alert('Executado: '+d.executadas+' tarefas'))} style={{marginTop:8,background:"#10b981",color:"#000",border:"none",padding:"5px 14px",borderRadius:7,fontSize:11,fontWeight:700,cursor:"pointer"}}>Executar ciclo agora</button>
+      </div>
+    </div>
+  </>;
+}
+
 export default function Dashboard(){
   const getPage=()=>{if(typeof window!=="undefined"){const p=new URLSearchParams(window.location.search).get("page");if(p)return p;}return"dashboard";};
   const[page,setPage]=useState(getPage);const[notifCount,setNotifCount]=useState(0);const[sb,setSb]=useState(true);
@@ -496,9 +592,9 @@ export default function Dashboard(){
   const NAV=[
     {s:"PRINCIPAL",items:[{id:"dashboard",i:"⊡",l:"Dashboard"},{id:"conteudo",i:"📄",l:"Conteúdo"},{id:"series",i:"🎬",l:"Séries"},{id:"ranking",i:"🌍",l:"Ranking Mundial"},{id:"monetizacao",i:"💰",l:"Monetização"}]},
     {s:"SISTEMA",items:[{id:"cerebro",i:"🧠",l:"Cérebro AO VIVO"},{id:"gerador",i:"✨",l:"Gerador Manual"},{id:"variacoes",i:"🔁",l:"Motor 1000x"},{id:"logs",i:"📋",l:"Logs"}]},
-    {s:"ESTRATÉGIA",items:[{id:"hub",i:"🏠",l:"Hub Central"},{id:"revelacao",i:"🎉",l:"Revelação 2027"},{id:"playlist",i:"📋",l:"Playlist 630d"},{id:"cases",i:"📈",l:"Cases Virais"},{id:"canais",i:"📡",l:"Canais"},{id:"whatsapp",i:"💬",l:"WhatsApp"},{id:"daniela",i:"🤖",l:"Chat Daniela"},{id:"config",i:"⚙️",l:"Config"}]},
+    {s:"ESTRATÉGIA",items:[{id:"hub",i:"🏠",l:"Hub Central"},{id:"redes",i:"📱",l:"Redes Sociais"},{id:"revelacao",i:"🎉",l:"Revelação 2027"},{id:"playlist",i:"📋",l:"Playlist 630d"},{id:"cases",i:"📈",l:"Cases Virais"},{id:"canais",i:"📡",l:"Canais"},{id:"whatsapp",i:"💬",l:"WhatsApp"},{id:"daniela",i:"🤖",l:"Chat Daniela"},{id:"config",i:"⚙️",l:"Config"}]},
   ];
-  const PM={hub:PageHub,dashboard:PageDashboard,conteudo:PageConteudo,series:PageSeries,ranking:PageRanking,monetizacao:PageMonetizacao,cerebro:PageCerebro,gerador:PageGerador,variacoes:PageVariacoes,logs:PageLogs,revelacao:PageRevelacao,playlist:PagePlaylist,cases:PageCases,canais:PageCanais,whatsapp:PageWhatsApp,daniela:PageDanielaChat,config:PageConfig};
+  const PM={hub:PageHub,redes:PageRedesSociais,dashboard:PageDashboard,conteudo:PageConteudo,series:PageSeries,ranking:PageRanking,monetizacao:PageMonetizacao,cerebro:PageCerebro,gerador:PageGerador,variacoes:PageVariacoes,logs:PageLogs,revelacao:PageRevelacao,playlist:PagePlaylist,cases:PageCases,canais:PageCanais,whatsapp:PageWhatsApp,daniela:PageDanielaChat,config:PageConfig};
   const PC=PM[page]||PageDashboard;
   return<>
     <style>{`
