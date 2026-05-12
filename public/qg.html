@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>psicologia.doc — Quartel General</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#06060F; --s1:#0E0E1A; --s2:#12121F; --s3:#16162A;
+  --bd:rgba(255,255,255,.06); --bd2:rgba(255,255,255,.1);
+  --acc:#7C3AED; --acc2:#5B21B6; --mist:#C4B5FD;
+  --crim:#E11D48; --gold:#F59E0B; --teal:#0D9488; --cyan:#38BDF8;
+  --grn:#10B981; --frost:#F0F4FF;
+  --t1:#E2E8F0; --t2:#94A3B8; --t3:#475569;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--t1);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden}
+
+/* BG */
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 100% 60% at 50% -5%,rgba(124,58,237,.1),transparent),
+             radial-gradient(ellipse 50% 40% at 90% 80%,rgba(14,148,130,.05),transparent)}
+
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.7)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes countUp{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* HEADER */
+.hdr{position:sticky;top:0;z-index:100;
+  background:rgba(6,6,15,.9);backdrop-filter:blur(24px) saturate(200%);
+  border-bottom:1px solid var(--bd);padding:0 28px;height:56px;
+  display:flex;align-items:center;gap:14px}
+.hdr-logo{font-size:18px;font-weight:800;letter-spacing:-1px;color:var(--frost)}
+.hdr-logo span{color:var(--mist)}
+.hdr-v{font-size:9px;color:var(--t3);font-family:'DM Mono',monospace;background:var(--s2);
+  padding:2px 8px;border-radius:20px;border:1px solid var(--bd)}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--grn);animation:pulse 1.8s infinite;display:inline-block}
+.hdr-live{font-size:10px;color:var(--t2);display:flex;align-items:center;gap:5px}
+.hdr-r{margin-left:auto;display:flex;gap:6px;align-items:center}
+.hdr-btn{padding:5px 14px;border-radius:8px;font-size:11px;font-weight:600;text-decoration:none;
+  color:var(--t2);border:1px solid var(--bd);transition:all .15s;background:transparent;cursor:pointer;font-family:'DM Sans',sans-serif}
+.hdr-btn:hover{color:var(--frost);border-color:rgba(255,255,255,.15)}
+.hdr-btn.p{background:var(--acc);color:#fff;border-color:transparent}
+.hdr-btn.p:hover{background:#6D28D9}
+
+/* GRID LAYOUT */
+.pg{position:relative;z-index:1;max-width:1400px;margin:0 auto;padding:20px 24px 60px}
+
+/* ═══ HERO MISSION ═══ */
+.mission{
+  background:linear-gradient(135deg,rgba(124,58,237,.12),rgba(91,33,182,.08),rgba(14,148,130,.06));
+  border:1px solid rgba(124,58,237,.2);border-radius:20px;padding:28px 32px;
+  margin-bottom:20px;position:relative;overflow:hidden;
+}
+.mission::before{content:'ψ';position:absolute;right:24px;top:50%;transform:translateY(-50%);
+  font-size:120px;font-weight:900;opacity:.04;color:var(--mist);pointer-events:none;line-height:1}
+.mission-label{font-size:10px;font-family:'DM Mono',monospace;color:var(--mist);text-transform:uppercase;
+  letter-spacing:1px;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.mission h1{font-size:clamp(22px,3.5vw,36px);font-weight:800;letter-spacing:-1.5px;color:var(--frost);
+  line-height:1.1;margin-bottom:8px}
+.mission h1 em{font-style:normal;background:linear-gradient(90deg,#C084FC,#38BDF8);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.mission-sub{font-size:13px;color:var(--t2);max-width:580px;line-height:1.6}
+.mission-meta{display:flex;gap:12px;margin-top:16px;flex-wrap:wrap}
+.mmeta{font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;
+  padding:3px 10px;background:rgba(255,255,255,.04);border-radius:20px;border:1px solid var(--bd)}
+.mmeta.ok{color:var(--grn);background:rgba(16,185,129,.08);border-color:rgba(16,185,129,.2)}
+.mmeta.warn{color:var(--gold);background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.2)}
+
+/* ═══ MONETIZAÇÃO ROADMAP ═══ */
+.mono-bar{background:var(--s1);border:1px solid var(--bd);border-radius:16px;padding:20px 24px;margin-bottom:20px}
+.mono-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.mono-title{font-size:13px;font-weight:700;color:var(--frost);display:flex;align-items:center;gap:8px}
+.mono-target{font-size:11px;font-family:'DM Mono',monospace;color:var(--gold);
+  background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);padding:3px 10px;border-radius:8px}
+.stages{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.stage{background:var(--s2);border:1px solid var(--bd);border-radius:12px;padding:14px;position:relative;overflow:hidden}
+.stage.active{border-color:rgba(124,58,237,.4);background:rgba(124,58,237,.06)}
+.stage.done{border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.05)}
+.stage-n{font-size:20px;font-weight:800;font-family:'DM Mono',monospace;line-height:1;margin-bottom:4px}
+.stage-l{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.8px;font-weight:600;margin-bottom:6px}
+.stage-desc{font-size:10px;color:var(--t2);line-height:1.4}
+.stage-status{position:absolute;top:10px;right:10px;font-size:9px;font-weight:700;
+  padding:2px 7px;border-radius:20px;font-family:'DM Mono',monospace}
+.ss-now{background:rgba(124,58,237,.2);color:var(--mist)}
+.ss-next{background:rgba(245,158,11,.15);color:var(--gold)}
+.ss-meta{background:rgba(16,185,129,.15);color:var(--grn)}
+.mono-progress{margin-top:14px}
+.prog-label{display:flex;justify-content:space-between;font-size:10px;color:var(--t3);margin-bottom:5px;font-family:'DM Mono',monospace}
+.prog-bar{height:6px;background:rgba(255,255,255,.06);border-radius:10px;overflow:hidden}
+.prog-fill{height:100%;border-radius:10px;background:linear-gradient(90deg,var(--acc),var(--cyan));transition:width 1.5s ease}
+
+/* ═══ MÉTRICAS TEMPO REAL ═══ */
+.metrics-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:20px}
+.metric{background:var(--s1);border:1px solid var(--bd);border-radius:14px;padding:16px;
+  transition:all .2s;animation:fadeUp .35s ease both}
+.metric:hover{border-color:rgba(255,255,255,.12);transform:translateY(-2px)}
+.metric-n{font-size:28px;font-weight:800;font-family:'DM Mono',monospace;line-height:1;margin-bottom:3px;animation:countUp .5s ease}
+.metric-l{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.8px;font-weight:600}
+.metric-sub{font-size:9px;color:var(--t3);margin-top:3px;font-family:'DM Mono',monospace}
+.m-acc{color:var(--mist)}
+.m-grn{color:var(--grn)}
+.m-gold{color:var(--gold)}
+.m-crim{color:var(--crim)}
+.m-cyan{color:var(--cyan)}
+.m-teal{color:var(--teal)}
+
+/* ═══ LAYOUT PRINCIPAL 3 COLUNAS ═══ */
+.main-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px}
+@media(max-width:1100px){.main-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:720px){.main-grid{grid-template-columns:1fr}}
+
+/* ═══ PANEL ═══ */
+.panel{background:var(--s1);border:1px solid var(--bd);border-radius:16px;overflow:hidden}
+.panel-h{padding:14px 16px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:8px}
+.panel-icon{font-size:16px}
+.panel-title{font-size:12px;font-weight:700;color:var(--t1)}
+.panel-badge{margin-left:auto;font-size:9px;font-family:'DM Mono',monospace;padding:2px 8px;
+  border-radius:20px;font-weight:700}
+.pb-grn{background:rgba(16,185,129,.15);color:var(--grn);border:1px solid rgba(16,185,129,.2)}
+.pb-gold{background:rgba(245,158,11,.15);color:var(--gold);border:1px solid rgba(245,158,11,.2)}
+.pb-acc{background:rgba(124,58,237,.15);color:var(--mist);border:1px solid rgba(124,58,237,.2)}
+.pb-crim{background:rgba(225,29,72,.15);color:#F87171;border:1px solid rgba(225,29,72,.2)}
+.panel-b{padding:14px 16px}
+
+/* LINK ITEM */
+.lnk{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;
+  text-decoration:none;color:var(--t2);border:1px solid transparent;
+  transition:all .15s;margin-bottom:6px}
+.lnk:last-child{margin-bottom:0}
+.lnk:hover{background:rgba(255,255,255,.04);border-color:var(--bd);color:var(--t1)}
+.lnk-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;
+  justify-content:center;font-size:15px;flex-shrink:0}
+.lnk-text{flex:1;min-width:0}
+.lnk-name{font-size:12px;font-weight:600;color:var(--t1);display:block;margin-bottom:1px}
+.lnk-desc{font-size:10px;color:var(--t3);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lnk-arr{font-size:11px;color:var(--t3);flex-shrink:0;opacity:0;transition:opacity .15s}
+.lnk:hover .lnk-arr{opacity:1}
+.lnk.ext::after{content:'↗';font-size:10px;color:var(--t3);flex-shrink:0}
+
+/* STATUS DOT */
+.sdot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.sdot.live{background:var(--grn);animation:pulse 2s infinite}
+.sdot.pend{background:var(--gold)}
+.sdot.off{background:var(--t3)}
+
+/* CÉREBRO DECISIONS */
+.dec-item{padding:10px 0;border-bottom:1px solid var(--bd);display:flex;gap:10px;align-items:flex-start}
+.dec-item:last-child{border-bottom:none;padding-bottom:0}
+.dec-num{font-size:11px;font-weight:800;font-family:'DM Mono',monospace;color:var(--mist);
+  width:20px;flex-shrink:0;margin-top:1px}
+.dec-text{font-size:11px;color:var(--t2);line-height:1.45;flex:1}
+.dec-tag{font-size:8px;font-weight:700;padding:1px 6px;border-radius:4px;margin-left:6px;
+  font-family:'DM Mono',monospace;vertical-align:middle;white-space:nowrap}
+.dt-exec{background:rgba(16,185,129,.15);color:var(--grn)}
+.dt-aut{background:rgba(124,58,237,.15);color:var(--mist)}
+.dt-pend{background:rgba(245,158,11,.15);color:var(--gold)}
+
+/* REDES */
+.rede-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bd)}
+.rede-row:last-child{border-bottom:none}
+.rede-ic{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px}
+.rede-name{font-size:12px;font-weight:600;color:var(--t1);flex:1}
+.rede-stat{font-size:10px;font-family:'DM Mono',monospace}
+.rede-action{font-size:9px;color:var(--t3);text-align:right}
+
+/* SÉRIE CARD */
+.serie{background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:12px;margin-bottom:8px}
+.serie:last-child{margin-bottom:0}
+.serie-top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.serie-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.serie-name{font-size:12px;font-weight:700;color:var(--t1);flex:1}
+.serie-count{font-size:10px;font-family:'DM Mono',monospace;color:var(--t3)}
+.serie-bar{height:3px;background:rgba(255,255,255,.06);border-radius:10px;overflow:hidden;margin-bottom:6px}
+.serie-fill{height:100%;border-radius:10px;transition:width 1.5s ease}
+.serie-meta{font-size:9px;color:var(--t3);display:flex;gap:10px}
+
+/* PIPELINE VISUAL */
+.pipe-stages{display:flex;gap:8px;flex-wrap:wrap}
+.ps{background:var(--s2);border:1px solid var(--bd);border-radius:8px;padding:8px 12px;
+  text-align:center;flex:1;min-width:80px}
+.ps-n{font-size:20px;font-weight:800;font-family:'DM Mono',monospace;line-height:1}
+.ps-l{font-size:8px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+
+/* TICKER */
+.ticker{background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.15);border-radius:10px;
+  padding:10px 14px;display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.ticker-icon{font-size:14px}
+.ticker-text{font-size:11px;color:var(--t2);flex:1;line-height:1.4}
+.ticker-time{font-size:9px;color:var(--t3);font-family:'DM Mono',monospace;flex-shrink:0}
+
+/* FULL-WIDTH SECTIONS */
+.full-grid{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:20px}
+@media(max-width:900px){.full-grid{grid-template-columns:1fr}}
+
+/* CALENDÁRIO DE PUBLICAÇÃO */
+.pub-slots{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.slot{background:var(--s2);border-radius:6px;padding:5px 4px;text-align:center;
+  font-size:9px;font-family:'DM Mono',monospace;color:var(--t3);cursor:default}
+.slot.peak{background:rgba(124,58,237,.15);color:var(--mist);border:1px solid rgba(124,58,237,.2)}
+.slot.top{background:rgba(16,185,129,.12);color:var(--grn);border:1px solid rgba(16,185,129,.15)}
+.slot-day{font-size:8px;color:var(--t3);margin-bottom:2px}
+.slot-t{font-size:10px;font-weight:700}
+.day-labels{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px}
+.dl{font-size:8px;color:var(--t3);text-align:center;text-transform:uppercase;letter-spacing:.5px}
+
+/* REFRESH */
+.refresh-bar{display:flex;align-items:center;justify-content:space-between;
+  padding:8px 16px;background:var(--s2);border-top:1px solid var(--bd);
+  font-size:10px;color:var(--t3);font-family:'DM Mono',monospace}
+.spin-ico{width:12px;height:12px;border:1.5px solid var(--bd2);border-top-color:var(--acc);
+  border-radius:50%;animation:spin 1s linear infinite;display:inline-block}
+
+/* FOOTER */
+footer{text-align:center;padding:20px;font-size:10px;color:var(--t3);
+  border-top:1px solid var(--bd);font-family:'DM Mono',monospace}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--s2);border:1px solid var(--bd2);
+  border-radius:12px;padding:10px 16px;font-size:11px;color:var(--t1);z-index:999;
+  transform:translateY(20px);opacity:0;transition:all .25s;pointer-events:none}
+.toast.show{transform:translateY(0);opacity:1}
+
+@media(max-width:600px){
+  .pg{padding:14px 14px 40px}
+  .mission{padding:18px 18px}
+  .metrics-grid{grid-template-columns:repeat(3,1fr)}
+  .stages{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-logo">ψ <span>psicologia.doc</span></div>
+  <div class="hdr-v">QG v14</div>
+  <div class="hdr-live"><span class="live-dot"></span> Cérebro Ativo</div>
+  <div class="hdr-r">
+    <a href="/dashboard" class="hdr-btn">Dashboard</a>
+    <a href="/galeria-quantica.html" class="hdr-btn">Galeria</a>
+    <a href="/hub.html" class="hdr-btn">Hub</a>
+    <button onclick="forcarAtualizacao()" class="hdr-btn p">↻ Sync</button>
+  </div>
+</header>
+
+<div class="pg">
+
+<!-- ═══ MISSÃO ═══ -->
+<div class="mission" style="animation:fadeUp .3s ease">
+  <div class="mission-label">🧠 Quartel General · Cérebro V14 · Autonomia Total</div>
+  <h1>Rota para <em>R$ 50.000/mês</em></h1>
+  <p class="mission-sub">Sistema de conteúdo autônomo psicologia.doc — Séries quânticas · 5 redes · Monetização multicanal · Cérebro toma decisões diariamente sem intervenção humana.</p>
+  <div class="mission-meta">
+    <span class="mmeta ok" id="m-cerebro">🟢 Cérebro V14 Ativo</span>
+    <span class="mmeta" id="m-pipeline">⏳ Carregando pipeline...</span>
+    <span class="mmeta warn">⚠️ YT Token Pendente</span>
+    <span class="mmeta">📅 Meta: Jan/2027</span>
+  </div>
+</div>
+
+<!-- ═══ ROADMAP MONETIZAÇÃO ═══ -->
+<div class="mono-bar" style="animation:fadeUp .35s .05s ease both">
+  <div class="mono-header">
+    <div class="mono-title">🗺️ Roadmap de Monetização · Meta: R$ 50.000/mês até Jan 2027</div>
+    <div class="mono-target" id="mono-current">Calculando...</div>
+  </div>
+  <div class="stages">
+    <div class="stage active">
+      <div class="stage-status ss-now">AGORA</div>
+      <div class="stage-n m-acc" id="subs-count">0</div>
+      <div class="stage-l">Inscritos</div>
+      <div class="stage-desc">Fase 0→1K via tráfego pago R$200</div>
+    </div>
+    <div class="stage">
+      <div class="stage-status ss-next">FASE 2</div>
+      <div class="stage-n m-gold">1.000</div>
+      <div class="stage-l">Meta Ads</div>
+      <div class="stage-desc">Ativar Google Ads R$4,67/dia · CTR viral orgânico</div>
+    </div>
+    <div class="stage">
+      <div class="stage-status ss-next">FASE 3</div>
+      <div class="stage-n m-cyan">4.000</div>
+      <div class="stage-l">Watch Time</div>
+      <div class="stage-desc">4.000h em 12m · 15min × 5 vídeos/sem = 3.900h/mês</div>
+    </div>
+    <div class="stage">
+      <div class="stage-status ss-meta">MONETIZAR</div>
+      <div class="stage-n m-grn">R$500</div>
+      <div class="stage-l">AdSense ON</div>
+      <div class="stage-desc">10K views × R$15 CPM BR psicologia = R$150/mês</div>
+    </div>
+    <div class="stage">
+      <div class="stage-status ss-meta">ESCALAR</div>
+      <div class="stage-n m-gold">R$5K</div>
+      <div class="stage-l">50K subs</div>
+      <div class="stage-desc">100K views/mês · AdSense + patrocínios B2B</div>
+    </div>
+    <div class="stage">
+      <div class="stage-status ss-meta">META</div>
+      <div class="stage-n" style="color:#F59E0B">R$50K</div>
+      <div class="stage-l">Jan 2027</div>
+      <div class="stage-desc">500K views · AdSense + MemberShip + Cursos + Marcas</div>
+    </div>
+  </div>
+  <div class="mono-progress">
+    <div class="prog-label">
+      <span>Progresso até R$50K/mês</span>
+      <span id="prog-pct">0%</span>
+    </div>
+    <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+  </div>
+</div>
+
+<!-- ═══ MÉTRICAS TEMPO REAL ═══ -->
+<div class="metrics-grid">
+  <div class="metric" style="animation-delay:.05s">
+    <div class="metric-n m-acc" id="mt-quantum">—</div>
+    <div class="metric-l">Quânticos Prontos</div>
+    <div class="metric-sub">Flux+KB V2 ✓</div>
+  </div>
+  <div class="metric" style="animation-delay:.08s">
+    <div class="metric-n m-gold" id="mt-render">—</div>
+    <div class="metric-l">Em Render</div>
+    <div class="metric-sub">Pipeline ativo</div>
+  </div>
+  <div class="metric" style="animation-delay:.1s">
+    <div class="metric-n m-cyan" id="mt-fila">—</div>
+    <div class="metric-l">Na Fila</div>
+    <div class="metric-sub">pending_generation</div>
+  </div>
+  <div class="metric" style="animation-delay:.12s">
+    <div class="metric-n m-grn" id="mt-published">—</div>
+    <div class="metric-l">Publicados YT</div>
+    <div class="metric-sub">Canal correto</div>
+  </div>
+  <div class="metric" style="animation-delay:.14s">
+    <div class="metric-n m-teal" id="mt-series">5</div>
+    <div class="metric-l">Séries Ativas</div>
+    <div class="metric-sub">Apego·Narcis·Trauma</div>
+  </div>
+  <div class="metric" style="animation-delay:.16s">
+    <div class="metric-n" style="color:#F472B6" id="mt-tarefas">—</div>
+    <div class="metric-l">Tarefas Cérebro</div>
+    <div class="metric-sub">Auto-melhoria</div>
+  </div>
+</div>
+
+<!-- ═══ GRID PRINCIPAL ═══ -->
+<div class="main-grid">
+
+  <!-- COL 1: PÁGINAS DO SISTEMA -->
+  <div class="panel">
+    <div class="panel-h">
+      <span class="panel-icon">🗂️</span>
+      <span class="panel-title">Todas as Páginas</span>
+      <span class="panel-badge pb-acc">18 páginas</span>
+    </div>
+    <div class="panel-b">
+      <!-- CONTROLE -->
+      <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--t3);font-family:'DM Mono',monospace;margin-bottom:8px;font-weight:700">Controle</div>
+      <a href="/dashboard" class="lnk" target="_blank">
+        <div class="lnk-icon" style="background:rgba(124,58,237,.15)">📊</div>
+        <div class="lnk-text"><span class="lnk-name">Dashboard V11</span><span class="lnk-desc">18 páginas · Hub central de operação</span></div>
+      </a>
+      <a href="/hub.html" class="lnk" target="_blank">
+        <div class="lnk-icon" style="background:rgba(56,189,248,.1)">🏠</div>
+        <div class="lnk-text"><span class="lnk-name">Hub Master</span><span class="lnk-desc">Portal unificado de todas as seções</span></div>
+      </a>
+      <a href="/dashboard?page=cerebro" class="lnk" target="_blank">
+        <div class="lnk-icon" style="background:rgba(196,181,253,.1)">🧠</div>
+        <div class="lnk-text"><span class="lnk-name">Cérebro Autônomo</span><span class="lnk-desc">V14 · Memória eterna · Auto-melhoria</span></div>
+      </a>
+      <a href="/dashboard?page=redes" class="lnk" target="_blank">
+        <div class="lnk-icon" style="background:rgba(225,29,72,.1)">📱</div>
+        <div class="lnk-text"><span class="lnk-name">Redes Sociais</span><span class="lnk-desc">YT · IG · TT · Pinterest · WA</span></div>
+      </a>
+      <a href="/dashboard?page=monetizacao" class="lnk" target="_blank">
+        <div class="lnk-icon" style="background:rgba(245,158,11,.1)">💰</div>
+        <div class="lnk-text"><span class="lnk-name">Monetização</span><span class="lnk-desc">AdSense · Patrocínios · Afiliados</span></div>
+      </a>
+      <a href="/dashboard?page=gerador" class="lnk" target="_blank">
+        <div class="lnk-icon" style="background:rgba(14,148,130,.1)">⚡</div>
+        <div class="lnk-text"><span class="lnk-name">Gerador de Conteúdo</span><span class="lnk-desc">Scripts · Áudio · Vídeo Quântico</span></div>
+      </a>
+      <!-- CONTEÚDO -->
+      <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--t3);font-family:'DM Mono',monospace;margin:12px 0 8px;font-weight:700">Conteúdo</div>
+      <a href="/galeria-quantica.html" class="lnk" target="_blank">
+        <div class="lnk-icon" style="background:rgba(124,58,237,.15)">🎬</div>
+        <div class="lnk-text"><span class="lnk-name">Galeria Quântica</span><span class="lnk-desc">Flux+KB V2 · Score 90+ · Player</span></div>
+      </a>
+      <a href="/videos-prontos.html" class="lnk" target="_blank">
+        <div class="lnk-icon" style="background:rgba(56,189,248,.1)">📹</div>
+        <div class="lnk-text"><span class="lnk-name">Todos os Vídeos</span><span class="lnk-desc">Galeria pública · Auto-atualiza 1h</span></div>
+      </a>
+      <a href="/dashboard?page=conteudo" class="lnk" target="_blank">
+        <div class="lnk-icon" style="background:rgba(16,185,129,.1)">📝</div>
+        <div class="lnk-text"><span class="lnk-name">Pipeline Conteúdo</span><span class="lnk-desc">Status de todos os vídeos</span></div>
+      </a>
+      <a href="/dashboard?page=series" class="lnk" target="_blank">
+        <div class="lnk-icon" style="background:rgba(245,158,11,.1)">📚</div>
+        <div class="lnk-text"><span class="lnk-name">Séries</span><span class="lnk-desc">5 séries · Apego · Narcis · Trauma...</span></div>
+      </a>
+      <!-- BRAND -->
+      <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--t3);font-family:'DM Mono',monospace;margin:12px 0 8px;font-weight:700">Brand</div>
+      <a href="/brand/thumb-generator.html" class="lnk" target="_blank">
+        <div class="lnk-icon" style="background:rgba(225,29,72,.1)">🖼️</div>
+        <div class="lnk-text"><span class="lnk-name">Thumb Generator</span><span class="lnk-desc">8 templates · 4 tipos · Viral</span></div>
+      </a>
+      <a href="/brand/youtube-banner.html" class="lnk" target="_blank">
+        <div class="lnk-icon" style="background:rgba(224,64,32,.1)">📺</div>
+        <div class="lnk-text"><span class="lnk-name">YouTube Banner</span><span class="lnk-desc">2560×1440px · Safe zone</span></div>
+      </a>
+      <a href="/brand/instagram-templates.html" class="lnk" target="_blank">
+        <div class="lnk-icon" style="background:rgba(225,29,72,.1)">📸</div>
+        <div class="lnk-text"><span class="lnk-name">Templates Instagram</span><span class="lnk-desc">Posts · Stories · 4 tipos</span></div>
+      </a>
+    </div>
+  </div>
+
+  <!-- COL 2: CÉREBRO + REDES -->
+  <div style="display:flex;flex-direction:column;gap:14px">
+
+    <!-- REDES SOCIAIS -->
+    <div class="panel">
+      <div class="panel-h">
+        <span class="panel-icon">📡</span>
+        <span class="panel-title">Redes Sociais · Tempo Real</span>
+        <span class="panel-badge pb-gold">5 plataformas</span>
+      </div>
+      <div class="panel-b" id="redes-container">
+        <div id="redes-list">
+          <!-- Populado por JS -->
+        </div>
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd)">
+          <div style="font-size:10px;color:var(--t3);margin-bottom:6px;font-family:'DM Mono',monospace">AÇÃO RÁPIDA</div>
+          <a href="/api/social?action=youtube" target="_blank" class="hdr-btn" style="display:block;text-align:center;padding:7px;border-radius:8px;font-size:10px;margin-bottom:5px">Copiar textos YouTube →</a>
+          <a href="/api/social?action=instagram" target="_blank" class="hdr-btn" style="display:block;text-align:center;padding:7px;border-radius:8px;font-size:10px">Copiar bio Instagram →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- APIs -->
+    <div class="panel">
+      <div class="panel-h">
+        <span class="panel-icon">🔌</span>
+        <span class="panel-title">APIs do Sistema</span>
+        <span class="panel-badge pb-acc">6 endpoints</span>
+      </div>
+      <div class="panel-b">
+        <a href="/api/cerebro" class="lnk" target="_blank">
+          <div class="lnk-icon" style="background:rgba(196,181,253,.1)">🧠</div>
+          <div class="lnk-text"><span class="lnk-name">/api/cerebro</span><span class="lnk-desc">Status + regras imutáveis V14</span></div>
+        </a>
+        <a href="/api/social" class="lnk" target="_blank">
+          <div class="lnk-icon" style="background:rgba(225,29,72,.1)">📱</div>
+          <div class="lnk-text"><span class="lnk-name">/api/social</span><span class="lnk-desc">Controle redes + auto-melhoria</span></div>
+        </a>
+        <a href="/api/growth" class="lnk" target="_blank">
+          <div class="lnk-icon" style="background:rgba(16,185,129,.1)">📈</div>
+          <div class="lnk-text"><span class="lnk-name">/api/growth</span><span class="lnk-desc">Pipeline + métricas de crescimento</span></div>
+        </a>
+        <a href="/api/social?action=auto_melhorar" class="lnk" target="_blank">
+          <div class="lnk-icon" style="background:rgba(245,158,11,.1)">⚡</div>
+          <div class="lnk-text"><span class="lnk-name">/api/social?action=auto_melhorar</span><span class="lnk-desc">Executa ciclo evolutivo agora</span></div>
+        </a>
+        <a href="/api/social?action=identidade" class="lnk" target="_blank">
+          <div class="lnk-icon" style="background:rgba(14,148,130,.1)">🪪</div>
+          <div class="lnk-text"><span class="lnk-name">/api/social?action=identidade</span><span class="lnk-desc">Psicologia · Nota legal jan/2027</span></div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- COL 3: CÉREBRO DECISÕES -->
+  <div style="display:flex;flex-direction:column;gap:14px">
+
+    <!-- SÉRIES -->
+    <div class="panel">
+      <div class="panel-h">
+        <span class="panel-icon">📚</span>
+        <span class="panel-title">Séries Quânticas</span>
+        <span class="panel-badge pb-acc">5 séries ativas</span>
+      </div>
+      <div class="panel-b">
+        <div class="serie">
+          <div class="serie-top">
+            <div class="serie-dot" style="background:#7C3AED"></div>
+            <div class="serie-name">Apego Ansioso</div>
+            <div class="serie-count" id="sc-apego">— ep</div>
+          </div>
+          <div class="serie-bar"><div class="serie-fill" style="width:60%;background:#7C3AED"></div></div>
+          <div class="serie-meta"><span>Long: 15min</span><span>Short: 54s</span><span>Score mín: 92</span></div>
+        </div>
+        <div class="serie">
+          <div class="serie-top">
+            <div class="serie-dot" style="background:#E11D48"></div>
+            <div class="serie-name">Mentes Narcisistas</div>
+            <div class="serie-count" id="sc-narcisismo">— ep</div>
+          </div>
+          <div class="serie-bar"><div class="serie-fill" style="width:40%;background:#E11D48"></div></div>
+          <div class="serie-meta"><span>Long: 15min</span><span>Short: 54s</span><span>28M ref</span></div>
+        </div>
+        <div class="serie">
+          <div class="serie-top">
+            <div class="serie-dot" style="background:#0D9488"></div>
+            <div class="serie-name">Trauma Invisível</div>
+            <div class="serie-count" id="sc-trauma">— ep</div>
+          </div>
+          <div class="serie-bar"><div class="serie-fill" style="width:30%;background:#0D9488"></div></div>
+          <div class="serie-meta"><span>Long: 15min</span><span>Short: 54s</span></div>
+        </div>
+        <div class="serie">
+          <div class="serie-top">
+            <div class="serie-dot" style="background:#F59E0B"></div>
+            <div class="serie-name">Ansiedade e Pânico</div>
+            <div class="serie-count" id="sc-ansiedade">— ep</div>
+          </div>
+          <div class="serie-bar"><div class="serie-fill" style="width:25%;background:#F59E0B"></div></div>
+          <div class="serie-meta"><span>Long: 15min</span><span>Short: 54s</span></div>
+        </div>
+        <div class="serie">
+          <div class="serie-top">
+            <div class="serie-dot" style="background:#FB7185"></div>
+            <div class="serie-name">Burnout</div>
+            <div class="serie-count" id="sc-burnout">— ep</div>
+          </div>
+          <div class="serie-bar"><div class="serie-fill" style="width:20%;background:#FB7185"></div></div>
+          <div class="serie-meta"><span>Long: 15min</span><span>Short: 54s</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CÉREBRO DECISÕES -->
+    <div class="panel">
+      <div class="panel-h">
+        <span class="panel-icon">⚡</span>
+        <span class="panel-title">Decisões do Cérebro V14</span>
+        <span class="panel-badge pb-grn">Autonomia Total</span>
+      </div>
+      <div class="panel-b">
+        <div class="dec-item">
+          <div class="dec-num">01</div>
+          <div class="dec-text">Vídeos longos = <strong>15 minutos</strong> (4.500 palavras) para watch time de monetização <span class="dec-tag dt-exec">Executado</span></div>
+        </div>
+        <div class="dec-item">
+          <div class="dec-num">02</div>
+          <div class="dec-text">Shorts = <strong>50–58s</strong> (155 palavras) para algoritmo Shorts YT <span class="dec-tag dt-exec">Executado</span></div>
+        </div>
+        <div class="dec-item">
+          <div class="dec-num">03</div>
+          <div class="dec-text">Render <strong>APENAS Flux.1 Schnell + Ken Burns</strong> — 17 vídeos v8 resetados <span class="dec-tag dt-exec">Executado</span></div>
+        </div>
+        <div class="dec-item">
+          <div class="dec-num">04</div>
+          <div class="dec-text">Gate score: <strong>≥90 render</strong> | <strong>≥92 publicar</strong> — qualidade garantida <span class="dec-tag dt-aut">Automático</span></div>
+        </div>
+        <div class="dec-item">
+          <div class="dec-num">05</div>
+          <div class="dec-text">Identidade: <strong>Psicologia</strong> (nunca psicóloga até jan/2027) — gravado na memória eterna <span class="dec-tag dt-exec">Gravado</span></div>
+        </div>
+        <div class="dec-item">
+          <div class="dec-num">06</div>
+          <div class="dec-text">15 novos temas nas 5 séries inseridos · Pipeline expandido <span class="dec-tag dt-exec">Executado</span></div>
+        </div>
+        <div class="dec-item">
+          <div class="dec-num">07</div>
+          <div class="dec-text">Google Ads R$200 → primeira fase 0→1K subs <span class="dec-tag dt-pend">Aguarda Rafael</span></div>
+        </div>
+        <div class="dec-item">
+          <div class="dec-num">08</div>
+          <div class="dec-text">YT Refresh Token → publicação automática <span class="dec-tag dt-pend">Aguarda Rafael</span></div>
+        </div>
+        <button onclick="executarCiclo()" style="width:100%;margin-top:10px;background:var(--acc);color:#fff;border:none;padding:9px;border-radius:9px;font-size:11px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif">
+          ⚡ Executar Ciclo de Auto-melhoria Agora
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ GRID INFERIOR: PIPELINE + PUBLICAÇÃO ═══ -->
+<div class="full-grid">
+
+  <!-- PIPELINE DETALHADO -->
+  <div class="panel">
+    <div class="panel-h">
+      <span class="panel-icon">🔄</span>
+      <span class="panel-title">Pipeline em Tempo Real</span>
+      <span class="panel-badge pb-acc" id="pipe-last">—</span>
+    </div>
+    <div class="panel-b">
+      <div class="pipe-stages" id="pipe-stages">
+        <!-- populado por JS -->
+      </div>
+      <!-- TICKERS -->
+      <div style="margin-top:12px" id="tickers">
+        <div class="ticker">
+          <span class="ticker-icon">🎬</span>
+          <span class="ticker-text">Render Flux+KB V2 disparado · 17 vídeos v8 resetados aguardando processamento quântico</span>
+          <span class="ticker-time">agora</span>
+        </div>
+        <div class="ticker">
+          <span class="ticker-icon">📝</span>
+          <span class="ticker-text">15 novos temas inseridos nas 5 séries com long=15min e short=50-58s</span>
+          <span class="ticker-time">agora</span>
+        </div>
+        <div class="ticker" style="background:rgba(245,158,11,.06);border-color:rgba(245,158,11,.15)">
+          <span class="ticker-icon">⚠️</span>
+          <span class="ticker-text"><strong>Ação manual necessária:</strong> configurar YOUTUBE_REFRESH_TOKEN no OAuth Playground (5 min) para ativar publicação automática</span>
+          <span class="ticker-time">pendente</span>
+        </div>
+      </div>
+    </div>
+    <div class="refresh-bar">
+      <span>Última atualização: <span id="last-time">—</span></span>
+      <span><span class="spin-ico"></span> Auto-sync 30s</span>
+    </div>
+  </div>
+
+  <!-- HORÁRIOS DE PUBLICAÇÃO -->
+  <div class="panel">
+    <div class="panel-h">
+      <span class="panel-icon">📅</span>
+      <span class="panel-title">Horários de Pico BR</span>
+      <span class="panel-badge pb-grn">25 slots</span>
+    </div>
+    <div class="panel-b">
+      <div class="day-labels">
+        <div class="dl">Seg</div><div class="dl">Ter</div><div class="dl">Qua</div>
+        <div class="dl">Qui</div><div class="dl">Sex</div><div class="dl">Sáb</div><div class="dl">Dom</div>
+      </div>
+      <div class="pub-slots">
+        <div class="slot top"><div class="slot-day">Seg</div><div class="slot-t">12h</div></div>
+        <div class="slot"><div class="slot-day">Ter</div><div class="slot-t">18h</div></div>
+        <div class="slot top"><div class="slot-day">Qua</div><div class="slot-t">21h</div></div>
+        <div class="slot peak"><div class="slot-day">Qui</div><div class="slot-t">22h</div></div>
+        <div class="slot top"><div class="slot-day">Sex</div><div class="slot-t">20h</div></div>
+        <div class="slot peak"><div class="slot-day">Sáb</div><div class="slot-t">11h</div></div>
+        <div class="slot peak"><div class="slot-day">Dom</div><div class="slot-t">10h</div></div>
+        <div class="slot"><div class="slot-day">Seg</div><div class="slot-t">19h</div></div>
+        <div class="slot top"><div class="slot-day">Ter</div><div class="slot-t">21h</div></div>
+        <div class="slot peak"><div class="slot-day">Qua</div><div class="slot-t">22h</div></div>
+        <div class="slot"><div class="slot-day">Qui</div><div class="slot-t">18h</div></div>
+        <div class="slot top"><div class="slot-day">Sex</div><div class="slot-t">21h</div></div>
+        <div class="slot peak"><div class="slot-day">Sáb</div><div class="slot-t">20h</div></div>
+        <div class="slot top"><div class="slot-day">Dom</div><div class="slot-t">21h</div></div>
+      </div>
+      <div style="margin-top:12px">
+        <div style="display:flex;gap:12px;font-size:9px;color:var(--t3)">
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.15);display:inline-block"></span>Pico</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.2);display:inline-block"></span>Top</span>
+        </div>
+        <div style="font-size:10px;color:var(--t3);margin-top:8px;line-height:1.5">Meta: 5 vídeos/semana<br>Long (15min) + 2 Shorts (54s)<br>Cerebro ajusta automaticamente</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /pg -->
+
+<footer>psicologia.doc · @psidanielacoelho · Cérebro V14 · Autonomia Total · Flux.1 Schnell + Ken Burns 30fps 1080p<br>
+Long=15min · Short=50-58s · Padrão Quântico Eterno · ZERO texto nas imagens · 5 séries · Meta: R$50K/mês jan/2027</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SB  = "https://tpjvalzwkqwttvmszvie.supabase.co";
+const SK  = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwanZhbHp3a3F3dHR2bXN6dmllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY4NjkyMzAsImV4cCI6MjA2MjQ0NTIzMH0.w45_lqUBd_9m8HEZSbNDHMb0kfKWq0Nwd1Dqf7V5NVc";
+const H   = { apikey: SK, Authorization: "Bearer " + SK };
+
+function toast(msg, dur=3000) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), dur);
+}
+
+function el(id) { return document.getElementById(id); }
+function set(id, v) { const e = el(id); if(e) e.textContent = v; }
+
+async function loadPipeline() {
+  try {
+    const r = await fetch(SB + "/rest/v1/content_pipeline?select=status,mp4_url,score,metadata,title", { headers: H });
+    const data = await r.json();
+    if (!Array.isArray(data)) return;
+
+    const cnt = {};
+    let quantum=0, score90=0, apego=0, narcis=0, trauma=0, ansied=0, burnout=0;
+    data.forEach(v => {
+      cnt[v.status] = (cnt[v.status]||0)+1;
+      if ((v.mp4_url||"").includes("/v2/")) quantum++;
+      const s = parseFloat(v.metadata?.gate_score || v.score || 0);
+      if(s>=90) score90++;
+      const t = (v.title||"").toLowerCase();
+      if(t.includes("apego")) apego++;
+      else if(t.includes("narcis")) narcis++;
+      else if(t.includes("trauma")) trauma++;
+      else if(t.includes("ansiedade")||t.includes("ansio")) ansied++;
+      else if(t.includes("burnout")) burnout++;
+    });
+
+    set("mt-quantum", quantum);
+    set("mt-render", cnt.mp4_ready||0);
+    set("mt-fila", cnt.pending_generation||0);
+    set("mt-published", cnt.published||0);
+    set("mt-tarefas", "7+");
+    set("subs-count", cnt.published||0);
+
+    set("sc-apego", apego+" ep");
+    set("sc-narcisismo", narcis+" ep");
+    set("sc-trauma", trauma+" ep");
+    set("sc-ansiedade", ansied+" ep");
+    set("sc-burnout", burnout+" ep");
+
+    const pub = cnt.published||0;
+    el("m-pipeline").textContent = `Pipeline: ${data.length} total · ${quantum} quânticos`;
+
+    // Pipeline stages
+    const stages = [
+      {l:"Quânticos",n:quantum,c:"#7C3AED"},
+      {l:"Em Render",n:cnt.mp4_ready||0,c:"#F59E0B"},
+      {l:"Na Fila",n:cnt.pending_generation||0,c:"#38BDF8"},
+      {l:"Publicados",n:cnt.published||0,c:"#10B981"},
+      {l:"Arquivados",n:cnt.archived||0,c:"#475569"},
+    ];
+    el("pipe-stages").innerHTML = stages.map(s=>`
+      <div class="ps"><div class="ps-n" style="color:${s.c}">${s.n}</div><div class="ps-l">${s.l}</div></div>
+    `).join("");
+
+    el("pipe-last").textContent = "Atualizado " + new Date().toLocaleTimeString("pt-BR");
+    set("last-time", new Date().toLocaleTimeString("pt-BR"));
+
+    // Progresso monetização (baseado em publicados vs meta)
+    const pct = Math.min(Math.round((pub/1000)*100*0.1+0.5),100);
+    el("prog-pct").textContent = pct+"%";
+    el("prog-fill").style.width = Math.max(pct,2)+"%";
+    el("mono-current").textContent = pub>0 ? `${pub} publicados · Em expansão` : "Aguardando publicação";
+
+  } catch(e) { console.log("Pipeline:", e.message); }
+}
+
+async function loadRedes() {
+  try {
+    const r = await fetch(SB + "/rest/v1/social_profiles?select=platform,status,profile_data,last_updated", { headers: H });
+    const data = await r.json();
+    if (!Array.isArray(data)) return;
+
+    const PLATS = {
+      youtube:   {icon:"▶️",cor:"#FF0000",nome:"YouTube",url:"https://youtube.com/@psidanielacoelho"},
+      instagram: {icon:"📸",cor:"#E1306C",nome:"Instagram",url:"https://instagram.com/psidanielacoelho"},
+      tiktok:    {icon:"🎵",cor:"#010101",nome:"TikTok",url:"https://tiktok.com/@psidanielacoelho"},
+      pinterest: {icon:"📌",cor:"#E60023",nome:"Pinterest",url:"https://pinterest.com/psidanielacoelho"},
+      whatsapp:  {icon:"💬",cor:"#25D366",nome:"WhatsApp",url:null},
+    };
+
+    const html = Object.entries(PLATS).map(([key,p])=>{
+      const prof = data.find(d=>d.platform===key);
+      const stat = prof?.status||"nao_configurado";
+      const isOk = stat==="ativo";
+      const dot = isOk ? "live" : stat.includes("pendente") ? "pend" : "off";
+      const statLabel = isOk ? "✅ Ativo" : stat.includes("credenciais") ? "⏳ Token" : "—";
+      const subs = prof?.profile_data?.seguidores || 0;
+      return `
+        <div class="rede-row">
+          <div class="rede-ic" style="background:${p.cor}20">${p.icon}</div>
+          <div style="flex:1;min-width:0">
+            <div class="rede-name">${p.nome}</div>
+            <div style="font-size:9px;color:var(--t3);font-family:'DM Mono',monospace">@psidanielacoelho · ${subs>0?subs+" subs":statLabel}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <div class="sdot ${dot}"></div>
+            ${p.url?`<a href="${p.url}" target="_blank" style="font-size:9px;color:var(--t3);text-decoration:none">↗</a>`:""}
+          </div>
+        </div>`;
+    }).join("");
+
+    el("redes-list").innerHTML = html;
+  } catch(e) { console.log("Redes:", e.message); }
+}
+
+async function executarCiclo() {
+  toast("⚡ Iniciando ciclo de auto-melhoria...");
+  try {
+    const r = await fetch("/api/social?action=auto_melhorar");
+    const d = await r.json();
+    toast(`✅ Ciclo executado: ${d.executadas||0} tarefas`, 4000);
+  } catch(e) { toast("❌ Erro: "+e.message, 4000); }
+}
+
+function forcarAtualizacao() {
+  toast("🔄 Sincronizando...");
+  loadPipeline();
+  loadRedes();
+}
+
+async function loadAll() {
+  await Promise.all([loadPipeline(), loadRedes()]);
+}
+
+loadAll();
+setInterval(loadAll, 30000);
+</script>
+</body>
+</html>
