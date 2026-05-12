@@ -263,21 +263,32 @@ NUMERO DE CENAS: EXATAMENTE {n_scenes_target} CENAS. NEM MAIS, NEM MENOS.
 PLATAFORMA: {target_platform}
 {viral_rules}
 
-REGRAS CRITICAS DO ESTILO PSYCH2GO (mesmo de canais virais mundiais):
-1. NUNCA peca texto, palavras, letras ou subtitulos na imagem
-2. Sempre 1 personagem humanoide ilustrado como FOCO (mulher ou homem brasileiro de pele clara/morena/negra alternando entre cenas, 20-40 anos)
-3. Fundos minimalistas, cores pastel suaves (rosa pessego, azul ceu, verde menta, lavanda, bege creme)
-4. Expressoes faciais MUITO expressivas casando com a emocao da narracao
-5. Variar enquadramento: close_face / medium / wide / silhouette / hands_close / profile
-6. Cada cena DEVE conter 2-4 frases inteiras. Distribua o roteiro INTEIRO entre as {n_scenes_target} cenas.
+REGRAS CRITICAS DO ESTILO PSYCH2GO QUANTICO V2 (9 milhoes de inscritos):
+1. ABSOLUTAMENTE ZERO texto/palavras/letras/numeros/subtitulos/UI nas imagens
+2. SEMPRE 1 personagem humanoide como FOCO CENTRAL — nunca cena sem personagem
+3. Personagens brasileiros alternando: pele clara/morena/negra, 20-45 anos, homem/mulher
+4. Fundos SOLIDOS ou gradiente suave PASTEL — NUNCA complexos ou fotorrealistas
+5. Expressoes faciais EXTREMAMENTE expressivas — a emocao deve ser OBVIA na face
+6. Variar enquadramento obrigatoriamente cena a cena
+7. shot_type DEVE mudar a cada 2 cenas para criar ritmo visual dinamico
+
+PALETTE por emocao (use estes tons nos prompts):
+- calmo: sky blue #A8D8EA, lavender
+- tenso: coral red #FF8C6B, deep orange
+- empatia: warm peach #FFD1BD, rose
+- esperanca: mint green #B2D8B2, soft yellow
+- urgente: amber #FFB347, bright orange
+- contemplativo: lavender purple #E8C1E8, indigo
+- melancolico: dusty blue #B0C4DE, grey
+- alivio: mint white #C8F0C8, soft green
 
 Para CADA cena retorne JSON com:
-- "narration": fragmento literal do roteiro (NAO mude palavras)
-- "duration_s": entre 5-8s
-- "image_prompt": descricao visual em INGLES comecando "minimalist 2D illustration in Psych2Go style, flat vector art, single humanoid character with expressive face, soft pastel background, NO text NO words NO letters NO signs NO watermarks NO subtitles, clean simple background, anime-adjacent simplified character art,"
+- "narration": fragmento LITERAL do roteiro (NAO altere)
+- "duration_s": 5-8s para viral, 6-12s para long form
+- "image_prompt": APENAS o contexto visual da cena em INGLES (NAO inclua instrucoes de estilo — o sistema quantico cuida disso). Ex: "woman feeling anxious alone in empty room" ou "couple arguing in kitchen" ou "person meditating at sunrise"
 - "emotion": [calmo|tenso|empatia|esperanca|urgente|contemplativo|melancolico|alivio]
-- "ken_burns": [zoom_in|zoom_out|pan_left|pan_right|static]
-- "shot_type": [close_face|medium|wide|silhouette|hands_close|profile]
+- "ken_burns": [zoom_in|zoom_out|pan_left|pan_right|static] — variar obrigatoriamente
+- "shot_type": [close_face|medium|wide|silhouette|hands_close|profile] — variar obrigatoriamente
 
 Retorne SOMENTE JSON valido: {{"scenes":[...], "background_music_mood":"calmo_reflexivo|melancolico_esperancoso|tenso_curioso|empatico_morno"}}
 
@@ -426,7 +437,100 @@ def _is_image_valid(path, min_brightness=15, max_brightness=245):
     # If validation fails for any reason, accept the image (don't block render)
     return True
 
-def gen_image_flux(prompt, output_path, width=768, height=1344, retries=4):
+# Sistema Psych2Go Quantico inserido
+# ============================================================
+# SISTEMA DE PROMPT PSYCH2GO QUANTICO V2
+# Baseado em analise profunda do estilo visual do canal (9M inscritos):
+# - 2D flat vector art, outlines espessos e limpos
+# - 1 personagem humanizado centrado, expressao MUITO expressiva
+# - Fundo solido ou gradiente PASTEL suave
+# - Paleta: peach #FFD1BD, sky blue #A8D8EA, mint #B2D8B2, 
+#   lavender #E8C1E8, coral #FFB5A7, cream #FFF0DB
+# - ZERO texto, ZERO numeros, ZERO simbolos, ZERO watermarks
+# - Estilo: Psych2Go x BrainCraft x Kurzgesagt simplified
+# ============================================================
+PSYCH2GO_PALETTES = {
+    'calmo':         ('soft sky blue background #A8D8EA, cream foreground', 'blue lavender'),
+    'tenso':         ('deep coral background #FF8C6B, dark navy foreground', 'coral red'),
+    'empatia':       ('warm peach background #FFD1BD, rose foreground', 'warm peach'),
+    'esperanca':     ('mint green background #B2D8B2, soft white foreground', 'mint green'),
+    'urgente':       ('bright amber background #FFB347, dark foreground', 'amber orange'),
+    'contemplativo': ('lavender purple background #E8C1E8, indigo foreground', 'lavender purple'),
+    'melancolico':   ('dusty blue background #B0C4DE, grey foreground', 'dusty blue grey'),
+    'alivio':        ('soft mint background #C8F0C8, light foreground', 'mint white'),
+    'hipnotico':     ('deep purple background #4B0082, violet foreground', 'deep purple'),
+    'dramatico':     ('crimson red background #DC143C, dark foreground', 'red dark'),
+}
+
+PSYCH2GO_SHOT_PROMPTS = {
+    'close_face':   'extreme close-up face portrait, large round expressive eyes, centered composition',
+    'medium':       'medium shot waist-up, relaxed arm gesture, centered character',
+    'wide':         'full body shot, character interacting with simple environment element',
+    'silhouette':   'dramatic backlit silhouette against glowing colorful background, strong contrast',
+    'hands_close':  'close-up hands detail, character holding or touching symbolic simple object',
+    'profile':      'side profile view showing strong emotional expression, clean background',
+}
+
+PSYCH2GO_CHAR_DIVERSITY = [
+    'young Brazilian woman 25-30, medium brown skin, long dark hair, casual outfit',
+    'young Brazilian man 28-35, light olive skin, short dark hair, simple shirt',
+    'Brazilian woman 30-40, dark brown skin, natural curly hair, colorful blouse',
+    'young person 22-28, light skin, straight brown hair, minimal clothing',
+    'Brazilian woman 35-45, dark skin, tied-back hair, professional casual',
+    'young man 20-27, olive skin, wavy hair, hoodie or t-shirt',
+    'woman 30-38, mixed ethnicity, shoulder-length hair, expressive face',
+    'man 32-42, darker skin, close-cropped hair, simple modern outfit',
+]
+
+def build_psych2go_prompt(scene_description: str, emotion: str, shot_type: str, 
+                           scene_index: int = 0, is_short: bool = False) -> str:
+    """Constroi prompt Psych2Go quantico - maximo de qualidade sem texto."""
+    palette_name, palette_desc = PSYCH2GO_PALETTES.get(emotion, PSYCH2GO_PALETTES['calmo'])
+    shot_desc = PSYCH2GO_SHOT_PROMPTS.get(shot_type, PSYCH2GO_SHOT_PROMPTS['medium'])
+    char = PSYCH2GO_CHAR_DIVERSITY[scene_index % len(PSYCH2GO_CHAR_DIVERSITY)]
+    aspect = '9:16 portrait vertical' if is_short else '16:9 landscape horizontal'
+    
+    # Mapeamento emocao -> expressao facial precisa
+    face_expressions = {
+        'calmo':         'peaceful calm gentle smile, soft relaxed expression',
+        'tenso':         'tense anxious worried furrowed brows, wide eyes',
+        'empatia':       'warm empathetic compassionate gentle smile, soft eyes',
+        'esperanca':     'hopeful uplifted bright eyes, subtle smile, looking up',
+        'urgente':       'urgent alert serious direct gaze, tense jaw',
+        'contemplativo': 'deeply thoughtful introspective downward gaze, hand near chin',
+        'melancolico':   'sad melancholic single tear or glassy eyes, slight frown',
+        'alivio':        'relieved exhale closed eyes, shoulders dropped, small smile',
+        'hipnotico':     'intense hypnotic direct stare, mysterious half-smile',
+        'dramatico':     'dramatic open-mouth shock or intense cry, highly expressive',
+    }
+    face_expr = face_expressions.get(emotion, face_expressions['calmo'])
+    
+    prompt = (
+        f"flat vector 2D illustration, Psych2Go educational animation style, "
+        f"minimalist character art, clean thick black outlines, "
+        f"{char}, {face_expr}, {shot_desc}, "
+        f"{palette_desc} pastel color scheme, {palette_name} tones, "
+        f"solid flat {palette_desc} background, soft gradient, "
+        f"rounded simplified facial features, large expressive eyes, "
+        f"kawaii-adjacent cute humanoid proportions, "
+        f"professional educational YouTube video frame, "
+        f"{aspect} composition, centered balanced layout, "
+        f"ZERO text ZERO words ZERO letters ZERO numbers ZERO watermarks ZERO signs ZERO captions"
+    )
+    
+    # Adicionar contexto visual da cena (sem mencionar texto/narration)
+    # Simplificar a descricao para elementos visuais apenas
+    visual_keywords = (scene_description[:150]
+        .replace('você', 'person').replace('seu', 'their')
+        .replace('sua', 'their').replace('para', 'with')
+        .replace('quando', '').replace('porque', ''))
+    
+    # Adicionar contexto visual minimo
+    prompt = prompt[:800] + f", scene theme: psychology emotion {emotion}"
+    
+    return prompt[:1000]
+
+def gen_image_flux(prompt, output_path, width=768, height=1344, retries=5, emotion="calmo", shot_type="medium", scene_index=0):
     """9:16 portrait = 768x1344. 16:9 landscape = 1344x768.
     Validates image isn't black/empty; retries with new seed if so."""
     safe_prompt = (prompt + ", NO text, NO words, NO letters, NO signs, NO labels, NO captions, NO watermarks, NO typography, NO writing, NO numbers, clean 2D flat illustration, Psych2Go style, single character focus, expressive face, pastel background")[:1000]
@@ -691,7 +795,13 @@ def run():
     image_paths = []
     for i, sc in enumerate(scenes):
         ip = WORK / f"image_{i:03d}.jpg"
-        ok = gen_image_flux(sc['image_prompt'], ip, width=width, height=height)
+        ok = gen_image_flux(
+            sc.get('image_prompt', sc.get('narration','')), ip,
+            width=width, height=height,
+            emotion=sc.get('emotion', 'calmo'),
+            shot_type=sc.get('shot_type', 'medium'),
+            scene_index=i
+        )
         if ok:
             image_paths.append(str(ip))
             print(f"  ✓ Scene {i+1} image generated")
