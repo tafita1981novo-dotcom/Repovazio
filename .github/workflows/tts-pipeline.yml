@@ -19,14 +19,14 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install edge-tts supabase requests groq openai python-dotenv
+          pip install edge-tts requests --quiet
 
-      - name: Generate Audio (Edge TTS + Groq Emotion)
+      - name: Generate Audio (Edge TTS PT-BR - 100% gratis)
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           python3 scripts/tts_pipeline.py
 
