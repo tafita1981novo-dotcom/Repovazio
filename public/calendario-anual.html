@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ψ Calendário Anual 2026-2027 · @psidanielacoelho · Meta R$50K/mês</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#06060F;--s1:#0D0D1C;--s2:#111128;--v:#7C3AED;--m:#C4B5FD;--t1:#E2E8F0;--t2:#94A3B8;--t3:#475569;--bd:rgba(255,255,255,.07)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--t1);font-family:"DM Sans",sans-serif;min-height:100vh}
+.home{position:fixed;top:14px;right:16px;z-index:9999;display:flex;align-items:center;gap:7px;background:rgba(6,6,15,.93);border:1px solid rgba(196,181,253,.22);border-radius:10px;padding:7px 15px;color:var(--m);font-size:11px;font-weight:700;text-decoration:none;backdrop-filter:blur(14px)}
+#topbar{position:sticky;top:0;z-index:500;background:rgba(6,6,15,.98);backdrop-filter:blur(20px);border-bottom:1px solid var(--bd);padding:10px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.logo{font-size:13px;font-weight:800;color:var(--m)}
+.logo small{font-size:8px;font-family:"DM Mono",monospace;color:var(--t3);margin-left:4px}
+.now-box{background:rgba(225,29,72,.1);border:1px solid rgba(225,29,72,.25);border-radius:8px;padding:5px 11px;font-size:10px;font-weight:700;color:#FCA5A5;font-family:"DM Mono",monospace}
+.dot{width:6px;height:6px;border-radius:50%;background:#E11D48;display:inline-block;margin-right:5px;animation:blink 1.2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.tabs{display:flex;gap:4px;flex-wrap:wrap}
+.tab{font-size:10px;font-weight:700;padding:5px 10px;border-radius:7px;border:1px solid var(--bd);background:rgba(255,255,255,.04);color:var(--t2);cursor:pointer;transition:.15s;white-space:nowrap;text-decoration:none}
+.tab.on,.tab:hover{background:rgba(124,58,237,.15);border-color:rgba(124,58,237,.4);color:var(--m)}
+.wrap{max-width:1100px;margin:0 auto;padding:12px 18px 100px}
+.panel{display:none}.panel.on{display:block}
+/* CALENDÁRIO GRID */
+.cal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-top:10px}
+.semana{border-radius:10px;border:1px solid;overflow:hidden;transition:.15s}
+.semana:hover{transform:translateY(-1px)}
+.sem-hdr{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;border-bottom:1px solid rgba(255,255,255,.07)}
+.sem-n{font-size:12px;font-weight:900;font-family:"DM Mono",monospace;margin-right:6px}
+.sem-d{font-size:8px;color:#94A3B8;font-family:"DM Mono",monospace}
+.sem-vpw{font-size:8px;font-weight:800;color:#C4B5FD;display:block;font-family:"DM Mono",monospace}
+.sem-r{font-size:8px;color:#10B981;display:block;font-family:"DM Mono",monospace}
+.marco{padding:4px 10px;background:rgba(225,29,72,.12);border-bottom:1px solid rgba(225,29,72,.2);font-size:9px;font-weight:700;color:#FCA5A5;text-align:center}
+.slots{padding:7px 8px;display:grid;gap:3px}
+.slot{display:flex;align-items:center;gap:5px;padding:3px 5px;background:rgba(255,255,255,.03);border-radius:5px;font-size:9px}
+.sdata{color:#94A3B8;font-family:"DM Mono",monospace;min-width:60px}
+.shora{color:#C4B5FD;font-family:"DM Mono",monospace;min-width:35px;font-weight:700}
+.stipo{font-size:11px}
+/* ESTRATÉGIA */
+.strat-card{background:var(--s1);border:1px solid var(--bd);border-radius:11px;padding:14px 16px;margin-bottom:10px}
+.strat-t{font-size:12px;font-weight:800;color:#E2E8F0;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.strat-body{font-size:10px;color:#94A3B8;line-height:1.7}
+.strat-body strong{color:#E2E8F0}
+/* RASTREADOR */
+.track-row{display:grid;grid-template-columns:28px 70px 1fr 60px 60px 60px 80px;align-items:center;gap:5px;padding:7px 9px;background:var(--s1);border:1px solid var(--bd);border-radius:8px;margin-bottom:3px;font-size:10px}
+.track-row:hover{border-color:rgba(124,58,237,.3)}
+.badge-pub{font-size:8px;padding:2px 6px;border-radius:4px;background:rgba(16,185,129,.12);color:#10B981;border:1px solid rgba(16,185,129,.2);font-weight:700}
+.badge-ag{font-size:8px;padding:2px 6px;border-radius:4px;background:rgba(245,158,11,.1);color:#fbbf24;border:1px solid rgba(245,158,11,.2);font-weight:700}
+.stat-box{text-align:center}.stat-n{font-size:11px;font-weight:800;display:block}.stat-l{font-size:7px;color:#475569;text-transform:uppercase}
+/* LEGEND */
+.legend{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.leg{display:flex;align-items:center;gap:5px;font-size:9px;color:#94A3B8}
+.leg-dot{width:8px;height:8px;border-radius:2px}
+.filter-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.fbtn{font-size:9px;font-weight:700;padding:4px 10px;border-radius:6px;border:1px solid var(--bd);background:rgba(255,255,255,.04);color:var(--t2);cursor:pointer;transition:.15s}
+.fbtn.on,.fbtn:hover{background:rgba(124,58,237,.15);border-color:rgba(124,58,237,.4);color:var(--m)}
+</style>
+</head>
+<body>
+<a class="home" href="/hub.html">ψ Hub</a>
+
+<div id="topbar">
+  <div class="logo">📅 Calendário Anual <small>@psidanielacoelho · 16/mai/2026 → mai/2027</small></div>
+  <div class="now-box"><span class="dot"></span>RJ agora: <span id="rjtime">--:--</span> · BRT (UTC-3)</div>
+  <div class="tabs">
+    <button class="tab on" onclick="show('calendario',this)">📅 52 Semanas</button>
+    <button class="tab" onclick="show('rastreador',this)">📊 Rastreador</button>
+    <button class="tab" onclick="show('estrategia',this)">💰 R$50K/mês</button>
+    <a class="tab" href="/galeria-eterna.html" style="text-decoration:none">🌌 Galeria Eterna</a>
+    <a class="tab" href="/galeria-videos.html" style="text-decoration:none">▶ 17 MP4</a>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- CALENDÁRIO 52 SEMANAS -->
+<div id="panel-calendario" class="panel on">
+  <div style="font-size:8px;color:var(--t3);margin-bottom:8px;font-family:'DM Mono',monospace">
+    📍 Hoje: 14/mai/2026 · Primeira publicação: <strong style="color:#E11D48">Sábado 16/mai 18h</strong> · Meta: R$50K/mês em 37 semanas
+  </div>
+  
+  <div class="legend">
+    <div class="leg"><div class="leg-dot" style="background:#7C3AED"></div>Identidade (S1-4)</div>
+    <div class="leg"><div class="leg-dot" style="background:#E11D48"></div>Aceleração (S5-8)</div>
+    <div class="leg"><div class="leg-dot" style="background:#0D9488"></div>Crescimento (S9-12)</div>
+    <div class="leg"><div class="leg-dot" style="background:#F59E0B"></div>Escala (S13-16)</div>
+    <div class="leg"><div class="leg-dot" style="background:#6366F1"></div>Autoridade (S17-20)</div>
+    <div class="leg"><div class="leg-dot" style="background:#10B981"></div>Monetização (S21-24)</div>
+    <div class="leg"><div class="leg-dot" style="background:#F97316"></div>Expansão (S25-30)</div>
+    <div class="leg"><div class="leg-dot" style="background:#EC4899"></div>Plena (S31-37)</div>
+    <div class="leg"><div class="leg-dot" style="background:#C4B5FD"></div>Escalamento (S38-52)</div>
+  </div>
+  
+  <div class="filter-bar">
+    <button class="fbtn on" onclick="filterSem(0,this)">Todas as 52 semanas</button>
+    <button class="fbtn" onclick="filterSem(1,this)">S1-8 · Início</button>
+    <button class="fbtn" onclick="filterSem(2,this)">S9-24 · Crescimento</button>
+    <button class="fbtn" onclick="filterSem(3,this)">S25-52 · Expansão</button>
+  </div>
+  
+  <div class="cal-grid" id="cal-grid">
+<div class="semana" id="s1" style="border-color:#7C3AED40">
+  <div class="sem-hdr" style="background:#7C3AED15">
+    <div>
+      <span class="sem-n" style="color:#7C3AED">S1</span>
+      <span class="sem-d">16/05/26</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">3v/sem</span>
+      <span class="sem-r">R$0</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 16/05</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Seg 18/05</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qua 20/05</span><span class="shora">18:00</span><span class="stipo">📹</span></div></div>
+</div>
+<div class="semana" id="s2" style="border-color:#7C3AED40">
+  <div class="sem-hdr" style="background:#7C3AED15">
+    <div>
+      <span class="sem-n" style="color:#7C3AED">S2</span>
+      <span class="sem-d">23/05/26</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">3v/sem</span>
+      <span class="sem-r">R$0</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 23/05</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Seg 25/05</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qua 27/05</span><span class="shora">18:00</span><span class="stipo">📹</span></div></div>
+</div>
+<div class="semana" id="s3" style="border-color:#7C3AED40">
+  <div class="sem-hdr" style="background:#7C3AED15">
+    <div>
+      <span class="sem-n" style="color:#7C3AED">S3</span>
+      <span class="sem-d">30/05/26</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">3v/sem</span>
+      <span class="sem-r">R$0</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 30/05</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Seg 01/06</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qua 03/06</span><span class="shora">18:00</span><span class="stipo">📹</span></div></div>
+</div>
+<div class="semana" id="s4" style="border-color:#7C3AED40">
+  <div class="sem-hdr" style="background:#7C3AED15">
+    <div>
+      <span class="sem-n" style="color:#7C3AED">S4</span>
+      <span class="sem-d">06/06/26</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">3v/sem</span>
+      <span class="sem-r">R$0</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 06/06</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Seg 08/06</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qua 10/06</span><span class="shora">18:00</span><span class="stipo">📹</span></div></div>
+</div>
+<div class="semana" id="s5" style="border-color:#E11D4840">
+  <div class="sem-hdr" style="background:#E11D4815">
+    <div>
+      <span class="sem-n" style="color:#E11D48">S5</span>
+      <span class="sem-d">13/06/26</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">3v/sem</span>
+      <span class="sem-r">R$0</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 13/06</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Seg 15/06</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qua 17/06</span><span class="shora">18:00</span><span class="stipo">📹</span></div></div>
+</div>
+<div class="semana" id="s6" style="border-color:#E11D4840">
+  <div class="sem-hdr" style="background:#E11D4815">
+    <div>
+      <span class="sem-n" style="color:#E11D48">S6</span>
+      <span class="sem-d">20/06/26</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">4v/sem</span>
+      <span class="sem-r">AdSense ON</span>
+    </div>
+  </div>
+  <div class="marco">🎉 1K inscritos · AdSense ATIVO</div>
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 20/06</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Seg 22/06</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qua 24/06</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Sex 26/06</span><span class="shora">12:00</span><span class="stipo">📱</span></div></div>
+</div>
+<div class="semana" id="s7" style="border-color:#E11D4840">
+  <div class="sem-hdr" style="background:#E11D4815">
+    <div>
+      <span class="sem-n" style="color:#E11D48">S7</span>
+      <span class="sem-d">27/06/26</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">4v/sem</span>
+      <span class="sem-r">R$50-150</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 27/06</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Seg 29/06</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qua 01/07</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Sex 03/07</span><span class="shora">12:00</span><span class="stipo">📱</span></div></div>
+</div>
+<div class="semana" id="s8" style="border-color:#E11D4840">
+  <div class="sem-hdr" style="background:#E11D4815">
+    <div>
+      <span class="sem-n" style="color:#E11D48">S8</span>
+      <span class="sem-d">04/07/26</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">4v/sem</span>
+      <span class="sem-r">R$100-200</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 04/07</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Seg 06/07</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qua 08/07</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Sex 10/07</span><span class="shora">12:00</span><span class="stipo">📱</span></div></div>
+</div>
+<div class="semana" id="s9" style="border-color:#0D948840">
+  <div class="sem-hdr" style="background:#0D948815">
+    <div>
+      <span class="sem-n" style="color:#0D9488">S9</span>
+      <span class="sem-d">11/07/26</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">4v/sem</span>
+      <span class="sem-r">R$200-400</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 11/07</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Seg 13/07</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qua 15/07</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Sex 17/07</span><span class="shora">12:00</span><span class="stipo">📱</span></div></div>
+</div>
+<div class="semana" id="s10" style="border-color:#0D948840">
+  <div class="sem-hdr" style="background:#0D948815">
+    <div>
+      <span class="sem-n" style="color:#0D9488">S10</span>
+      <span class="sem-d">18/07/26</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">4v/sem</span>
+      <span class="sem-r">R$300-500</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 18/07</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Seg 20/07</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qua 22/07</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Sex 24/07</span><span class="shora">12:00</span><span class="stipo">📱</span></div></div>
+</div>
+<div class="semana" id="s11" style="border-color:#0D948840">
+  <div class="sem-hdr" style="background:#0D948815">
+    <div>
+      <span class="sem-n" style="color:#0D9488">S11</span>
+      <span class="sem-d">25/07/26</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">4v/sem</span>
+      <span class="sem-r">R$400-700</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 25/07</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Seg 27/07</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qua 29/07</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Sex 31/07</span><span class="shora">12:00</span><span class="stipo">📱</span></div></div>
+</div>
+<div class="semana" id="s12" style="border-color:#0D948840">
+  <div class="sem-hdr" style="background:#0D948815">
+    <div>
+      <span class="sem-n" style="color:#0D9488">S12</span>
+      <span class="sem-d">01/08/26</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">4v/sem</span>
+      <span class="sem-r">R$500-900</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 01/08</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Seg 03/08</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qua 05/08</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Sex 07/08</span><span class="shora">12:00</span><span class="stipo">📱</span></div></div>
+</div>
+<div class="semana" id="s13" style="border-color:#F59E0B40">
+  <div class="sem-hdr" style="background:#F59E0B15">
+    <div>
+      <span class="sem-n" style="color:#F59E0B">S13</span>
+      <span class="sem-d">08/08/26</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">5v/sem</span>
+      <span class="sem-r">R$600-1K</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 08/08</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Dom 09/08</span><span class="shora">12:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Seg 10/08</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qua 12/08</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Sex 14/08</span><span class="shora">12:00</span><span class="stipo">📱</span></div></div>
+</div>
+<div class="semana" id="s14" style="border-color:#F59E0B40">
+  <div class="sem-hdr" style="background:#F59E0B15">
+    <div>
+      <span class="sem-n" style="color:#F59E0B">S14</span>
+      <span class="sem-d">15/08/26</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">5v/sem</span>
+      <span class="sem-r">R$700-1.2K</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 15/08</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Dom 16/08</span><span class="shora">12:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Seg 17/08</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qua 19/08</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Sex 21/08</span><span class="shora">12:00</span><span class="stipo">📱</span></div></div>
+</div>
+<div class="semana" id="s15" style="border-color:#F59E0B40">
+  <div class="sem-hdr" style="background:#F59E0B15">
+    <div>
+      <span class="sem-n" style="color:#F59E0B">S15</span>
+      <span class="sem-d">22/08/26</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">5v/sem</span>
+      <span class="sem-r">R$900-1.5K</span>
+    </div>
+  </div>
+  <div class="marco">🎉 10K inscritos · MARCO</div>
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 22/08</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Dom 23/08</span><span class="shora">12:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Seg 24/08</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qua 26/08</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Sex 28/08</span><span class="shora">12:00</span><span class="stipo">📱</span></div></div>
+</div>
+<div class="semana" id="s16" style="border-color:#F59E0B40">
+  <div class="sem-hdr" style="background:#F59E0B15">
+    <div>
+      <span class="sem-n" style="color:#F59E0B">S16</span>
+      <span class="sem-d">29/08/26</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">5v/sem</span>
+      <span class="sem-r">R$1K-1.8K</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 29/08</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Dom 30/08</span><span class="shora">12:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Seg 31/08</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qua 02/09</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Sex 04/09</span><span class="shora">12:00</span><span class="stipo">📱</span></div></div>
+</div>
+<div class="semana" id="s17" style="border-color:#6366F140">
+  <div class="sem-hdr" style="background:#6366F115">
+    <div>
+      <span class="sem-n" style="color:#6366F1">S17</span>
+      <span class="sem-d">05/09/26</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">6v/sem</span>
+      <span class="sem-r">R$1.2K-2K</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 05/09</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Dom 06/09</span><span class="shora">12:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Seg 07/09</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Ter 08/09</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Qui 10/09</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Sex 11/09</span><span class="shora">18:00</span><span class="stipo">📹</span></div></div>
+</div>
+<div class="semana" id="s18" style="border-color:#6366F140">
+  <div class="sem-hdr" style="background:#6366F115">
+    <div>
+      <span class="sem-n" style="color:#6366F1">S18</span>
+      <span class="sem-d">12/09/26</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">6v/sem</span>
+      <span class="sem-r">R$1.5K-2.5K</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 12/09</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Dom 13/09</span><span class="shora">12:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Seg 14/09</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Ter 15/09</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Qui 17/09</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Sex 18/09</span><span class="shora">18:00</span><span class="stipo">📹</span></div></div>
+</div>
+<div class="semana" id="s19" style="border-color:#6366F140">
+  <div class="sem-hdr" style="background:#6366F115">
+    <div>
+      <span class="sem-n" style="color:#6366F1">S19</span>
+      <span class="sem-d">19/09/26</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">6v/sem</span>
+      <span class="sem-r">R$1.8K-3K</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 19/09</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Dom 20/09</span><span class="shora">12:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Seg 21/09</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Ter 22/09</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Qui 24/09</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Sex 25/09</span><span class="shora">18:00</span><span class="stipo">📹</span></div></div>
+</div>
+<div class="semana" id="s20" style="border-color:#6366F140">
+  <div class="sem-hdr" style="background:#6366F115">
+    <div>
+      <span class="sem-n" style="color:#6366F1">S20</span>
+      <span class="sem-d">26/09/26</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">6v/sem</span>
+      <span class="sem-r">R$2K-3.5K</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 26/09</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Dom 27/09</span><span class="shora">12:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Seg 28/09</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Ter 29/09</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Qui 01/10</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Sex 02/10</span><span class="shora">18:00</span><span class="stipo">📹</span></div></div>
+</div>
+<div class="semana" id="s21" style="border-color:#10B98140">
+  <div class="sem-hdr" style="background:#10B98115">
+    <div>
+      <span class="sem-n" style="color:#10B981">S21</span>
+      <span class="sem-d">03/10/26</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">6v/sem</span>
+      <span class="sem-r">R$2.5K-4K</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 03/10</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Dom 04/10</span><span class="shora">12:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Seg 05/10</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Ter 06/10</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Qui 08/10</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Sex 09/10</span><span class="shora">18:00</span><span class="stipo">📹</span></div></div>
+</div>
+<div class="semana" id="s22" style="border-color:#10B98140">
+  <div class="sem-hdr" style="background:#10B98115">
+    <div>
+      <span class="sem-n" style="color:#10B981">S22</span>
+      <span class="sem-d">10/10/26</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">6v/sem</span>
+      <span class="sem-r">R$3K-5K</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 10/10</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Dom 11/10</span><span class="shora">12:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Seg 12/10</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Ter 13/10</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Qui 15/10</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Sex 16/10</span><span class="shora">18:00</span><span class="stipo">📹</span></div></div>
+</div>
+<div class="semana" id="s23" style="border-color:#10B98140">
+  <div class="sem-hdr" style="background:#10B98115">
+    <div>
+      <span class="sem-n" style="color:#10B981">S23</span>
+      <span class="sem-d">17/10/26</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">6v/sem</span>
+      <span class="sem-r">R$3.5K-5.5K</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 17/10</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Dom 18/10</span><span class="shora">12:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Seg 19/10</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Ter 20/10</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Qui 22/10</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Sex 23/10</span><span class="shora">18:00</span><span class="stipo">📹</span></div></div>
+</div>
+<div class="semana" id="s24" style="border-color:#10B98140">
+  <div class="sem-hdr" style="background:#10B98115">
+    <div>
+      <span class="sem-n" style="color:#10B981">S24</span>
+      <span class="sem-d">24/10/26</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">6v/sem</span>
+      <span class="sem-r">R$4K-6.5K</span>
+    </div>
+  </div>
+  <div class="marco">🎉 50K inscritos · MARCO</div>
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 24/10</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Dom 25/10</span><span class="shora">12:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Seg 26/10</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Ter 27/10</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Qui 29/10</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Sex 30/10</span><span class="shora">18:00</span><span class="stipo">📹</span></div></div>
+</div>
+<div class="semana" id="s25" style="border-color:#F9731640">
+  <div class="sem-hdr" style="background:#F9731615">
+    <div>
+      <span class="sem-n" style="color:#F97316">S25</span>
+      <span class="sem-d">31/10/26</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">7v/sem</span>
+      <span class="sem-r">R$5K-8K</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 31/10</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Dom 01/11</span><span class="shora">12:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Seg 02/11</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Ter 03/11</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Qua 04/11</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qui 05/11</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Sex 06/11</span><span class="shora">12:00</span><span class="stipo">📱</span></div></div>
+</div>
+<div class="semana" id="s26" style="border-color:#F9731640">
+  <div class="sem-hdr" style="background:#F9731615">
+    <div>
+      <span class="sem-n" style="color:#F97316">S26</span>
+      <span class="sem-d">07/11/26</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">7v/sem</span>
+      <span class="sem-r">R$5.5K-9K</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 07/11</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Dom 08/11</span><span class="shora">12:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Seg 09/11</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Ter 10/11</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Qua 11/11</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qui 12/11</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Sex 13/11</span><span class="shora">12:00</span><span class="stipo">📱</span></div></div>
+</div>
+<div class="semana" id="s27" style="border-color:#F9731640">
+  <div class="sem-hdr" style="background:#F9731615">
+    <div>
+      <span class="sem-n" style="color:#F97316">S27</span>
+      <span class="sem-d">14/11/26</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">7v/sem</span>
+      <span class="sem-r">R$6K-10K</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 14/11</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Dom 15/11</span><span class="shora">12:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Seg 16/11</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Ter 17/11</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Qua 18/11</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qui 19/11</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Sex 20/11</span><span class="shora">12:00</span><span class="stipo">📱</span></div></div>
+</div>
+<div class="semana" id="s28" style="border-color:#F9731640">
+  <div class="sem-hdr" style="background:#F9731615">
+    <div>
+      <span class="sem-n" style="color:#F97316">S28</span>
+      <span class="sem-d">21/11/26</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">7v/sem</span>
+      <span class="sem-r">R$7K-12K</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 21/11</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Dom 22/11</span><span class="shora">12:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Seg 23/11</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Ter 24/11</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Qua 25/11</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qui 26/11</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Sex 27/11</span><span class="shora">12:00</span><span class="stipo">📱</span></div></div>
+</div>
+<div class="semana" id="s29" style="border-color:#F9731640">
+  <div class="sem-hdr" style="background:#F9731615">
+    <div>
+      <span class="sem-n" style="color:#F97316">S29</span>
+      <span class="sem-d">28/11/26</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">7v/sem</span>
+      <span class="sem-r">R$8K-14K</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 28/11</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Dom 29/11</span><span class="shora">12:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Seg 30/11</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Ter 01/12</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Qua 02/12</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qui 03/12</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Sex 04/12</span><span class="shora">12:00</span><span class="stipo">📱</span></div></div>
+</div>
+<div class="semana" id="s30" style="border-color:#F9731640">
+  <div class="sem-hdr" style="background:#F9731615">
+    <div>
+      <span class="sem-n" style="color:#F97316">S30</span>
+      <span class="sem-d">05/12/26</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">7v/sem</span>
+      <span class="sem-r">R$9K-15K</span>
+    </div>
+  </div>
+  <div class="marco">🏆 100K · BOTÃO DOURADO</div>
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 05/12</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Dom 06/12</span><span class="shora">12:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Seg 07/12</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Ter 08/12</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Qua 09/12</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qui 10/12</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Sex 11/12</span><span class="shora">12:00</span><span class="stipo">📱</span></div></div>
+</div>
+<div class="semana" id="s31" style="border-color:#EC489940">
+  <div class="sem-hdr" style="background:#EC489915">
+    <div>
+      <span class="sem-n" style="color:#EC4899">S31</span>
+      <span class="sem-d">12/12/26</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">7v/sem</span>
+      <span class="sem-r">R$12K-20K</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 12/12</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Dom 13/12</span><span class="shora">12:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Seg 14/12</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Ter 15/12</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Qua 16/12</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qui 17/12</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Sex 18/12</span><span class="shora">12:00</span><span class="stipo">📱</span></div></div>
+</div>
+<div class="semana" id="s32" style="border-color:#EC489940">
+  <div class="sem-hdr" style="background:#EC489915">
+    <div>
+      <span class="sem-n" style="color:#EC4899">S32</span>
+      <span class="sem-d">19/12/26</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">7v/sem</span>
+      <span class="sem-r">R$15K-25K</span>
+    </div>
+  </div>
+  <div class="marco">🎓 Curso Online</div>
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 19/12</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Dom 20/12</span><span class="shora">12:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Seg 21/12</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Ter 22/12</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Qua 23/12</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qui 24/12</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Sex 25/12</span><span class="shora">12:00</span><span class="stipo">📱</span></div></div>
+</div>
+<div class="semana" id="s33" style="border-color:#EC489940">
+  <div class="sem-hdr" style="background:#EC489915">
+    <div>
+      <span class="sem-n" style="color:#EC4899">S33</span>
+      <span class="sem-d">26/12/26</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">7v/sem</span>
+      <span class="sem-r">R$18K-30K</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 26/12</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Dom 27/12</span><span class="shora">12:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Seg 28/12</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Ter 29/12</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Qua 30/12</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qui 31/12</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Sex 01/01</span><span class="shora">12:00</span><span class="stipo">📱</span></div></div>
+</div>
+<div class="semana" id="s34" style="border-color:#EC489940">
+  <div class="sem-hdr" style="background:#EC489915">
+    <div>
+      <span class="sem-n" style="color:#EC4899">S34</span>
+      <span class="sem-d">02/01/27</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">7v/sem</span>
+      <span class="sem-r">R$20K-35K</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 02/01</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Dom 03/01</span><span class="shora">12:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Seg 04/01</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Ter 05/01</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Qua 06/01</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qui 07/01</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Sex 08/01</span><span class="shora">12:00</span><span class="stipo">📱</span></div></div>
+</div>
+<div class="semana" id="s35" style="border-color:#EC489940">
+  <div class="sem-hdr" style="background:#EC489915">
+    <div>
+      <span class="sem-n" style="color:#EC4899">S35</span>
+      <span class="sem-d">09/01/27</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">7v/sem</span>
+      <span class="sem-r">R$22K-38K</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 09/01</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Dom 10/01</span><span class="shora">12:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Seg 11/01</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Ter 12/01</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Qua 13/01</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qui 14/01</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Sex 15/01</span><span class="shora">12:00</span><span class="stipo">📱</span></div></div>
+</div>
+<div class="semana" id="s36" style="border-color:#EC489940">
+  <div class="sem-hdr" style="background:#EC489915">
+    <div>
+      <span class="sem-n" style="color:#EC4899">S36</span>
+      <span class="sem-d">16/01/27</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">7v/sem</span>
+      <span class="sem-r">R$25K-42K</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 16/01</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Dom 17/01</span><span class="shora">12:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Seg 18/01</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Ter 19/01</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Qua 20/01</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qui 21/01</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Sex 22/01</span><span class="shora">12:00</span><span class="stipo">📱</span></div></div>
+</div>
+<div class="semana" id="s37" style="border-color:#EC489940">
+  <div class="sem-hdr" style="background:#EC489915">
+    <div>
+      <span class="sem-n" style="color:#EC4899">S37</span>
+      <span class="sem-d">23/01/27</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">7v/sem</span>
+      <span class="sem-r">R$30K-50K</span>
+    </div>
+  </div>
+  <div class="marco">🚀 250K · R$50K/mês</div>
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 23/01</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Dom 24/01</span><span class="shora">12:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Seg 25/01</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Ter 26/01</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Qua 27/01</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qui 28/01</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Sex 29/01</span><span class="shora">12:00</span><span class="stipo">📱</span></div></div>
+</div>
+<div class="semana" id="s38" style="border-color:#C4B5FD40">
+  <div class="sem-hdr" style="background:#C4B5FD15">
+    <div>
+      <span class="sem-n" style="color:#C4B5FD">S38</span>
+      <span class="sem-d">30/01/27</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">7v/sem</span>
+      <span class="sem-r">R$30K+</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 30/01</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Dom 31/01</span><span class="shora">12:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Seg 01/02</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Ter 02/02</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Qua 03/02</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qui 04/02</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Sex 05/02</span><span class="shora">12:00</span><span class="stipo">📱</span></div></div>
+</div>
+<div class="semana" id="s39" style="border-color:#C4B5FD40">
+  <div class="sem-hdr" style="background:#C4B5FD15">
+    <div>
+      <span class="sem-n" style="color:#C4B5FD">S39</span>
+      <span class="sem-d">06/02/27</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">7v/sem</span>
+      <span class="sem-r">R$30K+</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 06/02</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Dom 07/02</span><span class="shora">12:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Seg 08/02</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Ter 09/02</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Qua 10/02</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qui 11/02</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Sex 12/02</span><span class="shora">12:00</span><span class="stipo">📱</span></div></div>
+</div>
+<div class="semana" id="s40" style="border-color:#C4B5FD40">
+  <div class="sem-hdr" style="background:#C4B5FD15">
+    <div>
+      <span class="sem-n" style="color:#C4B5FD">S40</span>
+      <span class="sem-d">13/02/27</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">7v/sem</span>
+      <span class="sem-r">R$30K+</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 13/02</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Dom 14/02</span><span class="shora">12:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Seg 15/02</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Ter 16/02</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Qua 17/02</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qui 18/02</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Sex 19/02</span><span class="shora">12:00</span><span class="stipo">📱</span></div></div>
+</div>
+<div class="semana" id="s41" style="border-color:#C4B5FD40">
+  <div class="sem-hdr" style="background:#C4B5FD15">
+    <div>
+      <span class="sem-n" style="color:#C4B5FD">S41</span>
+      <span class="sem-d">20/02/27</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">7v/sem</span>
+      <span class="sem-r">R$30K+</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 20/02</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Dom 21/02</span><span class="shora">12:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Seg 22/02</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Ter 23/02</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Qua 24/02</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qui 25/02</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Sex 26/02</span><span class="shora">12:00</span><span class="stipo">📱</span></div></div>
+</div>
+<div class="semana" id="s42" style="border-color:#C4B5FD40">
+  <div class="sem-hdr" style="background:#C4B5FD15">
+    <div>
+      <span class="sem-n" style="color:#C4B5FD">S42</span>
+      <span class="sem-d">27/02/27</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">7v/sem</span>
+      <span class="sem-r">R$30K+</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 27/02</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Dom 28/02</span><span class="shora">12:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Seg 01/03</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Ter 02/03</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Qua 03/03</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qui 04/03</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Sex 05/03</span><span class="shora">12:00</span><span class="stipo">📱</span></div></div>
+</div>
+<div class="semana" id="s43" style="border-color:#C4B5FD40">
+  <div class="sem-hdr" style="background:#C4B5FD15">
+    <div>
+      <span class="sem-n" style="color:#C4B5FD">S43</span>
+      <span class="sem-d">06/03/27</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">7v/sem</span>
+      <span class="sem-r">R$30K+</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 06/03</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Dom 07/03</span><span class="shora">12:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Seg 08/03</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Ter 09/03</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Qua 10/03</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qui 11/03</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Sex 12/03</span><span class="shora">12:00</span><span class="stipo">📱</span></div></div>
+</div>
+<div class="semana" id="s44" style="border-color:#C4B5FD40">
+  <div class="sem-hdr" style="background:#C4B5FD15">
+    <div>
+      <span class="sem-n" style="color:#C4B5FD">S44</span>
+      <span class="sem-d">13/03/27</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">7v/sem</span>
+      <span class="sem-r">R$30K+</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 13/03</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Dom 14/03</span><span class="shora">12:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Seg 15/03</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Ter 16/03</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Qua 17/03</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qui 18/03</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Sex 19/03</span><span class="shora">12:00</span><span class="stipo">📱</span></div></div>
+</div>
+<div class="semana" id="s45" style="border-color:#C4B5FD40">
+  <div class="sem-hdr" style="background:#C4B5FD15">
+    <div>
+      <span class="sem-n" style="color:#C4B5FD">S45</span>
+      <span class="sem-d">20/03/27</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">7v/sem</span>
+      <span class="sem-r">R$30K+</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 20/03</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Dom 21/03</span><span class="shora">12:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Seg 22/03</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Ter 23/03</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Qua 24/03</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qui 25/03</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Sex 26/03</span><span class="shora">12:00</span><span class="stipo">📱</span></div></div>
+</div>
+<div class="semana" id="s46" style="border-color:#C4B5FD40">
+  <div class="sem-hdr" style="background:#C4B5FD15">
+    <div>
+      <span class="sem-n" style="color:#C4B5FD">S46</span>
+      <span class="sem-d">27/03/27</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">7v/sem</span>
+      <span class="sem-r">R$30K+</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 27/03</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Dom 28/03</span><span class="shora">12:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Seg 29/03</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Ter 30/03</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Qua 31/03</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qui 01/04</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Sex 02/04</span><span class="shora">12:00</span><span class="stipo">📱</span></div></div>
+</div>
+<div class="semana" id="s47" style="border-color:#C4B5FD40">
+  <div class="sem-hdr" style="background:#C4B5FD15">
+    <div>
+      <span class="sem-n" style="color:#C4B5FD">S47</span>
+      <span class="sem-d">03/04/27</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">7v/sem</span>
+      <span class="sem-r">R$30K+</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 03/04</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Dom 04/04</span><span class="shora">12:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Seg 05/04</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Ter 06/04</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Qua 07/04</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qui 08/04</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Sex 09/04</span><span class="shora">12:00</span><span class="stipo">📱</span></div></div>
+</div>
+<div class="semana" id="s48" style="border-color:#C4B5FD40">
+  <div class="sem-hdr" style="background:#C4B5FD15">
+    <div>
+      <span class="sem-n" style="color:#C4B5FD">S48</span>
+      <span class="sem-d">10/04/27</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">7v/sem</span>
+      <span class="sem-r">R$30K+</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 10/04</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Dom 11/04</span><span class="shora">12:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Seg 12/04</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Ter 13/04</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Qua 14/04</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qui 15/04</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Sex 16/04</span><span class="shora">12:00</span><span class="stipo">📱</span></div></div>
+</div>
+<div class="semana" id="s49" style="border-color:#C4B5FD40">
+  <div class="sem-hdr" style="background:#C4B5FD15">
+    <div>
+      <span class="sem-n" style="color:#C4B5FD">S49</span>
+      <span class="sem-d">17/04/27</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">7v/sem</span>
+      <span class="sem-r">R$30K+</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 17/04</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Dom 18/04</span><span class="shora">12:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Seg 19/04</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Ter 20/04</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Qua 21/04</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qui 22/04</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Sex 23/04</span><span class="shora">12:00</span><span class="stipo">📱</span></div></div>
+</div>
+<div class="semana" id="s50" style="border-color:#C4B5FD40">
+  <div class="sem-hdr" style="background:#C4B5FD15">
+    <div>
+      <span class="sem-n" style="color:#C4B5FD">S50</span>
+      <span class="sem-d">24/04/27</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">7v/sem</span>
+      <span class="sem-r">R$30K+</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 24/04</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Dom 25/04</span><span class="shora">12:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Seg 26/04</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Ter 27/04</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Qua 28/04</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qui 29/04</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Sex 30/04</span><span class="shora">12:00</span><span class="stipo">📱</span></div></div>
+</div>
+<div class="semana" id="s51" style="border-color:#C4B5FD40">
+  <div class="sem-hdr" style="background:#C4B5FD15">
+    <div>
+      <span class="sem-n" style="color:#C4B5FD">S51</span>
+      <span class="sem-d">01/05/27</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">7v/sem</span>
+      <span class="sem-r">R$30K+</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 01/05</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Dom 02/05</span><span class="shora">12:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Seg 03/05</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Ter 04/05</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Qua 05/05</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qui 06/05</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Sex 07/05</span><span class="shora">12:00</span><span class="stipo">📱</span></div></div>
+</div>
+<div class="semana" id="s52" style="border-color:#C4B5FD40">
+  <div class="sem-hdr" style="background:#C4B5FD15">
+    <div>
+      <span class="sem-n" style="color:#C4B5FD">S52</span>
+      <span class="sem-d">08/05/27</span>
+    </div>
+    <div style="text-align:right">
+      <span class="sem-vpw">7v/sem</span>
+      <span class="sem-r">R$30K+</span>
+    </div>
+  </div>
+  
+  <div class="slots"><div class="slot"><span class="sdata">Sáb 08/05</span><span class="shora">18:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Dom 09/05</span><span class="shora">12:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Seg 10/05</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Ter 11/05</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Qua 12/05</span><span class="shora">12:00</span><span class="stipo">📱</span></div><div class="slot"><span class="sdata">Qui 13/05</span><span class="shora">18:00</span><span class="stipo">📹</span></div><div class="slot"><span class="sdata">Sex 14/05</span><span class="shora">12:00</span><span class="stipo">📱</span></div></div>
+</div></div>
+</div>
+
+<!-- RASTREADOR DE PUBLICAÇÕES -->
+<div id="panel-rastreador" class="panel">
+  <div style="font-size:8px;color:var(--t3);margin-bottom:10px;font-family:'DM Mono',monospace">
+    Registre manualmente após publicar cada vídeo · O Cérebro atualiza automaticamente
+  </div>
+  
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:6px;margin-bottom:14px">
+    <div style="text-align:center;padding:8px;background:var(--s1);border:1px solid var(--bd);border-radius:8px"><span style="font-size:16px;font-weight:900;color:#E11D48;display:block">0</span><span style="font-size:8px;color:var(--t3)">publicados</span></div>
+    <div style="text-align:center;padding:8px;background:var(--s1);border:1px solid var(--bd);border-radius:8px"><span style="font-size:16px;font-weight:900;color:#F59E0B;display:block">17</span><span style="font-size:8px;color:var(--t3)">agendados</span></div>
+    <div style="text-align:center;padding:8px;background:var(--s1);border:1px solid var(--bd);border-radius:8px"><span style="font-size:16px;font-weight:900;color:#10B981;display:block">0</span><span style="font-size:8px;color:var(--t3)">inscritos</span></div>
+    <div style="text-align:center;padding:8px;background:var(--s1);border:1px solid var(--bd);border-radius:8px"><span style="font-size:16px;font-weight:900;color:#C4B5FD;display:block">R$0</span><span style="font-size:8px;color:var(--t3)">AdSense/mês</span></div>
+    <div style="text-align:center;padding:8px;background:var(--s1);border:1px solid rgba(225,29,72,.2);border-radius:8px"><span style="font-size:16px;font-weight:900;color:#E11D48;display:block">37</span><span style="font-size:8px;color:var(--t3)">sem p/ R$50K</span></div>
+  </div>
+
+  <div style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--t3);margin-bottom:6px">17 VÍDEOS AGENDADOS</div>
+  <div style="display:grid;grid-template-columns:28px 70px 1fr 60px 60px 60px 80px;gap:5px;padding:4px 9px;margin-bottom:4px">
+    <span style="font-size:8px;color:var(--t3)">#</span>
+    <span style="font-size:8px;color:var(--t3)">Data</span>
+    <span style="font-size:8px;color:var(--t3)">Título</span>
+    <span style="font-size:8px;color:var(--t3);text-align:center">Views48h</span>
+    <span style="font-size:8px;color:var(--t3);text-align:center">Likes7d</span>
+    <span style="font-size:8px;color:var(--t3);text-align:center">Subs+</span>
+    <span style="font-size:8px;color:var(--t3);text-align:center">Status</span>
+  </div>
+  
+  <div class="track-row">
+  <div style="font-family:monospace;font-size:9px;font-weight:800;color:#94A3B8">1</div>
+  <div style="font-family:monospace;font-size:9px;color:#94A3B8">16/mai Sáb</div>
+  <div style="font-size:9px;font-weight:600;color:#E2E8F0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Narcisismo: 3 Sinais Que Você Está Ignorando</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center"><span class="badge-ag">agendado</span></div>
+</div><div class="track-row">
+  <div style="font-family:monospace;font-size:9px;font-weight:800;color:#94A3B8">2</div>
+  <div style="font-family:monospace;font-size:9px;color:#94A3B8">18/mai Seg</div>
+  <div style="font-size:9px;font-weight:600;color:#E2E8F0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Celular 80x/dia? Não é Vício — É Apego</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center"><span class="badge-ag">agendado</span></div>
+</div><div class="track-row">
+  <div style="font-family:monospace;font-size:9px;font-weight:800;color:#94A3B8">3</div>
+  <div style="font-family:monospace;font-size:9px;color:#94A3B8">20/mai Qua</div>
+  <div style="font-size:9px;font-weight:600;color:#E2E8F0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Gaslighting: A Manipulação Que Faz Você Duvidar</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center"><span class="badge-ag">agendado</span></div>
+</div><div class="track-row">
+  <div style="font-family:monospace;font-size:9px;font-weight:800;color:#94A3B8">4</div>
+  <div style="font-family:monospace;font-size:9px;color:#94A3B8">23/mai Sáb</div>
+  <div style="font-size:9px;font-weight:600;color:#E2E8F0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Depressão: Não Era Preguiça. Era o Cérebro</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center"><span class="badge-ag">agendado</span></div>
+</div><div class="track-row">
+  <div style="font-family:monospace;font-size:9px;font-weight:800;color:#94A3B8">5</div>
+  <div style="font-family:monospace;font-size:9px;color:#94A3B8">25/mai Seg</div>
+  <div style="font-size:9px;font-weight:600;color:#E2E8F0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Apego Ansioso: O Medo de Abandono</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center"><span class="badge-ag">agendado</span></div>
+</div><div class="track-row">
+  <div style="font-family:monospace;font-size:9px;font-weight:800;color:#94A3B8">6</div>
+  <div style="font-family:monospace;font-size:9px;color:#94A3B8">27/mai Qua</div>
+  <div style="font-size:9px;font-weight:600;color:#E2E8F0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Ansiedade: O Sinal Silencioso Que 9 em 10</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center"><span class="badge-ag">agendado</span></div>
+</div><div class="track-row">
+  <div style="font-family:monospace;font-size:9px;font-weight:800;color:#94A3B8">7</div>
+  <div style="font-family:monospace;font-size:9px;color:#94A3B8">30/mai Sáb</div>
+  <div style="font-size:9px;font-weight:600;color:#E2E8F0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Trauma: O Que o Trauma Silencioso Faz</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center"><span class="badge-ag">agendado</span></div>
+</div><div class="track-row">
+  <div style="font-family:monospace;font-size:9px;font-weight:800;color:#94A3B8">8</div>
+  <div style="font-family:monospace;font-size:9px;color:#94A3B8">01/jun Seg</div>
+  <div style="font-size:9px;font-weight:600;color:#E2E8F0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Você Sabota Tudo Antes de Ser Feliz?</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center"><span class="badge-ag">agendado</span></div>
+</div><div class="track-row">
+  <div style="font-family:monospace;font-size:9px;font-weight:800;color:#94A3B8">9</div>
+  <div style="font-family:monospace;font-size:9px;color:#94A3B8">03/jun Qua</div>
+  <div style="font-size:9px;font-weight:600;color:#E2E8F0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Perfeccionista: Medo de Ser Descoberto</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center"><span class="badge-ag">agendado</span></div>
+</div><div class="track-row">
+  <div style="font-family:monospace;font-size:9px;font-weight:800;color:#94A3B8">10</div>
+  <div style="font-family:monospace;font-size:9px;color:#94A3B8">06/jun Sáb</div>
+  <div style="font-size:9px;font-weight:600;color:#E2E8F0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Trauma de Abandono: Por Que Nunca Seguro</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center"><span class="badge-ag">agendado</span></div>
+</div><div class="track-row">
+  <div style="font-family:monospace;font-size:9px;font-weight:800;color:#94A3B8">11</div>
+  <div style="font-family:monospace;font-size:9px;color:#94A3B8">08/jun Seg</div>
+  <div style="font-size:9px;font-weight:600;color:#E2E8F0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Amor vs Necessidade — A Neurociência</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center"><span class="badge-ag">agendado</span></div>
+</div><div class="track-row">
+  <div style="font-family:monospace;font-size:9px;font-weight:800;color:#94A3B8">12</div>
+  <div style="font-family:monospace;font-size:9px;color:#94A3B8">10/jun Qua</div>
+  <div style="font-size:9px;font-weight:600;color:#E2E8F0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Relacionamento Tóxico: Os Sinais Normalizando</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center"><span class="badge-ag">agendado</span></div>
+</div><div class="track-row">
+  <div style="font-family:monospace;font-size:9px;font-weight:800;color:#94A3B8">13</div>
+  <div style="font-family:monospace;font-size:9px;color:#94A3B8">13/jun Sáb</div>
+  <div style="font-size:9px;font-weight:600;color:#E2E8F0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Negligência Emocional: O Trauma Que Não Sabe</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center"><span class="badge-ag">agendado</span></div>
+</div><div class="track-row">
+  <div style="font-family:monospace;font-size:9px;font-weight:800;color:#94A3B8">14</div>
+  <div style="font-family:monospace;font-size:9px;color:#94A3B8">15/jun Seg</div>
+  <div style="font-size:9px;font-weight:600;color:#E2E8F0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Apego Ansioso: 7 Sinais Que Você Tem</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center"><span class="badge-ag">agendado</span></div>
+</div><div class="track-row">
+  <div style="font-family:monospace;font-size:9px;font-weight:800;color:#94A3B8">15</div>
+  <div style="font-family:monospace;font-size:9px;color:#94A3B8">17/jun Qua</div>
+  <div style="font-size:9px;font-weight:600;color:#E2E8F0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Relacionamento Tóxico: A Ciência</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center"><span class="badge-ag">agendado</span></div>
+</div><div class="track-row">
+  <div style="font-family:monospace;font-size:9px;font-weight:800;color:#94A3B8">16</div>
+  <div style="font-family:monospace;font-size:9px;color:#94A3B8">20/jun Sáb</div>
+  <div style="font-size:9px;font-weight:600;color:#E2E8F0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Psicologia do Dinheiro: Por Que Foge</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center"><span class="badge-ag">agendado</span></div>
+</div><div class="track-row">
+  <div style="font-family:monospace;font-size:9px;font-weight:800;color:#94A3B8">17</div>
+  <div style="font-family:monospace;font-size:9px;color:#94A3B8">22/jun Seg</div>
+  <div style="font-size:9px;font-weight:600;color:#E2E8F0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Apego Ansioso: Medo do Abandono</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center;font-size:10px;font-weight:800;color:#94A3B8">—</div>
+  <div style="text-align:center"><span class="badge-ag">agendado</span></div>
+</div>
+
+  <div style="margin-top:12px;padding:10px 13px;background:rgba(124,58,237,.07);border:1px solid rgba(124,58,237,.18);border-radius:9px">
+    <div style="font-size:9px;font-weight:700;color:var(--m);margin-bottom:4px">🔗 Conexão com Redes Sociais</div>
+    <div style="display:grid;gap:3px">
+      <div style="font-size:9px;color:#94A3B8;display:flex;justify-content:space-between"><span>YouTube @psidanielacoelho</span><span style="color:#E11D48">❌ Token expirado → renovar oauth.html</span></div>
+      <div style="font-size:9px;color:#94A3B8;display:flex;justify-content:space-between"><span>Instagram</span><span style="color:#F59E0B">⚠️ OAuth pendente</span></div>
+      <div style="font-size:9px;color:#94A3B8;display:flex;justify-content:space-between"><span>TikTok</span><span style="color:#F59E0B">⚠️ OAuth pendente</span></div>
+      <div style="font-size:9px;color:#94A3B8;display:flex;justify-content:space-between"><span>Google Calendar</span><span style="color:#10B981">✅ Alarmes ativos (5h/2h/1h antes)</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ESTRATÉGIA R$50K -->
+<div id="panel-estrategia" class="panel">
+  <div style="font-size:8px;color:var(--t3);margin-bottom:10px">Baseado nos casos mundiais: Psych2Go (20M subs), DoctorRamani (2M), TherapyNutshell (2M), Charisma on Command (5M)</div>
+
+  <div class="strat-card" style="border-color:rgba(225,29,72,.3)">
+    <div class="strat-t">🏆 Caminho Mais Rápido para R$50K/mês — Cases Mundiais</div>
+    <div class="strat-body">
+      O canal psicologia BR com melhor RPM do mundo é o nicho de <strong>Narcisismo + Trauma + Relacionamentos</strong>.<br>
+      CPM médio do nicho: <strong>R$15-25 por 1.000 views em Longs</strong> · Shorts: R$0,03-0,08 por view.<br><br>
+      <strong>Fórmula Psych2Go:</strong> 3-4 vídeos/semana × 52 semanas × crescimento composto = 20M inscritos em 8 anos.<br>
+      <strong>Versão BR acelerada:</strong> 7 vídeos/semana (pipeline autônomo $0) a partir da semana 25 = <strong>100K em ~30 semanas</strong>.<br><br>
+      Para R$50K/mês de AdSense puro:<br>
+      → 250K subs + 3M views/mês em Longs × R$20 CPM = <strong>R$60K/mês</strong> ✅<br>
+      → Isso é alcançável na <strong>Semana 37 (janeiro/2027)</strong> com a estratégia de 7v/semana.
+    </div>
+  </div>
+
+  <div class="strat-card" style="border-color:rgba(16,185,129,.3)">
+    <div class="strat-t">📈 Os 5 Aceleradores de Receita (além do AdSense)</div>
+    <div class="strat-body">
+      <strong>1. CPM Alto desde o início:</strong> Narcisismo + Trauma + Relacionamentos têm CPM 3-5x maior que conteúdo geral. Publicar nestes temas = mais dinheiro por view.<br><br>
+      <strong>2. Longs de 8-12 min > Shorts para receita:</strong> 1M de views em Longs = R$15-20K. 1M em Shorts = R$50. Estratégia: Shorts para crescimento, Longs para dinheiro.<br><br>
+      <strong>3. Sponsor na semana 24 (30K subs):</strong> Psicologia/saúde/apps paga R$3K-12K/vídeo integrado. 2 sponsors/mês = R$8-24K/mês extra.<br><br>
+      <strong>4. Curso online na semana 32 (130K subs):</strong> 1% de conversão × R$297 × 1.300 = R$3.861 por lançamento. 2 lançamentos/ano = R$7.7K+.<br><br>
+      <strong>5. Canal de Membros na semana 34:</strong> R$14,90/mês × 1% de 150K = 1.500 membros = R$22.350/mês recorrente.
+    </div>
+  </div>
+
+  <div class="strat-card" style="border-color:rgba(124,58,237,.3)">
+    <div class="strat-t">🗓️ Linha do Tempo Financeira Real</div>
+    <div class="strat-body">
+      <div style="display:grid;gap:4px">
+        <div style="display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.05);padding-bottom:4px"><span style="color:#E2E8F0">S6 · ~Jun/2026 · 1K subs</span><span style="color:#10B981;font-weight:700">AdSense ativo · R$0-50/mês</span></div>
+        <div style="display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.05);padding-bottom:4px"><span style="color:#E2E8F0">S15 · ~Set/2026 · 10K subs</span><span style="color:#10B981;font-weight:700">R$900-1.500/mês</span></div>
+        <div style="display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.05);padding-bottom:4px"><span style="color:#E2E8F0">S24 · ~Nov/2026 · 50K subs</span><span style="color:#F59E0B;font-weight:700">R$4K-6.5K + 1º Sponsor R$3K</span></div>
+        <div style="display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.05);padding-bottom:4px"><span style="color:#E2E8F0">S30 · ~Dez/2026 · 100K subs</span><span style="color:#E11D48;font-weight:700">🏆 R$9K-15K + Botão Dourado</span></div>
+        <div style="display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.05);padding-bottom:4px"><span style="color:#E2E8F0">S32 · ~Jan/2027 · 130K subs</span><span style="color:#C4B5FD;font-weight:700">🎓 Curso + R$15K-25K/mês</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:#E2E8F0">S37 · ~Fev/2027 · 250K subs</span><span style="color:#fff;font-weight:800">🚀 R$30K-50K/mês TOTAL</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="strat-card" style="border-color:rgba(245,158,11,.3)">
+    <div class="strat-t">⚡ Regras de Ouro para Chegar Mais Rápido</div>
+    <div class="strat-body">
+      <strong>1. NUNCA publique SHORT e LONG no mesmo dia</strong> — algoritmo pune duplicidade.<br>
+      <strong>2. Primeiro 7 dias de cada vídeo são decisivos</strong> — responder 100% dos comentários nas primeiras 2h.<br>
+      <strong>3. Não use "Shorts" para monetização</strong> — dinheiro real vem de Longs 8-12min. Shorts = crescimento.<br>
+      <strong>4. RPM aumenta com qualidade da audiência</strong> — nicho psicologia BR tem audiência com renda média alta.<br>
+      <strong>5. Consistência supera frequência</strong> — publicar 3x/semana todo semana > 7x/semana por 2 semanas e parar.<br>
+      <strong>6. Sábado 18h BRT = maior alcance</strong> — horário de ouro para psicologia no Brasil (validado por analytics BR).
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+function show(p,btn){
+  document.querySelectorAll('.panel').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+  document.getElementById('panel-'+p).classList.add('on');
+  if(btn) btn.classList.add('on');
+}
+
+function filterSem(f,btn){
+  document.querySelectorAll('.fbtn').forEach(x=>x.classList.remove('on'));
+  btn.classList.add('on');
+  const sems=document.querySelectorAll('.semana');
+  sems.forEach(s=>{
+    const n=parseInt(s.id.replace('s',''));
+    if(f===0) s.style.display='';
+    else if(f===1) s.style.display=(n<=8)?'':'none';
+    else if(f===2) s.style.display=(n>=9&&n<=24)?'':'none';
+    else s.style.display=(n>=25)?'':'none';
+  });
+}
+
+// Relógio RJ em tempo real
+function updateRJ(){
+  const rj = new Date(new Date().toLocaleString('en',{timeZone:'America/Sao_Paulo'}));
+  const h=String(rj.getHours()).padStart(2,'0');
+  const m=String(rj.getMinutes()).padStart(2,'0');
+  const s=String(rj.getSeconds()).padStart(2,'0');
+  document.getElementById('rjtime').textContent=h+':'+m+':'+s;
+}
+updateRJ(); setInterval(updateRJ,1000);
+
+// Highlight semana atual
+const hoje=new Date();
+document.querySelectorAll('.semana').forEach(s=>{
+  // Marcar S1 como atual por padrão
+  if(s.id==='s1') s.style.outline='2px solid rgba(225,29,72,.6)';
+});
+</script>
+</body></html>
