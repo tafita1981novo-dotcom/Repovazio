@@ -571,7 +571,7 @@ Renovar: <a href="/oauth.html">oauth.html</a> → <a href="https://github.com/ta
 </div>
 
 <!-- MODAL -->
-<div id="modal" onclick="if(event.target===this)close()">
+<div id="modal" onclick="if(event.target===this)fecharModal()">
   <div class="mbox">
     <div class="mhdr">
       <div class="mhdr-info">
@@ -579,7 +579,7 @@ Renovar: <a href="/oauth.html">oauth.html</a> → <a href="https://github.com/ta
         <div style="font-size:14px;font-weight:800;color:#E2E8F0;line-height:1.3" id="mtitle"></div>
         <div class="mstat" id="mmeta"></div>
       </div>
-      <button class="mclose" onclick="close()">✕</button>
+      <button class="mclose" onclick="fecharModal()">✕</button>
     </div>
     <video id="mvid" controls playsinline></video>
     <div class="mftr">
@@ -600,9 +600,9 @@ Renovar: <a href="/oauth.html">oauth.html</a> → <a href="https://github.com/ta
 const VIDEOS=[{"pos": 1, "id": 683, "tipo": "SHORT", "titulo": "Narcisismo: 3 Sinais Que Voc\u00ea Est\u00e1 Ignorando Agora Mesmo", "serie": "\ud83d\udd34 Narcisismo", "ref": "28M \u00b7 Psych2Go", "dia": "S\u00e1b 18h", "playlist": "\ud83d\udd34 Narcisismo, Manipula\u00e7\u00e3o e Gaslighting", "viral": 90, "url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778680583_Narcisismo_encoberto_3_sinais__v8.mp4"}, {"pos": 2, "id": 682, "tipo": "SHORT", "titulo": "Voc\u00ea Checa o Celular 80 Vezes por Dia? N\u00e3o \u00e9 V\u00edcio \u2014 \u00c9 Apego", "serie": "\ud83d\udc9c Apego", "ref": "22M \u00b7 Psych2Go", "dia": "Seg 12h", "playlist": "\ud83d\udc9c Apego Ansioso e Medo do Abandono", "viral": 90, "url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778681220_Voc_checa_o_celular_80_vezes_a_v8.mp4"}, {"pos": 3, "id": 693, "tipo": "LONG", "titulo": "Gaslighting: A Manipula\u00e7\u00e3o Que Faz Voc\u00ea Duvidar da Sua Pr\u00f3pria Sanidade", "serie": "\ud83d\udd34 Narcisismo", "ref": "12M \u00b7 Charisma", "dia": "Qua 18h", "playlist": "\ud83d\udd34 Narcisismo, Manipula\u00e7\u00e3o e Gaslighting", "viral": 85, "url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778706024_Gaslighting_a_manipulao_invisv_v8.mp4"}, {"pos": 4, "id": 688, "tipo": "SHORT", "titulo": "Depress\u00e3o: N\u00e3o Era Pregui\u00e7a. Era o C\u00e9rebro Desligando", "serie": "\ud83d\ude14 Depress\u00e3o", "ref": "18M \u00b7 Psych2Go", "dia": "S\u00e1b 12h", "playlist": "\ud83d\ude14 Depress\u00e3o e Burnout Silenciosos", "viral": 80, "url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778680853_Rafael_no_conseguia_sair_da_ca_v8.mp4"}, {"pos": 5, "id": 692, "tipo": "LONG", "titulo": "Apego Ansioso: O Medo de Abandono Que Controla Cada Rela\u00e7\u00e3o", "serie": "\ud83d\udc9c Apego", "ref": "22M \u00b7 Psych2Go", "dia": "Seg 18h", "playlist": "\ud83d\udc9c Apego Ansioso e Medo do Abandono", "viral": 82, "url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778705685_Apego_Ansioso_o_medo_do_abando_v8.mp4"}, {"pos": 6, "id": 684, "tipo": "SHORT", "titulo": "Ansiedade: O Sinal Silencioso Que 9 em 10 Pessoas Ignoram", "serie": "\ud83d\udd35 Ansiedade", "ref": "15M \u00b7 Psych2Go", "dia": "Qua 12h", "playlist": "\ud83d\udd35 Ansiedade, P\u00e2nico e Pensamentos", "viral": 75, "url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778634218_Sofia_dormia_2_horas_por_noite_v8.mp4"}, {"pos": 7, "id": 686, "tipo": "LONG", "titulo": "Trauma: O Que o Trauma Silencioso Faz Dentro de Voc\u00ea", "serie": "\ud83d\udfe3 Trauma", "ref": "19M \u00b7 Psych2Go", "dia": "S\u00e1b 18h", "playlist": "\ud83d\udfe3 Trauma de Inf\u00e2ncia e Cura", "viral": 87, "url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778634352_O_que_o_trauma_silencioso_faz__v8.mp4"}, {"pos": 8, "id": 685, "tipo": "SHORT", "titulo": "Voc\u00ea Sabota Tudo Quando Est\u00e1 Prestes a Ser Feliz? A Ci\u00eancia Explica", "serie": "\ud83d\udc9b Autoestima", "ref": "15M \u00b7 Improvement Pill", "dia": "Seg 12h", "playlist": "\ud83d\udc9b Autoestima, Autossabotagem e Motiva\u00e7\u00e3o", "viral": 78, "url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778681009_Por_que_voc_sabota_tudo_quando_v8.mp4"}, {"pos": 9, "id": 689, "tipo": "SHORT", "titulo": "Perfeccionista N\u00e3o Tem Medo de Falhar \u2014 Tem Medo de Ser Descoberto", "serie": "\ud83d\udc9b Autoestima", "ref": "15M \u00b7 Improvement Pill", "dia": "Qua 18h", "playlist": "\ud83d\udc9b Autoestima, Autossabotagem e Motiva\u00e7\u00e3o", "viral": 76, "url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778634177_O_perfeccionista_no_tem_medo_d_v8.mp4"}, {"pos": 10, "id": 691, "tipo": "LONG", "titulo": "Trauma de Abandono: Por Que Nunca Se Sente Seguro", "serie": "\ud83d\udfe3 Trauma", "ref": "19M \u00b7 Psych2Go", "dia": "S\u00e1b 12h", "playlist": "\ud83d\udfe3 Trauma de Inf\u00e2ncia e Cura", "viral": 83, "url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778634437_Trauma_de_abandono_por_que_voc_v8.mp4"}, {"pos": 11, "id": 687, "tipo": "SHORT", "titulo": "Quando Voc\u00ea Confunde Amor Com Necessidade \u2014 A Neuroci\u00eancia Explica", "serie": "\ud83e\udd1d Relacion.", "ref": "11M \u00b7 Psych2Go", "dia": "Seg 18h", "playlist": "\ud83e\udd1d Relacionamentos T\u00f3xicos e Padr\u00f5es", "viral": 79, "url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778680994_Isabela_achava_que_era_amor__e_v8.mp4"}, {"pos": 12, "id": 695, "tipo": "LONG", "titulo": "Relacionamento T\u00f3xico: Os Sinais Que Voc\u00ea Est\u00e1 Normalizando", "serie": "\ud83e\udd1d Relacion.", "ref": "11M \u00b7 Psych2Go", "dia": "Qua 12h", "playlist": "\ud83e\udd1d Relacionamentos T\u00f3xicos e Padr\u00f5es", "viral": 81, "url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778705967_Sinais_de_um_relacionamento_tx_v8.mp4"}, {"pos": 13, "id": 694, "tipo": "LONG", "titulo": "Neglig\u00eancia Emocional: O Trauma que Voc\u00ea Nem Sabe que Tem", "serie": "\ud83d\udfe3 Trauma", "ref": "19M \u00b7 Psych2Go", "dia": "S\u00e1b 18h", "playlist": "\ud83d\udfe3 Trauma de Inf\u00e2ncia e Cura", "viral": 85, "url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778705984_Negligncia_emocional_o_trauma__v8.mp4"}, {"pos": 14, "id": 91, "tipo": "SHORT", "titulo": "Apego Ansioso: 7 Sinais Que Voc\u00ea Tem (e N\u00e3o Sabe)", "serie": "\ud83d\udc9c Apego", "ref": "22M \u00b7 Psych2Go", "dia": "Seg 12h", "playlist": "\ud83d\udc9c Apego Ansioso e Medo do Abandono", "viral": 80, "url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/v2/pipeline_91_1778565294.mp4"}, {"pos": 15, "id": 690, "tipo": "LONG", "titulo": "Relacionamento T\u00f3xico: A Ci\u00eancia Por Que Voc\u00ea Escolhe Errado", "serie": "\ud83e\udd1d Relacion.", "ref": "11M \u00b7 Psych2Go", "dia": "Qua 18h", "playlist": "\ud83e\udd1d Relacionamentos T\u00f3xicos e Padr\u00f5es", "viral": 77, "url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778634393_A_cincia_por_trs_de_escolher_s_v8.mp4"}, {"pos": 16, "id": 696, "tipo": "LONG", "titulo": "Psicologia do Dinheiro: Por Que o Dinheiro Foge de Voc\u00ea", "serie": "\ud83d\udcb0 Dinheiro", "ref": "Top Finance Psych", "dia": "S\u00e1b 12h", "playlist": "\ud83d\udcb0 Psicologia do Dinheiro e Sucesso", "viral": 73, "url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778705982_Crenas_limitantes_por_que_dinh_v8.mp4"}, {"pos": 17, "id": 76, "tipo": "LONG", "titulo": "Apego Ansioso: Medo do Abandono que Controla sua Vida", "serie": "\ud83d\udc9c Apego", "ref": "22M \u00b7 Psych2Go", "dia": "Seg 18h", "playlist": "\ud83d\udc9c Apego Ansioso e Medo do Abandono", "viral": 78, "url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/v2/pipeline_76_1778546722.mp4"}];
 let IDX=0;
 
-function playVideo(i){IDX=i;open();}
+function playVideo(i){IDX=i;abrirModal();}
 
-function open(){
+function abrirModal(){
   const v=VIDEOS[IDX];
   document.getElementById('mpos').textContent='Posição '+v.pos+' de 17 · Semana '+Math.ceil(v.pos/3)+' · '+v.dia;
   document.getElementById('mtitle').textContent=v.titulo;
@@ -622,17 +622,17 @@ function open(){
   document.body.style.overflow='hidden';
 }
 
-function close(){
+function fecharModal(){
   const v=document.getElementById('mvid');v.pause();v.src='';
   document.getElementById('modal').classList.remove('open');
   document.body.style.overflow='';
 }
 
-function nav(d){const n=IDX+d;if(n>=0&&n<VIDEOS.length){IDX=n;open();}}
+function nav(d){const n=IDX+d;if(n>=0&&n<VIDEOS.length){IDX=n;abrirModal();}}
 
 document.addEventListener('keydown',e=>{
   if(!document.getElementById('modal').classList.contains('open'))return;
-  if(e.key==='Escape')close();
+  if(e.key==="Escape")fecharModal();
   if(e.key==='ArrowRight')nav(+1);
   if(e.key==='ArrowLeft')nav(-1);
 });
