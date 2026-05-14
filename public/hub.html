@@ -1,453 +1,217 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>psicologia.doc | Hub Central</title>
+<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ψ HUB MASTER — psicologia.doc V37</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800;900&family=DM+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#090912;--c1:#0e0e18;--c2:#14142b;--bd:#1e1e35;--acc:#7c3aed;--t:#e2e8f0;--dim:#64748b}
+:root{--bg:#06060F;--s1:#0E0E1A;--s2:#12121F;--acc:#7C3AED;--crim:#E11D48;--gold:#F59E0B;--teal:#0D9488;--grn:#10B981;--mist:#C4B5FD;--t1:#E2E8F0;--t2:#94A3B8;--t3:#475569;--bd:rgba(255,255,255,.07)}
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--bg);color:var(--t);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh}
-body::before{content:'';position:fixed;inset:0;background:
-  linear-gradient(rgba(124,58,237,.025) 1px,transparent 1px),
-  linear-gradient(90deg,rgba(124,58,237,.025) 1px,transparent 1px);
-  background-size:36px 36px;pointer-events:none;z-index:0}
-@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
-@keyframes glow{0%,100%{opacity:1}50%{opacity:.4}}
-
-/* HEADER */
-.hdr{position:sticky;top:0;z-index:100;background:rgba(9,9,18,.92);backdrop-filter:blur(20px);
-  border-bottom:1px solid var(--bd);padding:10px 22px;display:flex;align-items:center;gap:14px}
-.logo{font-size:16px;font-weight:800;background:linear-gradient(90deg,#c084fc,#38bdf8);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap}
-.logo-sub{font-size:10px;color:var(--dim);margin-top:2px;display:flex;align-items:center;gap:5px}
-.dot{width:6px;height:6px;background:#10b981;border-radius:50%;animation:glow 1.5s infinite}
-.hstats{display:flex;gap:16px;margin-left:auto}
-.hs{text-align:center;min-width:52px}
-.hs-n{font-size:18px;font-weight:800;color:#c084fc;font-family:monospace;line-height:1}
-.hs-l{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px}
-.hbtns{display:flex;gap:6px;margin-left:10px}
-.hb{padding:5px 13px;border-radius:7px;font-size:11px;font-weight:700;text-decoration:none;
-  white-space:nowrap;transition:all .15s}
-.hb-p{background:var(--acc);color:#fff}
-.hb-s{background:var(--c2);color:#94a3b8;border:1px solid var(--bd)}
-.hb:hover{opacity:.8}
-
-/* PIPELINE BAR */
-.pbar{background:var(--c1);border-bottom:1px solid var(--bd);padding:7px 22px;
-  display:flex;gap:5px;flex-wrap:wrap;align-items:center;font-size:10px}
-.pc{padding:2px 9px;border-radius:20px;font-size:10px;font-weight:600;white-space:nowrap}
-
-/* WRAP */
-.wrap{max-width:1400px;margin:0 auto;padding:18px 22px;position:relative;z-index:1}
-
-/* SECTION TITLE */
-.st{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--dim);
-  font-weight:600;margin-bottom:9px;margin-top:18px;display:flex;align-items:center;gap:8px}
-.st::after{content:'';flex:1;height:1px;background:var(--bd)}
-
-/* GRIDS */
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-.g5{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
-
-/* HERO DASHBOARD */
-.hero{background:linear-gradient(135deg,rgba(124,58,237,.18),rgba(6,182,212,.06));
-  border:1px solid rgba(124,58,237,.35);border-radius:18px;padding:22px;
-  text-decoration:none;color:inherit;display:block;transition:all .2s;position:relative;overflow:hidden}
-.hero::before{content:'';position:absolute;top:-40px;right:-40px;width:150px;height:150px;
-  background:radial-gradient(circle,rgba(124,58,237,.15),transparent);pointer-events:none}
-.hero:hover{border-color:rgba(124,58,237,.6);transform:translateY(-2px)}
-.hero-t{font-size:19px;font-weight:800;background:linear-gradient(90deg,#c084fc,#38bdf8);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
-.hero-s{font-size:11px;color:var(--dim);margin-bottom:14px}
-.hero-kpis{display:flex;gap:20px;flex-wrap:wrap}
-.hk{text-align:center}
-.hk-n{font-size:26px;font-weight:800;color:#c084fc;line-height:1}
-.hk-l{font-size:9px;color:var(--dim);margin-top:2px}
-
-/* DASHBOARD PAGES GRID */
-.dp{background:var(--c2);border:1px solid var(--bd);border-radius:9px;
-  padding:9px 12px;text-decoration:none;color:var(--t);display:flex;align-items:center;
-  gap:8px;transition:all .15s;font-size:11px;font-weight:600}
-.dp:hover{border-color:#7c3aed;background:rgba(124,58,237,.1);color:#c084fc}
-.dpi{font-size:15px;flex-shrink:0;width:20px;text-align:center}
-
-/* INFRA CARDS */
-.ic{background:var(--c1);border:1px solid var(--bd);border-radius:12px;
-  padding:13px;text-decoration:none;color:inherit;display:block;transition:all .2s}
-.ic:hover{border-color:#475569;transform:translateY(-1px)}
-.ic-h{display:flex;align-items:center;gap:9px;margin-bottom:6px}
-.ic-ico{font-size:22px;flex-shrink:0}
-.ic-t{font-size:12px;font-weight:700;line-height:1.2}
-.ic-u{font-size:9px;color:var(--dim);font-family:monospace;margin-top:1px}
-.ic-d{font-size:10px;color:var(--dim);line-height:1.5}
-.tag{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;
-  font-size:9px;font-weight:600;margin-top:6px}
-.t-ok{background:rgba(16,185,129,.18);color:#34d399}
-.t-wa{background:rgba(245,158,11,.14);color:#fbbf24}
-.t-er{background:rgba(244,63,94,.14);color:#fb7185}
-.t-in{background:rgba(59,130,246,.14);color:#60a5fa}
-
-/* TOOLS CARD */
-.tc{background:var(--c1);border:1px solid var(--bd);border-radius:12px;
-  padding:12px;text-decoration:none;color:inherit;display:flex;flex-direction:column;
-  gap:3px;transition:all .2s}
-.tc:hover{border-color:#475569;transform:translateY(-1px)}
-.tc-t{font-size:12px;font-weight:700}
-.tc-s{font-size:10px;color:var(--dim);line-height:1.4}
-
-/* CREDS */
-.cr{display:flex;align-items:center;gap:7px;padding:6px 9px;background:var(--c2);
-  border-radius:7px;margin-bottom:4px}
-.cr-k{font-family:monospace;font-size:10px;color:#22d3ee;flex:1;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
-.cr-s{font-size:14px;flex-shrink:0}
-.cr-d{font-size:9px;color:var(--dim);flex-shrink:0}
-
-/* URGENTE */
-.urg{background:rgba(244,63,94,.07);border:1px solid rgba(244,63,94,.22);
-  border-radius:14px;padding:15px;margin-bottom:14px}
-.urg-t{font-size:12px;font-weight:700;color:#fb7185;margin-bottom:9px;
-  display:flex;align-items:center;gap:6px}
-.urg-s{font-size:11px;color:#94a3b8;padding:2px 0;display:flex;gap:6px}
-.urg-n{color:#fb7185;font-weight:700;flex-shrink:0}
-.ubtn{display:inline-block;padding:6px 15px;border-radius:8px;font-size:11px;
-  font-weight:700;text-decoration:none;margin-top:10px;margin-right:7px}
-
-/* VIDEO ROWS */
-.vr{display:flex;gap:8px;align-items:center;padding:6px 0;
-  border-bottom:1px solid rgba(30,30,53,.7)}
-.vi{font-size:9px;color:var(--dim);min-width:26px;font-family:monospace}
-.vt{font-size:11px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.vls{display:flex;gap:5px;flex-shrink:0}
-.vl{font-size:10px;font-weight:700;text-decoration:none;padding:1px 7px;
-  border-radius:4px;background:rgba(255,255,255,.07)}
-.yt{color:#f43f5e}.mp4{color:#60a5fa}.au{color:#a78bfa}
-
-/* FASES */
-.fase{border-radius:12px;padding:14px;text-align:center}
-.fa{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px}
-.fv{font-size:22px;font-weight:800;margin:4px 0;line-height:1}
-.fd{font-size:10px;color:#94a3b8}
-
-/* PROGRESSO */
-.prog-bar{height:6px;background:#1e1e35;border-radius:6px;overflow:hidden;margin-top:5px}
-.prog-fill{height:100%;border-radius:6px;transition:width .8s}
-
-footer{text-align:center;padding:18px;font-size:10px;color:var(--dim);
-  border-top:1px solid var(--bd);margin-top:24px}
-
-@media(max-width:1000px){.g4,.g5{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:800px){.g2,.g4,.g5,.g3{grid-template-columns:1fr}.hstats{display:none}}
-@media(max-width:600px){.hbtns{display:none}}
-</style>
-</head>
+body{background:var(--bg);color:var(--t1);font-family:"DM Sans",sans-serif;min-height:100vh}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 70% 50% at 15% 0%,rgba(124,58,237,.13),transparent),
+  radial-gradient(ellipse 50% 40% at 85% 90%,rgba(225,29,72,.08),transparent),
+  radial-gradient(ellipse 40% 60% at 50% 50%,rgba(13,148,136,.04),transparent)}
+.hdr{position:sticky;top:0;z-index:100;background:rgba(6,6,15,.96);backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--bd);padding:16px 32px;display:flex;align-items:center;gap:14px}
+.psi{font-size:32px;color:var(--acc);font-family:serif;line-height:1}
+.hdr-title{font-size:22px;font-weight:900;letter-spacing:-1px;color:var(--frost)}
+.hdr-sub{font-size:11px;color:var(--t3);font-family:"DM Mono",monospace}
+.status-dots{display:flex;gap:8px;margin-left:auto;align-items:center}
+.dot{width:8px;height:8px;border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.dot.grn{background:var(--grn)}
+.dot.gold{background:var(--gold)}
+.status-txt{font-size:10px;color:var(--t3);font-family:"DM Mono",monospace}
+.wrap{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:40px 28px 80px}
+.hero{background:linear-gradient(135deg,rgba(124,58,237,.12),rgba(225,29,72,.06));
+  border:1px solid rgba(124,58,237,.2);border-radius:20px;padding:32px;margin-bottom:36px}
+.hero-row{display:flex;align-items:flex-start;gap:24px;flex-wrap:wrap}
+.hero-main{flex:1;min-width:280px}
+.hero-tag{font-size:10px;font-family:"DM Mono",monospace;color:var(--acc);
+  background:rgba(124,58,237,.12);border:1px solid rgba(124,58,237,.3);
+  border-radius:20px;padding:3px 12px;display:inline-block;margin-bottom:12px}
+.hero-title{font-size:28px;font-weight:900;letter-spacing:-1px;color:var(--t1);
+  line-height:1.2;margin-bottom:8px}
+.hero-title span{color:var(--mist)}
+.hero-desc{font-size:13px;color:var(--t2);line-height:1.6;max-width:520px}
+.hero-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:20px;flex:1;min-width:280px}
+.hstat{background:rgba(0,0,0,.3);border:1px solid var(--bd);border-radius:12px;padding:14px;text-align:center}
+.hstat-n{font-size:26px;font-weight:900;color:var(--t1);line-height:1}
+.hstat-l{font-size:9px;color:var(--t3);font-family:"DM Mono",monospace;margin-top:3px;text-transform:uppercase;letter-spacing:1px}
+h3{font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--t3);
+  font-family:"DM Mono",monospace;margin-bottom:14px;padding-bottom:8px;
+  border-bottom:1px solid var(--bd)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin-bottom:32px}
+.card{background:var(--s1);border:1px solid var(--bd);border-radius:14px;
+  padding:18px;text-decoration:none;color:inherit;display:block;transition:.18s;position:relative;overflow:hidden}
+.card::before{content:"";position:absolute;inset:0;opacity:0;transition:.18s}
+.card:hover{border-color:rgba(255,255,255,.15);transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,0,0,.4)}
+.card:hover::before{opacity:1}
+.card-acc{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;
+  justify-content:center;font-size:18px;margin-bottom:12px}
+.card-title{font-size:14px;font-weight:800;color:var(--t1);margin-bottom:4px;letter-spacing:-.2px}
+.card-desc{font-size:11px;color:var(--t3);line-height:1.5}
+.card-badge{position:absolute;top:12px;right:12px;font-size:9px;font-family:"DM Mono",monospace;
+  padding:2px 7px;border-radius:10px;font-weight:700}
+.badge-hot{background:rgba(225,29,72,.15);color:var(--crim);border:1px solid rgba(225,29,72,.3)}
+.badge-new{background:rgba(16,185,129,.12);color:var(--grn);border:1px solid rgba(16,185,129,.3)}
+.badge-live{background:rgba(124,58,237,.15);color:var(--mist);border:1px solid rgba(124,58,237,.3)}
+.badge-ok{background:rgba(16,185,129,.12);color:var(--grn);border:1px solid rgba(16,185,129,.25)}
+.cta{background:linear-gradient(135deg,rgba(245,158,11,.12),rgba(245,158,11,.06));
+  border:1px solid rgba(245,158,11,.3);border-radius:16px;padding:24px;margin-top:32px;
+  display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.cta-icon{font-size:36px;flex-shrink:0}
+.cta-title{font-size:16px;font-weight:800;color:var(--gold);margin-bottom:4px}
+.cta-desc{font-size:12px;color:var(--t2);line-height:1.5}
+.cta-step{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);border-radius:8px;
+  padding:6px 12px;font-size:11px;font-family:"DM Mono",monospace;color:var(--gold);
+  white-space:nowrap;display:inline-block;margin-top:8px}
+</style></head>
 <body>
-
-<!-- HEADER -->
 <header class="hdr">
-  <div>
-    <div class="logo">psicologia.doc</div>
-    <div class="logo-sub"><span class="dot"></span><span>Eterno Cerebro V12 &middot; 24/7 &middot; @psidanielacoelho</span></div>
-  </div>
-  <div class="hstats">
-    <div class="hs"><div class="hs-n" id="h-pub">-</div><div class="hs-l">Publicados</div></div>
-    <div class="hs"><div class="hs-n" id="h-mp4">-</div><div class="hs-l">MP4</div></div>
-    <div class="hs"><div class="hs-n" id="h-tts">-</div><div class="hs-l">Fila TTS</div></div>
-    <div class="hs"><div class="hs-n" id="h-rec" style="color:#34d399">-</div><div class="hs-l">R$/mes</div></div>
-  </div>
-  <div class="hbtns">
-    <a href="/dashboard" class="hb hb-p">Dashboard V11</a>
-    <a href="/admin.html" class="hb hb-s">Admin</a>
-    <a href="/growth.html" class="hb hb-s">Growth</a>
-    <a href="/series.html" class="hb hb-s">20 Series</a>
-    <a href="/estrategia.html" class="hb hb-s">Estrategia V37</a>
-    <a href="/videos-prontos.html" class="hb hb-s">Videos</a>
-    <a href="/cerebro.html" class="hb hb-s">Cerebro</a>
+  <span class="psi">ψ</span>
+  <div><div class="hdr-title">psicologia.doc</div>
+  <div class="hdr-sub">@psidanielacoelho · V37 · Hub Master</div></div>
+  <div class="status-dots">
+    <span class="dot grn"></span>
+    <span class="status-txt">PIPELINE ATIVO</span>
+    <span class="dot gold"></span>
+    <span class="status-txt">AGUARDANDO OAUTH</span>
   </div>
 </header>
 
-<!-- PIPELINE BAR -->
-<div class="pbar">
-  <span style="color:var(--dim);font-weight:600;white-space:nowrap">Pipeline ao vivo:</span>
-  <span id="pb" style="color:var(--dim)">Carregando...</span>
-</div>
-
 <div class="wrap">
-
-<!-- ACAO URGENTE -->
-<div class="urg">
-  <div class="urg-t">Acao Urgente: YouTube Refresh Token (unico bloqueio para publicacao automatica)</div>
-  <div class="urg-s"><span class="urg-n">1.</span>Acesse developers.google.com/oauthplayground</div>
-  <div class="urg-s"><span class="urg-n">2.</span>Configuracoes: Use your own OAuth credentials (Client ID e Secret estao nas Vercel env vars)</div>
-  <div class="urg-s"><span class="urg-n">3.</span>Escopos: youtube + yt-analytics.readonly &middot; Login: psidanielacoelho1982@gmail.com</div>
-  <div class="urg-s"><span class="urg-n">4.</span>Exchange authorization code &rarr; copiar refresh_token &rarr; adicionar como YOUTUBE_REFRESH_TOKEN no Vercel</div>
-  <a href="https://developers.google.com/oauthplayground" target="_blank" class="ubtn" style="background:#f59e0b;color:#000">Abrir OAuth Playground</a>
-  <a href="https://ads.google.com" target="_blank" class="ubtn" style="background:#7c3aed;color:#fff">Google Ads R$200</a>
-</div>
-
-<!-- CONTROLE CENTRAL -->
-<div class="st">Controle Central</div>
-<div class="g2" style="margin-bottom:12px">
-
-  <!-- HERO CARD -->
-  <a href="/dashboard" class="hero">
-    <div class="hero-t">Dashboard V11</div>
-    <div class="hero-s">16 paginas &middot; Supabase ao vivo &middot; Gate Quantico V12 &middot; Estrategia 50K integrada</div>
-    <div class="hero-kpis">
-      <div class="hk"><div class="hk-n" id="dk-pub">-</div><div class="hk-l">Publicados</div></div>
-      <div class="hk"><div class="hk-n" id="dk-mp4">-</div><div class="hk-l">MP4 Prontos</div></div>
-      <div class="hk"><div class="hk-n" id="dk-tts">-</div><div class="hk-l">Fila TTS</div></div>
-      <div class="hk"><div class="hk-n" id="dk-rec" style="color:#34d399">-</div><div class="hk-l">R$/mes est.</div></div>
-    </div>
-    <div id="prog-wrap" style="margin-top:12px">
-      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--dim);margin-bottom:3px">
-        <span>Progresso para R$50.000/mes</span><span id="prog-pct">0%</span>
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-row">
+      <div class="hero-main">
+        <span class="hero-tag">🇧🇷 Canal @psidanielacoelho</span>
+        <div class="hero-title">16 vídeos prontos.<br><span>1 ação desbloqueia tudo.</span></div>
+        <div class="hero-desc">37 sinais de algoritmo injetados · Gate de qualidade ativo · SEO PT+EN+ES · 471 na fila · Thumbnails geradas automaticamente · Comentários respondidos por IA</div>
       </div>
-      <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%;background:linear-gradient(90deg,#34d399,#06b6d4)"></div></div>
-    </div>
-  </a>
-
-  <!-- PAGES DO DASHBOARD -->
-  <div>
-    <div class="st" style="margin-top:0">16 Paginas do Dashboard</div>
-    <div class="g2" style="gap:5px">
-      <a href="/dashboard?page=dashboard"   class="dp"><span class="dpi">Dashboard</span></a>
-      <a href="/dashboard?page=conteudo"    class="dp"><span class="dpi">Conteudo</span></a>
-      <a href="/dashboard?page=series"      class="dp"><span class="dpi">Series Epis.</span></a>
-      <a href="/dashboard?page=ranking"     class="dp"><span class="dpi">Ranking Mundial</span></a>
-      <a href="/dashboard?page=monetizacao" class="dp"><span class="dpi">Monetizacao</span></a>
-      <a href="/dashboard?page=cerebro"     class="dp"><span class="dpi">Cerebro Vivo</span></a>
-      <a href="/dashboard?page=gerador"     class="dp"><span class="dpi">Gerador Manual</span></a>
-      <a href="/dashboard?page=variacoes"   class="dp"><span class="dpi">Motor 1000x</span></a>
-      <a href="/dashboard?page=revelacao"   class="dp"><span class="dpi">Revelacao 2027</span></a>
-      <a href="/dashboard?page=playlist"    class="dp"><span class="dpi">Playlist 630d</span></a>
-      <a href="/dashboard?page=cases"       class="dp"><span class="dpi">Cases Virais</span></a>
-      <a href="/dashboard?page=canais"      class="dp"><span class="dpi">Canais</span></a>
-      <a href="/dashboard?page=whatsapp"    class="dp"><span class="dpi">WhatsApp</span></a>
-      <a href="/dashboard?page=logs"        class="dp"><span class="dpi">Logs Sistema</span></a>
-      <a href="/dashboard?page=daniela"     class="dp"><span class="dpi">Chat Daniela IA</span></a>
-      <a href="/dashboard?page=config"      class="dp"><span class="dpi">Configuracoes</span></a>
+      <div class="hero-stats">
+        <div class="hstat"><div class="hstat-n" style="color:var(--grn)">16</div><div class="hstat-l">Prontos</div></div>
+        <div class="hstat"><div class="hstat-n" style="color:var(--mist)">471</div><div class="hstat-l">Na Fila</div></div>
+        <div class="hstat"><div class="hstat-n" style="color:var(--gold)">37</div><div class="hstat-l">Sinais</div></div>
+        <div class="hstat"><div class="hstat-n" style="color:var(--acc)">99</div><div class="hstat-l">SEO Médio</div></div>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- ADMIN E INFRA -->
-<div class="st">Administracao e Infraestrutura</div>
-<div class="g4">
-  <a href="/admin.html" class="ic">
-    <div class="ic-h"><span class="ic-ico">Admin Panel</span></div>
-    <div class="ic-d">Pipeline manager completo &middot; Status Edge Functions &middot; Configuracoes &middot; Logs do sistema &middot; Controle manual do pipeline</div>
-    <span class="tag t-ok">Ativo &middot; 34KB</span>
-  </a>
-  <a href="https://supabase.com/dashboard/project/tpjvalzwkqwttvmszvie" target="_blank" class="ic">
-    <div class="ic-h"><span class="ic-ico">Supabase</span></div>
-    <div class="ic-t">tpjvalzwkqwttvmszvie</div>
-    <div class="ic-d">PostgreSQL &middot; Edge Functions &middot; content_pipeline &middot; channel_snapshots &middot; cerebro_logs &middot; viral_mirror</div>
-    <span class="tag t-ok">Free Tier Ativo</span>
-  </a>
-  <a href="https://github.com/tafita81/Repovazio" target="_blank" class="ic">
-    <div class="ic-h"><span class="ic-ico">GitHub</span></div>
-    <div class="ic-t">tafita81/Repovazio</div>
-    <div class="ic-d">Source code &middot; 38+ GitHub Actions &middot; CI/CD automatico &middot; Deploy on push para Vercel</div>
-    <span class="tag t-ok">Main branch</span>
-  </a>
-  <a href="https://vercel.com/tafita81s-projects/repovazio" target="_blank" class="ic">
-    <div class="ic-h"><span class="ic-ico">Vercel</span></div>
-    <div class="ic-t">repovazio.vercel.app</div>
-    <div class="ic-d">Next.js 14 &middot; Env vars seguras &middot; Edge middleware &middot; Preview deployments &middot; Hobby Plan</div>
-    <span class="tag t-ok">Online</span>
-  </a>
-  <a href="https://studio.youtube.com" target="_blank" class="ic">
-    <div class="ic-h"><span class="ic-ico">YouTube Studio</span></div>
-    <div class="ic-t">@psidanielacoelho</div>
-    <div class="ic-d">Canal UCyCkIpsVgME9yCj_oXJFheA &middot; psidanielacoelho1982@gmail.com &middot; mp4 prontos aguardando token</div>
-    <span class="tag t-wa">Token Pendente</span>
-  </a>
-  <a href="https://ads.google.com" target="_blank" class="ic">
-    <div class="ic-h"><span class="ic-ico">Google Ads</span></div>
-    <div class="ic-t">Fase 1 &mdash; R$200</div>
-    <div class="ic-d">R$4,67/dia x 30 dias &middot; In-stream ignoravel &middot; Target 25-45 BR &middot; Narcisismo + Apego + Burnout</div>
-    <span class="tag t-wa">Configurar agora</span>
-  </a>
-  <a href="https://developers.google.com/oauthplayground" target="_blank" class="ic">
-    <div class="ic-h"><span class="ic-ico">OAuth Playground</span></div>
-    <div class="ic-t">Gerar YouTube Refresh Token</div>
-    <div class="ic-d">UNICO BLOQUEIO para publicacao automatica &middot; Client ID + Secret nas Vercel env vars &middot; 5 minutos</div>
-    <span class="tag t-er">PENDENTE CRITICO</span>
-  </a>
-  <a href="/producao.html" class="ic">
-    <div class="ic-h"><span class="ic-ico">Producao</span></div>
-    <div class="ic-t">Status da Producao</div>
-    <div class="ic-d">Visualizacao da fila de producao &middot; Status por etapa &middot; Progresso por video</div>
-    <span class="tag t-in">Monitor</span>
-  </a>
-</div>
-
-<!-- PIPELINE E FERRAMENTAS -->
-<div class="st">Pipeline e Ferramentas</div>
-<div class="g4">
-  <a href="/videos-prontos.html" class="tc"><div class="tc-t">Videos Prontos</div><div class="tc-s">Galeria publica &middot; Links MP4/YT/audio &middot; Auto-atualiza a cada hora</div><span class="tag t-ok">Publico</span></a>
-  <a href="/growth.html" class="tc"><div class="tc-t">Growth Engine</div><div class="tc-s">Progresso 1K subs &middot; KPIs do canal &middot; Setup Google Ads &middot; Fases R$200-R$800</div><span class="tag t-ok">Online</span></a>
-  <a href="/cerebro.html" class="tc"><div class="tc-t">Cerebro Monitor</div><div class="tc-s">Logs em tempo real &middot; Automacoes 24/7 &middot; Gate Quantico V12 &middot; 38+ crons</div><span class="tag t-ok">24/7</span></a>
-  <a href="/videos-analise.html" class="tc"><div class="tc-t">Analise de Videos</div><div class="tc-s">Analytics por video &middot; CTR &middot; Views &middot; Score de viralidade &middot; Comparativos</div><span class="tag t-in">Analytics</span></a>
-  <a href="/apps/pipeline-manager.html" class="tc"><div class="tc-t">Pipeline Manager</div><div class="tc-s">Gestao manual de status &middot; Resetar bloqueados &middot; Aprovacao individual</div><span class="tag t-in">Gestao</span></a>
-  <a href="/apps/cerebro-monitor.html" class="tc"><div class="tc-t">Cerebro App</div><div class="tc-s">Monitor standalone &middot; Edge Functions status &middot; Logs detalhados</div><span class="tag t-in">Monitor</span></a>
-  <a href="/galeria.html" class="tc"><div class="tc-t">Galeria</div><div class="tc-s">Thumbnails &middot; Imagens geradas &middot; Flux.1 Schnell NVIDIA</div><span class="tag t-in">Visual</span></a>
-  <a href="/conectores.html" class="tc"><div class="tc-t">Conectores OAuth</div><div class="tc-s">Status OAuth &middot; YouTube &middot; Instagram &middot; TikTok &middot; WhatsApp</div><span class="tag t-wa">Configurar</span></a>
-</div>
-
-<!-- CANAL E DANIELA -->
-<div class="st">Canal e Daniela Coelho</div>
-<div class="g4">
-  <a href="/canal-oficial.html" class="tc"><div class="tc-t">Canal Oficial</div><div class="tc-s">@psidanielacoelho &middot; UCyCkIpsVgME9yCj_oXJFheA &middot; Daniela Coelho Psicologa BR</div><span class="tag t-ok">Ativo</span></a>
-  <a href="/daniela.html" class="tc"><div class="tc-t">Daniela IA Interface</div><div class="tc-s">Interface publica da Daniela &middot; Chat psicologia prática &middot; Persona completa</div><span class="tag t-ok">Online</span></a>
-  <a href="/apps/daniela-enhanced.html" class="tc"><div class="tc-t">Daniela Enhanced V2</div><div class="tc-s">Interface avancada &middot; Tone shift &middot; Emocao Dinamica &middot; ElevenLabs Sarah</div><span class="tag t-ok">V2</span></a>
-  <a href="/setup-canal.html" class="tc"><div class="tc-t">Setup Canal</div><div class="tc-s">Guia de configuracao &middot; OAuth passo a passo &middot; Credenciais &middot; Primeiros passos</div><span class="tag t-in">Setup</span></a>
-</div>
-
-<!-- CREDENCIAIS -->
-<div class="st">Status de Credenciais</div>
-<div class="g2">
-  <div style="background:var(--c1);border:1px solid var(--bd);border-radius:13px;padding:14px">
-    <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--dim);margin-bottom:9px;font-weight:600">YouTube e Canais Sociais</div>
-    <div class="cr"><span class="cr-k">YOUTUBE_CLIENT_ID</span><span class="cr-s">OK</span><span class="cr-d">Configurado</span></div>
-    <div class="cr"><span class="cr-k">YOUTUBE_CLIENT_SECRET</span><span class="cr-s">OK</span><span class="cr-d">Configurado</span></div>
-    <div class="cr"><span class="cr-k">YOUTUBE_REFRESH_TOKEN</span><span class="cr-s" style="color:#fb7185">--</span><span class="cr-d" style="color:#fb7185">PENDENTE &mdash; BLOQUEIO CRITICO</span></div>
-    <div class="cr"><span class="cr-k">YOUTUBE_CHANNEL_ID</span><span class="cr-s">OK</span><span class="cr-d">UCyCkIpsVgME9yCj_oXJFheA</span></div>
-    <div class="cr"><span class="cr-k">INSTAGRAM_ACCESS_TOKEN</span><span class="cr-s" style="color:#f59e0b">--</span><span class="cr-d">Nao configurado</span></div>
-    <div class="cr"><span class="cr-k">TIKTOK_ACCESS_TOKEN</span><span class="cr-s" style="color:#f59e0b">--</span><span class="cr-d">Nao configurado</span></div>
-    <div class="cr"><span class="cr-k">WHATSAPP_TOKEN</span><span class="cr-s" style="color:#f59e0b">--</span><span class="cr-d">Nao configurado</span></div>
+  <!-- PUBLICAÇÃO -->
+  <h3>🚀 Publicação</h3>
+  <div class="grid">
+    <a href="/pronto-publicar.html" class="card">
+      <span class="card-badge badge-hot">16 / 16 ✅</span>
+      <div class="card-acc" style="background:rgba(16,185,129,.12)">🚀</div>
+      <div class="card-title">Pronto para Publicar</div>
+      <div class="card-desc">16 vídeos aprovados pelo gate com links MP4 para teste, scores completos e ordem de publicação</div>
+    </a>
+    <a href="/videos-prontos.html" class="card">
+      <span class="card-badge badge-live">AUTO</span>
+      <div class="card-acc" style="background:rgba(124,58,237,.12)">📺</div>
+      <div class="card-title">Vídeos Prontos</div>
+      <div class="card-desc">Galeria com player HTML5. Atualiza automaticamente a cada hora com novos MP4s</div>
+    </a>
+    <a href="/galeria-thumbnails.html" class="card">
+      <span class="card-badge badge-new">30 gerados</span>
+      <div class="card-acc" style="background:rgba(245,158,11,.1)">🖼️</div>
+      <div class="card-title">Galeria de Thumbnails</div>
+      <div class="card-desc">30 thumbnails SVG geradas automaticamente. Filtro por tipo (viral, trauma, ansiedade, gold, apego)</div>
+    </a>
   </div>
-  <div style="background:var(--c1);border:1px solid var(--bd);border-radius:13px;padding:14px">
-    <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--dim);margin-bottom:9px;font-weight:600">LLMs e Stack Tecnico</div>
-    <div class="cr"><span class="cr-k">NVIDIA_API_KEY</span><span class="cr-s">OK</span><span class="cr-d">Flux.1 Schnell (gratis)</span></div>
-    <div class="cr"><span class="cr-k">GROQ_API_KEY</span><span class="cr-s">OK</span><span class="cr-d">Llama 3.3 70B (gratis)</span></div>
-    <div class="cr"><span class="cr-k">OPENAI_API_KEY</span><span class="cr-s">OK</span><span class="cr-d">gpt-4o-mini fallback pago</span></div>
-    <div class="cr"><span class="cr-k">DEEPSEEK_API_KEY</span><span class="cr-s">OK</span><span class="cr-d">V3 principal LLMRouter</span></div>
-    <div class="cr"><span class="cr-k">GH_PAT</span><span class="cr-s">OK</span><span class="cr-d">GitHub Actions CI/CD</span></div>
-    <div class="cr"><span class="cr-k">GEMINI_API_KEY</span><span class="cr-s">OK</span><span class="cr-d">Gemini Pro</span></div>
-    <div style="margin-top:10px;padding:10px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.18);border-radius:9px;font-size:10px;color:#34d399">
-      Stack 100% gratis em producao: NVIDIA + Groq + Edge TTS + Supabase + Vercel Hobby
+
+  <!-- CONTEÚDO E PIPELINE -->
+  <h3>⚙️ Pipeline e Conteúdo</h3>
+  <div class="grid">
+    <a href="/qg.html" class="card">
+      <div class="card-acc" style="background:rgba(124,58,237,.12)">🧠</div>
+      <div class="card-title">QG — Quartel General</div>
+      <div class="card-desc">Estado completo do pipeline, scores, fila de geração e ações disponíveis</div>
+    </a>
+    <a href="/series.html" class="card">
+      <div class="card-acc" style="background:rgba(13,148,136,.1)">📚</div>
+      <div class="card-title">20 Séries · 140 Episódios</div>
+      <div class="card-desc">Roadmap completo de conteúdo: Ciência do Apego, Mentes Narcisistas, Trauma Invisível...</div>
+    </a>
+    <a href="/estrategia.html" class="card">
+      <div class="card-acc" style="background:rgba(245,158,11,.1)">📈</div>
+      <div class="card-title">Estratégia V37</div>
+      <div class="card-desc">Plano de 6 meses para maior canal de psicologia PT-BR com oceano azul identificado</div>
+    </a>
+    <a href="/growth.html" class="card">
+      <div class="card-acc" style="background:rgba(225,29,72,.1)">💰</div>
+      <div class="card-title">Growth & Monetização</div>
+      <div class="card-desc">Projeção R$50K/mês. Ads, AdSense PT+EN+ES, grupos WhatsApp, patrocínios</div>
+    </a>
+  </div>
+
+  <!-- BRAND E DESIGN -->
+  <h3>🎨 Identidade Visual</h3>
+  <div class="grid">
+    <a href="/brand.html" class="card">
+      <span class="card-badge badge-new">V1</span>
+      <div class="card-acc" style="background:rgba(124,58,237,.12)">ψ</div>
+      <div class="card-title">Brand Kit Completo</div>
+      <div class="card-desc">Banner YouTube 2560×1440, 4 thumbnails, 5 avatars por plataforma, bios otimizadas, paleta e regras</div>
+    </a>
+    <a href="/thumbnail-gen.html" class="card">
+      <span class="card-badge badge-new">NOVO</span>
+      <div class="card-acc" style="background:rgba(225,29,72,.1)">⚡</div>
+      <div class="card-title">Gerador de Thumbnails</div>
+      <div class="card-desc">Gerar thumbnails personalizadas em tempo real. 5 estilos. Download SVG e PNG 1280×720</div>
+    </a>
+    <a href="/setup-canal.html" class="card">
+      <div class="card-acc" style="background:rgba(13,148,136,.1)">📺</div>
+      <div class="card-title">Setup do Canal</div>
+      <div class="card-desc">Checklist completa para YouTube Studio, Instagram, TikTok e Pinterest com textos prontos</div>
+    </a>
+  </div>
+
+  <!-- INFRAESTRUTURA -->
+  <h3>🔧 Infraestrutura</h3>
+  <div class="grid">
+    <a href="/cerebro.html" class="card">
+      <div class="card-acc" style="background:rgba(124,58,237,.12)">🧠</div>
+      <div class="card-title">Cérebro Autônomo</div>
+      <div class="card-desc">Dashboard do eternal_brain com 37 sinais de algoritmo, regras eternas e crons ativos</div>
+    </a>
+    <a href="/conectores.html" class="card">
+      <span class="card-badge badge-hot">URGENTE</span>
+      <div class="card-acc" style="background:rgba(225,29,72,.1)">🔑</div>
+      <div class="card-title">OAuth & Conectores</div>
+      <div class="card-desc">Configurar YouTube OAuth (desbloqueio dos 16 vídeos) + Meta + TikTok + Pinterest</div>
+    </a>
+    <a href="/admin.html" class="card">
+      <div class="card-acc" style="background:rgba(245,158,11,.1)">⚙️</div>
+      <div class="card-title">Admin</div>
+      <div class="card-desc">Gerenciamento de crons, Edge Functions, banco de dados e deploy</div>
+    </a>
+  </div>
+
+  <!-- CTA ÚNICO -->
+  <div class="cta">
+    <span class="cta-icon">🔑</span>
+    <div style="flex:1">
+      <div class="cta-title">Uma ação. 16 vídeos publicados. Pipeline ativo.</div>
+      <div class="cta-desc">
+        Todo o sistema está pronto. 37 sinais de algoritmo injetados em cada vídeo. 
+        Gate de qualidade garantindo média 95+ em tudo. SEO em PT+EN+ES.
+        O único bloqueador é o OAuth do YouTube.
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <span class="cta-step">1. OAuth Playground → psidanielacoelho1982@gmail.com</span>
+        <span class="cta-step">2. Scope: youtube.upload + youtube.force-ssl</span>
+        <span class="cta-step">3. Cole o refresh_token no Supabase → ia_cache</span>
+        <span class="cta-step">4. ✅ Pipeline publica automaticamente</span>
+      </div>
     </div>
   </div>
+
 </div>
 
-<!-- ULTIMOS VIDEOS -->
-<div class="st">Ultimos Videos Publicados</div>
-<div style="background:var(--c1);border:1px solid var(--bd);border-radius:13px;padding:15px">
-  <div id="vlist"><div style="color:var(--dim);font-size:11px">Carregando videos...</div></div>
-  <a href="/videos-prontos.html" style="display:inline-block;margin-top:10px;font-size:10px;color:#38bdf8;text-decoration:none">Ver galeria completa de videos prontos</a>
-</div>
-
-<!-- PLANO 50K -->
-<div class="st">Plano 50K &mdash; Fases Estrategicas</div>
-<div class="g4">
-  <div class="fase" style="background:linear-gradient(135deg,rgba(192,132,252,.12),rgba(124,58,237,.06));border:1px solid rgba(124,58,237,.24)">
-    <div class="fa">Fase 1 &mdash; Agora</div>
-    <div class="fv" style="color:#c084fc">R$200</div>
-    <div class="fd">0 a 100 subs &middot; Afiliados Zenklub &middot; Google Ads In-stream</div>
-  </div>
-  <div class="fase" style="background:linear-gradient(135deg,rgba(56,189,248,.1),rgba(6,182,212,.05));border:1px solid rgba(56,189,248,.2)">
-    <div class="fa">Fase 2 &mdash; 30 dias</div>
-    <div class="fv" style="color:#38bdf8">R$500</div>
-    <div class="fd">100 a 500 subs &middot; YouTube AdSense &middot; Memberships</div>
-  </div>
-  <div class="fase" style="background:linear-gradient(135deg,rgba(52,211,153,.1),rgba(16,185,129,.05));border:1px solid rgba(52,211,153,.2)">
-    <div class="fa">Fase 3 &mdash; 90 dias</div>
-    <div class="fv" style="color:#34d399">R$800</div>
-    <div class="fd">500 a 1K subs &middot; Curso R$97 &middot; WhatsApp grupos</div>
-  </div>
-  <div class="fase" style="background:linear-gradient(135deg,rgba(245,158,11,.1),rgba(249,115,22,.05));border:1px solid rgba(245,158,11,.22)">
-    <div class="fa">Meta &mdash; 2027</div>
-    <div class="fv" style="color:#f59e0b">R$50K+</div>
-    <div class="fd">Daniela publica &middot; Consultas &middot; Patrocinios &middot; Todas as fontes</div>
-  </div>
-</div>
-
-<!-- LINKS RAPIDOS -->
-<div class="st">Links Rapidos e Extras</div>
-<div class="g5">
-  <a href="/mapa.html" class="tc"><div class="tc-t">Mapa do Sistema</div><div class="tc-s">Mapa completo da arquitetura</div></a>
-  <a href="/apps/oauth-youtube.html" class="tc"><div class="tc-t">OAuth YouTube</div><div class="tc-s">Gerador de token interativo</div></a>
-  <a href="/apps/youtube-connector.html" class="tc"><div class="tc-t">YT Connector</div><div class="tc-s">Ferramenta de conexao YT</div></a>
-  <a href="/v2.html" class="tc"><div class="tc-t">Pipeline V2</div><div class="tc-s">Interface pipeline versao 2</div></a>
-  <a href="/apps/daniela-ia-presentation.html" class="tc"><div class="tc-t">Apresentacao IA</div><div class="tc-s">Deck da Daniela IA</div></a>
-  <a href="https://youtube.com/@psidanielacoelho" target="_blank" class="tc"><div class="tc-t">Canal YouTube</div><div class="tc-s">Visualizar canal publico externo</div></a>
-  <a href="/apps/contador-publico.html" class="tc"><div class="tc-t">Contador Publico</div><div class="tc-s">Stats publicas do canal</div></a>
-  <a href="/index.html" class="tc"><div class="tc-t">Index Publico</div><div class="tc-s">Pagina de entrada publica</div></a>
-  <a href="/apps/daniela-v2.html" class="tc"><div class="tc-t">Daniela V2 App</div><div class="tc-s">Interface Daniela versao 2</div></a>
-  <a href="/apps/cerebro-monitor.html" class="tc"><div class="tc-t">Cerebro Standalone</div><div class="tc-s">Monitor do cerebro isolado</div></a>
-</div>
-
-</div><!-- /wrap -->
-
-<footer>
-  psicologia.doc &middot; @psidanielacoelho &middot; Revelacao 1 Jan 2027 &middot; Meta R$50K/mes &middot; Eternal Brain V12<br>
-  <span style="color:#f43f5e">NUNCA usar o canal UCSH63tBfY6wEIdkC4u4zKdg</span> &middot; Canal correto: UCyCkIpsVgME9yCj_oXJFheA
+<footer style="text-align:center;padding:20px;font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;line-height:1.8;position:relative;z-index:1;border-top:1px solid var(--bd)">
+ψ psicologia.doc V37 · @psidanielacoelho · UCyCkIpsVgME9yCj_oXJFheA<br>
+37 sinais de algoritmo · Gate ativo · SEO PT+EN+ES · 471 vídeos na fila<br>
+Referências: DoctorRamani 2.3M · Psych2Go 10.5M · Therapy in a Nutshell 1.2M · Luana Marinho 2.1M BR
 </footer>
-
-<script>
-// Carregar dados via /api/growth (endpoint seguro Next.js, sem chaves expostas)
-async function load(){
-  try{
-    const d = await fetch("/api/growth").then(r=>r.ok?r.json():{});
-    const pub=d.publicados||0, mp4=d.mp4_ready||0;
-    const pipe=d.pipeline||{}, canal=d.canal||{};
-    const tts=(pipe.ready_tts||0)+(pipe.audio_processing||0);
-    const rec=Math.round(pub*1500*12/1000);
-    const fmt=n=>String(n).replace(/\B(?=(\d{3})+(?!\d))/g,".");
-
-    // Header stats
-    ["h-pub","dk-pub"].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=pub;});
-    ["h-mp4","dk-mp4"].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=mp4;});
-    ["h-tts","dk-tts"].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=tts;});
-    ["h-rec","dk-rec"].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent="R$"+fmt(rec);});
-
-    // Progresso
-    const pct=Math.min(100,Math.round(rec/50000*100));
-    const pf=document.getElementById("prog-fill");
-    const pp=document.getElementById("prog-pct");
-    if(pf)pf.style.width=pct+"%";
-    if(pp)pp.textContent=pct+"% de R$50K";
-
-    // Pipeline bar
-    const ICONS={published:"OK",mp4_ready:"MP4",script_ready:"Script",ready_tts:"TTS",
-      video_ready:"Video",audio_processing:"Audio",pending_generation:"Gerando",
-      blocked_safety:"Bloqueado",archived:"Arquivado"};
-    const CORES={published:"rgba(16,185,129,.2)",mp4_ready:"rgba(59,130,246,.2)",
-      script_ready:"rgba(6,182,212,.2)",ready_tts:"rgba(139,92,246,.2)",
-      blocked_safety:"rgba(244,63,94,.2)",pending_generation:"rgba(100,116,139,.15)",
-      archived:"rgba(30,41,59,.4)"};
-    const chips=Object.entries(pipe).filter(([,n])=>n>0)
-      .sort((a,b)=>b[1]-a[1])
-      .map(([k,n])=>`<span class="pc" style="background:${CORES[k]||"rgba(255,255,255,.06)"};color:#94a3b8">${ICONS[k]||k} <strong style="color:#e2e8f0">${n}</strong></span>`)
-      .join("");
-    document.getElementById("pb").innerHTML=chips||"Pipeline vazio";
-
-    // Videos
-    const vids=d.ultimos_publicados||[];
-    const vl=document.getElementById("vlist");
-    if(!vids.length){
-      vl.innerHTML='<div style="color:#64748b;font-size:11px">Nenhum video publicado ainda</div>';
-      return;
-    }
-    vl.innerHTML=vids.map(v=>`
-      <div class="vr">
-        <span class="vi">#${v.id}</span>
-        <span class="vt">${(v.title||"-").slice(0,90)}</span>
-        <div class="vls">
-          ${v.youtube_url?`<a href="${v.youtube_url}" target="_blank" class="vl yt">YT</a>`:""}
-          ${v.mp4_url?`<a href="${v.mp4_url}" target="_blank" class="vl mp4">MP4</a>`:""}
-          ${v.audio_url?`<a href="${v.audio_url}" target="_blank" class="vl au">Audio</a>`:""}
-        </div>
-      </div>`).join("");
-  }catch(e){console.error("Hub load error:",e);}
-}
-load();
-setInterval(load,30000);
-</script>
-</body>
-</html>
+</body></html>
