@@ -1,633 +1,179 @@
 <!DOCTYPE html>
 <html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ψ Brand Kit — @psidanielacoelho</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,600;0,9..40,700;0,9..40,800;0,9..40,900;1,9..40,400&family=DM+Mono:wght@400;600&family=Playfair+Display:ital,wght@0,700;0,900;1,700&display=swap" rel="stylesheet">
+<title>ψ Brand Identity — psicologia.doc · @psidanielacoelho</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800&family=DM+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
-:root{
-  --bg:#06060F;--s1:#0E0E1A;--s2:#12121F;--s3:#1a1a2e;
-  --acc:#7C3AED;--acc2:#5B21B6;--crim:#E11D48;--gold:#F59E0B;
-  --teal:#0D9488;--cyan:#38BDF8;--grn:#10B981;
-  --frost:#F0F4FF;--mist:#C4B5FD;--t1:#E2E8F0;--t2:#94A3B8;--t3:#475569;
-  --bd:rgba(255,255,255,.06);--bd2:rgba(255,255,255,.12);
-}
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--bg);color:var(--t1);font-family:'DM Sans',sans-serif;min-height:100vh}
-body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-  background:radial-gradient(ellipse 60% 40% at 20% 10%,rgba(124,58,237,.12),transparent),
-  radial-gradient(ellipse 50% 40% at 80% 80%,rgba(225,29,72,.07),transparent)}
-h2{font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--t3);font-family:'DM Mono',monospace;margin-bottom:16px}
-.hdr{position:sticky;top:0;z-index:100;background:rgba(6,6,15,.95);backdrop-filter:blur(20px);
-  border-bottom:1px solid var(--bd);padding:16px 32px;display:flex;align-items:center;gap:16px}
-.logo-txt{font-size:20px;font-weight:800;letter-spacing:-1px;color:var(--frost)}
-.logo-txt span{color:var(--mist)}
-.badge{font-size:9px;font-family:'DM Mono',monospace;background:rgba(124,58,237,.2);color:var(--mist);
-  padding:3px 10px;border-radius:20px;border:1px solid rgba(124,58,237,.3)}
-.wrap{position:relative;z-index:1;max-width:1440px;margin:0 auto;padding:40px 32px 80px}
-.section{margin-bottom:56px}
+:root{--bg:#06060F;--s1:#0E0E1A;--s2:#12121F;--bd:rgba(255,255,255,.06);--acc:#7C3AED;--mist:#C4B5FD;--gold:#F59E0B;--crim:#E11D48;--teal:#0D9488;--grn:#10B981;--frost:#F0F4FF;--t1:#E2E8F0;--t2:#94A3B8;--t3:#475569}
+*{margin:0;padding:0;box-sizing:border-box}body{background:var(--bg);color:var(--t1);font-family:'DM Sans',sans-serif;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 80% 50% at 20% -10%,rgba(124,58,237,.14),transparent),radial-gradient(ellipse 60% 40% at 85% 20%,rgba(225,29,72,.08),transparent)}
+.hdr{position:sticky;top:0;z-index:100;background:rgba(6,6,15,.92);backdrop-filter:blur(24px);border-bottom:1px solid var(--bd);padding:0 28px;height:58px;display:flex;align-items:center;gap:14px}
+.logo{font-size:22px;font-weight:800;letter-spacing:-1.5px;color:var(--frost)}.logo span{color:var(--mist)}
+.badge{font-size:9px;color:var(--gold);font-family:'DM Mono',monospace;background:rgba(245,158,11,.12);padding:3px 10px;border-radius:20px;border:1px solid rgba(245,158,11,.25);font-weight:600}
+.hnav{margin-left:auto;display:flex;gap:6px}
+.hbtn{padding:5px 14px;border-radius:8px;font-size:11px;font-weight:600;text-decoration:none;color:var(--t2);border:1px solid var(--bd);transition:.15s;background:transparent}
+.hbtn:hover{color:var(--frost);border-color:rgba(255,255,255,.1)}.hbtn.p{background:var(--acc);color:#fff;border-color:transparent}
+.wrap{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:32px 28px 80px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 
-/* BANNER YOUTUBE */
-.yt-banner-wrap{background:var(--s1);border:1px solid var(--bd);border-radius:16px;overflow:hidden}
-.yt-banner-label{padding:16px 20px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center}
-.yt-banner-label span{font-size:12px;font-weight:600;color:var(--frost)}
-.yt-banner-label small{font-size:10px;color:var(--t3);font-family:'DM Mono',monospace}
-.yt-banner-container{position:relative;width:100%;aspect-ratio:6.4/1;overflow:hidden;background:#000}
-.yt-banner-safe{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-  width:60.4%;height:100%;border:1px dashed rgba(255,255,255,.1);pointer-events:none;z-index:10}
-.yt-banner-safe::before{content:'ZONA SEGURA — TV';position:absolute;top:2px;left:4px;
-  font-size:7px;color:rgba(255,255,255,.3);font-family:'DM Mono',monospace}
-.yt-banner-safe::after{content:'↔ Mobile safe';position:absolute;bottom:2px;right:4px;
-  font-size:7px;color:rgba(255,255,255,.3);font-family:'DM Mono',monospace}
+/* HERO */
+.hero{text-align:center;margin-bottom:40px;animation:fadeUp .4s ease}
+.hero h1{font-size:clamp(32px,4vw,56px);font-weight:800;letter-spacing:-2px;color:var(--frost);margin-bottom:12px}
+.hero h1 em{font-style:normal;background:linear-gradient(90deg,#C084FC,#38BDF8);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero p{font-size:15px;color:var(--t2);max-width:600px;margin:0 auto;line-height:1.7}
 
-/* SVG Banner */
-.banner-svg{width:100%;height:100%;display:block}
+/* ARTES */
+.artes-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:40px}
+@media(max-width:768px){.artes-grid{grid-template-columns:1fr}}
+.arte{background:var(--s1);border:1px solid var(--bd);border-radius:16px;overflow:hidden;animation:fadeUp .4s ease both}
+.arte-img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:var(--s2)}
+.arte-img.sq{aspect-ratio:1/1}
+.arte-img.tall{aspect-ratio:9/16;max-height:400px;object-fit:contain;background:var(--s2)}
+.arte-info{padding:14px 16px}
+.arte-title{font-size:13px;font-weight:700;color:var(--frost);margin-bottom:4px}
+.arte-desc{font-size:11px;color:var(--t3);margin-bottom:10px;font-family:'DM Mono',monospace}
+.arte-btn{display:inline-block;padding:6px 14px;background:var(--acc);color:#fff;text-decoration:none;border-radius:8px;font-size:11px;font-weight:600;margin-right:8px}
+.arte-btn:hover{opacity:.85}.arte-btn.sec{background:rgba(255,255,255,.06);color:var(--t2)}
 
-/* THUMBNAILS */
-.thumb-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-.thumb-wrap{border-radius:10px;overflow:hidden;aspect-ratio:16/9;cursor:pointer;
-  transition:.2s;border:2px solid transparent}
-.thumb-wrap:hover{transform:scale(1.02);border-color:var(--acc)}
-.thumb-svg{width:100%;height:100%;display:block}
-.thumb-label{font-size:10px;color:var(--t3);margin-top:8px;text-align:center;font-family:'DM Mono',monospace}
+/* PALETA */
+.palette{background:var(--s1);border:1px solid var(--bd);border-radius:16px;padding:20px 24px;margin-bottom:30px}
+.sec-title{font-size:14px;font-weight:700;color:var(--frost);margin-bottom:14px}
+.colors{display:flex;gap:10px;flex-wrap:wrap}
+.color{text-align:center}
+.cbox{width:60px;height:60px;border-radius:12px;margin:0 auto 6px}
+.cname{font-size:9px;color:var(--t3);font-family:'DM Mono',monospace}
+.chex{font-size:9px;color:var(--t2);font-family:'DM Mono',monospace;font-weight:600}
 
-/* AVATAR / PROFILE */
-.avatar-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;align-items:center}
-.av-wrap{display:flex;flex-direction:column;align-items:center;gap:8px}
-.av-img{border-radius:50%;overflow:hidden}
-.av-label{font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;text-align:center}
+/* INSTRUÇÕES */
+.inst{background:linear-gradient(135deg,rgba(124,58,237,.1),rgba(91,33,182,.05));border:1px solid rgba(124,58,237,.25);border-radius:16px;padding:20px 24px;margin-bottom:20px}
+.inst h3{font-size:13px;font-weight:700;color:var(--frost);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.steps{display:flex;flex-direction:column;gap:10px}
+.step{background:rgba(255,255,255,.03);border:1px solid var(--bd);border-radius:10px;padding:12px 14px;display:flex;align-items:flex-start;gap:12px}
+.sn{font-size:16px;font-weight:800;font-family:'DM Mono',monospace;color:var(--gold);flex-shrink:0;width:22px}
+.st{font-size:12px;color:var(--t2);line-height:1.6;flex:1}
+.st strong{color:var(--frost)}
+.st a{color:var(--mist);text-decoration:none}.st a:hover{text-decoration:underline}
+.warn{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:12px 14px;font-size:12px;color:var(--gold);margin-top:10px}
 
-/* COLORS */
-.palette{display:flex;gap:8px;flex-wrap:wrap}
-.chip{width:60px;height:60px;border-radius:10px;position:relative;cursor:pointer}
-.chip-label{font-size:9px;margin-top:4px;text-align:center;font-family:'DM Mono',monospace;color:var(--t3)}
+/* REDES STATUS */
+.redes{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:30px}
+.rede{background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:14px;display:flex;align-items:center;gap:12px}
+.ri{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.rn{font-size:13px;font-weight:700;color:var(--t1)}
+.rs{font-size:9px;color:var(--t3);font-family:'DM Mono',monospace}
+.rdot{width:6px;height:6px;border-radius:50%;margin-left:auto}
+.dlive{background:var(--grn)}.dpend{background:var(--gold)}
 
-/* TYPOGRAPHY */
-.type-sample{background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:24px;margin-bottom:12px}
-.type-name{font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;margin-bottom:8px}
-
-/* DOWNLOAD */
-.dl-btn{display:inline-flex;align-items:center;gap:6px;background:rgba(124,58,237,.2);color:var(--mist);
-  border:1px solid rgba(124,58,237,.3);border-radius:8px;padding:6px 14px;font-size:11px;
-  font-weight:600;cursor:pointer;text-decoration:none;transition:.15s;margin-top:10px}
-.dl-btn:hover{background:rgba(124,58,237,.3)}
-
-/* SOCIAL BIOS */
-.bio-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-.bio-card{background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:16px}
-.bio-plat{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-.bio-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px}
-.bio-name{font-size:12px;font-weight:700;color:var(--frost)}
-.bio-txt{font-size:12px;color:var(--t2);line-height:1.6;white-space:pre-wrap;
-  background:var(--s2);border-radius:8px;padding:10px;font-family:'DM Mono',monospace;font-size:10px}
-.bio-chars{font-size:9px;color:var(--t3);margin-top:6px;font-family:'DM Mono',monospace}
-
-/* RULES */
-.rules-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.rule{background:var(--s1);border:1px solid var(--bd);border-radius:10px;padding:14px;display:flex;gap:10px}
-.rule-icon{font-size:18px;flex-shrink:0}
-.rule-txt{font-size:11px;color:var(--t2);line-height:1.5}
-.rule-txt strong{color:var(--frost);display:block;margin-bottom:3px}
-
-@media(max-width:900px){
-  .thumb-grid{grid-template-columns:1fr 1fr}
-  .avatar-grid{grid-template-columns:repeat(3,1fr)}
-  .bio-grid{grid-template-columns:1fr}
-}
-</style></head>
-<body>
+footer{text-align:center;padding:20px;font-size:10px;color:var(--t3);border-top:1px solid var(--bd);font-family:'DM Mono',monospace}
+</style></head><body>
 <header class="hdr">
-  <div class="logo-txt">ψ <span>psidanielacoelho</span></div>
-  <span class="badge">BRAND KIT V1</span>
-  <span style="margin-left:auto;font-size:10px;color:var(--t3);font-family:'DM Mono',monospace">
-    Baseado em: DoctorRamani · Psych2Go · Therapy in a Nutshell · Luana Marinho
-  </span>
+<div class="logo">ψ <span>psicologia.doc</span></div>
+<div class="badge">IDENTIDADE VISUAL</div>
+<nav class="hnav">
+<a href="/comando.html" class="hbtn">← Command Center</a>
+<a href="https://youtube.com/@psidanielacoelho" target="_blank" class="hbtn p">▶️ Canal YouTube</a>
+</nav>
 </header>
-
 <div class="wrap">
 
+<div class="hero">
+<h1>Identidade Visual<br><em>@psidanielacoelho</em></h1>
+<p>Todas as artes criadas com a paleta oficial psicologia.doc · Prontas para aplicar no YouTube e redes sociais · Geradas automaticamente</p>
+</div>
+
+<!-- STATUS REDES -->
+<div class="redes" style="margin-bottom:30px">
+<div class="rede"><div class="ri" style="background:rgba(255,0,0,.12)">▶️</div><div><div class="rn">YouTube</div><div class="rs">Banner pendente OAuth refresh</div></div><div class="rdot dpend"></div></div>
+<div class="rede"><div class="ri" style="background:rgba(225,48,108,.12)">📸</div><div><div class="rn">Instagram</div><div class="rs">Pendente OAuth Meta Business</div></div><div class="rdot dpend"></div></div>
+<div class="rede"><div class="ri" style="background:rgba(1,1,1,.3)">🎵</div><div><div class="rn">TikTok</div><div class="rs">Pendente OAuth TikTok Business</div></div><div class="rdot dpend"></div></div>
+<div class="rede"><div class="ri" style="background:rgba(230,0,35,.12)">📌</div><div><div class="rn">Pinterest</div><div class="rs">Pendente OAuth Pinterest API</div></div><div class="rdot dpend"></div></div>
+</div>
+
+<!-- ARTES -->
+<div style="font-size:14px;font-weight:700;color:var(--frost);margin-bottom:16px">🎨 Artes Geradas — Baixar e Aplicar</div>
+<div class="artes-grid">
+<div class="arte">
+<img class="arte-img" src="/brand/yt_banner.png" alt="Banner YouTube 2560x1440">
+<div class="arte-info">
+<div class="arte-title">🎬 Banner YouTube</div>
+<div class="arte-desc">2560×1440px · Zona segura 1546×423px central</div>
+<a href="/brand/yt_banner.png" download class="arte-btn">⬇ Download</a>
+<a href="https://studio.youtube.com/channel/UCyCkIpsVgME9yCj_oXJFheA/editing/images" target="_blank" class="arte-btn sec">Aplicar no YT ↗</a>
+</div>
+</div>
+<div class="arte">
+<img class="arte-img sq" src="/brand/avatar.png" alt="Avatar 800x800">
+<div class="arte-info">
+<div class="arte-title">👤 Avatar / Foto de Perfil</div>
+<div class="arte-desc">800×800px · Para todas as redes sociais</div>
+<a href="/brand/avatar.png" download class="arte-btn">⬇ Download</a>
+<a href="https://studio.youtube.com/channel/UCyCkIpsVgME9yCj_oXJFheA/editing/images" target="_blank" class="arte-btn sec">Aplicar no YT ↗</a>
+</div>
+</div>
+<div class="arte">
+<img class="arte-img sq" src="/brand/instagram_post.png" alt="Instagram 1080x1080">
+<div class="arte-info">
+<div class="arte-title">📸 Post Instagram / Pinterest</div>
+<div class="arte-desc">1080×1080px · Quadrado · Perfil e posts de apresentação</div>
+<a href="/brand/instagram_post.png" download class="arte-btn">⬇ Download</a>
+</div>
+</div>
+<div class="arte">
+<img class="arte-img" src="/brand/thumbnail_template.png" alt="Thumbnail 1280x720">
+<div class="arte-info">
+<div class="arte-title">🖼️ Template de Thumbnail</div>
+<div class="arte-desc">1280×720px · Customizar com tópico do vídeo</div>
+<a href="/brand/thumbnail_template.png" download class="arte-btn">⬇ Download</a>
+</div>
+</div>
+</div>
+
+<!-- Story separado (tall) -->
+<div class="arte" style="max-width:400px;margin:0 auto 30px">
+<img class="arte-img tall" src="/brand/story_cover.png" alt="Story 1080x1920">
+<div class="arte-info">
+<div class="arte-title">📱 Story / Reels Cover / TikTok</div>
+<div class="arte-desc">1080×1920px · Vertical · Instagram Stories, Reels, TikTok, YouTube Shorts</div>
+<a href="/brand/story_cover.png" download class="arte-btn">⬇ Download</a>
+</div>
+</div>
+
 <!-- PALETA -->
-<div class="section">
-  <h2>Paleta de Cores</h2>
-  <div class="palette">
-    <div><div class="chip" style="background:#06060F;border:1px solid var(--bd2)"></div><div class="chip-label">#06060F<br>Fundo</div></div>
-    <div><div class="chip" style="background:#7C3AED"></div><div class="chip-label">#7C3AED<br>Violeta</div></div>
-    <div><div class="chip" style="background:#5B21B6"></div><div class="chip-label">#5B21B6<br>Ametista</div></div>
-    <div><div class="chip" style="background:#E11D48"></div><div class="chip-label">#E11D48<br>Crimson</div></div>
-    <div><div class="chip" style="background:#F59E0B"></div><div class="chip-label">#F59E0B<br>Gold</div></div>
-    <div><div class="chip" style="background:#0D9488"></div><div class="chip-label">#0D9488<br>Teal</div></div>
-    <div><div class="chip" style="background:#38BDF8"></div><div class="chip-label">#38BDF8<br>Cyan</div></div>
-    <div><div class="chip" style="background:#C4B5FD"></div><div class="chip-label">#C4B5FD<br>Mist</div></div>
-    <div><div class="chip" style="background:#F0F4FF"></div><div class="chip-label">#F0F4FF<br>Frost</div></div>
-  </div>
+<div class="palette">
+<div class="sec-title">🎨 Paleta Oficial psicologia.doc</div>
+<div class="colors">
+<div class="color"><div class="cbox" style="background:#06060F;border:1px solid rgba(255,255,255,.1)"></div><div class="cname">Fundo</div><div class="chex">#06060F</div></div>
+<div class="color"><div class="cbox" style="background:#7C3AED"></div><div class="cname">Violeta</div><div class="chex">#7C3AED</div></div>
+<div class="color"><div class="cbox" style="background:#5B21B6"></div><div class="cname">Ametista</div><div class="chex">#5B21B6</div></div>
+<div class="color"><div class="cbox" style="background:#E11D48"></div><div class="cname">Crimson</div><div class="chex">#E11D48</div></div>
+<div class="color"><div class="cbox" style="background:#F59E0B"></div><div class="cname">Ouro</div><div class="chex">#F59E0B</div></div>
+<div class="color"><div class="cbox" style="background:#0D9488"></div><div class="cname">Teal</div><div class="chex">#0D9488</div></div>
+<div class="color"><div class="cbox" style="background:#C4B5FD"></div><div class="cname">Névoa</div><div class="chex">#C4B5FD</div></div>
+<div class="color"><div class="cbox" style="background:#F0F4FF;border:1px solid rgba(255,255,255,.1)"></div><div class="cname">Gelo</div><div class="chex">#F0F4FF</div></div>
+</div>
 </div>
 
-<!-- BANNER YOUTUBE -->
-<div class="section">
-  <h2>Banner YouTube — 2560×1440px</h2>
-  <div class="yt-banner-wrap">
-    <div class="yt-banner-label">
-      <span>Canal Art — @psidanielacoelho</span>
-      <small>Zona segura (TV): 2560×1440 · Mobile: 1235×338 · Desktop: 1546×423</small>
-    </div>
-    <div class="yt-banner-container">
-      <div class="yt-banner-safe"></div>
-      <svg class="banner-svg" viewBox="0 0 2560 400" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#06060F"/>
-            <stop offset="40%" style="stop-color:#0E0818"/>
-            <stop offset="100%" style="stop-color:#0A0614"/>
-          </linearGradient>
-          <linearGradient id="acc-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" style="stop-color:#7C3AED;stop-opacity:1"/>
-            <stop offset="100%" style="stop-color:#E11D48;stop-opacity:1"/>
-          </linearGradient>
-          <radialGradient id="glow1" cx="30%" cy="50%" r="40%">
-            <stop offset="0%" style="stop-color:#7C3AED;stop-opacity:0.15"/>
-            <stop offset="100%" style="stop-color:#7C3AED;stop-opacity:0"/>
-          </radialGradient>
-          <radialGradient id="glow2" cx="80%" cy="30%" r="35%">
-            <stop offset="0%" style="stop-color:#E11D48;stop-opacity:0.1"/>
-            <stop offset="100%" style="stop-color:#E11D48;stop-opacity:0"/>
-          </radialGradient>
-          <filter id="blur-sm"><feGaussianBlur stdDeviation="2"/></filter>
-        </defs>
-        <!-- Background -->
-        <rect width="2560" height="400" fill="url(#bg-grad)"/>
-        <rect width="2560" height="400" fill="url(#glow1)"/>
-        <rect width="2560" height="400" fill="url(#glow2)"/>
-        <!-- Linha decorativa topo -->
-        <rect x="0" y="0" width="2560" height="3" fill="url(#acc-grad)" opacity="0.8"/>
-        <!-- Grid sutil -->
-        <g opacity="0.04" stroke="#fff" stroke-width="0.5">
-          <line x1="0" y1="100" x2="2560" y2="100"/>
-          <line x1="0" y1="200" x2="2560" y2="200"/>
-          <line x1="0" y1="300" x2="2560" y2="300"/>
-          <line x1="640" y1="0" x2="640" y2="400"/>
-          <line x1="1280" y1="0" x2="1280" y2="400"/>
-          <line x1="1920" y1="0" x2="1920" y2="400"/>
-        </g>
-        <!-- Ψ grande decorativo esquerda -->
-        <text x="80" y="320" font-size="380" font-family="serif" fill="#7C3AED" opacity="0.06"
-          font-weight="900">ψ</text>
-        <!-- Bloco violeta acento -->
-        <rect x="650" y="80" width="8" height="240" rx="4" fill="#7C3AED" opacity="0.9"/>
-        <!-- NOME principal -->
-        <text x="690" y="178" font-size="80" font-family="'DM Sans',sans-serif" font-weight="800"
-          fill="#F0F4FF" letter-spacing="-2">Daniela Coelho</text>
-        <!-- Subtítulo -->
-        <text x="692" y="232" font-size="34" font-family="'DM Sans',sans-serif" font-weight="400"
-          fill="#94A3B8" letter-spacing="1">Psicologia · Saúde Mental · Autoconhecimento</text>
-        <!-- Handle -->
-        <text x="692" y="288" font-size="28" font-family="'DM Mono',monospace" font-weight="600"
-          fill="#7C3AED">@psidanielacoelho</text>
-        <!-- Separador -->
-        <line x1="1480" y1="100" x2="1480" y2="300" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
-        <!-- Frequência -->
-        <text x="1520" y="168" font-size="22" font-family="'DM Sans',sans-serif" font-weight="600"
-          fill="#F59E0B">📺  Novos vídeos toda semana</text>
-        <text x="1520" y="204" font-size="18" font-family="'DM Sans',sans-serif" fill="#94A3B8">
-          Apego · Narcisismo · Trauma · Ansiedade
-        </text>
-        <text x="1520" y="238" font-size="18" font-family="'DM Sans',sans-serif" fill="#94A3B8">
-          Burnout · Psicologia do Dinheiro
-        </text>
-        <!-- Ψ símbolo direita -->
-        <circle cx="2320" cy="200" r="120" fill="none" stroke="#7C3AED" stroke-width="1.5" opacity="0.2"/>
-        <circle cx="2320" cy="200" r="90" fill="rgba(124,58,237,0.08)"/>
-        <text x="2320" y="240" font-size="120" font-family="serif" font-weight="900" fill="#7C3AED"
-          opacity="0.7" text-anchor="middle">ψ</text>
-        <!-- Linha inferior -->
-        <rect x="0" y="397" width="2560" height="3" fill="url(#acc-grad)" opacity="0.4"/>
-      </svg>
-    </div>
-  </div>
-  <a class="dl-btn" href="#" id="dl-banner" onclick="downloadSVG('banner-svg-code','banner-youtube-psidanielacoelho.svg');return false">
-    ↓ Download Banner SVG (2560×1440)
-  </a>
-  <small style="display:block;margin-top:8px;font-size:10px;color:var(--t3);font-family:'DM Mono',monospace">
-    Upload em: YouTube Studio → Personalização → Arte do canal → Editar
-  </small>
+<!-- INSTRUÇÕES YOUTUBE -->
+<div class="inst">
+<h3>▶️ Como Aplicar no YouTube Studio (2 minutos)</h3>
+<div class="steps">
+<div class="step"><div class="sn">01</div><div class="st"><strong>Renovar o refresh token:</strong> Acesse <a href="https://developers.google.com/oauthplayground" target="_blank">OAuth Playground ↗</a> · Login com psidanielacoelho1982@gmail.com · Authorize: youtube, yt-analytics.readonly · Exchange code for tokens · Copiar o refresh_token</div></div>
+<div class="step"><div class="sn">02</div><div class="st"><strong>Salvar no Supabase:</strong> Ir em <a href="https://supabase.com/dashboard/project/tpjvalzwkqwttvmszvie/editor" target="_blank">SQL Editor ↗</a> → executar: UPDATE ia_cache SET value='SEU_NOVO_TOKEN' WHERE cache_key='secret:YOUTUBE_REFRESH_TOKEN';</div></div>
+<div class="step"><div class="sn">03</div><div class="st"><strong>Aplicar banner:</strong> <a href="https://studio.youtube.com/channel/UCyCkIpsVgME9yCj_oXJFheA/editing/images" target="_blank">YouTube Studio → Personalização → Identidade visual ↗</a> · Upload do banner (yt_banner.png) e foto de perfil (avatar.png)</div></div>
+<div class="step"><div class="sn">04</div><div class="st"><strong>OU aguardar:</strong> Com o refresh token renovado, o sistema aplica automaticamente via profile-optimizer-daily às 4h UTC</div></div>
+</div>
+<div class="warn">⚠️ O YOUTUBE_REFRESH_TOKEN atual está expirado. Renovação manual necessária via OAuth Playground com a conta psidanielacoelho1982@gmail.com.</div>
 </div>
 
-<!-- THUMBNAILS -->
-<div class="section">
-  <h2>Templates de Thumbnail — 1280×720px (proporção 16:9)</h2>
-  <div class="thumb-grid">
-
-    <!-- Thumbnail 1: Narcisismo/Viral (vermelho escuro) -->
-    <div>
-      <div class="thumb-wrap">
-        <svg class="thumb-svg" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="t1-bg" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style="stop-color:#1a0508"/>
-              <stop offset="100%" style="stop-color:#06060F"/>
-            </linearGradient>
-            <radialGradient id="t1-glow" cx="70%" cy="40%" r="50%">
-              <stop offset="0%" style="stop-color:#E11D48;stop-opacity:0.25"/>
-              <stop offset="100%" style="stop-color:#E11D48;stop-opacity:0"/>
-            </radialGradient>
-          </defs>
-          <rect width="1280" height="720" fill="url(#t1-bg)"/>
-          <rect width="1280" height="720" fill="url(#t1-glow)"/>
-          <!-- Barra lateral esquerda vermelha -->
-          <rect x="0" y="0" width="10" height="720" fill="#E11D48"/>
-          <!-- Área de texto esquerda -->
-          <rect x="30" y="80" width="680" height="560" fill="rgba(0,0,0,0.2)" rx="4"/>
-          <!-- Número destaque -->
-          <text x="60" y="220" font-size="180" font-family="'DM Sans',sans-serif" font-weight="900"
-            fill="#E11D48" opacity="0.15">7</text>
-          <!-- Texto principal -->
-          <text x="60" y="200" font-size="72" font-family="'DM Sans',sans-serif" font-weight="900"
-            fill="#F0F4FF" letter-spacing="-2">7 SINAIS DE</text>
-          <text x="60" y="290" font-size="72" font-family="'DM Sans',sans-serif" font-weight="900"
-            fill="#E11D48" letter-spacing="-2">NARCISISMO</text>
-          <text x="60" y="375" font-size="44" font-family="'DM Sans',sans-serif" font-weight="700"
-            fill="#F0F4FF">Você Está Ignorando</text>
-          <!-- Subtag -->
-          <rect x="60" y="430" width="300" height="42" rx="21" fill="#E11D48"/>
-          <text x="210" y="458" font-size="18" font-family="'DM Sans',sans-serif" font-weight="700"
-            fill="#fff" text-anchor="middle">e não sabe que está</text>
-          <!-- Silhueta feminina direita (placeholder) -->
-          <ellipse cx="1000" cy="500" rx="240" ry="300" fill="rgba(225,29,72,0.06)"/>
-          <ellipse cx="1000" cy="200" rx="120" ry="130" fill="rgba(225,29,72,0.08)"/>
-          <!-- ψ watermark -->
-          <text x="1200" y="690" font-size="36" font-family="serif" fill="#E11D48" opacity="0.4"
-            text-anchor="end" font-weight="900">ψ</text>
-          <!-- Handle -->
-          <text x="60" y="690" font-size="22" font-family="'DM Mono',monospace" fill="#E11D48"
-            opacity="0.6">@psidanielacoelho</text>
-        </svg>
-      </div>
-      <div class="thumb-label">🔴 VIRAL / Narcisismo<br>Crimson Dark</div>
-    </div>
-
-    <!-- Thumbnail 2: Trauma/Drama (roxo profundo) -->
-    <div>
-      <div class="thumb-wrap">
-        <svg class="thumb-svg" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="t2-bg" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style="stop-color:#0D0418"/>
-              <stop offset="100%" style="stop-color:#06060F"/>
-            </linearGradient>
-            <radialGradient id="t2-glow" cx="30%" cy="60%" r="60%">
-              <stop offset="0%" style="stop-color:#7C3AED;stop-opacity:0.3"/>
-              <stop offset="100%" style="stop-color:#7C3AED;stop-opacity:0"/>
-            </radialGradient>
-          </defs>
-          <rect width="1280" height="720" fill="url(#t2-bg)"/>
-          <rect width="1280" height="720" fill="url(#t2-glow)"/>
-          <!-- Faixa diagonal -->
-          <polygon points="0,0 400,0 0,400" fill="rgba(124,58,237,0.12)"/>
-          <!-- Linha vertical esq -->
-          <rect x="0" y="0" width="6" height="720" fill="#7C3AED"/>
-          <!-- Texto grande -->
-          <text x="60" y="220" font-size="80" font-family="'DM Sans',sans-serif" font-weight="900"
-            fill="#F0F4FF" letter-spacing="-3">TRAUMA</text>
-          <text x="60" y="315" font-size="58" font-family="'DM Sans',sans-serif" font-weight="700"
-            fill="#C4B5FD" letter-spacing="-1">INVISÍVEL</text>
-          <text x="60" y="405" font-size="38" font-family="'DM Sans',sans-serif" font-weight="400"
-            fill="#94A3B8" leading="1.4">O que ninguém te conta</text>
-          <text x="60" y="448" font-size="38" font-family="'DM Sans',sans-serif" font-weight="400"
-            fill="#94A3B8">sobre trauma oculto</text>
-          <!-- Destaque dourado -->
-          <rect x="60" y="500" width="420" height="3" fill="#F59E0B" opacity="0.8"/>
-          <text x="60" y="540" font-size="22" font-family="'DM Sans',sans-serif" font-weight="600"
-            fill="#F59E0B">Com base científica · DSM-5 · Bowlby</text>
-          <!-- Círculo decorativo direita -->
-          <circle cx="980" cy="360" r="200" fill="none" stroke="#7C3AED" stroke-width="1" opacity="0.2"/>
-          <circle cx="980" cy="360" r="150" fill="rgba(124,58,237,0.06)"/>
-          <text x="980" y="420" font-size="160" font-family="serif" fill="#7C3AED" opacity="0.3"
-            text-anchor="middle" font-weight="900">ψ</text>
-          <text x="60" y="690" font-size="22" font-family="'DM Mono',monospace" fill="#7C3AED" opacity="0.6">@psidanielacoelho</text>
-        </svg>
-      </div>
-      <div class="thumb-label">🟣 TRAUMA / Científico<br>Violet Premium</div>
-    </div>
-
-    <!-- Thumbnail 3: Ansiedade (azul escuro) -->
-    <div>
-      <div class="thumb-wrap">
-        <svg class="thumb-svg" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="t3-bg" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style="stop-color:#03111f"/>
-              <stop offset="100%" style="stop-color:#06060F"/>
-            </linearGradient>
-            <radialGradient id="t3-glow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" style="stop-color:#0D9488;stop-opacity:0.2"/>
-              <stop offset="100%" style="stop-color:#0D9488;stop-opacity:0"/>
-            </radialGradient>
-          </defs>
-          <rect width="1280" height="720" fill="url(#t3-bg)"/>
-          <rect width="1280" height="720" fill="url(#t3-glow)"/>
-          <!-- Linha topo teal -->
-          <rect x="0" y="0" width="1280" height="6" fill="#0D9488"/>
-          <!-- Background text watermark -->
-          <text x="-20" y="480" font-size="320" font-family="'DM Sans',sans-serif" font-weight="900"
-            fill="#0D9488" opacity="0.04" letter-spacing="-15">POR QUÊ</text>
-          <!-- Texto -->
-          <text x="70" y="190" font-size="52" font-family="'DM Sans',sans-serif" font-weight="700"
-            fill="#94A3B8">Por que você</text>
-          <text x="70" y="280" font-size="88" font-family="'DM Sans',sans-serif" font-weight="900"
-            fill="#0D9488" letter-spacing="-3">NÃO</text>
-          <text x="70" y="375" font-size="88" font-family="'DM Sans',sans-serif" font-weight="900"
-            fill="#F0F4FF" letter-spacing="-3">CONSEGUE</text>
-          <text x="70" y="464" font-size="62" font-family="'DM Sans',sans-serif" font-weight="700"
-            fill="#C4B5FD">parar de se preocupar</text>
-          <!-- Tag -->
-          <rect x="70" y="520" width="260" height="44" rx="22" fill="rgba(13,148,136,0.2)"
-            stroke="#0D9488" stroke-width="1"/>
-          <text x="200" y="548" font-size="18" font-family="'DM Sans',sans-serif" font-weight="600"
-            fill="#0D9488" text-anchor="middle">A ciência explica</text>
-          <text x="70" y="690" font-size="22" font-family="'DM Mono',monospace" fill="#0D9488" opacity="0.6">@psidanielacoelho</text>
-        </svg>
-      </div>
-      <div class="thumb-label">🔵 ANSIEDADE / Pergunta<br>Teal Scientific</div>
-    </div>
-
-    <!-- Thumbnail 4: Gold / Dinheiro / Premium -->
-    <div>
-      <div class="thumb-wrap">
-        <svg class="thumb-svg" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="t4-bg" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style="stop-color:#120C02"/>
-              <stop offset="100%" style="stop-color:#06060F"/>
-            </linearGradient>
-            <linearGradient id="t4-gold" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" style="stop-color:#F59E0B"/>
-              <stop offset="50%" style="stop-color:#FCD34D"/>
-              <stop offset="100%" style="stop-color:#F59E0B"/>
-            </linearGradient>
-            <radialGradient id="t4-glow" cx="50%" cy="50%" r="60%">
-              <stop offset="0%" style="stop-color:#F59E0B;stop-opacity:0.15"/>
-              <stop offset="100%" style="stop-color:#F59E0B;stop-opacity:0"/>
-            </radialGradient>
-          </defs>
-          <rect width="1280" height="720" fill="url(#t4-bg)"/>
-          <rect width="1280" height="720" fill="url(#t4-glow)"/>
-          <!-- Linha gold topo -->
-          <rect x="0" y="0" width="1280" height="5" fill="url(#t4-gold)"/>
-          <rect x="0" y="715" width="1280" height="5" fill="url(#t4-gold)"/>
-          <!-- Aspas decorativas -->
-          <text x="40" y="200" font-size="200" font-family="serif" fill="#F59E0B" opacity="0.08">"</text>
-          <!-- Texto principal -->
-          <text x="80" y="220" font-size="58" font-family="'Playfair Display',serif" font-weight="700"
-            fill="#F0F4FF" font-style="italic" letter-spacing="-1">Psicologia do</text>
-          <text x="80" y="320" font-size="96" font-family="'DM Sans',sans-serif" font-weight="900"
-            fill="url(#t4-gold)" letter-spacing="-3">DINHEIRO</text>
-          <text x="80" y="415" font-size="44" font-family="'DM Sans',sans-serif" font-weight="600"
-            fill="#F0F4FF">Por que dinheiro</text>
-          <text x="80" y="462" font-size="44" font-family="'DM Sans',sans-serif" font-weight="600"
-            fill="#F59E0B">foge de você</text>
-          <!-- Separador gold -->
-          <rect x="80" y="500" width="500" height="2" fill="url(#t4-gold)" opacity="0.5"/>
-          <text x="80" y="538" font-size="24" font-family="'DM Sans',sans-serif" fill="#94A3B8">
-            Crenças limitantes · Neurociência
-          </text>
-          <!-- Cifrão decorativo -->
-          <text x="1050" y="500" font-size="280" font-family="'DM Sans',sans-serif" font-weight="900"
-            fill="#F59E0B" opacity="0.06" text-anchor="middle">$</text>
-          <text x="80" y="690" font-size="22" font-family="'DM Mono',monospace" fill="#F59E0B" opacity="0.6">@psidanielacoelho</text>
-        </svg>
-      </div>
-      <div class="thumb-label">🟡 DINHEIRO / Premium<br>Gold Prestige</div>
-    </div>
-
-  </div>
-  <a class="dl-btn" href="#" onclick="downloadAllThumbs();return false">↓ Download Todos os Templates SVG</a>
+<!-- INSTRUÇÕES OUTRAS REDES -->
+<div class="inst">
+<h3>📡 Redes Sociais — Aplicação Automática após OAuth</h3>
+<div class="steps">
+<div class="step"><div class="sn">IG</div><div class="st"><strong>Instagram:</strong> Configurar INSTAGRAM_ACCESS_TOKEN via <a href="/conectores.html">Conectores OAuth ↗</a> → O cron profile-optimizer-daily (4h) aplica avatar e bio automaticamente</div></div>
+<div class="step"><div class="sn">TK</div><div class="st"><strong>TikTok:</strong> Configurar TIKTOK_ACCESS_TOKEN via <a href="/conectores.html">Conectores OAuth ↗</a> → Avatar, bio e link automaticamente</div></div>
+<div class="step"><div class="sn">PT</div><div class="st"><strong>Pinterest:</strong> Configurar PINTEREST_ACCESS_TOKEN via <a href="/conectores.html">Conectores OAuth ↗</a> → Perfil e boards organizados automaticamente</div></div>
+</div>
 </div>
 
-<!-- AVATAR -->
-<div class="section">
-  <h2>Avatars e Ícones — por Plataforma</h2>
-  <div class="avatar-grid">
-
-    <!-- YouTube (800x800 circular) -->
-    <div class="av-wrap">
-      <div class="av-img" style="width:120px;height:120px">
-        <svg viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg" width="120" height="120">
-          <defs>
-            <radialGradient id="av-bg" cx="40%" cy="30%" r="70%">
-              <stop offset="0%" style="stop-color:#2D1B69"/>
-              <stop offset="100%" style="stop-color:#06060F"/>
-            </radialGradient>
-            <linearGradient id="av-line" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style="stop-color:#7C3AED"/>
-              <stop offset="100%" style="stop-color:#E11D48"/>
-            </linearGradient>
-          </defs>
-          <circle cx="400" cy="400" r="400" fill="url(#av-bg)"/>
-          <!-- Ring externo -->
-          <circle cx="400" cy="400" r="370" fill="none" stroke="url(#av-line)" stroke-width="8" opacity="0.6"/>
-          <!-- Ψ símbolo central -->
-          <text x="400" y="520" font-size="380" font-family="serif" font-weight="900"
-            fill="#7C3AED" text-anchor="middle" opacity="0.9">ψ</text>
-          <!-- Texto mini -->
-          <text x="400" y="720" font-size="72" font-family="'DM Mono',monospace" font-weight="600"
-            fill="#C4B5FD" text-anchor="middle" opacity="0.8">DC</text>
-        </svg>
-      </div>
-      <div class="av-label">YouTube<br>800×800px</div>
-    </div>
-
-    <!-- Instagram (1:1) -->
-    <div class="av-wrap">
-      <div class="av-img" style="width:120px;height:120px">
-        <svg viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg" width="120" height="120">
-          <defs>
-            <linearGradient id="ig-bg" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style="stop-color:#1a0518"/>
-              <stop offset="50%" style="stop-color:#0E0818"/>
-              <stop offset="100%" style="stop-color:#06060F"/>
-            </linearGradient>
-            <linearGradient id="ig-acc" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style="stop-color:#E11D48"/>
-              <stop offset="100%" style="stop-color:#7C3AED"/>
-            </linearGradient>
-          </defs>
-          <circle cx="400" cy="400" r="400" fill="url(#ig-bg)"/>
-          <circle cx="400" cy="400" r="365" fill="none" stroke="url(#ig-acc)" stroke-width="6" opacity="0.5"/>
-          <text x="400" y="480" font-size="300" font-family="serif" font-weight="900"
-            fill="url(#ig-acc)" text-anchor="middle" opacity="0.9">ψ</text>
-          <text x="400" y="650" font-size="60" font-family="'DM Sans',sans-serif" font-weight="700"
-            fill="#F0F4FF" text-anchor="middle" letter-spacing="2">PSICOLOGIA</text>
-        </svg>
-      </div>
-      <div class="av-label">Instagram<br>320×320px</div>
-    </div>
-
-    <!-- TikTok -->
-    <div class="av-wrap">
-      <div class="av-img" style="width:120px;height:120px">
-        <svg viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg" width="120" height="120">
-          <circle cx="400" cy="400" r="400" fill="#06060F"/>
-          <circle cx="400" cy="400" r="365" fill="none" stroke="#38BDF8" stroke-width="5" opacity="0.4"/>
-          <text x="400" y="490" font-size="340" font-family="serif" font-weight="900"
-            fill="#38BDF8" text-anchor="middle" opacity="0.9">ψ</text>
-          <text x="400" y="660" font-size="58" font-family="'DM Mono',monospace" font-weight="600"
-            fill="#C4B5FD" text-anchor="middle">@DC</text>
-        </svg>
-      </div>
-      <div class="av-label">TikTok<br>200×200px</div>
-    </div>
-
-    <!-- Pinterest -->
-    <div class="av-wrap">
-      <div class="av-img" style="width:120px;height:120px">
-        <svg viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg" width="120" height="120">
-          <circle cx="400" cy="400" r="400" fill="#06060F"/>
-          <circle cx="400" cy="400" r="365" fill="none" stroke="#F59E0B" stroke-width="5" opacity="0.4"/>
-          <text x="400" y="490" font-size="340" font-family="serif" font-weight="900"
-            fill="#F59E0B" text-anchor="middle" opacity="0.9">ψ</text>
-          <text x="400" y="660" font-size="52" font-family="'DM Sans',sans-serif" font-weight="700"
-            fill="#FCD34D" text-anchor="middle">psicologia</text>
-        </svg>
-      </div>
-      <div class="av-label">Pinterest<br>165×165px</div>
-    </div>
-
-    <!-- WhatsApp -->
-    <div class="av-wrap">
-      <div class="av-img" style="width:120px;height:120px">
-        <svg viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg" width="120" height="120">
-          <circle cx="400" cy="400" r="400" fill="#06060F"/>
-          <circle cx="400" cy="400" r="365" fill="none" stroke="#10B981" stroke-width="5" opacity="0.4"/>
-          <text x="400" y="490" font-size="340" font-family="serif" font-weight="900"
-            fill="#10B981" text-anchor="middle" opacity="0.9">ψ</text>
-          <text x="400" y="650" font-size="52" font-family="'DM Sans',sans-serif" font-weight="700"
-            fill="#6EE7B7" text-anchor="middle">Daniela</text>
-        </svg>
-      </div>
-      <div class="av-label">WhatsApp<br>500×500px</div>
-    </div>
-
-  </div>
 </div>
-
-<!-- BIOS OTIMIZADAS -->
-<div class="section">
-  <h2>Bios Otimizadas por Plataforma — SEO + Hashtags</h2>
-  <div class="bio-grid">
-
-    <div class="bio-card">
-      <div class="bio-plat">
-        <div class="bio-icon" style="background:rgba(255,0,0,.12)">▶️</div>
-        <div class="bio-name">YouTube — Descrição do Canal</div>
-      </div>
-      <div class="bio-txt">Psicologia para entender quem você é.
-
-Toda semana: documentários sobre apego ansioso, narcisismo, trauma, ansiedade e relacionamentos — com base científica.
-
-📚 Séries exclusivas:
-• A Ciência do Apego
-• Mentes Narcisistas
-• Trauma Invisível
-• Ansiedade e Pânico
-• Psicologia do Dinheiro
-
-🔔 Ative o sininho para não perder nenhum episódio.
-
-📸 Instagram: @psidanielacoelho
-🎵 TikTok: @psidanielacoelho
-📌 Pinterest: @psidanielacoelho
-
-⚠️ Conteúdo educacional. Não substitui acompanhamento profissional.</div>
-      <div class="bio-chars">1.000 chars max YouTube · ✅ SEO: apego ansioso, narcisismo, trauma, ansiedade</div>
-    </div>
-
-    <div class="bio-card">
-      <div class="bio-plat">
-        <div class="bio-icon" style="background:rgba(225,48,108,.12)">📸</div>
-        <div class="bio-name">Instagram — Bio (150 chars)</div>
-      </div>
-      <div class="bio-txt">Psicologia para entender quem você é 🧠
-Apego · Trauma · Narcisismo · Ansiedade
-Novos vídeos toda semana ↓</div>
-      <div class="bio-chars">89 chars · ✅ Link na bio: youtube.com/@psidanielacoelho</div>
-    </div>
-
-    <div class="bio-card">
-      <div class="bio-plat">
-        <div class="bio-icon" style="background:rgba(0,0,0,.3)">🎵</div>
-        <div class="bio-name">TikTok — Bio (80 chars)</div>
-      </div>
-      <div class="bio-txt">Psicologia para entender quem você é 🧠
-Apego | Narcisismo | Trauma
-🔗 @psidanielacoelho no YouTube</div>
-      <div class="bio-chars">80 chars max TikTok · ✅ Menciona canal principal</div>
-    </div>
-
-    <div class="bio-card">
-      <div class="bio-plat">
-        <div class="bio-icon" style="background:rgba(230,0,35,.12)">📌</div>
-        <div class="bio-name">Pinterest — Bio + Site</div>
-      </div>
-      <div class="bio-txt">Psicologia baseada em ciência.
-Apego, Narcisismo, Trauma, Ansiedade.
-Novos vídeos toda semana.
-🔗 youtube.com/@psidanielacoelho</div>
-      <div class="bio-chars">160 chars · ✅ Site: youtube.com/@psidanielacoelho</div>
-    </div>
-
-  </div>
-</div>
-
-<!-- REGRAS DE BRAND -->
-<div class="section">
-  <h2>Regras de Identidade Visual — Permanentes</h2>
-  <div class="rules-grid">
-    <div class="rule"><span class="rule-icon">🎨</span>
-      <div class="rule-txt"><strong>Paleta obrigatória</strong>
-        Fundo sempre #06060F. Violeta #7C3AED como cor principal. Crimson #E11D48 para urgência/viral. Gold #F59E0B para premium/CTAs. Nunca fundo branco ou claro.</div></div>
-    <div class="rule"><span class="rule-icon">ψ</span>
-      <div class="rule-txt"><strong>Símbolo Ψ sempre presente</strong>
-        O símbolo Psi (ψ) é o ícone de marca. Aparece em todos os avatars, no canto das thumbnails e no banner. Fonte: serif, weight 900.</div></div>
-    <div class="rule"><span class="rule-icon">📐</span>
-      <div class="rule-txt"><strong>Thumbnails: regra dos 3</strong>
-        1. Emoção/rosto (60% do frame) · 2. Texto máximo 5 palavras em bold · 3. Cor de destaque por tema. Fundo sempre escuro.</div></div>
-    <div class="rule"><span class="rule-icon">🔤</span>
-      <div class="rule-txt"><strong>Tipografia</strong>
-        Títulos: DM Sans 800-900 · Subtítulos: DM Sans 600-700 · Corpo: Georgia · Monospace/handles: DM Mono. NUNCA Arial ou Roboto.</div></div>
-    <div class="rule"><span class="rule-icon">🎭</span>
-      <div class="rule-txt"><strong>Cor por emoção</strong>
-        Ansiedade: azul/teal #0D9488 · Narcisismo/perigo: crimson #E11D48 · Trauma: violeta #7C3AED · Esperança: verde #10B981 · Premium: gold #F59E0B</div></div>
-    <div class="rule"><span class="rule-icon">⚠️</span>
-      <div class="rule-txt"><strong>Nunca antes de jan/2027</strong>
-        Jamais usar "psicóloga", "CRP" ou "psicoterapeuta" em nenhum material visual. Usar: "Daniela Coelho | Psicologia" ou "Criadora de conteúdo de psicologia".</div></div>
-  </div>
-</div>
-
-</div><!-- /wrap -->
-
-<footer style="text-align:center;padding:20px;font-size:10px;color:var(--t3);border-top:1px solid var(--bd);font-family:'DM Mono',monospace;line-height:1.8">
-ψ psicologia.doc · Brand Kit V1 · @psidanielacoelho<br>
-Baseado em: DoctorRamani (2.3M) · Psych2Go (10.5M) · Therapy in a Nutshell · Luana Marinho (2.1M BR)<br>
-Identidade Visual: #06060F · #7C3AED · #E11D48 · #F59E0B · DM Sans + Playfair Display
-</footer>
-
-<script>
-function downloadSVG(id, filename) {
-  const svg = document.querySelector('.' + id) || document.querySelector('svg');
-  const blob = new Blob([svg.outerHTML], {type: 'image/svg+xml'});
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-  a.download = filename; a.click();
-}
-function downloadAllThumbs() {
-  const svgs = document.querySelectorAll('.thumb-svg');
-  const names = ['thumb-narcisismo-viral.svg','thumb-trauma-cientifico.svg','thumb-ansiedade-pergunta.svg','thumb-dinheiro-premium.svg'];
-  svgs.forEach((svg, i) => {
-    const blob = new Blob([svg.outerHTML], {type: 'image/svg+xml'});
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-    a.download = names[i] || 'thumb-'+i+'.svg'; a.click();
-  });
-}
-// Chip copy
-document.querySelectorAll('.chip').forEach(c => {
-  c.title = c.style.background;
-  c.onclick = () => { navigator.clipboard?.writeText(c.style.background); };
-});
-</script>
+<footer>ψ psicologia.doc · Identidade Visual @psidanielacoelho · Paleta: #06060F · #7C3AED · #E11D48 · #F59E0B · Gerado automaticamente</footer>
 </body></html>
