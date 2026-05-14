@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ψ Gerador de Thumbnails — @psidanielacoelho</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800;900&family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#06060F;--s1:#0E0E1A;--acc:#7C3AED;--crim:#E11D48;--gold:#F59E0B;--teal:#0D9488;--mist:#C4B5FD;--t1:#E2E8F0;--t2:#94A3B8;--t3:#475569;--bd:rgba(255,255,255,.07)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--t1);font-family:"DM Sans",sans-serif;min-height:100vh;display:grid;grid-template-columns:320px 1fr;height:100vh;overflow:hidden}
+.sidebar{background:var(--s1);border-right:1px solid var(--bd);padding:20px;overflow-y:auto;display:flex;flex-direction:column;gap:16px}
+.logo{font-size:18px;font-weight:800;color:var(--mist);padding-bottom:16px;border-bottom:1px solid var(--bd)}
+label{font-size:11px;color:var(--t3);font-family:"DM Mono",monospace;display:block;margin-bottom:4px}
+input,select,textarea{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--bd);border-radius:8px;padding:8px 12px;color:var(--t1);font-family:"DM Sans",sans-serif;font-size:13px;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--acc)}
+textarea{resize:vertical;min-height:80px}
+.color-chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{width:28px;height:28px;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:.15s}
+.chip.active,.chip:hover{border-color:#fff}
+.btn{width:100%;padding:10px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;border:none;transition:.15s}
+.btn-gen{background:var(--acc);color:#fff}
+.btn-gen:hover{background:#6D28D9}
+.btn-dl{background:rgba(124,58,237,.15);color:var(--mist);border:1px solid rgba(124,58,237,.3);margin-top:8px}
+.btn-dl:hover{background:rgba(124,58,237,.3)}
+.preview{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;gap:16px;overflow:auto}
+.canvas-wrap{width:100%;max-width:720px;aspect-ratio:16/9;position:relative;border-radius:12px;overflow:hidden;box-shadow:0 0 0 1px rgba(255,255,255,.08),0 24px 80px rgba(0,0,0,.5)}
+#thumbCanvas{width:100%;height:100%;display:block}
+.thumb-info{font-size:11px;color:var(--t3);font-family:"DM Mono",monospace;text-align:center}
+.sep{height:1px;background:var(--bd)}
+</style>
+</head><body>
+
+<div class="sidebar">
+  <div class="logo">ψ Thumbnail Gen</div>
+  
+  <div>
+    <label>TIPO DE THUMBNAIL</label>
+    <select id="tipo" onchange="render()">
+      <option value="viral">🔴 Viral — Narcisismo/Perigo</option>
+      <option value="trauma">🟣 Trauma/Científico</option>
+      <option value="ansiedade">🔵 Ansiedade/Pergunta</option>
+      <option value="gold">🟡 Dinheiro/Premium</option>
+      <option value="apego">💜 Apego/Emocional</option>
+    </select>
+  </div>
+
+  <div>
+    <label>LINHA 1 (título principal)</label>
+    <input id="l1" value="7 SINAIS DE" oninput="render()">
+  </div>
+  <div>
+    <label>LINHA 2 (destaque em cor)</label>
+    <input id="l2" value="NARCISISMO" oninput="render()">
+  </div>
+  <div>
+    <label>LINHA 3 (subtítulo)</label>
+    <input id="l3" value="Que Você Está Ignorando" oninput="render()">
+  </div>
+  <div>
+    <label>NÚMERO/BADGE (opcional)</label>
+    <input id="badge" value="7" oninput="render()">
+  </div>
+  <div>
+    <label>TAG INFERIOR (opcional)</label>
+    <input id="tag" value="e não sabe que está" oninput="render()">
+  </div>
+
+  <div class="sep"></div>
+
+  <div>
+    <label>TAMANHO FONTE LINHA 1</label>
+    <input type="range" id="fs1" min="40" max="100" value="72" oninput="document.getElementById('fs1v').textContent=this.value+'px';render()">
+    <span id="fs1v" style="font-size:10px;color:var(--t3)">72px</span>
+  </div>
+  <div>
+    <label>TAMANHO FONTE LINHA 2</label>
+    <input type="range" id="fs2" min="50" max="120" value="90" oninput="document.getElementById('fs2v').textContent=this.value+'px';render()">
+    <span id="fs2v" style="font-size:10px;color:var(--t3)">90px</span>
+  </div>
+
+  <div class="sep"></div>
+
+  <button class="btn btn-gen" onclick="render()">⚡ Gerar Thumbnail</button>
+  <button class="btn btn-dl" onclick="download()">↓ Download SVG (1280×720)</button>
+  <button class="btn btn-dl" onclick="downloadPNG()">↓ Download PNG (1280×720)</button>
+</div>
+
+<div class="preview">
+  <div class="canvas-wrap">
+    <svg id="thumbCanvas" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <div class="thumb-info">1280×720px · 16:9 · Pronto para YouTube, Instagram Reels, TikTok</div>
+</div>
+
+<script>
+const TIPOS = {
+  viral: {bg1:"#1a0508",bg2:"#06060F",glow:"#E11D48",accent:"#E11D48",line2:"#E11D48",barColor:"#E11D48"},
+  trauma: {bg1:"#0D0418",bg2:"#06060F",glow:"#7C3AED",accent:"#7C3AED",line2:"#C4B5FD",barColor:"#7C3AED"},
+  ansiedade: {bg1:"#03111f",bg2:"#06060F",glow:"#0D9488",accent:"#0D9488",line2:"#0D9488",barColor:"#0D9488"},
+  gold: {bg1:"#120C02",bg2:"#06060F",glow:"#F59E0B",accent:"#F59E0B",line2:"#F59E0B",barColor:"#F59E0B"},
+  apego: {bg1:"#0a0418",bg2:"#06060F",glow:"#7C3AED",accent:"#C4B5FD",line2:"#E11D48",barColor:"#7C3AED"}
+};
+
+function render(){
+  const tipo = TIPOS[document.getElementById("tipo").value];
+  const l1 = document.getElementById("l1").value;
+  const l2 = document.getElementById("l2").value;
+  const l3 = document.getElementById("l3").value;
+  const badge = document.getElementById("badge").value;
+  const tag = document.getElementById("tag").value;
+  const fs1 = document.getElementById("fs1").value;
+  const fs2 = document.getElementById("fs2").value;
+
+  const svg = document.getElementById("thumbCanvas");
+  svg.innerHTML = `
+    <defs>
+      <linearGradient id="tbg" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style="stop-color:${tipo.bg1}"/>
+        <stop offset="100%" style="stop-color:${tipo.bg2}"/>
+      </linearGradient>
+      <radialGradient id="tglow" cx="70%" cy="40%" r="55%">
+        <stop offset="0%" style="stop-color:${tipo.glow};stop-opacity:0.22"/>
+        <stop offset="100%" style="stop-color:${tipo.glow};stop-opacity:0"/>
+      </radialGradient>
+      <linearGradient id="tbar" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" style="stop-color:${tipo.barColor};stop-opacity:1"/>
+        <stop offset="100%" style="stop-color:${tipo.barColor};stop-opacity:.4"/>
+      </linearGradient>
+    </defs>
+    <rect width="1280" height="720" fill="url(#tbg)"/>
+    <rect width="1280" height="720" fill="url(#tglow)"/>
+    <rect x="0" y="0" width="8" height="720" fill="url(#tbar)"/>
+    ${badge ? `<text x="70" y="300" font-size="280" font-family="DM Sans,sans-serif" font-weight="900" fill="${tipo.accent}" opacity="0.06">${badge}</text>` : ""}
+    <text x="60" y="${badge ? 190 : 210}" font-size="${fs1}" font-family="DM Sans,sans-serif" font-weight="900" fill="#F0F4FF" letter-spacing="-2">${l1}</text>
+    <text x="60" y="${badge ? 300 : 310}" font-size="${fs2}" font-family="DM Sans,sans-serif" font-weight="900" fill="${tipo.line2}" letter-spacing="-3">${l2}</text>
+    ${l3 ? `<text x="60" y="${badge ? 380 : 390}" font-size="44" font-family="DM Sans,sans-serif" font-weight="700" fill="#F0F4FF">${l3}</text>` : ""}
+    ${tag ? `<rect x="60" y="${badge ? 430 : 440}" width="${Math.max(200, tag.length*14+40)}" height="44" rx="22" fill="${tipo.accent}"/>
+    <text x="${60 + Math.max(200, tag.length*14+40)/2}" y="${badge ? 458 : 468}" font-size="18" font-family="DM Sans,sans-serif" font-weight="700" fill="#fff" text-anchor="middle">${tag}</text>` : ""}
+    <circle cx="1000" cy="360" r="200" fill="none" stroke="${tipo.accent}" stroke-width="1" opacity="0.15"/>
+    <text x="1000" y="430" font-size="200" font-family="serif" font-weight="900" fill="${tipo.accent}" opacity="0.12" text-anchor="middle">ψ</text>
+    <text x="60" y="695" font-size="22" font-family="DM Mono,monospace" fill="${tipo.accent}" opacity="0.55">@psidanielacoelho</text>
+  `;
+}
+
+function getSVGStr(){
+  const svg = document.getElementById("thumbCanvas");
+  const ns = "http://www.w3.org/2000/svg";
+  const clone = svg.cloneNode(true);
+  clone.setAttribute("xmlns", ns);
+  clone.setAttribute("width", "1280");
+  clone.setAttribute("height", "720");
+  return '<?xml version="1.0" encoding="UTF-8"?>' + clone.outerHTML;
+}
+
+function download(){
+  const a = document.createElement("a");
+  a.href = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(getSVGStr());
+  const l2 = document.getElementById("l2").value.replace(/\s+/g,"-").toLowerCase();
+  a.download = `thumb-${l2}-psidanielacoelho.svg`;
+  a.click();
+}
+
+function downloadPNG(){
+  const svg = document.getElementById("thumbCanvas");
+  const data = new XMLSerializer().serializeToString(svg);
+  const canvas = document.createElement("canvas");
+  canvas.width = 1280; canvas.height = 720;
+  const ctx = canvas.getContext("2d");
+  const img = new Image();
+  img.onload = () => { ctx.drawImage(img, 0, 0, 1280, 720);
+    const a = document.createElement("a");
+    const l2 = document.getElementById("l2").value.replace(/\s+/g,"-").toLowerCase();
+    a.download = `thumb-${l2}-psidanielacoelho.png`;
+    a.href = canvas.toDataURL("image/png"); a.click();
+  };
+  img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(data);
+}
+
+render();
+</script>
+</body></html>
