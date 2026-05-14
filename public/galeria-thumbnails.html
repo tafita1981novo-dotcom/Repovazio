@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ψ Galeria de Thumbnails — @psidanielacoelho</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800&family=DM+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#06060F;--s1:#0E0E1A;--acc:#7C3AED;--crim:#E11D48;--gold:#F59E0B;--teal:#0D9488;--mist:#C4B5FD;--t1:#E2E8F0;--t2:#94A3B8;--t3:#475569;--bd:rgba(255,255,255,.07)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--t1);font-family:"DM Sans",sans-serif;min-height:100vh}
+.hdr{position:sticky;top:0;z-index:100;background:rgba(6,6,15,.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--bd);padding:14px 24px;display:flex;align-items:center;gap:16px}
+.logo{font-size:18px;font-weight:800;color:var(--mist)}
+.badge-cnt{background:rgba(124,58,237,.2);color:var(--mist);border:1px solid rgba(124,58,237,.3);border-radius:20px;padding:3px 12px;font-size:11px;font-family:"DM Mono",monospace}
+.filters{display:flex;gap:8px;margin-left:auto}
+.filter-btn{background:rgba(255,255,255,.05);border:1px solid var(--bd);border-radius:20px;padding:4px 14px;font-size:12px;color:var(--t2);cursor:pointer;transition:.15s}
+.filter-btn.active,.filter-btn:hover{background:rgba(124,58,237,.2);border-color:rgba(124,58,237,.5);color:var(--mist)}
+.wrap{padding:24px;max-width:1600px;margin:0 auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+.thumb-card{background:var(--s1);border:1px solid var(--bd);border-radius:14px;overflow:hidden;cursor:pointer;transition:.2s}
+.thumb-card:hover{border-color:rgba(124,58,237,.4);transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,0,0,.4)}
+.thumb-preview{width:100%;aspect-ratio:16/9;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#000}
+.thumb-preview svg{width:100%;height:100%}
+.thumb-info{padding:12px}
+.thumb-title{font-size:13px;font-weight:700;color:var(--t1);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.thumb-meta{display:flex;gap:8px;align-items:center}
+.tipo-tag{font-size:9px;font-family:"DM Mono",monospace;padding:2px 8px;border-radius:10px;font-weight:600}
+.viral{background:rgba(225,29,72,.15);color:#E11D48;border:1px solid rgba(225,29,72,.3)}
+.trauma{background:rgba(124,58,237,.15);color:#C4B5FD;border:1px solid rgba(124,58,237,.3)}
+.ansiedade{background:rgba(13,148,136,.15);color:#0D9488;border:1px solid rgba(13,148,136,.3)}
+.gold{background:rgba(245,158,11,.15);color:#F59E0B;border:1px solid rgba(245,158,11,.3)}
+.apego{background:rgba(196,181,253,.1);color:#C4B5FD;border:1px solid rgba(196,181,253,.3)}
+.thumb-id{font-size:9px;color:var(--t3);font-family:"DM Mono",monospace;margin-left:auto}
+.dl-btn{display:inline-flex;align-items:center;gap:4px;background:rgba(124,58,237,.15);color:var(--mist);border:1px solid rgba(124,58,237,.25);border-radius:6px;padding:4px 10px;font-size:10px;font-weight:600;cursor:pointer;margin-top:8px;transition:.15s}
+.dl-btn:hover{background:rgba(124,58,237,.3)}
+.loading{text-align:center;padding:80px;color:var(--t3);font-size:14px}
+.stats{display:flex;gap:12px;padding:0 0 20px;flex-wrap:wrap}
+.stat{background:var(--s1);border:1px solid var(--bd);border-radius:10px;padding:12px 16px;text-align:center}
+.stat-n{font-size:28px;font-weight:800;color:var(--t1)}
+.stat-l{font-size:10px;color:var(--t3);font-family:"DM Mono",monospace;margin-top:2px}
+</style></head>
+<body>
+<header class="hdr">
+  <div class="logo">ψ Galeria de Thumbnails</div>
+  <span class="badge-cnt" id="total-count">Carregando...</span>
+  <div class="filters">
+    <button class="filter-btn active" onclick="filtrar('todos')">Todos</button>
+    <button class="filter-btn" onclick="filtrar('viral')">🔴 Viral</button>
+    <button class="filter-btn" onclick="filtrar('trauma')">🟣 Trauma</button>
+    <button class="filter-btn" onclick="filtrar('ansiedade')">🔵 Ansiedade</button>
+    <button class="filter-btn" onclick="filtrar('gold')">🟡 Gold</button>
+    <button class="filter-btn" onclick="filtrar('apego')">💜 Apego</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="stats" id="stats"></div>
+  <div class="grid" id="grid"><div class="loading">⏳ Carregando thumbnails...</div></div>
+</div>
+
+<script>
+const SB_URL = 'https://tpjvalzwkqwttvmszvie.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwanZhbHp3a3F3dHR2bXN6dmllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY3MDkxNjUsImV4cCI6MjA1MjI4NTE2NX0.Sn3xzLw6DtGi2y0yyg_HCObPz7YxBObM3RrKs8ylsaA';
+let allData = [];
+
+async function load() {
+  const r = await fetch(`${SB_URL}/rest/v1/video_thumbnails?select=id,pipeline_id,tipo,titulo_linha1,titulo_linha2,svg_thumb,status&status=eq.ready&order=id.desc&limit=100`, {
+    headers: {'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY}
+  });
+  allData = await r.json();
+  document.getElementById('total-count').textContent = allData.length + ' thumbnails';
+  renderStats();
+  render(allData);
+}
+
+function renderStats() {
+  const tipos = {viral:0,trauma:0,ansiedade:0,gold:0,apego:0};
+  allData.forEach(t => tipos[t.tipo] = (tipos[t.tipo]||0)+1);
+  const icons = {viral:'🔴',trauma:'🟣',ansiedade:'🔵',gold:'🟡',apego:'💜'};
+  document.getElementById('stats').innerHTML = Object.entries(tipos)
+    .filter(([,n])=>n>0)
+    .map(([t,n])=>`<div class="stat"><div class="stat-n">${n}</div><div class="stat-l">${icons[t]} ${t}</div></div>`)
+    .join('');
+}
+
+function render(data) {
+  const grid = document.getElementById('grid');
+  if (!data.length) { grid.innerHTML = '<div class="loading">Nenhum thumbnail encontrado.</div>'; return; }
+  grid.innerHTML = data.map(t => `
+    <div class="thumb-card" id="card-${t.id}">
+      <div class="thumb-preview">${t.svg_thumb || '<div style="width:100%;height:100%;background:#111;display:flex;align-items:center;justify-content:center;color:#444;font-size:12px">SVG não disponível</div>'}</div>
+      <div class="thumb-info">
+        <div class="thumb-title">${t.titulo_linha1 || ''} ${t.titulo_linha2 || ''}</div>
+        <div class="thumb-meta">
+          <span class="tipo-tag ${t.tipo}">${t.tipo}</span>
+          <span class="thumb-id">ID ${t.pipeline_id}</span>
+        </div>
+        <button class="dl-btn" onclick="dlSVG(${t.id})">↓ SVG</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filtrar(tipo) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  render(tipo === 'todos' ? allData : allData.filter(t => t.tipo === tipo));
+}
+
+function dlSVG(id) {
+  const t = allData.find(x => x.id === id);
+  if (!t?.svg_thumb) return;
+  const a = document.createElement('a');
+  a.href = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(t.svg_thumb);
+  a.download = `thumb-${t.tipo}-id${t.pipeline_id}.svg`;
+  a.click();
+}
+
+load();
+</script>
+</body></html>
