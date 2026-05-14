@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ψ Command Center — psicologia.doc → R$50K/mês</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;600;700;800&family=DM+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#06060F;--s1:#0E0E1A;--s2:#12121F;--bd:rgba(255,255,255,.06);--bd2:rgba(255,255,255,.1);--acc:#7C3AED;--mist:#C4B5FD;--gold:#F59E0B;--crim:#E11D48;--teal:#0D9488;--cyan:#38BDF8;--grn:#10B981;--frost:#F0F4FF;--t1:#E2E8F0;--t2:#94A3B8;--t3:#475569}
+*{margin:0;padding:0;box-sizing:border-box}body{background:var(--bg);color:var(--t1);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+background:radial-gradient(ellipse 80% 50% at 20% -10%,rgba(124,58,237,.14),transparent),
+radial-gradient(ellipse 60% 40% at 85% 20%,rgba(225,29,72,.08),transparent),
+radial-gradient(ellipse 70% 50% at 50% 110%,rgba(14,148,130,.08),transparent)}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.7)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(124,58,237,0)}50%{box-shadow:0 0 24px 4px rgba(124,58,237,.3)}}
+.hdr{position:sticky;top:0;z-index:100;background:rgba(6,6,15,.92);backdrop-filter:blur(24px);border-bottom:1px solid var(--bd);padding:0 28px;height:58px;display:flex;align-items:center;gap:14px}
+.logo{font-size:22px;font-weight:800;letter-spacing:-1.5px;color:var(--frost)}.logo span{color:var(--mist)}
+.badge{font-size:9px;color:var(--gold);font-family:'DM Mono',monospace;background:rgba(245,158,11,.12);padding:3px 10px;border-radius:20px;border:1px solid rgba(245,158,11,.25);font-weight:600}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--grn);animation:pulse 1.8s infinite;display:inline-block}
+.live{font-size:10px;color:var(--t2);display:flex;align-items:center;gap:5px}
+.hnav{margin-left:auto;display:flex;gap:6px}
+.hbtn{padding:5px 14px;border-radius:8px;font-size:11px;font-weight:600;text-decoration:none;color:var(--t2);border:1px solid var(--bd);transition:.15s;background:transparent;cursor:pointer;font-family:'DM Sans',sans-serif}
+.hbtn:hover{color:var(--frost);border-color:var(--bd2)}.hbtn.p{background:var(--acc);color:#fff;border-color:transparent}
+.wrap{position:relative;z-index:1;max-width:1440px;margin:0 auto;padding:28px 28px 80px}
+
+/* HERO */
+.hero{margin-bottom:28px;animation:fadeUp .4s ease}
+.hero-top{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.hero-left h1{font-size:clamp(28px,4vw,52px);font-weight:800;letter-spacing:-2px;color:var(--frost);line-height:1.05;margin-bottom:10px}
+.hero-left h1 em{font-style:normal;background:linear-gradient(90deg,#C084FC,#38BDF8,#10B981);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero-sub{font-size:14px;color:var(--t2);max-width:620px;line-height:1.7;margin-bottom:18px}
+.hero-tags{display:flex;gap:8px;flex-wrap:wrap}
+.htag{font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;padding:3px 10px;background:rgba(255,255,255,.04);border-radius:20px;border:1px solid var(--bd)}
+.htag.ok{color:var(--grn);background:rgba(16,185,129,.08);border-color:rgba(16,185,129,.2)}
+.htag.warn{color:var(--gold);background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.2)}
+.htag.acc{color:var(--mist);background:rgba(124,58,237,.08);border-color:rgba(124,58,237,.2)}
+.yt-cta{background:linear-gradient(135deg,rgba(225,29,72,.15),rgba(225,29,72,.06));border:1px solid rgba(225,29,72,.25);border-radius:16px;padding:20px 24px;min-width:260px;text-align:center}
+.yt-icon{font-size:36px;margin-bottom:8px}
+.yt-name{font-size:14px;font-weight:700;color:var(--frost);margin-bottom:4px}
+.yt-handle{font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;margin-bottom:14px}
+.yt-btn{display:block;background:var(--crim);color:#fff;text-decoration:none;border-radius:10px;padding:10px;font-size:13px;font-weight:700;margin-bottom:8px;transition:.15s}
+.yt-btn:hover{background:#BE123C}
+.yt-subs{font-size:22px;font-weight:800;font-family:'DM Mono',monospace;color:var(--gold);line-height:1}
+.yt-sl{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.8px}
+
+/* ROADMAP MONETIZAÇÃO */
+.roadmap{background:var(--s1);border:1px solid var(--bd);border-radius:18px;padding:24px 28px;margin-bottom:24px;animation:fadeUp .4s .05s ease both}
+.rm-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+.rm-title{font-size:14px;font-weight:700;color:var(--frost)}
+.rm-sub{font-size:10px;color:var(--t3);font-family:'DM Mono',monospace}
+.phases{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:18px}
+.phase{background:var(--s2);border:1px solid var(--bd);border-radius:12px;padding:16px;position:relative;overflow:hidden}
+.phase.current{border-color:rgba(124,58,237,.5);background:rgba(124,58,237,.06);animation:glow 3s ease-in-out infinite}
+.phase.done{border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.05)}
+.phase.locked{opacity:.5}
+.ph-tag{position:absolute;top:10px;right:10px;font-size:8px;font-weight:700;padding:2px 7px;border-radius:20px;font-family:'DM Mono',monospace}
+.pt-now{background:rgba(124,58,237,.2);color:var(--mist)}
+.pt-next{background:rgba(245,158,11,.15);color:var(--gold)}
+.pt-lock{background:rgba(71,85,105,.3);color:var(--t3)}
+.pt-done{background:rgba(16,185,129,.15);color:var(--grn)}
+.ph-n{font-size:24px;font-weight:800;font-family:'DM Mono',monospace;line-height:1;margin-bottom:4px}
+.ph-l{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.8px;font-weight:600;margin-bottom:6px}
+.ph-desc{font-size:11px;color:var(--t2);line-height:1.5}
+.ph-action{font-size:10px;font-weight:700;margin-top:8px;padding:5px 10px;border-radius:7px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;width:100%;text-align:left}
+.pa-now{background:rgba(124,58,237,.2);color:var(--mist)}
+.pa-next{background:rgba(245,158,11,.12);color:var(--gold)}
+.prog-wrap{margin-top:16px}
+.prog-row{display:flex;justify-content:space-between;font-size:10px;color:var(--t3);margin-bottom:5px;font-family:'DM Mono',monospace}
+.pbar{height:8px;background:rgba(255,255,255,.06);border-radius:10px;overflow:hidden}
+.pfill{height:100%;border-radius:10px;background:linear-gradient(90deg,var(--acc),var(--cyan),var(--grn));transition:width 1.5s ease}
+
+/* MÉTRICAS */
+.mrow{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:24px;animation:fadeUp .4s .1s ease both}
+.mc{background:var(--s1);border:1px solid var(--bd);border-radius:14px;padding:16px;transition:.2s}
+.mc:hover{border-color:rgba(255,255,255,.12);transform:translateY(-2px)}
+.mcn{font-size:30px;font-weight:800;font-family:'DM Mono',monospace;line-height:1;margin-bottom:3px}
+.mcl{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.8px;font-weight:600}
+.mcs{font-size:9px;color:var(--t3);margin-top:3px;font-family:'DM Mono',monospace}
+.ca{color:var(--mist)}.cg{color:var(--grn)}.cgo{color:var(--gold)}.cc{color:var(--cyan)}.ct{color:var(--teal)}.ccr{color:var(--crim)}
+
+/* AÇÕES IMEDIATAS */
+.actions{background:linear-gradient(135deg,rgba(245,158,11,.08),rgba(225,29,72,.05));border:1px solid rgba(245,158,11,.2);border-radius:16px;padding:20px 24px;margin-bottom:24px;animation:fadeUp .4s .15s ease both}
+.act-h{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.act-title{font-size:14px;font-weight:700;color:var(--frost)}
+.act-badge{font-size:9px;font-family:'DM Mono',monospace;padding:2px 8px;border-radius:20px;background:rgba(245,158,11,.15);color:var(--gold);border:1px solid rgba(245,158,11,.2);font-weight:700}
+.act-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.act{display:flex;align-items:flex-start;gap:12px;background:rgba(255,255,255,.03);border:1px solid var(--bd);border-radius:12px;padding:14px}
+.act-num{font-size:18px;font-weight:800;font-family:'DM Mono',monospace;color:var(--gold);flex-shrink:0;width:28px}
+.act-text{font-size:12px;color:var(--t2);line-height:1.5;flex:1}
+.act-text strong{color:var(--frost)}
+.act-tag{font-size:8px;font-weight:700;padding:1px 6px;border-radius:4px;font-family:'DM Mono',monospace;display:inline-block;margin-top:4px}
+.at-now{background:rgba(225,29,72,.15);color:var(--crim)}
+.at-soon{background:rgba(245,158,11,.15);color:var(--gold)}
+.at-aut{background:rgba(124,58,237,.15);color:var(--mist)}
+
+/* GRID PÁGINAS */
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
+@media(max-width:1100px){.grid3{grid-template-columns:1fr 1fr}}@media(max-width:680px){.grid3{grid-template-columns:1fr}}
+.panel{background:var(--s1);border:1px solid var(--bd);border-radius:16px;overflow:hidden;animation:fadeUp .4s .2s ease both}
+.ph{padding:13px 16px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:8px}
+.pt{font-size:12px;font-weight:700;color:var(--t1);flex:1}
+.pbadge{font-size:9px;font-family:'DM Mono',monospace;padding:2px 8px;border-radius:20px;font-weight:700}
+.pgr{background:rgba(16,185,129,.15);color:var(--grn);border:1px solid rgba(16,185,129,.2)}
+.pgo{background:rgba(245,158,11,.15);color:var(--gold);border:1px solid rgba(245,158,11,.2)}
+.pac{background:rgba(124,58,237,.15);color:var(--mist);border:1px solid rgba(124,58,237,.2)}
+.pcr{background:rgba(225,29,72,.15);color:var(--crim);border:1px solid rgba(225,29,72,.2)}
+.pb{padding:12px 16px}
+.lnk{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;text-decoration:none;color:var(--t2);border:1px solid transparent;transition:.15s;margin-bottom:5px}
+.lnk:last-child{margin-bottom:0}.lnk:hover{background:rgba(255,255,255,.04);border-color:var(--bd);color:var(--t1)}
+.li{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.ln{font-size:12px;font-weight:600;color:var(--t1);display:block;margin-bottom:1px}
+.ld{font-size:10px;color:var(--t3);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* REDES */
+.redes{background:var(--s1);border:1px solid var(--bd);border-radius:16px;padding:20px 24px;margin-bottom:24px;animation:fadeUp .4s .25s ease both}
+.rh{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.rt{font-size:14px;font-weight:700;color:var(--frost)}
+.rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.rede{background:var(--s2);border:1px solid var(--bd);border-radius:12px;padding:14px;display:flex;align-items:center;gap:12px}
+.ric{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.rn{font-size:13px;font-weight:700;color:var(--t1)}
+.rs{font-size:9px;color:var(--t3);font-family:'DM Mono',monospace}
+.rdot{width:6px;height:6px;border-radius:50%;margin-left:auto;flex-shrink:0}
+.dlive{background:var(--grn);animation:pulse 2s infinite}.dpend{background:var(--gold)}.doff{background:var(--t3)}
+
+/* PIPELINE */
+.pipe-panel{background:var(--s1);border:1px solid var(--bd);border-radius:16px;padding:20px 24px;margin-bottom:24px;animation:fadeUp .4s .3s ease both}
+.ps-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.ps{background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:10px 14px;text-align:center;flex:1;min-width:90px}
+.psn{font-size:24px;font-weight:800;font-family:'DM Mono',monospace;line-height:1}
+.psl{font-size:8px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+.tick{background:rgba(16,185,129,.05);border:1px solid rgba(16,185,129,.15);border-radius:10px;padding:10px 14px;display:flex;align-items:flex-start;gap:10px;margin-bottom:8px}
+.tick:last-child{margin-bottom:0}
+.tt{font-size:11px;color:var(--t2);flex:1;line-height:1.5}
+.tm{font-size:9px;color:var(--t3);font-family:'DM Mono',monospace;flex-shrink:0;margin-top:1px}
+.rbar{display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid var(--bd);font-size:10px;color:var(--t3);font-family:'DM Mono',monospace}
+.spin{width:11px;height:11px;border:1.5px solid var(--bd2);border-top-color:var(--acc);border-radius:50%;animation:spin 1s linear infinite;display:inline-block}
+
+footer{text-align:center;padding:20px;font-size:10px;color:var(--t3);border-top:1px solid var(--bd);font-family:'DM Mono',monospace;line-height:1.8}
+@media(max-width:700px){.wrap{padding:16px 16px 60px}.hero-top{flex-direction:column}.yt-cta{width:100%}.phases{grid-template-columns:1fr 1fr}.mrow{grid-template-columns:repeat(3,1fr)}}
+</style></head><body>
+<header class="hdr">
+<div class="logo">ψ <span>psicologia.doc</span></div>
+<div class="badge">COMMAND CENTER V37</div>
+<div class="live"><span class="dot"></span> Sistema Ativo · $0/mês</div>
+<nav class="hnav">
+<a href="/qg.html" class="hbtn">QG</a>
+<a href="/series.html" class="hbtn">Séries</a>
+<a href="/videos-prontos.html" class="hbtn">Vídeos</a>
+<a href="/hub.html" class="hbtn">Hub</a>
+<button onclick="sync()" class="hbtn p">↻ Sync</button>
+</nav>
+</header>
+<div class="wrap">
+
+<!-- HERO -->
+<div class="hero">
+<div class="hero-top">
+<div class="hero-left">
+<h1>Rota para <em>R$ 50.000/mês</em><br>via YouTube + 4 redes</h1>
+<p class="hero-sub">psicologia.doc — Sistema autônomo 24/7 · Cadeia LLM 8 modelos grátis (Qwen3 Next 80B default) · Edge TTS Microsoft · Render v8 Cinematic · 20 séries · 140 episódios planejados · Custo $0/mês.</p>
+<div class="hero-tags">
+<span class="htag ok">🟢 Cérebro V37 Ativo</span>
+<span class="htag acc">⚡ Qwen3 Default</span>
+<span class="htag ok" id="ht-mp4">⏳ Carregando...</span>
+<span class="htag warn">⚠️ OAuth Meta/TikTok Pendente</span>
+<span class="htag">📅 Meta: Jan/2027</span>
+</div>
+</div>
+<div class="yt-cta">
+<div class="yt-icon">▶️</div>
+<div class="yt-name">Canal Oficial</div>
+<div class="yt-handle">@psidanielacoelho</div>
+<a href="https://youtube.com/@psidanielacoelho" target="_blank" class="yt-btn">🚀 Abrir Canal YouTube</a>
+<div class="yt-subs" id="yt-subs">0</div>
+<div class="yt-sl">inscritos atuais</div>
+</div>
+</div>
+</div>
+
+<!-- ROADMAP MONETIZAÇÃO -->
+<div class="roadmap">
+<div class="rm-hdr">
+<div class="rm-title">🗺️ Roadmap Monetização · 6 Fases até R$50.000/mês</div>
+<div class="rm-sub" id="rm-current">Calculando fase atual...</div>
+</div>
+<div class="phases">
+<div class="phase current">
+<div class="ph-tag pt-now">AGORA</div>
+<div class="ph-n ca" id="ph-subs">0</div>
+<div class="ph-l">Inscritos YT</div>
+<div class="ph-desc">Publicar 17 vídeos prontos · Google Ads R$200 (R$4,67/dia) · Organic viral shorts</div>
+<button class="ph-action pa-now" onclick="location.href='/canal-oficial.html'">→ Configurar publicação</button>
+</div>
+<div class="phase">
+<div class="ph-tag pt-next">FASE 2</div>
+<div class="ph-n cgo">1.000</div>
+<div class="ph-l">Inscritos</div>
+<div class="ph-desc">Ativar Instagram · TikTok · Pinterest · WhatsApp → tráfego cruzado entre redes</div>
+<button class="ph-action pa-next" onclick="location.href='/conectores.html'">→ Setup OAuth redes</button>
+</div>
+<div class="phase">
+<div class="ph-tag pt-next">FASE 3</div>
+<div class="ph-n cc">4.000h</div>
+<div class="ph-l">Watch Time</div>
+<div class="ph-desc">Long-form 12min+ (5x/semana) = 4.000h em 3 meses para elegibilidade AdSense</div>
+<button class="ph-action pa-next" onclick="location.href='/series.html'">→ Ver 20 séries</button>
+</div>
+<div class="phase locked">
+<div class="ph-tag pt-lock">FASE 4</div>
+<div class="ph-n" style="color:var(--t3)">R$1K</div>
+<div class="ph-l">AdSense ON</div>
+<div class="ph-desc">50K views/mês × RPM R$22 = R$1.100/mês · Ativar após 1K subs + 4Kh</div>
+</div>
+<div class="phase locked">
+<div class="ph-tag pt-lock">FASE 5</div>
+<div class="ph-n" style="color:var(--t3)">R$22K</div>
+<div class="ph-l">1M views/mês</div>
+<div class="ph-desc">160 vídeos × 6K views × RPM R$22 + receita TikTok/Meta/Pinterest</div>
+</div>
+<div class="phase locked">
+<div class="ph-tag pt-lock">META</div>
+<div class="ph-n" style="color:var(--gold)">R$50K</div>
+<div class="ph-l">Jan/2027</div>
+<div class="ph-desc">400+ vídeos × RPM R$28 + sponsorship + cursos + afiliados psicologia</div>
+</div>
+</div>
+<div class="prog-wrap">
+<div class="prog-row"><span>Progresso rota R$50K/mês</span><span id="prog-pct">0% · Fase 1 de 6</span></div>
+<div class="pbar"><div class="pfill" id="pfill" style="width:3%"></div></div>
+</div>
+</div>
+
+<!-- MÉTRICAS TEMPO REAL -->
+<div class="mrow">
+<div class="mc"><div class="mcn cg" id="mt-mp4">17</div><div class="mcl">MP4 Prontos</div><div class="mcs">Para publicar agora</div></div>
+<div class="mc"><div class="mcn cgo" id="mt-pend">23</div><div class="mcl">Pending OAuth</div><div class="mcs">Aguardando setup redes</div></div>
+<div class="mc"><div class="mcn ca">20</div><div class="mcl">Séries</div><div class="mcs">140 episódios planejados</div></div>
+<div class="mc"><div class="mcn cc">5</div><div class="mcl">Priority 10</div><div class="mcs">34 eps · Publicar primeiro</div></div>
+<div class="mc"><div class="mcn" style="color:#F472B6">$0</div><div class="mcl">Custo Mensal</div><div class="mcs">100% grátis</div></div>
+<div class="mc"><div class="mcn cg" id="mt-pub">0</div><div class="mcl">Publicados</div><div class="mcs">Canal YouTube ativo</div></div>
+</div>
+
+<!-- AÇÕES IMEDIATAS -->
+<div class="actions">
+<div class="act-h"><span>⚡</span><span class="act-title">Próximas Ações — Desbloqueie a Monetização</span><span class="act-badge">PRIORIDADE MÁXIMA</span></div>
+<div class="act-list">
+<div class="act"><div class="act-num">01</div><div class="act-text"><strong>Publicar 17 MP4s no YouTube</strong> — via youtube-publisher.yml · OAuth token já configurado (103 chars) · Shorts virais primeiro (50-58s) depois long-form (12min+)<span class="act-tag at-now">HOJE</span></div></div>
+<div class="act"><div class="act-num">02</div><div class="act-text"><strong>Google Ads R$200 → 1K inscritos</strong> — R$4,67/dia · Segmentar: ansiedade, trauma, narcisismo · BR mulheres 22-45 anos · ROI esperado: 200 subs por R$100<span class="act-tag at-now">ESTA SEMANA</span></div></div>
+<div class="act"><div class="act-num">03</div><div class="act-text"><strong>OAuth Meta (Instagram/Facebook)</strong> — SETUP.md → conectores.html · Desbloqueia 23 pipelines em pending_credentials para distribuição automática<span class="act-tag at-soon">PRÓXIMOS 3 DIAS</span></div></div>
+<div class="act"><div class="act-num">04</div><div class="act-text"><strong>OAuth TikTok + Pinterest</strong> — TikTok tem algoritmo viral orgânico potente para psicologia · Pinterest drive tráfego contínuo sem pagar<span class="act-tag at-soon">PRÓXIMOS 3 DIAS</span></div></div>
+<div class="act"><div class="act-num">05</div><div class="act-text"><strong>Gerar 135 episódios restantes</strong> — via Qwen3 Next 80B · 5 séries Priority 10 primeiro (apego, narcisismo, trauma, vínculos, dinheiro) · Depois Reserve 7<span class="act-tag at-aut">AUTO (Qwen3)</span></div></div>
+<div class="act"><div class="act-num">06</div><div class="act-text"><strong>Deletar ~62 EFs orphan</strong> — Supabase Dashboard → Edge Functions → deletar versões v9-v12 antigas · Desbloqueia deploys de novas EFs sem upgrade Pro<span class="act-tag at-soon">QUANDO POSSÍVEL</span></div></div>
+</div>
+</div>
+
+<!-- PÁGINAS DO SISTEMA -->
+<div class="grid3">
+<div class="panel">
+<div class="ph"><span>🎯</span><span class="pt">Estratégia & Controle</span><span class="pbadge pac">Command</span></div>
+<div class="pb">
+<a href="/qg.html" class="lnk"><div class="li" style="background:rgba(124,58,237,.15)">🧠</div><div style="flex:1"><span class="ln">QG V37 — Quartel General</span><span class="ld">Cadeia LLM · Decisões · Pipeline RT</span></div></a>
+<a href="/estrategia.html" class="lnk"><div class="li" style="background:rgba(245,158,11,.1)">🗺️</div><div style="flex:1"><span class="ln">Estratégia V37</span><span class="ld">Roadmap unificado · Painel executivo</span></div></a>
+<a href="/growth.html" class="lnk"><div class="li" style="background:rgba(16,185,129,.1)">📈</div><div style="flex:1"><span class="ln">Growth Plan</span><span class="ld">0→1K→10K→100K subs · Fases</span></div></a>
+<a href="/hub.html" class="lnk"><div class="li" style="background:rgba(56,189,248,.1)">🏠</div><div style="flex:1"><span class="ln">Hub Master</span><span class="ld">Portal unificado · 20 páginas</span></div></a>
+<a href="/admin.html" class="lnk"><div class="li" style="background:rgba(225,29,72,.1)">⚙️</div><div style="flex:1"><span class="ln">Admin Panel</span><span class="ld">Controles avançados do sistema</span></div></a>
+<a href="/dashboard" class="lnk"><div class="li" style="background:rgba(124,58,237,.15)">📊</div><div style="flex:1"><span class="ln">Dashboard V11</span><span class="ld">16 páginas operacionais</span></div></a>
+</div>
+</div>
+<div class="panel">
+<div class="ph"><span>🎬</span><span class="pt">Conteúdo & Vídeos</span><span class="pbadge pgr">17 MP4s</span></div>
+<div class="pb">
+<a href="/videos-prontos.html" class="lnk"><div class="li" style="background:rgba(16,185,129,.1)">🎬</div><div style="flex:1"><span class="ln">Vídeos Prontos</span><span class="ld">17 MP4s · Player HTML5 · Download</span></div></a>
+<a href="/series.html" class="lnk"><div class="li" style="background:rgba(124,58,237,.15)">📚</div><div style="flex:1"><span class="ln">Séries V37</span><span class="ld">20 séries · 140 episódios planejados</span></div></a>
+<a href="/galeria-quantica.html" class="lnk"><div class="li" style="background:rgba(56,189,248,.1)">🌌</div><div style="flex:1"><span class="ln">Galeria Quântica</span><span class="ld">Flux+KB V2 · Score 95+ · Curado</span></div></a>
+<a href="/producao.html" class="lnk"><div class="li" style="background:rgba(245,158,11,.1)">🏭</div><div style="flex:1"><span class="ln">Produção</span><span class="ld">Pipeline status · Renders · TTS</span></div></a>
+<a href="/videos-analise.html" class="lnk"><div class="li" style="background:rgba(14,148,130,.1)">🔬</div><div style="flex:1"><span class="ln">Análise de Vídeos</span><span class="ld">Métricas · Scores · Performance</span></div></a>
+<a href="/mapa.html" class="lnk"><div class="li" style="background:rgba(225,29,72,.1)">🗂️</div><div style="flex:1"><span class="ln">Mapa de Conteúdo</span><span class="ld">Calendário editorial · Tópicos</span></div></a>
+</div>
+</div>
+<div class="panel">
+<div class="ph"><span>📡</span><span class="pt">Canal & Distribuição</span><span class="pbadge pgo">Pendente OAuth</span></div>
+<div class="pb">
+<a href="https://youtube.com/@psidanielacoelho" target="_blank" class="lnk"><div class="li" style="background:rgba(225,29,72,.15)">▶️</div><div style="flex:1"><span class="ln">YouTube @psidanielacoelho ↗</span><span class="ld">Canal oficial · UCyCkIpsVgME9yCj...</span></div></a>
+<a href="/canal-oficial.html" class="lnk"><div class="li" style="background:rgba(255,80,80,.1)">📺</div><div style="flex:1"><span class="ln">Canal Oficial (config)</span><span class="ld">Setup publicação · SEO · Thumbnails</span></div></a>
+<a href="/conectores.html" class="lnk"><div class="li" style="background:rgba(245,158,11,.15)">🔌</div><div style="flex:1"><span class="ln">Conectores OAuth ⚠️</span><span class="ld">Meta · TikTok · Pinterest · Setup</span></div></a>
+<a href="/setup-canal.html" class="lnk"><div class="li" style="background:rgba(16,185,129,.1)">🛠️</div><div style="flex:1"><span class="ln">Setup Canal</span><span class="ld">Configuração inicial · Checklist</span></div></a>
+<a href="/daniela.html" class="lnk"><div class="li" style="background:rgba(196,181,253,.1)">👩</div><div style="flex:1"><span class="ln">Daniela Coelho</span><span class="ld">Persona · Bio · @psidanielacoelho</span></div></a>
+<a href="/oauth-callback.html" class="lnk"><div class="li" style="background:rgba(56,189,248,.1)">🔑</div><div style="flex:1"><span class="ln">OAuth Callback</span><span class="ld">Autenticação redes sociais</span></div></a>
+</div>
+</div>
+</div>
+
+<!-- REDES SOCIAIS -->
+<div class="redes">
+<div class="rh"><span>📡</span><span class="rt">Redes Sociais — Status de Distribuição</span></div>
+<div class="rgrid">
+<div class="rede"><div class="ric" style="background:rgba(255,0,0,.12)">▶️</div><div><div class="rn">YouTube</div><div class="rs">@psidanielacoelho · OAuth ✓ · 0 subs</div></div><div class="rdot dlive"></div></div>
+<div class="rede"><div class="ric" style="background:rgba(225,48,108,.12)">📸</div><div><div class="rn">Instagram</div><div class="rs">Pendente OAuth Meta Business</div></div><div class="rdot dpend"></div></div>
+<div class="rede"><div class="ric" style="background:rgba(1,1,1,.3)">🎵</div><div><div class="rn">TikTok</div><div class="rs">Pendente OAuth TikTok For Business</div></div><div class="rdot dpend"></div></div>
+<div class="rede"><div class="ric" style="background:rgba(230,0,35,.12)">📌</div><div><div class="rn">Pinterest</div><div class="rs">Pendente OAuth Pinterest API</div></div><div class="rdot dpend"></div></div>
+<div class="rede"><div class="ric" style="background:rgba(37,211,102,.12)">💬</div><div><div class="rn">WhatsApp</div><div class="rs">8 grupos · Pendente link grupos</div></div><div class="rdot dpend"></div></div>
+</div>
+</div>
+
+<!-- PIPELINE LIVE -->
+<div class="pipe-panel">
+<div class="ph" style="border:none;padding:0 0 16px 0"><span>🔄</span><span class="pt" style="font-size:14px">Pipeline Tempo Real</span><span class="pbadge pac" id="pipe-last" style="margin-left:auto">—</span></div>
+<div class="ps-row">
+<div class="ps"><div class="psn cg" id="ps-mp4">17</div><div class="psl">MP4 Prontos</div></div>
+<div class="ps"><div class="psn cgo" id="ps-pend">23</div><div class="psl">Pending OAuth</div></div>
+<div class="ps"><div class="psn cc" id="ps-rend">0</div><div class="psl">Rendering</div></div>
+<div class="ps"><div class="psn ca" id="ps-aud">0</div><div class="psl">Audio Ready</div></div>
+<div class="ps"><div class="psn ct" id="ps-scr">0</div><div class="psl">Script Ready</div></div>
+<div class="ps"><div class="psn ccr" id="ps-pub">0</div><div class="psl">Publicados</div></div>
+</div>
+<div class="tick"><span>🎬</span><span class="tt"><strong>17 MP4s prontos</strong> para publicação — 10 top10 + 5 pilotos V37 (Qwen3 + Edge TTS) + 2 outros. Distribuição bloqueada por OAuth.</span><span class="tm">live</span></div>
+<div class="tick"><span>📚</span><span class="tt"><strong>20 séries · 5 priority:</strong> Apego (8ep) · Narcisistas (6ep) · Trauma (8ep) · Vínculos Tóxicos (6ep) · Psicologia do Dinheiro (6ep) — pilotos gerados, 135 eps restantes na fila.</span><span class="tm">live</span></div>
+<div class="tick" style="background:rgba(245,158,11,.05);border-color:rgba(245,158,11,.15)"><span>⚠️</span><span class="tt"><strong>Bloqueio principal:</strong> Configurar OAuth Meta Business API + TikTok For Business + Pinterest API via /conectores.html. YouTube já tem refresh_token (103 chars). Após setup: 23 vídeos entram em distribuição automática cron 30min.</span><span class="tm">pendente</span></div>
+<div class="rbar"><span>Última: <span id="last-time">—</span></span><span><span class="spin"></span> Auto-sync 30s</span></div>
+</div>
+
+</div><!-- /wrap -->
+
+<footer>
+ψ psicologia.doc · @psidanielacoelho · Canal UCyCkIpsVgME9yCj_oXJFheA<br>
+Command Center V37 · Qwen3 Next 80B · 20 séries · 140 episódios · $0/mês · Meta R$50K/mês jan/2027<br>
+Stack: NVIDIA NIM + Gemini + Groq | Edge TTS MS pt-BR | Flux+KB V2 | GitHub Actions 22 workflows | Supabase | Vercel
+</footer>
+
+<script>
+const SB="https://tpjvalzwkqwttvmszvie.supabase.co";
+const SK="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwanZhbHp3a3F3dHR2bXN6dmllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY4NjkyMzAsImV4cCI6MjA2MjQ0NTIzMH0.w45_lqUBd_9m8HEZSbNDHMb0kfKWq0Nwd1Dqf7V5NVc";
+const H={apikey:SK,Authorization:"Bearer "+SK};
+const s=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};
+
+async function loadPipeline(){
+  try{
+    const r=await fetch(SB+"/rest/v1/content_pipeline?select=status,mp4_url,youtube_video_id",{headers:H});
+    const d=await r.json();
+    if(!Array.isArray(d))return;
+    const c={};let mp4=0,pub=0;
+    d.forEach(v=>{c[v.status]=(c[v.status]||0)+1;if(v.mp4_url)mp4++;if(v.youtube_video_id)pub++;});
+    s("mt-mp4",mp4);s("mt-pend",c.pending_credentials||0);s("mt-pub",pub);
+    s("ps-mp4",mp4);s("ps-pend",c.pending_credentials||0);
+    s("ps-rend",c.rendering||0);s("ps-aud",c.audio_ready||0);
+    s("ps-scr",c.script_ready||0);s("ps-pub",pub);
+    s("ph-subs",pub);s("yt-subs",pub);
+    s("ht-mp4","✓ "+mp4+" vídeos prontos");
+    document.getElementById("ht-mp4")?.classList.add("ok");
+    // Calcular fase
+    const fase = pub>=1000?"Fase 4: AdSense ON":pub>=10?"Fase 3: Watch Time":pub>=1?"Fase 2: 1K inscritos":"Fase 1: Publicar primeiros vídeos";
+    const pct = pub>=1000?60:pub>=100?40:pub>=10?20:pub>=1?8:3;
+    s("rm-current",`${pub} publicados · ${fase}`);
+    s("prog-pct",`${pct}% · ${fase}`);
+    document.getElementById("pfill").style.width=pct+"%";
+    const t=new Date().toLocaleTimeString("pt-BR");
+    s("pipe-last","Atualizado "+t);s("last-time",t);
+  }catch(e){console.log(e)}
+}
+
+function sync(){loadPipeline()}
+loadPipeline();
+setInterval(loadPipeline,30000);
+</script>
+</body></html>
