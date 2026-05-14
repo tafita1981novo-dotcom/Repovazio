@@ -73,7 +73,11 @@ if not channel_ok:
 
 # 3. Buscar mp4_ready
 hdrs = {"Authorization": f"Bearer {SBK}", "apikey": SBK}
-videos = requests.get(f"{SBU}/rest/v1/content_pipeline?status=eq.mp4_ready&mp4_url=not.is.null&limit=2&order=id.asc&select=id,title,script,mp4_url,target_platform", headers=hdrs, timeout=15).json()
+# Buscar pending_credentials com mp4 (YouTube OAuth já configurado)
+videos_pc = requests.get(f"{SBU}/rest/v1/content_pipeline?status=eq.pending_credentials&mp4_url=not.is.null&youtube_video_id=is.null&limit=2&order=id.asc&select=id,title,youtube_title,youtube_description,script,mp4_url,target_platform,seo_score", headers=hdrs, timeout=15).json()
+# Fallback para mp4_ready
+videos_mr = requests.get(f"{SBU}/rest/v1/content_pipeline?status=eq.mp4_ready&mp4_url=not.is.null&limit=2&order=id.asc&select=id,title,youtube_title,youtube_description,script,mp4_url,target_platform,seo_score", headers=hdrs, timeout=15).json()
+videos = (videos_pc or []) + (videos_mr or [])
 print(f"{len(videos)} vídeos prontos")
 
 for v in videos:
