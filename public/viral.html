@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ψ Painel Viral — @psidanielacoelho</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800&family=DM+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#06060F;--s1:#0E0E1A;--s2:#12121F;--acc:#7C3AED;--crim:#E11D48;--gold:#F59E0B;--teal:#0D9488;--grn:#10B981;--mist:#C4B5FD;--t1:#E2E8F0;--t2:#94A3B8;--t3:#475569;--bd:rgba(255,255,255,.07)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--t1);font-family:"DM Sans",sans-serif;min-height:100vh}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse 60% 40% at 20% 10%,rgba(225,29,72,.06),transparent)}
+.hdr{padding:14px 24px;border-bottom:1px solid var(--bd);background:rgba(6,6,15,.95);backdrop-filter:blur(20px);position:sticky;top:0;z-index:100;display:flex;align-items:center;gap:14px}
+.logo{font-size:18px;font-weight:800;color:var(--mist)}
+.wrap{max-width:1300px;margin:0 auto;padding:28px 24px 80px;position:relative;z-index:1}
+h2{font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--t3);font-family:"DM Mono",monospace;margin-bottom:14px}
+.viral-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px;margin-bottom:32px}
+.viral-card{background:var(--s1);border:1px solid var(--bd);border-radius:14px;padding:16px;transition:.2s;position:relative;overflow:hidden}
+.viral-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px}
+.viral-card.s95plus::before{background:var(--crim)}
+.viral-card.s85plus::before{background:var(--gold)}
+.viral-card.s75plus::before{background:var(--teal)}
+.viral-card:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.15)}
+.vc-rank{font-size:32px;font-weight:900;line-height:1;margin-bottom:8px}
+.vc-title{font-size:13px;font-weight:700;color:var(--t1);margin-bottom:4px;line-height:1.3}
+.vc-yt{font-size:11px;color:var(--t2);margin-bottom:8px;line-height:1.4}
+.vc-scores{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.score-tag{font-size:9px;font-family:"DM Mono",monospace;padding:2px 8px;border-radius:8px}
+.st-total{background:rgba(225,29,72,.15);color:var(--crim);border:1px solid rgba(225,29,72,.3)}
+.st-ctr{background:rgba(245,158,11,.15);color:var(--gold);border:1px solid rgba(245,158,11,.3)}
+.st-seo{background:rgba(16,185,129,.15);color:var(--grn);border:1px solid rgba(16,185,129,.3)}
+.st-thumb{background:rgba(124,58,237,.15);color:var(--mist);border:1px solid rgba(124,58,237,.3)}
+.vc-bar{height:6px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;margin-top:6px}
+.vc-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--crim),var(--gold))}
+/* Hooks */
+.hook-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:32px}
+.hook-card{background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:14px;cursor:pointer;transition:.15s}
+.hook-card:hover{border-color:rgba(124,58,237,.4)}
+.hook-tema{font-size:9px;font-family:"DM Mono",monospace;color:var(--t3);text-transform:uppercase;margin-bottom:6px}
+.hook-text{font-size:12px;color:var(--t1);line-height:1.5;font-style:italic}
+.hook-score{font-size:10px;color:var(--gold);font-weight:700;margin-top:6px;font-family:"DM Mono",monospace}
+.copy-tag{font-size:9px;color:var(--t3);margin-top:4px}
+</style></head>
+<body>
+<header class="hdr">
+  <div class="logo">🔥 Painel Viral</div>
+  <span style="font-size:10px;color:var(--t3);font-family:monospace;margin-left:auto">@psidanielacoelho · 16 vídeos · Viral scores calculados</span>
+</header>
+
+<div class="wrap">
+  <!-- VIRAL SCORES DOS 16 VÍDEOS -->
+  <h2>🏆 Ranking Viral — 16 Vídeos Prontos (Por CTR Estimado)</h2>
+  <div class="viral-grid" id="viral-grid">
+    <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--t3)">⏳ Carregando scores...</div>
+  </div>
+
+  <!-- BIBLIOTECA DE HOOKS -->
+  <h2>💡 Biblioteca de Hooks Virais (30 hooks · score médio 95)</h2>
+  <div class="hook-grid" id="hook-grid">
+    <div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--t3)">⏳ Carregando hooks...</div>
+  </div>
+</div>
+
+<script>
+const SB_URL = 'https://tpjvalzwkqwttvmszvie.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwanZhbHp3a3F3dHR2bXN6dmllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY3MDkxNjUsImV4cCI6MjA1MjI4NTE2NX0.Sn3xzLw6DtGi2y0yyg_HCObPz7YxBObM3RrKs8ylsaA';
+
+async function sb(table, params='') {
+  const r = await fetch(`${SB_URL}/rest/v1/${table}?${params}`, {
+    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
+  });
+  return r.json();
+}
+
+async function loadViralScores() {
+  const [scores, pipeline] = await Promise.all([
+    sb('viral_score_analysis','select=*&order=viral_total.desc&limit=16'),
+    sb('content_pipeline','select=id,title,youtube_title,seo_score&status=eq.pending_credentials&mp4_url=not.is.null')
+  ]);
+  
+  const pipeMap = {};
+  pipeline.forEach(v => pipeMap[v.id] = v);
+  
+  const grid = document.getElementById('viral-grid');
+  grid.innerHTML = scores.map((s, i) => {
+    const v = pipeMap[s.pipeline_id] || {};
+    const cls = s.viral_total >= 85 ? 's95plus' : s.viral_total >= 75 ? 's85plus' : 's75plus';
+    const rankColor = i < 3 ? 'var(--crim)' : i < 6 ? 'var(--gold)' : 'var(--t2)';
+    return `
+      <div class="viral-card ${cls}">
+        <div class="vc-rank" style="color:${rankColor}">#${i+1}</div>
+        <div class="vc-title">${(v.title||'').substring(0,55)}</div>
+        <div class="vc-yt">${(v.youtube_title||'').substring(0,70)}</div>
+        <div class="vc-scores">
+          <span class="score-tag st-total">VIRAL ${s.viral_total}/100</span>
+          <span class="score-tag st-ctr">CTR ~${s.predicao_ctr}%</span>
+          <span class="score-tag st-seo">SEO ${v.seo_score||0}</span>
+        </div>
+        <div class="vc-bar"><div class="vc-bar-fill" style="width:${s.viral_total}%"></div></div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function loadHooks() {
+  const hooks = await sb('viral_hooks_library','select=tema,hook,tipo,score_viral&ativo=eq.true&order=score_viral.desc&limit=16');
+  const grid = document.getElementById('hook-grid');
+  const ICONS = {narcisismo:'🔴',apego_ansioso:'💜',trauma:'🟣',ansiedade:'🔵',burnout:'⚫',dinheiro:'🟡',autoestima:'💛'};
+  grid.innerHTML = hooks.map(h => `
+    <div class="hook-card" onclick="navigator.clipboard?.writeText('${h.hook.replace(/'/g,"\'")}')">
+      <div class="hook-tema">${ICONS[h.tema]||'🎯'} ${h.tema.replace('_',' ')}</div>
+      <div class="hook-text">"${h.hook}"</div>
+      <div class="hook-score">Score ${h.score_viral}/100 · ${h.tipo}</div>
+      <div class="copy-tag">↑ Clique para copiar</div>
+    </div>
+  `).join('');
+}
+
+loadViralScores();
+loadHooks();
+</script>
+</body></html>
