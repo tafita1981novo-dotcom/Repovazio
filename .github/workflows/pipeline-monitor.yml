@@ -24,46 +24,5 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-        run: |
-          python3 << 'PY'
-import os, requests, json
-
-SBU = os.environ["SUPABASE_URL"]
-SBK = os.environ["SUPABASE_KEY"]
-hdrs = {"Authorization": f"Bearer {SBK}", "apikey": SBK}
-
-# Status do pipeline
-r = requests.get(f"{SBU}/rest/v1/content_pipeline?select=status&limit=2000", headers=hdrs, timeout=15)
-data = r.json()
-cnt = {}
-for x in data:
-    cnt[x['status']] = cnt.get(x['status'], 0) + 1
-
-print("=== PIPELINE STATUS ===")
-for k, v in sorted(cnt.items(), key=lambda x: -x[1]):
-    print(f"  {k}: {v}")
-
-# Vídeos prontos para publicar
-mp4 = cnt.get('pending_credentials', 0)
-pub = sum(1 for x in data if x.get('youtube_video_id'))
-print(f"
-MP4 prontos: {mp4}")
-print(f"Publicados YT: {pub}")
-
-# Analytics
-a = requests.get(f"{SBU}/rest/v1/youtube_analytics_daily?select=*&order=data_ref.desc&limit=1", headers=hdrs, timeout=15).json()
-if a:
-    last = a[0]
-    print(f"
-Analytics ({last.get('data_ref','?')}): {last.get('canal_inscritos',0)} inscritos")
-PY
-
-      - name: Disparar workflows se necessário
-        env:
           GH_PAT: ${{ secrets.GH_PAT }}
-        run: |
-          # Se o publisher não rodou hoje, disparar
-          TODAY=$(date -u +%Y-%m-%d)
-          echo "Verificando se Publisher rodou em $TODAY..."
-          RUNS=$(curl -s -H "Authorization: Bearer $GH_PAT"             "https://api.github.com/repos/${{ github.repository }}/actions/workflows/youtube-publisher.yml/runs?per_page=5" |             python3 -c "import json,sys; d=json.load(sys.stdin); print([r['created_at'][:10] for r in d.get('workflow_runs',[])])")
-          echo "Últimas runs: $RUNS"
+        run: python3 scripts/daily_report.py
