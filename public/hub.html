@@ -1,217 +1,261 @@
 <!DOCTYPE html>
 <html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ψ HUB MASTER — psicologia.doc V37</title>
+<title>ψ Hub Mestre — psicologia.doc V37</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800;900&family=DM+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#06060F;--s1:#0E0E1A;--s2:#12121F;--acc:#7C3AED;--crim:#E11D48;--gold:#F59E0B;--teal:#0D9488;--grn:#10B981;--mist:#C4B5FD;--t1:#E2E8F0;--t2:#94A3B8;--t3:#475569;--bd:rgba(255,255,255,.07)}
+:root{--bg:#06060F;--s1:#0E0E1A;--s2:#12121F;--acc:#7C3AED;--crim:#E11D48;--gold:#F59E0B;--teal:#0D9488;--mist:#C4B5FD;--t1:#E2E8F0;--t2:#94A3B8;--t3:#475569;--bd:rgba(255,255,255,.07)}
 *{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--t1);font-family:"DM Sans",sans-serif;min-height:100vh}
 body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
-  background:radial-gradient(ellipse 70% 50% at 15% 0%,rgba(124,58,237,.13),transparent),
-  radial-gradient(ellipse 50% 40% at 85% 90%,rgba(225,29,72,.08),transparent),
-  radial-gradient(ellipse 40% 60% at 50% 50%,rgba(13,148,136,.04),transparent)}
-.hdr{position:sticky;top:0;z-index:100;background:rgba(6,6,15,.96);backdrop-filter:blur(24px);
-  border-bottom:1px solid var(--bd);padding:16px 32px;display:flex;align-items:center;gap:14px}
-.psi{font-size:32px;color:var(--acc);font-family:serif;line-height:1}
-.hdr-title{font-size:22px;font-weight:900;letter-spacing:-1px;color:var(--frost)}
-.hdr-sub{font-size:11px;color:var(--t3);font-family:"DM Mono",monospace}
-.status-dots{display:flex;gap:8px;margin-left:auto;align-items:center}
-.dot{width:8px;height:8px;border-radius:50%;animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.dot.grn{background:var(--grn)}
-.dot.gold{background:var(--gold)}
-.status-txt{font-size:10px;color:var(--t3);font-family:"DM Mono",monospace}
-.wrap{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:40px 28px 80px}
-.hero{background:linear-gradient(135deg,rgba(124,58,237,.12),rgba(225,29,72,.06));
-  border:1px solid rgba(124,58,237,.2);border-radius:20px;padding:32px;margin-bottom:36px}
-.hero-row{display:flex;align-items:flex-start;gap:24px;flex-wrap:wrap}
-.hero-main{flex:1;min-width:280px}
-.hero-tag{font-size:10px;font-family:"DM Mono",monospace;color:var(--acc);
-  background:rgba(124,58,237,.12);border:1px solid rgba(124,58,237,.3);
-  border-radius:20px;padding:3px 12px;display:inline-block;margin-bottom:12px}
-.hero-title{font-size:28px;font-weight:900;letter-spacing:-1px;color:var(--t1);
-  line-height:1.2;margin-bottom:8px}
-.hero-title span{color:var(--mist)}
-.hero-desc{font-size:13px;color:var(--t2);line-height:1.6;max-width:520px}
-.hero-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:20px;flex:1;min-width:280px}
-.hstat{background:rgba(0,0,0,.3);border:1px solid var(--bd);border-radius:12px;padding:14px;text-align:center}
-.hstat-n{font-size:26px;font-weight:900;color:var(--t1);line-height:1}
-.hstat-l{font-size:9px;color:var(--t3);font-family:"DM Mono",monospace;margin-top:3px;text-transform:uppercase;letter-spacing:1px}
-h3{font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--t3);
-  font-family:"DM Mono",monospace;margin-bottom:14px;padding-bottom:8px;
-  border-bottom:1px solid var(--bd)}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin-bottom:32px}
-.card{background:var(--s1);border:1px solid var(--bd);border-radius:14px;
-  padding:18px;text-decoration:none;color:inherit;display:block;transition:.18s;position:relative;overflow:hidden}
-.card::before{content:"";position:absolute;inset:0;opacity:0;transition:.18s}
-.card:hover{border-color:rgba(255,255,255,.15);transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,0,0,.4)}
+  background:radial-gradient(ellipse 70% 50% at 10% 20%,rgba(124,58,237,.08),transparent),
+  radial-gradient(ellipse 50% 40% at 90% 80%,rgba(225,29,72,.05),transparent)}
+.hdr{position:sticky;top:0;z-index:100;background:rgba(6,6,15,.95);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--bd);padding:14px 28px;display:flex;align-items:center;gap:16px}
+.ψ{font-size:22px;font-weight:900;color:var(--mist);font-family:serif}
+.brand{font-size:14px;font-weight:700;color:var(--t1)}
+.brand span{color:var(--mist)}
+.dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--teal);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+.dot-crim{background:var(--crim)}
+.wrap{position:relative;z-index:1;max-width:1400px;margin:0 auto;padding:32px 24px 80px}
+.hero{text-align:center;padding:32px 0 40px;margin-bottom:32px;border-bottom:1px solid var(--bd)}
+.hero h1{font-size:42px;font-weight:900;letter-spacing:-2px;color:var(--frost,#F0F4FF);line-height:1.1}
+.hero h1 span{color:var(--mist)}
+.hero p{font-size:15px;color:var(--t2);margin-top:12px;max-width:600px;margin-left:auto;margin-right:auto}
+.hero-stats{display:flex;gap:24px;justify-content:center;margin-top:20px;flex-wrap:wrap}
+.hstat{text-align:center}
+.hstat-n{font-size:28px;font-weight:800;color:var(--t1)}
+.hstat-l{font-size:10px;color:var(--t3);font-family:"DM Mono",monospace;margin-top:2px}
+/* SECTIONS */
+.section{margin-bottom:40px}
+.sec-hdr{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.sec-title{font-size:11px;text-transform:uppercase;letter-spacing:3px;color:var(--t3);font-family:"DM Mono",monospace}
+.sec-line{flex:1;height:1px;background:var(--bd)}
+/* GRIDS */
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+/* CARDS */
+.card{background:var(--s1);border:1px solid var(--bd);border-radius:14px;padding:16px;
+  text-decoration:none;color:inherit;display:block;transition:.2s;position:relative;overflow:hidden}
+.card::before{content:"";position:absolute;inset:0;opacity:0;transition:.2s;
+  background:linear-gradient(135deg,rgba(124,58,237,.06),transparent)}
+.card:hover{border-color:rgba(124,58,237,.35);transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,0,0,.4)}
 .card:hover::before{opacity:1}
-.card-acc{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;
-  justify-content:center;font-size:18px;margin-bottom:12px}
-.card-title{font-size:14px;font-weight:800;color:var(--t1);margin-bottom:4px;letter-spacing:-.2px}
-.card-desc{font-size:11px;color:var(--t3);line-height:1.5}
-.card-badge{position:absolute;top:12px;right:12px;font-size:9px;font-family:"DM Mono",monospace;
-  padding:2px 7px;border-radius:10px;font-weight:700}
-.badge-hot{background:rgba(225,29,72,.15);color:var(--crim);border:1px solid rgba(225,29,72,.3)}
-.badge-new{background:rgba(16,185,129,.12);color:var(--grn);border:1px solid rgba(16,185,129,.3)}
-.badge-live{background:rgba(124,58,237,.15);color:var(--mist);border:1px solid rgba(124,58,237,.3)}
-.badge-ok{background:rgba(16,185,129,.12);color:var(--grn);border:1px solid rgba(16,185,129,.25)}
-.cta{background:linear-gradient(135deg,rgba(245,158,11,.12),rgba(245,158,11,.06));
-  border:1px solid rgba(245,158,11,.3);border-radius:16px;padding:24px;margin-top:32px;
-  display:flex;align-items:center;gap:20px;flex-wrap:wrap}
-.cta-icon{font-size:36px;flex-shrink:0}
-.cta-title{font-size:16px;font-weight:800;color:var(--gold);margin-bottom:4px}
-.cta-desc{font-size:12px;color:var(--t2);line-height:1.5}
-.cta-step{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);border-radius:8px;
-  padding:6px 12px;font-size:11px;font-family:"DM Mono",monospace;color:var(--gold);
-  white-space:nowrap;display:inline-block;margin-top:8px}
+.card.red:hover{border-color:rgba(225,29,72,.35)}
+.card.red::before{background:linear-gradient(135deg,rgba(225,29,72,.06),transparent)}
+.card.gold:hover{border-color:rgba(245,158,11,.35)}
+.card.gold::before{background:linear-gradient(135deg,rgba(245,158,11,.06),transparent)}
+.card.teal:hover{border-color:rgba(13,148,136,.35)}
+.card.teal::before{background:linear-gradient(135deg,rgba(13,148,136,.06),transparent)}
+.card.grn:hover{border-color:rgba(16,185,129,.35)}
+.card.grn::before{background:linear-gradient(135deg,rgba(16,185,129,.06),transparent)}
+.card-icon{font-size:24px;margin-bottom:10px;display:block}
+.card-title{font-size:13px;font-weight:700;color:var(--t1);margin-bottom:4px}
+.card-desc{font-size:11px;color:var(--t2);line-height:1.5}
+.card-badge{position:absolute;top:12px;right:12px;font-size:8px;font-family:"DM Mono",monospace;
+  padding:2px 8px;border-radius:10px}
+.badge-live{background:rgba(16,185,129,.15);color:#10B981;border:1px solid rgba(16,185,129,.3)}
+.badge-new{background:rgba(124,58,237,.2);color:var(--mist);border:1px solid rgba(124,58,237,.3)}
+.badge-att{background:rgba(245,158,11,.15);color:var(--gold);border:1px solid rgba(245,158,11,.3)}
+/* ALERT */
+.alert{background:rgba(225,29,72,.07);border:1px solid rgba(225,29,72,.2);border-radius:12px;
+  padding:14px 18px;margin-bottom:20px;display:flex;gap:12px;align-items:flex-start}
+.alert-icon{font-size:18px;flex-shrink:0}
+.alert-txt{font-size:12px;color:#FCA5A5;line-height:1.6}
+.alert-txt strong{color:#fff;display:block;margin-bottom:3px}
+/* MINI LINKS */
+.mini-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.mini-link{font-size:10px;font-family:"DM Mono",monospace;background:rgba(255,255,255,.05);
+  border:1px solid var(--bd);border-radius:6px;padding:3px 10px;color:var(--t2);text-decoration:none;transition:.1s}
+.mini-link:hover{background:rgba(124,58,237,.15);border-color:rgba(124,58,237,.3);color:var(--mist)}
 </style></head>
 <body>
 <header class="hdr">
-  <span class="psi">ψ</span>
-  <div><div class="hdr-title">psicologia.doc</div>
-  <div class="hdr-sub">@psidanielacoelho · V37 · Hub Master</div></div>
-  <div class="status-dots">
-    <span class="dot grn"></span>
-    <span class="status-txt">PIPELINE ATIVO</span>
-    <span class="dot gold"></span>
-    <span class="status-txt">AGUARDANDO OAUTH</span>
-  </div>
+  <span class="ψ">ψ</span>
+  <span class="brand">psicologia<span>.doc</span> V37</span>
+  <span class="dot" id="live-dot" title="Pipeline ativo"></span>
+  <span style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace" id="live-status">carregando...</span>
+  <span style="margin-left:auto;font-size:10px;color:var(--t3);font-family:'DM Mono',monospace">@psidanielacoelho · UCyCkIpsVgME9yCj_oXJFheA</span>
 </header>
 
 <div class="wrap">
-  <!-- HERO -->
+
   <div class="hero">
-    <div class="hero-row">
-      <div class="hero-main">
-        <span class="hero-tag">🇧🇷 Canal @psidanielacoelho</span>
-        <div class="hero-title">16 vídeos prontos.<br><span>1 ação desbloqueia tudo.</span></div>
-        <div class="hero-desc">37 sinais de algoritmo injetados · Gate de qualidade ativo · SEO PT+EN+ES · 471 na fila · Thumbnails geradas automaticamente · Comentários respondidos por IA</div>
-      </div>
-      <div class="hero-stats">
-        <div class="hstat"><div class="hstat-n" style="color:var(--grn)">16</div><div class="hstat-l">Prontos</div></div>
-        <div class="hstat"><div class="hstat-n" style="color:var(--mist)">471</div><div class="hstat-l">Na Fila</div></div>
-        <div class="hstat"><div class="hstat-n" style="color:var(--gold)">37</div><div class="hstat-l">Sinais</div></div>
-        <div class="hstat"><div class="hstat-n" style="color:var(--acc)">99</div><div class="hstat-l">SEO Médio</div></div>
-      </div>
+    <h1>ψ psicologia<span>.doc</span></h1>
+    <p>Pipeline autônomo 24/7 · Zero custo com IAs · @psidanielacoelho</p>
+    <div class="hero-stats">
+      <div class="hstat"><div class="hstat-n" id="hs-fila">-</div><div class="hstat-l">na fila LLM</div></div>
+      <div class="hstat"><div class="hstat-n" id="hs-thumbs" style="color:var(--mist)">43</div><div class="hstat-l">thumbnails prontos</div></div>
+      <div class="hstat"><div class="hstat-n" id="hs-crons" style="color:var(--teal)">47</div><div class="hstat-l">crons ativos</div></div>
+      <div class="hstat"><div class="hstat-n" id="hs-videos" style="color:var(--gold)">-</div><div class="hstat-l">vídeos com MP4</div></div>
     </div>
   </div>
 
-  <!-- PUBLICAÇÃO -->
-  <h3>🚀 Publicação</h3>
-  <div class="grid">
-    <a href="/pronto-publicar.html" class="card">
-      <span class="card-badge badge-hot">16 / 16 ✅</span>
-      <div class="card-acc" style="background:rgba(16,185,129,.12)">🚀</div>
-      <div class="card-title">Pronto para Publicar</div>
-      <div class="card-desc">16 vídeos aprovados pelo gate com links MP4 para teste, scores completos e ordem de publicação</div>
-    </a>
-    <a href="/videos-prontos.html" class="card">
-      <span class="card-badge badge-live">AUTO</span>
-      <div class="card-acc" style="background:rgba(124,58,237,.12)">📺</div>
-      <div class="card-title">Vídeos Prontos</div>
-      <div class="card-desc">Galeria com player HTML5. Atualiza automaticamente a cada hora com novos MP4s</div>
-    </a>
-    <a href="/galeria-thumbnails.html" class="card">
-      <span class="card-badge badge-new">30 gerados</span>
-      <div class="card-acc" style="background:rgba(245,158,11,.1)">🖼️</div>
-      <div class="card-title">Galeria de Thumbnails</div>
-      <div class="card-desc">30 thumbnails SVG geradas automaticamente. Filtro por tipo (viral, trauma, ansiedade, gold, apego)</div>
-    </a>
+  <!-- ALERTA AÇÃO CRÍTICA -->
+  <div class="alert">
+    <span class="alert-icon">🔴</span>
+    <div class="alert-txt">
+      <strong>Ações manuais bloqueando o crescimento:</strong>
+      1. Deletar ~62 orphan Edge Functions (Supabase Dashboard → Edge Functions) · 
+      2. Publicar 16 vídeos aprovados (GitHub → Actions → youtube-publisher.yml) · 
+      3. Criar 8 grupos WhatsApp + configurar links · 
+      4. Upload banner canal YouTube Studio · 
+      5. OAuth Meta + TikTok (SETUP.md)
+    </div>
   </div>
 
-  <!-- CONTEÚDO E PIPELINE -->
-  <h3>⚙️ Pipeline e Conteúdo</h3>
-  <div class="grid">
-    <a href="/qg.html" class="card">
-      <div class="card-acc" style="background:rgba(124,58,237,.12)">🧠</div>
-      <div class="card-title">QG — Quartel General</div>
-      <div class="card-desc">Estado completo do pipeline, scores, fila de geração e ações disponíveis</div>
-    </a>
-    <a href="/series.html" class="card">
-      <div class="card-acc" style="background:rgba(13,148,136,.1)">📚</div>
-      <div class="card-title">20 Séries · 140 Episódios</div>
-      <div class="card-desc">Roadmap completo de conteúdo: Ciência do Apego, Mentes Narcisistas, Trauma Invisível...</div>
-    </a>
-    <a href="/estrategia.html" class="card">
-      <div class="card-acc" style="background:rgba(245,158,11,.1)">📈</div>
-      <div class="card-title">Estratégia V37</div>
-      <div class="card-desc">Plano de 6 meses para maior canal de psicologia PT-BR com oceano azul identificado</div>
-    </a>
-    <a href="/growth.html" class="card">
-      <div class="card-acc" style="background:rgba(225,29,72,.1)">💰</div>
-      <div class="card-title">Growth & Monetização</div>
-      <div class="card-desc">Projeção R$50K/mês. Ads, AdSense PT+EN+ES, grupos WhatsApp, patrocínios</div>
-    </a>
+  <!-- PRODUÇÃO -->
+  <div class="section">
+    <div class="sec-hdr"><div class="sec-title">Produção & Controle</div><div class="sec-line"></div></div>
+    <div class="grid-4">
+      <a class="card" href="/comando.html"><span class="card-badge badge-live">LIVE</span>
+        <span class="card-icon">🧠</span>
+        <div class="card-title">Cérebro Autônomo</div>
+        <div class="card-desc">Pipeline principal · status · ações críticas · orquestrador</div></a>
+      <a class="card red" href="/videos-prontos.html"><span class="card-badge badge-live">LIVE</span>
+        <span class="card-icon">🎬</span>
+        <div class="card-title">Vídeos Prontos</div>
+        <div class="card-desc">Galeria com todos os MP4 gerados · download · preview</div></a>
+      <a class="card" href="/producao.html">
+        <span class="card-icon">⚙️</span>
+        <div class="card-title">Produção</div>
+        <div class="card-desc">Status do pipeline · render · TTS · geração de scripts</div></a>
+      <a class="card teal" href="/estado-v37.html">
+        <span class="card-icon">📊</span>
+        <div class="card-title">Estado V37</div>
+        <div class="card-desc">Status completo do projeto · métricas · roadmap</div></a>
+    </div>
   </div>
 
-  <!-- BRAND E DESIGN -->
-  <h3>🎨 Identidade Visual</h3>
-  <div class="grid">
-    <a href="/brand.html" class="card">
-      <span class="card-badge badge-new">V1</span>
-      <div class="card-acc" style="background:rgba(124,58,237,.12)">ψ</div>
-      <div class="card-title">Brand Kit Completo</div>
-      <div class="card-desc">Banner YouTube 2560×1440, 4 thumbnails, 5 avatars por plataforma, bios otimizadas, paleta e regras</div>
-    </a>
-    <a href="/thumbnail-gen.html" class="card">
-      <span class="card-badge badge-new">NOVO</span>
-      <div class="card-acc" style="background:rgba(225,29,72,.1)">⚡</div>
-      <div class="card-title">Gerador de Thumbnails</div>
-      <div class="card-desc">Gerar thumbnails personalizadas em tempo real. 5 estilos. Download SVG e PNG 1280×720</div>
-    </a>
-    <a href="/setup-canal.html" class="card">
-      <div class="card-acc" style="background:rgba(13,148,136,.1)">📺</div>
-      <div class="card-title">Setup do Canal</div>
-      <div class="card-desc">Checklist completa para YouTube Studio, Instagram, TikTok e Pinterest com textos prontos</div>
-    </a>
+  <!-- BRAND & VISUAL -->
+  <div class="section">
+    <div class="sec-hdr"><div class="sec-title">Brand Kit & Visual Identity</div><div class="sec-line"></div></div>
+    <div class="grid-4">
+      <a class="card" href="/brand.html"><span class="card-badge badge-new">NEW</span>
+        <span class="card-icon">🎨</span>
+        <div class="card-title">Brand Kit Completo</div>
+        <div class="card-desc">YouTube banner · thumbnails · avatars · bios · paleta · regras</div>
+        <div class="mini-links">
+          <span class="mini-link">2560×1440 banner</span>
+          <span class="mini-link">5 avatars</span>
+          <span class="mini-link">4 templates</span>
+        </div></a>
+      <a class="card red" href="/thumbnail-gen.html"><span class="card-badge badge-new">NEW</span>
+        <span class="card-icon">⚡</span>
+        <div class="card-title">Gerador Thumbnails</div>
+        <div class="card-desc">5 estilos · editar textos · download SVG/PNG 1280×720</div>
+        <div class="mini-links">
+          <span class="mini-link">viral</span>
+          <span class="mini-link">trauma</span>
+          <span class="mini-link">ansiedade</span>
+          <span class="mini-link">gold</span>
+          <span class="mini-link">apego</span>
+        </div></a>
+      <a class="card" href="/galeria-thumbnails.html"><span class="card-badge badge-new">NEW</span>
+        <span class="card-icon">🖼️</span>
+        <div class="card-title">Galeria Thumbnails</div>
+        <div class="card-desc">43 thumbnails auto-gerados · filtrar por tipo · download</div></a>
+      <a class="card teal" href="/insta-templates.html"><span class="card-badge badge-new">NEW</span>
+        <span class="card-icon">📸</span>
+        <div class="card-title">Templates Instagram</div>
+        <div class="card-desc">Post 1:1 · Reels 9:16 · Stories · 6 temas · download SVG/PNG</div></a>
+    </div>
   </div>
 
-  <!-- INFRAESTRUTURA -->
-  <h3>🔧 Infraestrutura</h3>
-  <div class="grid">
-    <a href="/cerebro.html" class="card">
-      <div class="card-acc" style="background:rgba(124,58,237,.12)">🧠</div>
-      <div class="card-title">Cérebro Autônomo</div>
-      <div class="card-desc">Dashboard do eternal_brain com 37 sinais de algoritmo, regras eternas e crons ativos</div>
-    </a>
-    <a href="/conectores.html" class="card">
-      <span class="card-badge badge-hot">URGENTE</span>
-      <div class="card-acc" style="background:rgba(225,29,72,.1)">🔑</div>
-      <div class="card-title">OAuth & Conectores</div>
-      <div class="card-desc">Configurar YouTube OAuth (desbloqueio dos 16 vídeos) + Meta + TikTok + Pinterest</div>
-    </a>
-    <a href="/admin.html" class="card">
-      <div class="card-acc" style="background:rgba(245,158,11,.1)">⚙️</div>
-      <div class="card-title">Admin</div>
-      <div class="card-desc">Gerenciamento de crons, Edge Functions, banco de dados e deploy</div>
-    </a>
+  <!-- SEO & CRESCIMENTO -->
+  <div class="section">
+    <div class="sec-hdr"><div class="sec-title">SEO & Crescimento</div><div class="sec-line"></div></div>
+    <div class="grid-4">
+      <a class="card gold" href="/seo-dashboard.html"><span class="card-badge badge-new">NEW</span>
+        <span class="card-icon">📈</span>
+        <div class="card-title">SEO Dashboard</div>
+        <div class="card-desc">Keywords PT/EN/ES · scores · projeção R$46K/mês · checklist</div></a>
+      <a class="card" href="/growth.html">
+        <span class="card-icon">🚀</span>
+        <div class="card-title">Growth Plan</div>
+        <div class="card-desc">0→1K→10K→100K · paid ads · organic · AdSense strategy</div></a>
+      <a class="card" href="/estrategia.html">
+        <span class="card-icon">🗺️</span>
+        <div class="card-title">Estratégia V37</div>
+        <div class="card-desc">Roadmap completo · fases · monetização · metas</div></a>
+      <a class="card teal" href="/setup-canal.html"><span class="card-badge badge-new">NEW</span>
+        <span class="card-icon">📺</span>
+        <div class="card-title">Setup do Canal</div>
+        <div class="card-desc">Checklist YouTube Studio · Instagram · TikTok · todas as redes</div></a>
+    </div>
   </div>
 
-  <!-- CTA ÚNICO -->
-  <div class="cta">
-    <span class="cta-icon">🔑</span>
-    <div style="flex:1">
-      <div class="cta-title">Uma ação. 16 vídeos publicados. Pipeline ativo.</div>
-      <div class="cta-desc">
-        Todo o sistema está pronto. 37 sinais de algoritmo injetados em cada vídeo. 
-        Gate de qualidade garantindo média 95+ em tudo. SEO em PT+EN+ES.
-        O único bloqueador é o OAuth do YouTube.
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <span class="cta-step">1. OAuth Playground → psidanielacoelho1982@gmail.com</span>
-        <span class="cta-step">2. Scope: youtube.upload + youtube.force-ssl</span>
-        <span class="cta-step">3. Cole o refresh_token no Supabase → ia_cache</span>
-        <span class="cta-step">4. ✅ Pipeline publica automaticamente</span>
-      </div>
+  <!-- CONTEÚDO -->
+  <div class="section">
+    <div class="sec-hdr"><div class="sec-title">Conteúdo</div><div class="sec-line"></div></div>
+    <div class="grid-4">
+      <a class="card" href="/series.html">
+        <span class="card-icon">📚</span>
+        <div class="card-title">20 Séries · 140 Eps</div>
+        <div class="card-desc">Todas as séries e episódios planejados</div></a>
+      <a class="card red" href="/galeria-quantica.html">
+        <span class="card-icon">🌌</span>
+        <div class="card-title">Galeria Quântica</div>
+        <div class="card-desc">Vídeos gate quântico aprovados</div></a>
+      <a class="card" href="/videos-analise.html">
+        <span class="card-icon">🔬</span>
+        <div class="card-title">Análise de Vídeos</div>
+        <div class="card-desc">Auditoria · scores · métricas por vídeo</div></a>
+      <a class="card gold" href="/qg.html">
+        <span class="card-icon">🎯</span>
+        <div class="card-title">Quartel General</div>
+        <div class="card-desc">QG V37 · todas as operações em uma tela</div></a>
+    </div>
+  </div>
+
+  <!-- DISTRIBUIÇÃO -->
+  <div class="section">
+    <div class="sec-hdr"><div class="sec-title">Distribuição & Redes Sociais</div><div class="sec-line"></div></div>
+    <div class="grid-4">
+      <a class="card" href="/conectores.html">
+        <span class="card-icon">🔗</span>
+        <div class="card-title">Conectores OAuth</div>
+        <div class="card-desc">Meta · TikTok · Pinterest · YouTube · configurar tokens</div></a>
+      <a class="card teal" href="/daniela.html">
+        <span class="card-icon">👤</span>
+        <div class="card-title">Perfil Daniela</div>
+        <div class="card-desc">Bio oficial · redes sociais · links</div></a>
+      <a class="card" href="/apps/">
+        <span class="card-icon">📱</span>
+        <div class="card-title">Apps</div>
+        <div class="card-desc">Aplicações e mini-tools do projeto</div></a>
+      <a class="card" href="/admin.html">
+        <span class="card-icon">⚙️</span>
+        <div class="card-title">Admin</div>
+        <div class="card-desc">Configurações · ambiente · secrets</div></a>
     </div>
   </div>
 
 </div>
 
-<footer style="text-align:center;padding:20px;font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;line-height:1.8;position:relative;z-index:1;border-top:1px solid var(--bd)">
-ψ psicologia.doc V37 · @psidanielacoelho · UCyCkIpsVgME9yCj_oXJFheA<br>
-37 sinais de algoritmo · Gate ativo · SEO PT+EN+ES · 471 vídeos na fila<br>
-Referências: DoctorRamani 2.3M · Psych2Go 10.5M · Therapy in a Nutshell 1.2M · Luana Marinho 2.1M BR
-</footer>
+<script>
+const SB_URL='https://tpjvalzwkqwttvmszvie.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwanZhbHp3a3F3dHR2bXN6dmllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY3MDkxNjUsImV4cCI6MjA1MjI4NTE2NX0.Sn3xzLw6DtGi2y0yyg_HCObPz7YxBObM3RrKs8ylsaA';
+
+async function loadStats() {
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/content_pipeline?select=status&limit=1000`,
+      {headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
+    const d = await r.json();
+    const cnt={};
+    d.forEach(x=>cnt[x.status]=(cnt[x.status]||0)+1);
+    document.getElementById('hs-fila').textContent=(cnt['pending_generation']||0).toLocaleString('pt-BR');
+    const mp4 = (cnt['mp4_ready']||0)+(cnt['pending_credentials']||0);
+    document.getElementById('hs-videos').textContent=mp4;
+    document.getElementById('live-status').textContent='pipeline ativo · '+new Date().toLocaleTimeString('pt-BR');
+  } catch(e) {
+    document.getElementById('live-status').textContent='offline';
+    document.getElementById('live-dot').className='dot dot-crim';
+  }
+}
+loadStats();
+setInterval(loadStats, 60000);
+</script>
 </body></html>
