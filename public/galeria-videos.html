@@ -1,260 +1,570 @@
 <!DOCTYPE html>
-<html lang="pt-BR"><head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ψ Galeria de Vídeos — @psidanielacoelho</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800;900&family=DM+Mono:wght@400;600&display=swap" rel="stylesheet">
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ψ Galeria — Ver Antes de Publicar</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,800;0,9..40,900;1,9..40,400&family=DM+Mono:wght@400;500&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#06060F;--s1:#0E0E1A;--v:#7C3AED;--r:#E11D48;--g:#F59E0B;--t:#0D9488;--grn:#10B981;--m:#C4B5FD;--t1:#E2E8F0;--t2:#94A3B8;--t3:#475569;--bd:rgba(255,255,255,.07)}
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--bg);color:var(--t1);font-family:"DM Sans",sans-serif;min-height:100vh}
-body::before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse 60% 40% at 20% 10%,rgba(124,58,237,.07),transparent)}
+/* ── BASE ── */
+:root {
+  --bg:   #06060F; --s1:#0C0C1A; --s2:#111126;
+  --v:    #7C3AED; --va:rgba(124,58,237,.18); --vb:rgba(124,58,237,.08);
+  --r:    #E11D48; --ra:rgba(225,29,72,.18);
+  --g:    #F59E0B; --ga:rgba(245,158,11,.12);
+  --t:    #0D9488; --ta:rgba(13,148,136,.15);
+  --grn:  #10B981; --grna:rgba(16,185,129,.12);
+  --m:    #C4B5FD; --ma:rgba(196,181,253,.12);
+  --ice:  #F0F4FF;
+  --t1:   #E2E8F0; --t2:#94A3B8; --t3:#475569; --t4:#2A2A40;
+  --bd:   rgba(255,255,255,.06); --bdh:rgba(255,255,255,.12);
+  --sh:   0 8px 32px rgba(0,0,0,.5);
+  --rad:  14px; --rad-sm:8px;
+}
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0 }
+html { scroll-behavior:smooth }
+body {
+  background:var(--bg); color:var(--t1);
+  font-family:"DM Sans",system-ui,sans-serif;
+  min-height:100vh; overflow-x:hidden;
+}
+/* ambient */
+body::before {
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+  background:
+    radial-gradient(ellipse 80% 50% at -5% 0%,  rgba(124,58,237,.09),transparent 55%),
+    radial-gradient(ellipse 60% 40% at 105% 0%, rgba(225,29,72,.07), transparent 50%),
+    radial-gradient(ellipse 50% 60% at 50% 110%,rgba(13,148,136,.05), transparent 55%);
+}
+* { position:relative; z-index:1 }
 
-/* BOTÃO HOME — canto superior direito */
-.home-btn{position:fixed;top:14px;right:16px;z-index:9999;display:flex;align-items:center;gap:6px;background:rgba(6,6,15,.92);border:1px solid rgba(196,181,253,.25);border-radius:10px;padding:6px 14px;color:#C4B5FD;font-size:11px;font-weight:700;text-decoration:none;backdrop-filter:blur(12px);transition:all .15s;box-shadow:0 2px 16px rgba(0,0,0,.4)}
-.home-btn:hover{border-color:rgba(196,181,253,.6);background:rgba(14,14,26,.97)}
+/* ── BOTÃO HOME ── */
+.home-btn {
+  position:fixed; top:14px; right:16px; z-index:9999;
+  display:flex; align-items:center; gap:7px;
+  background:rgba(6,6,15,.92); border:1px solid rgba(196,181,253,.22);
+  border-radius:10px; padding:7px 15px;
+  color:var(--m); font-size:11px; font-weight:700;
+  text-decoration:none; backdrop-filter:blur(14px);
+  box-shadow:0 2px 16px rgba(0,0,0,.45); transition:.18s;
+  letter-spacing:.04em;
+}
+.home-btn:hover { border-color:rgba(196,181,253,.6); background:rgba(14,14,26,.97); color:var(--ice) }
+.home-btn span { font-size:15px; font-family:"Playfair Display",serif; font-weight:700 }
 
-/* HEADER */
-.hdr{padding:16px 24px;border-bottom:1px solid var(--bd);background:rgba(6,6,15,.96);backdrop-filter:blur(20px);position:sticky;top:0;z-index:100;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-.logo{font-size:18px;font-weight:800;color:var(--m)}
-.canal-badge{display:flex;align-items:center;gap:6px;background:rgba(225,29,72,.1);border:1px solid rgba(225,29,72,.3);border-radius:20px;padding:5px 14px;font-size:11px;font-weight:700;color:#FCA5A5;text-decoration:none;margin-right:140px}
-.dot{width:7px;height:7px;border-radius:50%;background:#ff0000;animation:blink 1.5s infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+/* ── BARRA SUPERIOR: STORAGE MONITOR ── */
+#storage-bar {
+  position:sticky; top:0; z-index:500;
+  background:rgba(6,6,15,.97); backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--bd);
+  padding:10px 24px; display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+}
+.logo { font-family:"Playfair Display",serif; font-size:17px; color:var(--m); font-weight:700; letter-spacing:-.01em }
+.logo sub { font-size:9px; font-family:"DM Mono",monospace; color:var(--t3); vertical-align:middle; margin-left:4px; font-weight:400 }
 
-/* STATS */
-.stats-bar{background:var(--s1);border-bottom:1px solid var(--bd);padding:12px 24px;display:flex;gap:24px;flex-wrap:wrap}
-.sb-n{font-size:22px;font-weight:900;line-height:1;display:block}
-.sb-l{font-size:8px;color:var(--t3);font-family:"DM Mono",monospace}
+/* Storage gauge */
+.storage-gauge {
+  flex:1; min-width:220px; display:flex; align-items:center; gap:10px;
+  background:var(--s1); border:1px solid var(--bd);
+  border-radius:999px; padding:5px 14px;
+}
+.gauge-track {
+  flex:1; height:6px; background:rgba(255,255,255,.07);
+  border-radius:3px; overflow:hidden; min-width:80px;
+}
+.gauge-fill {
+  height:100%; border-radius:3px;
+  transition:width 1s cubic-bezier(.4,0,.2,1);
+}
+.gauge-label { font-family:"DM Mono",monospace; font-size:10px; white-space:nowrap }
+.storage-alert {
+  font-size:9px; font-weight:700; letter-spacing:.08em;
+  padding:3px 9px; border-radius:999px;
+  font-family:"DM Mono",monospace; white-space:nowrap;
+}
 
-/* ALERT */
-.alert-token{background:rgba(225,29,72,.06);border:1px solid rgba(225,29,72,.2);border-radius:10px;padding:10px 16px;margin:14px 24px 0;font-size:11px;color:#FCA5A5;line-height:1.6}
-.alert-token strong{color:#fff}.alert-token a{color:var(--g)}
+/* counts */
+.hdr-stat { text-align:center; min-width:48px }
+.hdr-n { font-size:18px; font-weight:900; line-height:1; font-family:"DM Mono",monospace; display:block }
+.hdr-l { font-size:7.5px; text-transform:uppercase; letter-spacing:.1em; color:var(--t3); margin-top:1px; display:block }
 
-/* WRAP */
-.wrap{max-width:1400px;margin:0 auto;padding:16px 24px 80px}
-.sec-hdr{display:flex;align-items:center;gap:10px;margin-bottom:12px;padding-bottom:7px;border-bottom:1px solid var(--bd)}
-.sec-ttl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:2px;color:var(--t2)}
-.sec-sub{font-size:8px;color:var(--t3);font-family:"DM Mono",monospace;margin-left:auto}
+/* canal badge */
+.canal-chip {
+  display:flex; align-items:center; gap:6px;
+  background:var(--ra); border:1px solid rgba(225,29,72,.28);
+  border-radius:999px; padding:5px 13px;
+  font-size:10px; font-weight:700; color:#FCA5A5;
+  text-decoration:none; margin-right:155px;
+}
+.dot { width:7px; height:7px; border-radius:50%; background:#ff2222; animation:blink 1.4s ease-in-out infinite }
+@keyframes blink { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.3;transform:scale(.7)} }
 
-/* FILTROS */
-.filtros{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
-.ftag{background:rgba(255,255,255,.06);border:1px solid var(--bd);border-radius:20px;padding:4px 12px;font-size:10px;font-weight:600;cursor:pointer;transition:.15s;color:var(--t2)}
-.ftag:hover,.ftag.ativo{background:rgba(124,58,237,.15);border-color:rgba(124,58,237,.4);color:var(--m)}
+/* ── ALERTA TOKEN ── */
+.token-alert {
+  background:linear-gradient(135deg,rgba(225,29,72,.08),rgba(245,158,11,.06));
+  border:1px solid rgba(225,29,72,.22);
+  border-radius:var(--rad-sm); padding:9px 18px;
+  margin:12px 24px 0; font-size:11px; color:#FCA5A5;
+  display:flex; align-items:center; gap:9px; flex-wrap:wrap; line-height:1.5;
+}
+.token-alert strong { color:var(--t1) }
+.token-alert a { color:var(--g); font-weight:600; text-decoration:none }
+.token-alert a:hover { text-decoration:underline }
 
-/* GRID */
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+/* ── FILTROS ── */
+.filter-bar {
+  padding:12px 24px; display:flex; gap:7px; flex-wrap:wrap; align-items:center;
+  border-bottom:1px solid var(--bd);
+}
+.filter-bar label { font-size:9px; text-transform:uppercase; letter-spacing:.1em; color:var(--t3); font-family:"DM Mono",monospace; margin-right:2px }
+.ftag {
+  background:rgba(255,255,255,.05); border:1px solid var(--bd);
+  border-radius:999px; padding:4px 13px;
+  font-size:10px; font-weight:600; cursor:pointer; transition:.15s;
+  color:var(--t2); user-select:none;
+}
+.ftag:hover { background:var(--va); border-color:rgba(124,58,237,.3); color:var(--m) }
+.ftag.on { background:var(--va); border-color:rgba(124,58,237,.45); color:var(--m); font-weight:700 }
+.sort-sel {
+  margin-left:auto; background:var(--s1); border:1px solid var(--bd);
+  color:var(--t2); border-radius:var(--rad-sm); padding:5px 10px;
+  font-size:10px; font-family:"DM Mono",monospace; cursor:pointer;
+}
 
-/* CARD */
-.vcard{background:var(--s1);border:1px solid var(--bd);border-radius:14px;overflow:hidden;transition:.2s;position:relative}
-.vcard:hover{border-color:rgba(124,58,237,.4);transform:translateY(-2px);box-shadow:0 10px 30px rgba(0,0,0,.4)}
-video.vcard-video{width:100%;aspect-ratio:16/9;background:#000;display:block;object-fit:cover}
-.vcard-body{padding:12px}
-.vcard-title{font-size:12px;font-weight:700;color:var(--t1);line-height:1.3;margin-bottom:7px}
-.vcard-meta{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px}
-.chip{font-size:8px;font-family:"DM Mono",monospace;padding:2px 6px;border-radius:6px;background:rgba(255,255,255,.07);color:var(--t2)}
-.chip-ok{background:rgba(16,185,129,.1);color:var(--grn);border:1px solid rgba(16,185,129,.2)}
-.chip-pub{background:rgba(255,0,0,.1);color:#ff4444;border:1px solid rgba(255,0,0,.2)}
-.chip-v{background:rgba(124,58,237,.1);color:var(--m);border:1px solid rgba(124,58,237,.2)}
-.vcard-actions{display:flex;gap:6px}
-.btn{flex:1;text-align:center;padding:7px 4px;border-radius:7px;font-size:10px;font-weight:700;text-decoration:none;transition:.15s;border:none;cursor:pointer;font-family:"DM Sans",sans-serif}
-.btn-dl{background:rgba(124,58,237,.15);color:var(--m);border:1px solid rgba(124,58,237,.3)}
-.btn-dl:hover{background:rgba(124,58,237,.3)}
-.btn-pub{background:rgba(225,29,72,.15);color:#FCA5A5;border:1px solid rgba(225,29,72,.3)}
-.btn-yt{background:rgba(16,185,129,.1);color:var(--grn);border:1px solid rgba(16,185,129,.25)}
-.vcard-badge{position:absolute;top:8px;left:8px;font-size:7px;font-family:"DM Mono",monospace;font-weight:700;padding:2px 7px;border-radius:6px}
-.vb-mp4{background:rgba(16,185,129,.2);color:var(--grn);border:1px solid rgba(16,185,129,.3)}
-.vb-pub{background:rgba(0,100,255,.2);color:#60a5fa;border:1px solid rgba(0,100,255,.3)}
+/* ── GRID ── */
+.wrap { max-width:1440px; margin:0 auto; padding:14px 24px 100px }
+.grid-hdr {
+  display:flex; align-items:center; gap:8px;
+  padding-bottom:10px; margin-bottom:14px;
+  border-bottom:1px solid var(--bd);
+}
+.grid-hdr-ttl { font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:.18em; color:var(--t3) }
+.grid-hdr-count { font-size:8px; color:var(--t3); font-family:"DM Mono",monospace; margin-left:auto }
 
-/* CANAL */
-.canal-card{background:linear-gradient(135deg,rgba(16,185,129,.06),rgba(124,58,237,.06));border:1px solid rgba(16,185,129,.2);border-radius:11px;padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:14px }
 
-/* EMPTY */
-.empty{text-align:center;padding:60px;color:var(--t3);grid-column:1/-1}
-.loading-spinner{display:inline-block;width:24px;height:24px;border:2px solid rgba(196,181,253,.3);border-top-color:var(--m);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:12px}
-@keyframes spin{to{transform:rotate(360deg)}}
+/* ── CARD ── */
+.card {
+  background:linear-gradient(170deg, var(--s1) 0%, var(--s2) 100%);
+  border:1px solid var(--bd); border-radius:var(--rad);
+  overflow:hidden; transition:border-color .2s, transform .2s, box-shadow .2s;
+  display:flex; flex-direction:column;
+}
+.card:hover {
+  border-color:rgba(124,58,237,.4);
+  transform:translateY(-3px);
+  box-shadow:0 14px 40px rgba(0,0,0,.45), 0 0 0 1px rgba(124,58,237,.15);
+}
+.card-video-wrap { position:relative; aspect-ratio:16/9; background:#000; overflow:hidden }
+.card-video-wrap video { width:100%; height:100%; object-fit:cover; display:block }
+.card-badge {
+  position:absolute; top:8px; left:8px;
+  font-size:7px; font-family:"DM Mono",monospace; font-weight:700;
+  padding:2px 8px; border-radius:5px;
+}
+.badge-mp4  { background:rgba(16,185,129,.2);  color:var(--grn); border:1px solid rgba(16,185,129,.3) }
+.badge-pub  { background:rgba(96,165,250,.2);  color:#93c5fd;    border:1px solid rgba(96,165,250,.3) }
+.card-size-badge {
+  position:absolute; top:8px; right:8px;
+  font-size:7px; font-family:"DM Mono",monospace;
+  padding:2px 7px; border-radius:5px;
+  background:rgba(6,6,15,.85); color:var(--t2); border:1px solid var(--bd);
+  backdrop-filter:blur(8px);
+}
+.card-body { padding:12px 13px; flex:1; display:flex; flex-direction:column; gap:9px }
+.card-title {
+  font-size:12.5px; font-weight:700; color:var(--t1); line-height:1.35;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+}
+.card-meta { display:flex; gap:5px; flex-wrap:wrap }
+.chip {
+  font-size:8px; font-family:"DM Mono",monospace;
+  padding:2px 7px; border-radius:5px;
+}
+.chip-s  { background:var(--va); color:var(--m);   border:1px solid rgba(124,58,237,.22) }
+.chip-p  { background:var(--grna); color:var(--grn); border:1px solid rgba(16,185,129,.2) }
+.chip-pl { background:rgba(255,255,255,.05); color:var(--t3); border:1px solid var(--bd) }
+.chip-id { background:rgba(255,255,255,.04); color:var(--t4); border:1px solid rgba(255,255,255,.04) }
 
-@media(max-width:600px){.grid{grid-template-columns:1fr}.stats-bar{gap:14px}}
+/* size bar within card */
+.size-row { display:flex; align-items:center; gap:7px }
+.size-track { flex:1; height:3px; background:rgba(255,255,255,.07); border-radius:2px; overflow:hidden }
+.size-fill  { height:100%; border-radius:2px; background:linear-gradient(90deg,var(--t),var(--v)) }
+.size-lbl   { font-size:8px; font-family:"DM Mono",monospace; color:var(--t3); white-space:nowrap }
+
+.card-acts { display:flex; gap:6px; margin-top:auto }
+.btn {
+  flex:1; text-align:center; padding:7px 4px;
+  border-radius:var(--rad-sm); font-size:10px; font-weight:700;
+  text-decoration:none; border:none; cursor:pointer;
+  font-family:"DM Sans",sans-serif; transition:.15s; letter-spacing:.02em;
+}
+.btn-dl  { background:var(--va); color:var(--m);   border:1px solid rgba(124,58,237,.3) }
+.btn-dl:hover  { background:rgba(124,58,237,.3) }
+.btn-pub { background:var(--ra); color:#FCA5A5;  border:1px solid rgba(225,29,72,.28) }
+.btn-pub:hover { background:rgba(225,29,72,.28) }
+.btn-yt  { background:var(--grna); color:var(--grn); border:1px solid rgba(16,185,129,.22) }
+.btn-yt:hover  { background:rgba(16,185,129,.22) }
+
+/* ── EMPTY / LOADING ── */
+.empty { grid-column:1/-1; text-align:center; padding:60px 20px; color:var(--t3) }
+.spinner {
+  width:28px; height:28px; border:2px solid rgba(196,181,253,.15);
+  border-top-color:var(--m); border-radius:50%;
+  animation:spin .7s linear infinite; margin:0 auto 14px;
+}
+@keyframes spin { to { transform:rotate(360deg) } }
+
+/* ── STORAGE CRÍTICO: barra de alerta expandida ── */
+.storage-critical-banner {
+  background:linear-gradient(135deg,rgba(225,29,72,.1),rgba(245,158,11,.07));
+  border:1px solid rgba(225,29,72,.3);
+  border-radius:var(--rad-sm); padding:10px 18px;
+  margin:10px 24px 0; font-size:11px; line-height:1.6;
+  display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap;
+}
+.sc-icon { font-size:20px; flex-shrink:0; margin-top:1px }
+.sc-text strong { color:var(--t1); display:block; margin-bottom:2px }
+.sc-text span { color:var(--t2) }
+
+/* ── RESPONSIVE ── */
+@media(max-width:640px){
+  .grid{ grid-template-columns:1fr }
+  #storage-bar{ gap:10px }
+  .canal-chip{ margin-right:150px }
+}
 </style>
-</head><body>
+</head>
+<body>
 
 <!-- BOTÃO HOME -->
 <a class="home-btn" href="/hub.html">
-  <span style="font-size:14px;font-family:serif;font-weight:900">ψ</span>
-  Hub
+  <span>ψ</span>Hub
 </a>
 
-<header class="hdr">
-  <div class="logo">🎬 Galeria de Vídeos</div>
-  <a class="canal-badge" href="https://www.youtube.com/@psidanielacoelho" target="_blank">
-    <span class="dot"></span>
-    @psidanielacoelho
-  </a>
-</header>
+<!-- ══════════ STORAGE BAR (sticky) ══════════ -->
+<div id="storage-bar">
+  <div class="logo">Galeria <sub>PRÉ-PUBLICAÇÃO</sub></div>
 
-<div class="stats-bar">
-  <div><span class="sb-n" id="s-total" style="color:var(--m)">–</span><span class="sb-l">TOTAL MP4</span></div>
-  <div><span class="sb-n" id="s-pub" style="color:var(--grn)">–</span><span class="sb-l">NO YOUTUBE</span></div>
-  <div><span class="sb-n" id="s-wait" style="color:var(--r)">–</span><span class="sb-l">AGUARDANDO</span></div>
-  <div><span class="sb-n" style="color:var(--g)">99</span><span class="sb-l">SEO SCORE</span></div>
-  <span style="margin-left:auto;font-size:9px;color:var(--t3);font-family:monospace" id="s-upd">–</span>
-</div>
-
-<div class="alert-token">
-  🔴 <strong>Publisher bloqueado:</strong> YT_REFRESH_TOKEN expirado.
-  Renovar em <a href="/oauth.html">oauth.html</a> (3 min) →
-  atualizar <a href="https://github.com/tafita81/Repovazio/settings/secrets/actions/YT_REFRESH_TOKEN" target="_blank">GitHub Secret</a> →
-  redisparar <a href="https://github.com/tafita81/Repovazio/actions/workflows/youtube-publisher.yml" target="_blank">YouTube Publisher</a>.
-</div>
-
-<div class="wrap">
-  <!-- CANAL -->
-  <div class="canal-card">
-    <span style="font-size:28px">📺</span>
-    <div>
-      <div style="font-size:13px;font-weight:800;color:var(--t1)">Canal: @psidanielacoelho</div>
-      <div style="font-size:9px;color:var(--t3);font-family:monospace;margin-top:2px">UCyCkIpsVgME9yCj_oXJFheA · psidanielacoelho1982@gmail.com</div>
-      <span style="font-size:9px;background:rgba(16,185,129,.1);color:var(--grn);border:1px solid rgba(16,185,129,.2);border-radius:5px;padding:1px 7px;font-family:monospace;margin-top:4px;display:inline-block">✓ ÚNICO DESTINO DE PUBLICAÇÃO</span>
+  <!-- Gauge storage -->
+  <div class="storage-gauge" id="gauge-wrap" title="Storage Supabase">
+    <div class="gauge-track">
+      <div class="gauge-fill" id="gauge-fill" style="width:0%;background:#10B981"></div>
     </div>
-    <a href="https://studio.youtube.com/channel/UCyCkIpsVgME9yCj_oXJFheA" target="_blank" 
-       style="margin-left:auto;background:rgba(225,29,72,.12);color:#FCA5A5;border:1px solid rgba(225,29,72,.25);border-radius:7px;padding:6px 14px;font-size:10px;font-weight:700;text-decoration:none">YouTube Studio →</a>
+    <span class="gauge-label" id="gauge-label" style="color:var(--t2)">—</span>
+    <span class="storage-alert" id="gauge-alert" style="display:none"></span>
   </div>
 
-  <!-- FILTROS -->
-  <div class="filtros" id="filtros">
-    <div class="ftag ativo" data-f="todos" onclick="filtrar(this,'todos')">Todos</div>
-    <div class="ftag" data-f="Apego" onclick="filtrar(this,'Apego')">💜 Apego</div>
-    <div class="ftag" data-f="Narcisismo" onclick="filtrar(this,'Narcisismo')">🔴 Narcisismo</div>
-    <div class="ftag" data-f="Trauma" onclick="filtrar(this,'Trauma')">🟣 Trauma</div>
-    <div class="ftag" data-f="Relacionamentos" onclick="filtrar(this,'Relacionamentos')">🤝 Relacionamentos</div>
-    <div class="ftag" data-f="Ansiedade" onclick="filtrar(this,'Ansiedade')">🔵 Ansiedade</div>
-    <div class="ftag" data-f="Autoestima" onclick="filtrar(this,'Autoestima')">💛 Autoestima</div>
-    <div class="ftag" data-f="Depressao" onclick="filtrar(this,'Depress')">😔 Depressão</div>
-    <div class="ftag" data-f="shorts" onclick="filtrar(this,'shorts')">📱 Shorts</div>
-    <div class="ftag" data-f="long" onclick="filtrar(this,'long')">📹 Long</div>
+  <!-- Stats rápidos -->
+  <div class="hdr-stat">
+    <span class="hdr-n" id="s-total" style="color:var(--m)">—</span>
+    <span class="hdr-l">MP4s</span>
+  </div>
+  <div class="hdr-stat">
+    <span class="hdr-n" id="s-pub" style="color:var(--grn)">—</span>
+    <span class="hdr-l">No YT</span>
+  </div>
+  <div class="hdr-stat">
+    <span class="hdr-n" id="s-wait" style="color:var(--r)">—</span>
+    <span class="hdr-l">Aguard.</span>
+  </div>
+  <div class="hdr-stat">
+    <span class="hdr-n" id="s-obj" style="color:var(--g)">—</span>
+    <span class="hdr-l">Objetos</span>
   </div>
 
-  <!-- GRID -->
-  <div class="sec-hdr">
-    <span class="sec-ttl">🎬 Todos os Vídeos com MP4</span>
-    <span class="sec-sub" id="grid-count">carregando...</span>
+  <!-- Canal -->
+  <a class="canal-chip" href="https://www.youtube.com/@psidanielacoelho" target="_blank">
+    <span class="dot"></span>@psidanielacoelho
+  </a>
+</div>
+
+<!-- banner storage crítico (injetado via JS se >80%) -->
+<div id="storage-banner" style="display:none"></div>
+
+<!-- alerta token -->
+<div class="token-alert">
+  <span>🔴</span>
+  <div>
+    <strong>Publisher bloqueado — YT_REFRESH_TOKEN expirado.</strong>
+    Renovar em <a href="/oauth.html">oauth.html</a> (3 min) →
+    atualizar <a href="https://github.com/tafita81/Repovazio/settings/secrets/actions/YT_REFRESH_TOKEN" target="_blank">GitHub Secret</a> →
+    redisparar <a href="https://github.com/tafita81/Repovazio/actions/workflows/youtube-publisher.yml" target="_blank">youtube-publisher.yml</a>
+  </div>
+</div>
+
+<!-- ══════════ FILTROS ══════════ -->
+<div class="filter-bar">
+  <label>Série</label>
+  <div class="ftag on" onclick="F(this,'t')">Todos</div>
+  <div class="ftag" onclick="F(this,'Apego')">💜 Apego</div>
+  <div class="ftag" onclick="F(this,'Narcisismo')">🔴 Narcisismo</div>
+  <div class="ftag" onclick="F(this,'Trauma')">🟣 Trauma</div>
+  <div class="ftag" onclick="F(this,'Relacionamentos')">🤝 Relacion.</div>
+  <div class="ftag" onclick="F(this,'Ansiedade')">🔵 Ansiedade</div>
+  <div class="ftag" onclick="F(this,'Autoestima')">💛 Autoestima</div>
+  <div class="ftag" onclick="F(this,'Depressão')">😔 Depressão</div>
+  <div class="ftag" onclick="F(this,'Dinheiro')">💰 Dinheiro</div>
+  <label style="margin-left:8px">Tipo</label>
+  <div class="ftag" onclick="F(this,'sh')">📱 Shorts</div>
+  <div class="ftag" onclick="F(this,'lo')">📹 Long</div>
+  <label style="margin-left:8px">Status</label>
+  <div class="ftag" onclick="F(this,'wait')">⏳ Aguardando</div>
+  <div class="ftag" onclick="F(this,'pub')">✅ Publicado</div>
+  <select class="sort-sel" onchange="SORT=this.value;render()">
+    <option value="seo">↓ SEO Score</option>
+    <option value="size">↓ Tamanho</option>
+    <option value="id">↓ ID</option>
+    <option value="plat">Plataforma</option>
+  </select>
+</div>
+
+<!-- ══════════ GRID ══════════ -->
+<div class="wrap">
+  <div class="grid-hdr">
+    <span class="grid-hdr-ttl">🎬 Vídeos Prontos para Publicar</span>
+    <span class="grid-hdr-count" id="grid-count">carregando…</span>
   </div>
   <div class="grid" id="grid">
-    <div class="empty"><div class="loading-spinner"></div><br>Carregando vídeos...</div>
+    <div class="empty"><div class="spinner"></div>Carregando vídeos do Supabase…</div>
   </div>
 </div>
 
+<!-- ══════════ JS ══════════ -->
 <script>
 const SB = 'https://tpjvalzwkqwttvmszvie.supabase.co';
-const K = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwanZhbHp3a3F3dHR2bXN6dmllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY3MDkxNjUsImV4cCI6MjA1MjI4NTE2NX0.Sn3xzLw6DtGi2y0yyg_HCObPz7YxBObM3RrKs8ylsaA';
+const AK = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwanZhbHp3a3F3dHR2bXN6dmllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY3MDkxNjUsImV4cCI6MjA1MjI4NTE2NX0.Sn3xzLw6DtGi2y0yyg_HCObPz7YxBObM3RrKs8ylsaA';
 
-// CANAL EXCLUSIVO — NUNCA ALTERAR
-const CANAL_ATIVO = 'UCyCkIpsVgME9yCj_oXJFheA'; // @psidanielacoelho
-const CANAL_BLOQUEADO = 'UCSH63tBfY6wEIdkC4u4zKdg'; // BLOQUEADO permanentemente
+// Supabase free tier limits
+const FREE_STORAGE_GB  = 1.0;   // 1 GB
+const FREE_STORAGE_MB  = 1024;  // em MB
+const MAX_OBJECTS_FREE = 100;   // aprox
 
-const SERIE_MAP = {
+// Mapeamento título → série
+const SM = {
   narcis:'Narcisismo', gaslight:'Narcisismo', manipul:'Narcisismo',
   apego:'Apego', abandono:'Apego',
   trauma:'Trauma', neglig:'Trauma',
-  ansied:'Ansiedade', pânico:'Ansiedade',
-  burnout:'Burnout', esgotamento:'Burnout',
+  ansied:'Ansiedade', panico:'Ansiedade',
+  burnout:'Burnout', esgot:'Burnout',
   autoestima:'Autoestima', impost:'Autoestima', sabota:'Autoestima',
-  relacionamento:'Relacionamentos', tóxico:'Relacionamentos', amor:'Relacionamentos',
+  relacionamento:'Relacionamentos', toxico:'Relacionamentos', amor:'Relacionamentos',
   depress:'Depressão',
-  dinheiro:'Dinheiro', finanças:'Dinheiro',
+  dinheiro:'Dinheiro', financ:'Dinheiro',
 };
 
-function getSerie(title) {
-  const t = (title||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-  for (const [k, s] of Object.entries(SERIE_MAP)) {
-    if (t.includes(k.normalize('NFD').replace(/[\u0300-\u036f]/g,''))) return s;
-  }
+function getSerie(t) {
+  const s = (t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  for (const [k,v] of Object.entries(SM))
+    if (s.includes(k.normalize('NFD').replace(/[\u0300-\u036f]/g,''))) return v;
   return 'Psicologia';
 }
 
-let todosVideos = [];
-let filtroAtivo = 'todos';
+let ALL  = [];   // videos com mp4
+let OBJS = {};   // name → {mb, created_at}
+let FA   = 't';  // filtro ativo
+let SORT = 'seo';
 
-async function load() {
+// ── Carregar storage objects (tamanhos reais) ──
+async function loadStorage() {
   try {
-    const res = await fetch(
-      `${SB}/rest/v1/content_pipeline?mp4_url=not.is.null&select=id,title,youtube_title,mp4_url,youtube_video_id,seo_score,target_platform,status&order=seo_score.desc,id.desc&limit=100`,
-      { headers: { apikey: K, Authorization: 'Bearer ' + K } }
-    );
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    todosVideos = await res.json();
+    // Paginando até 1000 objetos
+    let all = [], page = 0, PER = 100;
+    while (true) {
+      const r = await fetch(`${SB}/storage/v1/object/list/videos`, {
+        method:'POST',
+        headers:{ apikey:AK, Authorization:'Bearer '+AK, 'Content-Type':'application/json' },
+        body: JSON.stringify({ limit:PER, offset:page*PER, sortBy:{column:'created_at',order:'desc'} })
+      });
+      const d = await r.json();
+      if (!Array.isArray(d) || d.length === 0) break;
+      all = all.concat(d);
+      if (d.length < PER) break;
+      page++;
+    }
 
-    const pub = todosVideos.filter(v => v.youtube_video_id).length;
-    const wait = todosVideos.filter(v => !v.youtube_video_id).length;
+    // Mapear name → tamanho
+    let totalBytes = 0;
+    for (const obj of all) {
+      const mb = (obj.metadata?.size || 0) / 1024 / 1024;
+      totalBytes += (obj.metadata?.size || 0);
+      OBJS[obj.name] = { mb: parseFloat(mb.toFixed(2)), created_at: obj.created_at };
+      // também tentar subpath
+      if (obj.name && obj.name.includes('/')) {
+        OBJS[obj.name.split('/').pop()] = OBJS[obj.name];
+      }
+    }
 
-    document.getElementById('s-total').textContent = todosVideos.length;
-    document.getElementById('s-pub').textContent = pub;
-    document.getElementById('s-wait').textContent = wait;
-    document.getElementById('s-upd').textContent = 'Atualizado: ' + new Date().toLocaleTimeString('pt-BR');
+    const totalMB = totalBytes / 1024 / 1024;
+    const totalGB = totalMB / 1024;
+    const pct     = (totalGB / FREE_STORAGE_GB) * 100;
 
-    renderGrid();
+    // Atualizar gauge
+    const fill    = document.getElementById('gauge-fill');
+    const lbl     = document.getElementById('gauge-label');
+    const alert   = document.getElementById('gauge-alert');
+    const banner  = document.getElementById('storage-banner');
+    document.getElementById('s-obj').textContent = all.length;
+
+    const pctCapped = Math.min(pct, 100);
+    fill.style.width = pctCapped + '%';
+
+    if (pct >= 100) {
+      fill.style.background = 'linear-gradient(90deg,#dc2626,#ef4444)';
+      lbl.style.color = '#f87171';
+      lbl.textContent = totalGB.toFixed(2)+'GB / '+FREE_STORAGE_GB+'GB';
+      alert.style.display = 'inline-block';
+      alert.style.background = 'rgba(220,38,38,.15)';
+      alert.style.color = '#f87171';
+      alert.style.border = '1px solid rgba(220,38,38,.3)';
+      alert.textContent = '⚠ LIMITE EXCEDIDO ' + Math.round(pct) + '%';
+      banner.style.display = 'flex';
+      banner.innerHTML = `
+        <div class="storage-critical-banner">
+          <span class="sc-icon">🔴</span>
+          <div class="sc-text">
+            <strong>Storage CRÍTICO — ${totalGB.toFixed(2)} GB usados de ${FREE_STORAGE_GB} GB grátis (${Math.round(pct)}%)</strong>
+            <span>Supabase free tier permite 1 GB. Você está ${(totalGB - FREE_STORAGE_GB).toFixed(2)} GB acima do limite.
+            Opções: <b>fazer upgrade para Pro (US$25/mês · 100 GB)</b> ou deletar vídeos antigos já publicados.
+            Sem ação, o Supabase pode bloquear novos uploads.</span>
+          </div>
+        </div>`;
+    } else if (pct >= 80) {
+      fill.style.background = 'linear-gradient(90deg,#d97706,#f59e0b)';
+      lbl.style.color = '#fbbf24';
+      lbl.textContent = totalGB.toFixed(2)+'GB / '+FREE_STORAGE_GB+'GB';
+      alert.style.display = 'inline-block';
+      alert.style.background = 'rgba(245,158,11,.12)';
+      alert.style.color = '#fbbf24';
+      alert.style.border = '1px solid rgba(245,158,11,.3)';
+      alert.textContent = '⚠ ' + Math.round(pct) + '% usado';
+    } else {
+      fill.style.background = 'linear-gradient(90deg,var(--t),var(--v))';
+      lbl.style.color = 'var(--grn)';
+      lbl.textContent = totalGB.toFixed(2)+'GB / '+FREE_STORAGE_GB+'GB';
+    }
+
+    return all.length;
   } catch(e) {
-    document.getElementById('grid').innerHTML = `<div class="empty">❌ Erro: ${e.message}<br>Verifique a conexão com o Supabase.</div>`;
+    console.error('storage error', e);
+    document.getElementById('gauge-label').textContent = 'storage: erro';
+    return 0;
   }
 }
 
-function filtrar(el, f) {
-  document.querySelectorAll('.ftag').forEach(t => t.classList.remove('ativo'));
-  el.classList.add('ativo');
-  filtroAtivo = f;
-  renderGrid();
+// ── Carregar vídeos ──
+async function loadVideos() {
+  const r = await fetch(
+    `${SB}/rest/v1/content_pipeline?mp4_url=not.is.null`+
+    `&select=id,title,youtube_title,mp4_url,youtube_video_id,seo_score,target_platform,status`+
+    `&order=seo_score.desc,id.desc&limit=200`,
+    { headers:{ apikey:AK, Authorization:'Bearer '+AK } }
+  );
+  ALL = await r.json();
+  const pub = ALL.filter(v=>v.youtube_video_id).length;
+  document.getElementById('s-total').textContent = ALL.length;
+  document.getElementById('s-pub').textContent   = pub;
+  document.getElementById('s-wait').textContent  = ALL.length - pub;
+  render();
 }
 
-function renderGrid() {
-  let videos = todosVideos;
-  
-  if (filtroAtivo !== 'todos') {
-    videos = videos.filter(v => {
+// ── Enriquecer vídeo com tamanho real ──
+function getMB(v) {
+  const url = v.mp4_url || '';
+  // tentar match pelo filename
+  const fname = url.split('/').pop().split('?')[0];
+  if (OBJS[fname]) return OBJS[fname].mb;
+  // tentar path completo após /videos/
+  const m = url.match(/\/videos\/(.+)$/);
+  if (m && OBJS[m[1]]) return OBJS[m[1]].mb;
+  return null;
+}
+
+// ── Filtrar ──
+function F(el, f) {
+  document.querySelectorAll('.ftag').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on'); FA = f; render();
+}
+
+// ── Renderizar ──
+function render() {
+  let vs = [...ALL];
+  if (FA !== 't') {
+    vs = vs.filter(v => {
       const serie = getSerie(v.youtube_title || v.title || '');
-      const plat = (v.target_platform || '').toLowerCase();
-      if (filtroAtivo === 'shorts') return plat.includes('short');
-      if (filtroAtivo === 'long') return plat.includes('long');
-      return serie.toLowerCase().includes(filtroAtivo.toLowerCase());
+      const plat  = (v.target_platform||'').toLowerCase();
+      const pub   = !!v.youtube_video_id;
+      if (FA === 'sh')   return plat.includes('short');
+      if (FA === 'lo')   return plat.includes('long');
+      if (FA === 'wait') return !pub;
+      if (FA === 'pub')  return pub;
+      return serie.toLowerCase().includes(FA.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''));
     });
   }
 
-  document.getElementById('grid-count').textContent = `${videos.length} vídeos · ${filtroAtivo === 'todos' ? 'todos os tipos' : filtroAtivo}`;
+  // Ordenar
+  if (SORT === 'seo')  vs.sort((a,b) => (b.seo_score||0) - (a.seo_score||0));
+  if (SORT === 'size') vs.sort((a,b) => (getMB(b)||0) - (getMB(a)||0));
+  if (SORT === 'id')   vs.sort((a,b) => b.id - a.id);
+  if (SORT === 'plat') vs.sort((a,b) => (a.target_platform||'').localeCompare(b.target_platform||''));
 
-  if (!videos.length) {
-    document.getElementById('grid').innerHTML = '<div class="empty">Nenhum vídeo encontrado para este filtro.</div>';
+  document.getElementById('grid-count').textContent =
+    vs.length + ' vídeo' + (vs.length!==1?'s':'') + (FA==='t'?''>' — filtro: '+FA);
+
+  if (!vs.length) {
+    document.getElementById('grid').innerHTML =
+      '<div class="empty">Nenhum vídeo para este filtro.</div>';
     return;
   }
 
-  document.getElementById('grid').innerHTML = videos.map(v => {
-    const title = v.youtube_title || v.title || 'Sem título';
-    const serie = getSerie(title);
-    const isPub = !!v.youtube_video_id;
-    const plat = (v.target_platform || 'youtube_long').replace('youtube_','');
-    const seo = v.seo_score || 0;
-    const ytLink = v.youtube_video_id
+  document.getElementById('grid').innerHTML = vs.map(v => {
+    const title  = v.youtube_title || v.title || 'Sem título';
+    const serie  = getSerie(title);
+    const plat   = (v.target_platform||'long').replace('youtube_','');
+    const pub    = !!v.youtube_video_id;
+    const mb     = getMB(v);
+    const mbStr  = mb ? mb.toFixed(1)+' MB' : '—';
+    const pctBar = mb ? Math.min((mb / 40) * 100, 100) : 0; // 40 MB = max ref
+    const yt     = pub
       ? `https://youtube.com/watch?v=${v.youtube_video_id}`
       : `https://www.youtube.com/@psidanielacoelho`;
 
-    return `<div class="vcard">
-      <span class="vcard-badge ${isPub ? 'vb-pub' : 'vb-mp4'}">${isPub ? '✓ YouTube' : 'MP4 Pronto'}</span>
-      <video class="vcard-video" controls preload="none" loading="lazy" src="${v.mp4_url}"></video>
-      <div class="vcard-body">
-        <div class="vcard-title">${title.substring(0,75)}${title.length>75?'...':''}</div>
-        <div class="vcard-meta">
-          <span class="chip chip-v">${serie}</span>
-          <span class="chip">${plat}</span>
-          <span class="chip chip-ok">SEO ${seo}</span>
-          <span class="chip">#${v.id}</span>
+    return `<div class="card" id="card-${v.id}">
+      <div class="card-video-wrap">
+        <video controls preload="none" loading="lazy" src="${v.mp4_url}"></video>
+        <span class="card-badge ${pub?'badge-pub':'badge-mp4'}">${pub?'✓ YouTube':'MP4 Pronto'}</span>
+        <span class="card-size-badge">${mbStr}</span>
+      </div>
+      <div class="card-body">
+        <div class="card-title">${title.substring(0,80)}${title.length>80?'…':''}</div>
+        <div class="card-meta">
+          <span class="chip chip-s">${serie}</span>
+          <span class="chip chip-pl">${plat}</span>
+          <span class="chip chip-p">SEO ${v.seo_score||0}</span>
+          <span class="chip chip-id">#${v.id}</span>
         </div>
-        <div class="vcard-actions">
-          <a class="btn btn-dl" href="${v.mp4_url}" download="psidanielacoelho_${v.id}.mp4">⬇ Download</a>
+        ${mb ? `<div class="size-row">
+          <div class="size-track"><div class="size-fill" style="width:${pctBar}%"></div></div>
+          <span class="size-lbl">${mbStr} · ${pctBar.toFixed(0)}% de 40MB</span>
+        </div>` : ''}
+        <div class="card-acts">
+          <a class="btn btn-dl" href="${v.mp4_url}" download="psi_${v.id}.mp4">⬇ Download</a>
           <a class="btn btn-pub" href="/publicar.html">🚀 Publicar</a>
-          <a class="btn btn-yt" href="${ytLink}" target="_blank">${isPub ? '▶ YT' : '📺 Canal'}</a>
+          <a class="btn btn-yt" href="${yt}" target="_blank">${pub?'▶ YouTube':'📺 Canal'}</a>
         </div>
       </div>
     </div>`;
   }).join('');
 }
 
-load();
-setInterval(load, 90000);
+// ── Boot ──
+(async () => {
+  await Promise.all([ loadStorage(), loadVideos() ]);
+  // re-render com tamanhos
+  render();
+  // refresh a cada 2 min
+  setInterval(() => { loadStorage(); loadVideos(); }, 120000);
+})();
 </script>
-</body></html>
+</body>
+</html>
