@@ -2,11 +2,19 @@
   "buildCommand": "next build",
   "installCommand": "npm install",
   "framework": "nextjs",
-  "regions": ["iad1"],
-  "redirects": [
-    { "source": "/", "destination": "/hub.html", "permanent": false }
+  "regions": [
+    "iad1"
+  ],
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/index.html"
+    }
   ],
   "crons": [
-    { "path": "/api/cron", "schedule": "0 6 * * *" }
+    {
+      "path": "/api/cron",
+      "schedule": "0 6 * * *"
+    }
   ]
 }
