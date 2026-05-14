@@ -1,420 +1,641 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>&#968; Galeria &#8212; Ordem de Publicacao</title>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ψ Galeria — Ordem Definitiva de Publicação</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root{
-  --bg:#06060F;--s1:#0D0D1C;--s2:#111128;
-  --v:#7C3AED;--va:rgba(124,58,237,.15);
-  --r:#E11D48;--ra:rgba(225,29,72,.14);
-  --g:#F59E0B;--grn:#10B981;--grna:rgba(16,185,129,.12);
-  --m:#C4B5FD;--ice:#F0F4FF;
-  --t1:#E2E8F0;--t2:#94A3B8;--t3:#475569;
-  --bd:rgba(255,255,255,.07);--bdh:rgba(255,255,255,.14);
-}
+:root{--bg:#06060F;--s1:#0D0D1C;--s2:#111128;--v:#7C3AED;--m:#C4B5FD;--t1:#E2E8F0;--t2:#94A3B8;--t3:#475569;--bd:rgba(255,255,255,.07)}
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--t1);font-family:"DM Sans",sans-serif;min-height:100vh}
-
-.home{position:fixed;top:14px;right:16px;z-index:9999;display:flex;align-items:center;gap:7px;
-  background:rgba(6,6,15,.93);border:1px solid rgba(196,181,253,.22);border-radius:10px;
-  padding:7px 15px;color:var(--m);font-size:11px;font-weight:700;text-decoration:none;
-  backdrop-filter:blur(14px);transition:.15s}
+.home{position:fixed;top:14px;right:16px;z-index:9999;display:flex;align-items:center;gap:7px;background:rgba(6,6,15,.93);border:1px solid rgba(196,181,253,.22);border-radius:10px;padding:7px 15px;color:var(--m);font-size:11px;font-weight:700;text-decoration:none;backdrop-filter:blur(14px)}
 .home:hover{border-color:rgba(196,181,253,.55)}
-
-#topbar{position:sticky;top:0;z-index:500;background:rgba(6,6,15,.97);
-  backdrop-filter:blur(20px);border-bottom:1px solid var(--bd);
-  padding:9px 22px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+#topbar{position:sticky;top:0;z-index:500;background:rgba(6,6,15,.97);backdrop-filter:blur(20px);border-bottom:1px solid var(--bd);padding:10px 22px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .logo{font-size:15px;font-weight:800;color:var(--m)}
 .logo small{font-size:8px;font-family:"DM Mono",monospace;color:var(--t3);margin-left:5px;font-weight:400}
-
-.sg{display:flex;align-items:center;gap:8px;background:var(--s1);
-  border:1px solid rgba(220,38,38,.3);border-radius:999px;padding:5px 12px;flex:1;min-width:160px;max-width:300px}
+.sg{display:flex;align-items:center;gap:8px;background:var(--s1);border:1px solid rgba(220,38,38,.3);border-radius:999px;padding:5px 12px;flex:1;min-width:160px;max-width:280px}
 .sg-track{flex:1;height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden}
-.sg-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#dc2626,#ef4444)}
+.sg-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#dc2626,#ef4444);width:100%}
 .sg-lbl{font-family:"DM Mono",monospace;font-size:9px;white-space:nowrap;color:#f87171}
-
 .st{text-align:center}
-.st-n{font-size:16px;font-weight:900;font-family:"DM Mono",monospace;display:block;line-height:1}
+.st-n{font-size:15px;font-weight:900;font-family:"DM Mono",monospace;display:block;line-height:1}
 .st-l{font-size:7px;text-transform:uppercase;letter-spacing:.1em;color:var(--t3);display:block;margin-top:2px}
-
-.canal{display:flex;align-items:center;gap:5px;background:var(--ra);
-  border:1px solid rgba(225,29,72,.28);border-radius:999px;padding:5px 12px;
-  font-size:10px;font-weight:700;color:#FCA5A5;text-decoration:none;margin-right:148px}
+.canal{display:flex;align-items:center;gap:5px;background:rgba(225,29,72,.14);border:1px solid rgba(225,29,72,.28);border-radius:999px;padding:5px 12px;font-size:10px;font-weight:700;color:#FCA5A5;text-decoration:none;margin-right:148px}
 .dot{width:7px;height:7px;border-radius:50%;background:#ff2222;flex-shrink:0;animation:blink 1.4s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
-
-.a-crit{margin:8px 22px 0;border-radius:9px;padding:9px 16px;font-size:11px;line-height:1.6;
-  display:flex;gap:8px;align-items:flex-start;
-  background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.3);color:#fca5a5}
-.a-crit strong{color:var(--t1);display:block}
-.a-crit a{color:var(--g);font-weight:600;text-decoration:none}
-
-.a-red{margin:8px 22px 0;border-radius:9px;padding:8px 16px;font-size:11px;line-height:1.6;
-  display:flex;gap:8px;align-items:flex-start;
-  background:rgba(225,29,72,.08);border:1px solid rgba(225,29,72,.22);color:#FCA5A5}
-.a-red strong{color:var(--t1)}.a-red a{color:var(--g);font-weight:600;text-decoration:none}
-
-/* filtros */
-.filters{padding:9px 22px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;
-  border-bottom:1px solid var(--bd)}
-.flbl{font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:var(--t3);font-family:"DM Mono",monospace}
-.ftag{background:rgba(255,255,255,.05);border:1px solid var(--bd);border-radius:999px;
-  padding:4px 12px;font-size:10px;font-weight:600;cursor:pointer;transition:.15s;color:var(--t2)}
-.ftag:hover{background:var(--va);border-color:rgba(124,58,237,.3);color:var(--m)}
-.ftag.on{background:var(--va);border-color:rgba(124,58,237,.45);color:var(--m);font-weight:700}
-.fsel{margin-left:auto;background:var(--s1);border:1px solid var(--bd);color:var(--t2);
-  border-radius:7px;padding:5px 10px;font-size:10px;font-family:"DM Mono",monospace;cursor:pointer}
-
-/* lista */
-.wrap{max-width:880px;margin:0 auto;padding:14px 22px 100px}
-.lhdr{display:flex;align-items:center;gap:8px;margin-bottom:10px;
-  padding-bottom:8px;border-bottom:1px solid var(--bd)}
+.alert{margin:8px 22px 0;border-radius:9px;padding:9px 16px;font-size:11px;line-height:1.6;display:flex;gap:8px;align-items:flex-start}
+.alert-r{background:rgba(225,29,72,.08);border:1px solid rgba(225,29,72,.22);color:#FCA5A5}
+.alert-r strong{color:var(--t1)}.alert-r a,.alert a{color:#F59E0B;font-weight:600;text-decoration:none}
+.alert-crit{background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.3);color:#fca5a5}
+.alert-crit strong{color:var(--t1);display:block}
+.wrap{max-width:920px;margin:0 auto;padding:14px 22px 100px}
+.lhdr{display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--bd)}
 .lhdr-t{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.15em;color:var(--t3)}
-#cnt{margin-left:auto;font-size:8px;font-family:"DM Mono",monospace;color:var(--t3)}
-
-.vlist{display:flex;flex-direction:column;gap:3px}
-
-/* ROW - 5 colunas: num | tipo | info | status | ações */
-.vrow{
-  display:grid;
-  grid-template-columns:32px 62px 1fr auto auto;
-  align-items:center;gap:10px;
-  background:var(--s1);border:1px solid var(--bd);
-  border-radius:10px;padding:9px 13px;transition:.15s;
-}
+.vrow{display:grid;grid-template-columns:30px 70px 1fr auto;align-items:center;gap:10px;background:var(--s1);border:1px solid var(--bd);border-radius:10px;padding:10px 13px;transition:.15s;margin-bottom:3px}
 .vrow:hover{border-color:rgba(124,58,237,.35);background:var(--s2)}
-
-.vnum{font-family:"DM Mono",monospace;font-size:11px;font-weight:900;color:var(--t3);
-  width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.04);
-  border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-
-/* TIPO badge — destaque visual */
-.vtype{display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.type-short{
-  font-size:9px;font-weight:800;font-family:"DM Mono",monospace;
-  padding:4px 9px;border-radius:6px;white-space:nowrap;letter-spacing:.04em;
-  background:rgba(245,158,11,.15);color:#fbbf24;border:1px solid rgba(245,158,11,.3);
-}
-.type-long{
-  font-size:9px;font-weight:800;font-family:"DM Mono",monospace;
-  padding:4px 9px;border-radius:6px;white-space:nowrap;letter-spacing:.04em;
-  background:rgba(124,58,237,.15);color:var(--m);border:1px solid rgba(124,58,237,.3);
-}
-
+.vnum{font-family:"DM Mono",monospace;font-size:11px;font-weight:900;color:var(--t3);width:30px;height:30px;border-radius:7px;background:rgba(255,255,255,.04);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .vinfo{min-width:0}
-.vtitle{font-size:13px;font-weight:700;color:var(--t1);line-height:1.3;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.vtags{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap}
-.chip{font-size:8px;font-family:"DM Mono",monospace;padding:2px 6px;border-radius:5px}
-.cs{background:var(--va);color:var(--m);border:1px solid rgba(124,58,237,.22)}
-.cp{background:var(--grna);color:var(--grn);border:1px solid rgba(16,185,129,.2)}
-.cl{background:rgba(255,255,255,.05);color:var(--t3);border:1px solid var(--bd)}
-.ck{background:rgba(96,165,250,.12);color:#93c5fd;border:1px solid rgba(96,165,250,.2)}
-
-.vstatus{flex-shrink:0}
-.sw{font-size:8px;font-family:"DM Mono",monospace;font-weight:700;
-  padding:3px 8px;border-radius:6px;white-space:nowrap;
-  background:rgba(245,158,11,.1);color:#fbbf24;border:1px solid rgba(245,158,11,.2)}
-.sd{font-size:8px;font-family:"DM Mono",monospace;font-weight:700;
-  padding:3px 8px;border-radius:6px;white-space:nowrap;
-  background:var(--grna);color:var(--grn);border:1px solid rgba(16,185,129,.2)}
-
-.vacts{display:flex;gap:6px;align-items:center;flex-shrink:0}
-.bdl{font-size:9px;font-weight:700;padding:5px 10px;border-radius:7px;
-  background:rgba(255,255,255,.05);border:1px solid var(--bd);
-  color:var(--t2);text-decoration:none;transition:.15s}
-.bdl:hover{background:var(--va);color:var(--m)}
-.bplay{width:38px;height:38px;border-radius:50%;
-  background:var(--va);border:1px solid rgba(124,58,237,.4);
-  color:var(--m);font-size:16px;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0}
-.bplay:hover{background:var(--v);border-color:var(--v);color:#fff;
-  transform:scale(1.1);box-shadow:0 0 18px rgba(124,58,237,.55)}
-
-.empty{text-align:center;padding:60px 20px;color:var(--t3);font-size:13px}
-
-/* modal */
-#modal{display:none;position:fixed;inset:0;z-index:9000;
-  background:rgba(0,0,0,.9);backdrop-filter:blur(18px);
-  align-items:center;justify-content:center;padding:12px}
+/* MODAL */
+#modal{display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.92);backdrop-filter:blur(20px);align-items:center;justify-content:center;padding:12px}
 #modal.open{display:flex}
-.mbox{background:var(--s1);border:1px solid var(--bdh);border-radius:16px;
-  max-width:900px;width:100%;overflow:hidden;
-  box-shadow:0 28px 80px rgba(0,0,0,.75);
-  animation:pop .2s cubic-bezier(.34,1.56,.64,1)}
+.mbox{background:var(--s1);border:1px solid rgba(255,255,255,.14);border-radius:16px;max-width:920px;width:100%;overflow:hidden;box-shadow:0 28px 80px rgba(0,0,0,.75);animation:pop .2s cubic-bezier(.34,1.56,.64,1)}
 @keyframes pop{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}
-.mhdr{display:flex;align-items:flex-start;gap:12px;padding:13px 16px;border-bottom:1px solid var(--bd)}
+.mhdr{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border-bottom:1px solid var(--bd)}
 .mhdr-info{flex:1;min-width:0}
-.mhdr-title{font-size:14px;font-weight:800;color:var(--t1);line-height:1.3;margin-bottom:6px}
-.mhdr-meta{display:flex;gap:5px;flex-wrap:wrap}
-.mclose{width:30px;height:30px;border-radius:8px;border:1px solid var(--bd);
-  background:rgba(255,255,255,.05);color:var(--t2);font-size:16px;
-  cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s}
-.mclose:hover{background:var(--ra);color:#FCA5A5}
-#mvideo{background:#000;width:100%;display:block;max-height:70vh}
-.mftr{padding:10px 16px;border-top:1px solid var(--bd);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.mclose{width:32px;height:32px;border-radius:8px;border:1px solid var(--bd);background:rgba(255,255,255,.05);color:var(--t2);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0}
+.mclose:hover{background:rgba(225,29,72,.14);color:#FCA5A5}
+#mvid{background:#000;width:100%;display:block;max-height:68vh}
+.mftr{padding:12px 16px;border-top:1px solid var(--bd);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .mnav{display:flex;gap:5px}
-.mbtn{font-size:10px;font-weight:700;padding:6px 14px;border-radius:8px;
-  border:1px solid var(--bd);cursor:pointer;font-family:"DM Sans",sans-serif;
-  background:rgba(255,255,255,.05);color:var(--t2);transition:.15s}
-.mbtn:hover:not(:disabled){background:var(--va);border-color:rgba(124,58,237,.3);color:var(--m)}
+.mbtn{font-size:10px;font-weight:700;padding:7px 14px;border-radius:8px;border:1px solid var(--bd);cursor:pointer;font-family:"DM Sans",sans-serif;background:rgba(255,255,255,.05);color:var(--t2);transition:.15s}
+.mbtn:hover:not(:disabled){background:rgba(124,58,237,.15);border-color:rgba(124,58,237,.3);color:var(--m)}
 .mbtn:disabled{opacity:.3;cursor:not-allowed}
-.macts{margin-left:auto;display:flex;gap:7px}
-.mact{font-size:10px;font-weight:700;padding:6px 14px;border-radius:8px;
-  text-decoration:none;cursor:pointer;font-family:"DM Sans",sans-serif;transition:.15s}
-.ma-dl {background:var(--va);color:var(--m);border:1px solid rgba(124,58,237,.3)}
-.ma-pub{background:var(--ra);color:#FCA5A5;border:1px solid rgba(225,29,72,.28)}
-.ma-yt {background:var(--grna);color:var(--grn);border:1px solid rgba(16,185,129,.22)}
-@media(max-width:640px){
-  .vrow{grid-template-columns:28px 56px 1fr auto}
-  .vstatus,.bdl{display:none}
-  .canal{margin-right:140px}
-}
+.macts{margin-left:auto;display:flex;gap:6px}
+.ma{font-size:10px;font-weight:700;padding:7px 14px;border-radius:8px;text-decoration:none;cursor:pointer;font-family:"DM Sans",sans-serif;transition:.15s;border:none}
+.ma-dl{background:rgba(124,58,237,.15);color:var(--m);border:1px solid rgba(124,58,237,.3)}
+.ma-yt{background:rgba(16,185,129,.12);color:#10B981;border:1px solid rgba(16,185,129,.22)}
+/* info do modal */
+.mstat{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.mchip{font-size:8px;font-family:"DM Mono",monospace;padding:2px 7px;border-radius:5px}
+@media(max-width:600px){.vrow{grid-template-columns:26px 60px 1fr auto}.canal{margin-right:140px}}
 </style>
 </head>
 <body>
-
-<a class="home" href="/hub.html">&#968; Hub</a>
+<a class="home" href="/hub.html">ψ Hub</a>
 
 <div id="topbar">
-  <div class="logo">Galeria <small>ORDEM DE PUBLICA&#199;&#195;O</small></div>
-  <div class="sg">
-    <div class="sg-track"><div class="sg-fill" style="width:100%"></div></div>
-    <span class="sg-lbl">1.87 GB / 1 GB &#8212; EXCEDIDO 187%</span>
-  </div>
-  <div class="st"><span class="st-n" id="s-mp4" style="color:var(--m)">&#8211;</span><span class="st-l">V&#237;deos</span></div>
-  <div class="st"><span class="st-n" id="s-pub" style="color:var(--grn)">&#8211;</span><span class="st-l">No YT</span></div>
-  <div class="st"><span class="st-n" id="s-wait" style="color:var(--r)">&#8211;</span><span class="st-l">Aguard.</span></div>
-  <a class="canal" href="https://www.youtube.com/@psidanielacoelho" target="_blank">
-    <span class="dot"></span>@psidanielacoelho
-  </a>
+  <div class="logo">Galeria <small>ORDEM DEFINITIVA DE PUBLICAÇÃO</small></div>
+  <div class="sg"><div class="sg-track"><div class="sg-fill"></div></div><span class="sg-lbl">1.87 GB / 1 GB — EXCEDIDO</span></div>
+  <div class="st"><span class="st-n" style="color:#C4B5FD">17</span><span class="st-l">MP4 Prontos</span></div>
+  <div class="st"><span class="st-n" style="color:#10B981">0</span><span class="st-l">No YT</span></div>
+  <div class="st"><span class="st-n" style="color:#E11D48">17</span><span class="st-l">Aguardando</span></div>
+  <a class="canal" href="https://www.youtube.com/@psidanielacoelho" target="_blank"><span class="dot"></span>@psidanielacoelho</a>
 </div>
 
-<div class="a-crit">
-  <span style="font-size:18px;flex-shrink:0">&#128308;</span>
-  <div><strong>Storage CRÍTICO: 1.87 GB de 1 GB grátis (187%)</strong>
-  <a href="https://app.supabase.com/project/tpjvalzwkqwttvmszvie/settings/billing" target="_blank">Upgrade Pro US$25/m&#234;s (100 GB)</a> ou deletar v&#237;deos j&#225; publicados.</div>
-</div>
+<div class="alert alert-crit"><span style="font-size:18px;flex-shrink:0">🔴</span>
+<div><strong>Storage CRÍTICO: 1.87 GB / 1 GB grátis (187%)</strong>
+<a href="https://app.supabase.com/project/tpjvalzwkqwttvmszvie/settings/billing" target="_blank">Upgrade Pro US$25/mês</a> ou deletar vídeos já publicados.</div></div>
 
-<div class="a-red">
-  <span>&#128308;</span>
-  <div><strong>Publisher bloqueado &#8212; YT_REFRESH_TOKEN expirado.</strong>
-  <a href="/oauth.html">oauth.html</a> &#8594;
-  <a href="https://github.com/tafita81/Repovazio/settings/secrets/actions/YT_REFRESH_TOKEN" target="_blank">GitHub Secret</a> &#8594;
-  <a href="https://github.com/tafita81/Repovazio/actions/workflows/youtube-publisher.yml" target="_blank">publisher.yml</a></div>
-</div>
-
-<div class="filters">
-  <span class="flbl">S&#233;rie</span>
-  <div class="ftag on" onclick="F(this,'t')">Todos</div>
-  <div class="ftag" onclick="F(this,'Apego')">&#128156; Apego</div>
-  <div class="ftag" onclick="F(this,'Narcisismo')">&#128308; Narcisismo</div>
-  <div class="ftag" onclick="F(this,'Trauma')">&#128995; Trauma</div>
-  <div class="ftag" onclick="F(this,'Relacionamentos')">&#129309; Relacion.</div>
-  <div class="ftag" onclick="F(this,'Ansiedade')">&#128309; Ansiedade</div>
-  <div class="ftag" onclick="F(this,'Autoestima')">&#128155; Autoestima</div>
-  <div class="ftag" onclick="F(this,'Depress')">&#128532; Depress&#227;o</div>
-  <div class="ftag" onclick="F(this,'Dinheiro')">&#128176; Dinheiro</div>
-  <span class="flbl" style="margin-left:6px">Tipo</span>
-  <div class="ftag" onclick="F(this,'sh')">&#128241; Shorts</div>
-  <div class="ftag" onclick="F(this,'lo')">&#127909; Long</div>
-  <select class="fsel" onchange="SORT=this.value;render()">
-    <option value="pub">&#9660; Ordem estrat&#233;gica</option>
-    <option value="seo">&#9660; SEO Score</option>
-    <option value="id">&#9660; Mais recente</option>
-    <option value="plat">Plataforma</option>
-  </select>
-</div>
+<div class="alert alert-r"><span>🔴</span>
+<div><strong>YT_REFRESH_TOKEN expirado — publicação manual necessária.</strong>
+Renovar: <a href="/oauth.html">oauth.html</a> → <a href="https://github.com/tafita81/Repovazio/settings/secrets/actions/YT_REFRESH_TOKEN" target="_blank">GitHub Secret</a></div></div>
 
 <div class="wrap">
   <div class="lhdr">
-    <span class="lhdr-t">&#127916; Ordem estrat&#233;gica de publica&#231;&#227;o &#8212; clique &#9654; para assistir</span>
-    <span id="cnt">carregando&#8230;</span>
+    <span class="lhdr-t">🎬 17 Vídeos Prontos — Clique ▶ para assistir · Ordem estratégica por algoritmo</span>
   </div>
-  <div class="vlist" id="vlist">
-    <div class="empty">&#9749; Conectando ao Supabase&#8230;</div>
+  
+<div style="margin:20px 0 8px;padding:10px 16px;background:rgba(124,58,237,.12);border-radius:10px;border-left:3px solid rgba(255,255,255,.15)">
+  <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.15em;color:#E2E8F0">Semana 1 — Identidade do Canal</div>
+  <div style="font-size:9px;color:#94A3B8;margin-top:2px">Estabelecer identidade · algoritmo aprende quem você é</div>
+</div>
+<div class="vrow" id="row1">
+  <div class="vnum">1</div>
+  
+  <div style="display:flex;align-items:center;justify-content:center;flex-shrink:0">
+    <span style="font-size:8px;font-weight:800;font-family:'DM Mono',monospace;padding:4px 9px;border-radius:6px;white-space:nowrap;background:rgba(245,158,11,.15);color:#fbbf24;border:1px solid rgba(245,158,11,.4)">📱 SHORT</span>
+  </div>
+  
+  <div class="vinfo">
+    <div style="font-size:13px;font-weight:800;color:#E2E8F0;line-height:1.3;margin-bottom:5px">Narcisismo: 3 Sinais Que Você Está Ignorando Agora Mesmo</div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:4px">
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(124,58,237,.12);color:#C4B5FD;border:1px solid rgba(124,58,237,.2)">🔴 Narcisismo</span>
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.05);color:#94A3B8;border:1px solid rgba(255,255,255,.07)">⏰ Sáb 18h</span>
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.05);color:#94A3B8;border:1px solid rgba(255,255,255,.07)">📌 🔴 Narcisismo, Manipulação e Gaslighting</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">🌍 Ref: 28M · Psych2Go</span>
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">|</span>
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">Viral Score:</span>
+      <span style="font-family:monospace;color:#10B981;letter-spacing:1px;font-size:10px">█████████░</span> <span style="color:#10B981;font-weight:800;font-size:11px">90</span>
+    </div>
+  </div>
+  
+  <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+    <a href="https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778680583_Narcisismo_encoberto_3_sinais__v8.mp4" download="psi_683.mp4" style="font-size:9px;font-weight:700;padding:6px 10px;border-radius:7px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);color:#94A3B8;text-decoration:none;white-space:nowrap">⬇ DL</a>
+    <button onclick="playVideo(0)" style="width:42px;height:42px;border-radius:50%;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.4);color:#C4B5FD;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s" onmouseover="this.style.background='#7C3AED';this.style.color='#fff';this.style.transform='scale(1.1)'" onmouseout="this.style.background='rgba(124,58,237,.15)';this.style.color='#C4B5FD';this.style.transform='scale(1)'">▶</button>
   </div>
 </div>
+<div class="vrow" id="row2">
+  <div class="vnum">2</div>
+  
+  <div style="display:flex;align-items:center;justify-content:center;flex-shrink:0">
+    <span style="font-size:8px;font-weight:800;font-family:'DM Mono',monospace;padding:4px 9px;border-radius:6px;white-space:nowrap;background:rgba(245,158,11,.15);color:#fbbf24;border:1px solid rgba(245,158,11,.4)">📱 SHORT</span>
+  </div>
+  
+  <div class="vinfo">
+    <div style="font-size:13px;font-weight:800;color:#E2E8F0;line-height:1.3;margin-bottom:5px">Você Checa o Celular 80 Vezes por Dia? Não é Vício — É Apego</div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:4px">
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(124,58,237,.12);color:#C4B5FD;border:1px solid rgba(124,58,237,.2)">💜 Apego</span>
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.05);color:#94A3B8;border:1px solid rgba(255,255,255,.07)">⏰ Seg 12h</span>
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.05);color:#94A3B8;border:1px solid rgba(255,255,255,.07)">📌 💜 Apego Ansioso e Medo do Abandono</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">🌍 Ref: 22M · Psych2Go</span>
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">|</span>
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">Viral Score:</span>
+      <span style="font-family:monospace;color:#10B981;letter-spacing:1px;font-size:10px">█████████░</span> <span style="color:#10B981;font-weight:800;font-size:11px">90</span>
+    </div>
+  </div>
+  
+  <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+    <a href="https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778681220_Voc_checa_o_celular_80_vezes_a_v8.mp4" download="psi_682.mp4" style="font-size:9px;font-weight:700;padding:6px 10px;border-radius:7px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);color:#94A3B8;text-decoration:none;white-space:nowrap">⬇ DL</a>
+    <button onclick="playVideo(1)" style="width:42px;height:42px;border-radius:50%;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.4);color:#C4B5FD;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s" onmouseover="this.style.background='#7C3AED';this.style.color='#fff';this.style.transform='scale(1.1)'" onmouseout="this.style.background='rgba(124,58,237,.15)';this.style.color='#C4B5FD';this.style.transform='scale(1)'">▶</button>
+  </div>
+</div>
+<div class="vrow" id="row3">
+  <div class="vnum">3</div>
+  
+  <div style="display:flex;align-items:center;justify-content:center;flex-shrink:0">
+    <span style="font-size:8px;font-weight:800;font-family:'DM Mono',monospace;padding:4px 9px;border-radius:6px;white-space:nowrap;background:rgba(124,58,237,.15);color:#C4B5FD;border:1px solid rgba(124,58,237,.4)">📹 LONG</span>
+  </div>
+  
+  <div class="vinfo">
+    <div style="font-size:13px;font-weight:800;color:#E2E8F0;line-height:1.3;margin-bottom:5px">Gaslighting: A Manipulação Que Faz Você Duvidar da Sua Própria Sanidade</div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:4px">
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(124,58,237,.12);color:#C4B5FD;border:1px solid rgba(124,58,237,.2)">🔴 Narcisismo</span>
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.05);color:#94A3B8;border:1px solid rgba(255,255,255,.07)">⏰ Qua 18h</span>
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.05);color:#94A3B8;border:1px solid rgba(255,255,255,.07)">📌 🔴 Narcisismo, Manipulação e Gaslighting</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">🌍 Ref: 12M · Charisma</span>
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">|</span>
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">Viral Score:</span>
+      <span style="font-family:monospace;color:#10B981;letter-spacing:1px;font-size:10px">████████░░</span> <span style="color:#10B981;font-weight:800;font-size:11px">85</span>
+    </div>
+  </div>
+  
+  <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+    <a href="https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778706024_Gaslighting_a_manipulao_invisv_v8.mp4" download="psi_693.mp4" style="font-size:9px;font-weight:700;padding:6px 10px;border-radius:7px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);color:#94A3B8;text-decoration:none;white-space:nowrap">⬇ DL</a>
+    <button onclick="playVideo(2)" style="width:42px;height:42px;border-radius:50%;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.4);color:#C4B5FD;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s" onmouseover="this.style.background='#7C3AED';this.style.color='#fff';this.style.transform='scale(1.1)'" onmouseout="this.style.background='rgba(124,58,237,.15)';this.style.color='#C4B5FD';this.style.transform='scale(1)'">▶</button>
+  </div>
+</div>
+<div style="margin:20px 0 8px;padding:10px 16px;background:rgba(225,29,72,.08);border-radius:10px;border-left:3px solid rgba(255,255,255,.15)">
+  <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.15em;color:#E2E8F0">Semana 2 — Expandir Alcance</div>
+  <div style="font-size:9px;color:#94A3B8;margin-top:2px">Diversificar séries · testar empatia vs identificação</div>
+</div>
+<div class="vrow" id="row4">
+  <div class="vnum">4</div>
+  
+  <div style="display:flex;align-items:center;justify-content:center;flex-shrink:0">
+    <span style="font-size:8px;font-weight:800;font-family:'DM Mono',monospace;padding:4px 9px;border-radius:6px;white-space:nowrap;background:rgba(245,158,11,.15);color:#fbbf24;border:1px solid rgba(245,158,11,.4)">📱 SHORT</span>
+  </div>
+  
+  <div class="vinfo">
+    <div style="font-size:13px;font-weight:800;color:#E2E8F0;line-height:1.3;margin-bottom:5px">Depressão: Não Era Preguiça. Era o Cérebro Desligando</div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:4px">
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(124,58,237,.12);color:#C4B5FD;border:1px solid rgba(124,58,237,.2)">😔 Depressão</span>
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.05);color:#94A3B8;border:1px solid rgba(255,255,255,.07)">⏰ Sáb 12h</span>
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.05);color:#94A3B8;border:1px solid rgba(255,255,255,.07)">📌 😔 Depressão e Burnout Silenciosos</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">🌍 Ref: 18M · Psych2Go</span>
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">|</span>
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">Viral Score:</span>
+      <span style="font-family:monospace;color:#10B981;letter-spacing:1px;font-size:10px">████████░░</span> <span style="color:#10B981;font-weight:800;font-size:11px">80</span>
+    </div>
+  </div>
+  
+  <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+    <a href="https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778680853_Rafael_no_conseguia_sair_da_ca_v8.mp4" download="psi_688.mp4" style="font-size:9px;font-weight:700;padding:6px 10px;border-radius:7px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);color:#94A3B8;text-decoration:none;white-space:nowrap">⬇ DL</a>
+    <button onclick="playVideo(3)" style="width:42px;height:42px;border-radius:50%;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.4);color:#C4B5FD;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s" onmouseover="this.style.background='#7C3AED';this.style.color='#fff';this.style.transform='scale(1.1)'" onmouseout="this.style.background='rgba(124,58,237,.15)';this.style.color='#C4B5FD';this.style.transform='scale(1)'">▶</button>
+  </div>
+</div>
+<div class="vrow" id="row5">
+  <div class="vnum">5</div>
+  
+  <div style="display:flex;align-items:center;justify-content:center;flex-shrink:0">
+    <span style="font-size:8px;font-weight:800;font-family:'DM Mono',monospace;padding:4px 9px;border-radius:6px;white-space:nowrap;background:rgba(124,58,237,.15);color:#C4B5FD;border:1px solid rgba(124,58,237,.4)">📹 LONG</span>
+  </div>
+  
+  <div class="vinfo">
+    <div style="font-size:13px;font-weight:800;color:#E2E8F0;line-height:1.3;margin-bottom:5px">Apego Ansioso: O Medo de Abandono Que Controla Cada Relação</div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:4px">
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(124,58,237,.12);color:#C4B5FD;border:1px solid rgba(124,58,237,.2)">💜 Apego</span>
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.05);color:#94A3B8;border:1px solid rgba(255,255,255,.07)">⏰ Seg 18h</span>
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.05);color:#94A3B8;border:1px solid rgba(255,255,255,.07)">📌 💜 Apego Ansioso e Medo do Abandono</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">🌍 Ref: 22M · Psych2Go</span>
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">|</span>
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">Viral Score:</span>
+      <span style="font-family:monospace;color:#10B981;letter-spacing:1px;font-size:10px">████████░░</span> <span style="color:#10B981;font-weight:800;font-size:11px">82</span>
+    </div>
+  </div>
+  
+  <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+    <a href="https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778705685_Apego_Ansioso_o_medo_do_abando_v8.mp4" download="psi_692.mp4" style="font-size:9px;font-weight:700;padding:6px 10px;border-radius:7px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);color:#94A3B8;text-decoration:none;white-space:nowrap">⬇ DL</a>
+    <button onclick="playVideo(4)" style="width:42px;height:42px;border-radius:50%;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.4);color:#C4B5FD;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s" onmouseover="this.style.background='#7C3AED';this.style.color='#fff';this.style.transform='scale(1.1)'" onmouseout="this.style.background='rgba(124,58,237,.15)';this.style.color='#C4B5FD';this.style.transform='scale(1)'">▶</button>
+  </div>
+</div>
+<div class="vrow" id="row6">
+  <div class="vnum">6</div>
+  
+  <div style="display:flex;align-items:center;justify-content:center;flex-shrink:0">
+    <span style="font-size:8px;font-weight:800;font-family:'DM Mono',monospace;padding:4px 9px;border-radius:6px;white-space:nowrap;background:rgba(245,158,11,.15);color:#fbbf24;border:1px solid rgba(245,158,11,.4)">📱 SHORT</span>
+  </div>
+  
+  <div class="vinfo">
+    <div style="font-size:13px;font-weight:800;color:#E2E8F0;line-height:1.3;margin-bottom:5px">Ansiedade: O Sinal Silencioso Que 9 em 10 Pessoas Ignoram</div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:4px">
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(124,58,237,.12);color:#C4B5FD;border:1px solid rgba(124,58,237,.2)">🔵 Ansiedade</span>
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.05);color:#94A3B8;border:1px solid rgba(255,255,255,.07)">⏰ Qua 12h</span>
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.05);color:#94A3B8;border:1px solid rgba(255,255,255,.07)">📌 🔵 Ansiedade, Pânico e Pensamentos</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">🌍 Ref: 15M · Psych2Go</span>
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">|</span>
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">Viral Score:</span>
+      <span style="font-family:monospace;color:#F59E0B;letter-spacing:1px;font-size:10px">████████░░</span> <span style="color:#F59E0B;font-weight:800;font-size:11px">75</span>
+    </div>
+  </div>
+  
+  <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+    <a href="https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778634218_Sofia_dormia_2_horas_por_noite_v8.mp4" download="psi_684.mp4" style="font-size:9px;font-weight:700;padding:6px 10px;border-radius:7px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);color:#94A3B8;text-decoration:none;white-space:nowrap">⬇ DL</a>
+    <button onclick="playVideo(5)" style="width:42px;height:42px;border-radius:50%;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.4);color:#C4B5FD;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s" onmouseover="this.style.background='#7C3AED';this.style.color='#fff';this.style.transform='scale(1.1)'" onmouseout="this.style.background='rgba(124,58,237,.15)';this.style.color='#C4B5FD';this.style.transform='scale(1)'">▶</button>
+  </div>
+</div>
+<div style="margin:20px 0 8px;padding:10px 16px;background:rgba(13,148,136,.08);border-radius:10px;border-left:3px solid rgba(255,255,255,.15)">
+  <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.15em;color:#E2E8F0">Semana 3 — Profundidade Emocional</div>
+  <div style="font-size:9px;color:#94A3B8;margin-top:2px">Trauma = maior investimento emocional do nicho</div>
+</div>
+<div class="vrow" id="row7">
+  <div class="vnum">7</div>
+  
+  <div style="display:flex;align-items:center;justify-content:center;flex-shrink:0">
+    <span style="font-size:8px;font-weight:800;font-family:'DM Mono',monospace;padding:4px 9px;border-radius:6px;white-space:nowrap;background:rgba(124,58,237,.15);color:#C4B5FD;border:1px solid rgba(124,58,237,.4)">📹 LONG</span>
+  </div>
+  
+  <div class="vinfo">
+    <div style="font-size:13px;font-weight:800;color:#E2E8F0;line-height:1.3;margin-bottom:5px">Trauma: O Que o Trauma Silencioso Faz Dentro de Você</div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:4px">
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(124,58,237,.12);color:#C4B5FD;border:1px solid rgba(124,58,237,.2)">🟣 Trauma</span>
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.05);color:#94A3B8;border:1px solid rgba(255,255,255,.07)">⏰ Sáb 18h</span>
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.05);color:#94A3B8;border:1px solid rgba(255,255,255,.07)">📌 🟣 Trauma de Infância e Cura</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">🌍 Ref: 19M · Psych2Go</span>
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">|</span>
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">Viral Score:</span>
+      <span style="font-family:monospace;color:#10B981;letter-spacing:1px;font-size:10px">█████████░</span> <span style="color:#10B981;font-weight:800;font-size:11px">87</span>
+    </div>
+  </div>
+  
+  <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+    <a href="https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778634352_O_que_o_trauma_silencioso_faz__v8.mp4" download="psi_686.mp4" style="font-size:9px;font-weight:700;padding:6px 10px;border-radius:7px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);color:#94A3B8;text-decoration:none;white-space:nowrap">⬇ DL</a>
+    <button onclick="playVideo(6)" style="width:42px;height:42px;border-radius:50%;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.4);color:#C4B5FD;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s" onmouseover="this.style.background='#7C3AED';this.style.color='#fff';this.style.transform='scale(1.1)'" onmouseout="this.style.background='rgba(124,58,237,.15)';this.style.color='#C4B5FD';this.style.transform='scale(1)'">▶</button>
+  </div>
+</div>
+<div class="vrow" id="row8">
+  <div class="vnum">8</div>
+  
+  <div style="display:flex;align-items:center;justify-content:center;flex-shrink:0">
+    <span style="font-size:8px;font-weight:800;font-family:'DM Mono',monospace;padding:4px 9px;border-radius:6px;white-space:nowrap;background:rgba(245,158,11,.15);color:#fbbf24;border:1px solid rgba(245,158,11,.4)">📱 SHORT</span>
+  </div>
+  
+  <div class="vinfo">
+    <div style="font-size:13px;font-weight:800;color:#E2E8F0;line-height:1.3;margin-bottom:5px">Você Sabota Tudo Quando Está Prestes a Ser Feliz? A Ciência Explica</div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:4px">
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(124,58,237,.12);color:#C4B5FD;border:1px solid rgba(124,58,237,.2)">💛 Autoestima</span>
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.05);color:#94A3B8;border:1px solid rgba(255,255,255,.07)">⏰ Seg 12h</span>
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.05);color:#94A3B8;border:1px solid rgba(255,255,255,.07)">📌 💛 Autoestima, Autossabotagem e Motivação</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">🌍 Ref: 15M · Improvement Pill</span>
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">|</span>
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">Viral Score:</span>
+      <span style="font-family:monospace;color:#F59E0B;letter-spacing:1px;font-size:10px">████████░░</span> <span style="color:#F59E0B;font-weight:800;font-size:11px">78</span>
+    </div>
+  </div>
+  
+  <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+    <a href="https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778681009_Por_que_voc_sabota_tudo_quando_v8.mp4" download="psi_685.mp4" style="font-size:9px;font-weight:700;padding:6px 10px;border-radius:7px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);color:#94A3B8;text-decoration:none;white-space:nowrap">⬇ DL</a>
+    <button onclick="playVideo(7)" style="width:42px;height:42px;border-radius:50%;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.4);color:#C4B5FD;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s" onmouseover="this.style.background='#7C3AED';this.style.color='#fff';this.style.transform='scale(1.1)'" onmouseout="this.style.background='rgba(124,58,237,.15)';this.style.color='#C4B5FD';this.style.transform='scale(1)'">▶</button>
+  </div>
+</div>
+<div class="vrow" id="row9">
+  <div class="vnum">9</div>
+  
+  <div style="display:flex;align-items:center;justify-content:center;flex-shrink:0">
+    <span style="font-size:8px;font-weight:800;font-family:'DM Mono',monospace;padding:4px 9px;border-radius:6px;white-space:nowrap;background:rgba(245,158,11,.15);color:#fbbf24;border:1px solid rgba(245,158,11,.4)">📱 SHORT</span>
+  </div>
+  
+  <div class="vinfo">
+    <div style="font-size:13px;font-weight:800;color:#E2E8F0;line-height:1.3;margin-bottom:5px">Perfeccionista Não Tem Medo de Falhar — Tem Medo de Ser Descoberto</div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:4px">
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(124,58,237,.12);color:#C4B5FD;border:1px solid rgba(124,58,237,.2)">💛 Autoestima</span>
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.05);color:#94A3B8;border:1px solid rgba(255,255,255,.07)">⏰ Qua 18h</span>
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.05);color:#94A3B8;border:1px solid rgba(255,255,255,.07)">📌 💛 Autoestima, Autossabotagem e Motivação</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">🌍 Ref: 15M · Improvement Pill</span>
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">|</span>
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">Viral Score:</span>
+      <span style="font-family:monospace;color:#F59E0B;letter-spacing:1px;font-size:10px">████████░░</span> <span style="color:#F59E0B;font-weight:800;font-size:11px">76</span>
+    </div>
+  </div>
+  
+  <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+    <a href="https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778634177_O_perfeccionista_no_tem_medo_d_v8.mp4" download="psi_689.mp4" style="font-size:9px;font-weight:700;padding:6px 10px;border-radius:7px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);color:#94A3B8;text-decoration:none;white-space:nowrap">⬇ DL</a>
+    <button onclick="playVideo(8)" style="width:42px;height:42px;border-radius:50%;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.4);color:#C4B5FD;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s" onmouseover="this.style.background='#7C3AED';this.style.color='#fff';this.style.transform='scale(1.1)'" onmouseout="this.style.background='rgba(124,58,237,.15)';this.style.color='#C4B5FD';this.style.transform='scale(1)'">▶</button>
+  </div>
+</div>
+<div style="margin:20px 0 8px;padding:10px 16px;background:rgba(245,158,11,.08);border-radius:10px;border-left:3px solid rgba(255,255,255,.15)">
+  <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.15em;color:#E2E8F0">Semana 4 — Séries Relacionamentos</div>
+  <div style="font-size:9px;color:#94A3B8;margin-top:2px">Tema mais compartilhado por mulheres 25-40</div>
+</div>
+<div class="vrow" id="row10">
+  <div class="vnum">10</div>
+  
+  <div style="display:flex;align-items:center;justify-content:center;flex-shrink:0">
+    <span style="font-size:8px;font-weight:800;font-family:'DM Mono',monospace;padding:4px 9px;border-radius:6px;white-space:nowrap;background:rgba(124,58,237,.15);color:#C4B5FD;border:1px solid rgba(124,58,237,.4)">📹 LONG</span>
+  </div>
+  
+  <div class="vinfo">
+    <div style="font-size:13px;font-weight:800;color:#E2E8F0;line-height:1.3;margin-bottom:5px">Trauma de Abandono: Por Que Nunca Se Sente Seguro</div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:4px">
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(124,58,237,.12);color:#C4B5FD;border:1px solid rgba(124,58,237,.2)">🟣 Trauma</span>
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.05);color:#94A3B8;border:1px solid rgba(255,255,255,.07)">⏰ Sáb 12h</span>
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.05);color:#94A3B8;border:1px solid rgba(255,255,255,.07)">📌 🟣 Trauma de Infância e Cura</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">🌍 Ref: 19M · Psych2Go</span>
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">|</span>
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">Viral Score:</span>
+      <span style="font-family:monospace;color:#10B981;letter-spacing:1px;font-size:10px">████████░░</span> <span style="color:#10B981;font-weight:800;font-size:11px">83</span>
+    </div>
+  </div>
+  
+  <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+    <a href="https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778634437_Trauma_de_abandono_por_que_voc_v8.mp4" download="psi_691.mp4" style="font-size:9px;font-weight:700;padding:6px 10px;border-radius:7px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);color:#94A3B8;text-decoration:none;white-space:nowrap">⬇ DL</a>
+    <button onclick="playVideo(9)" style="width:42px;height:42px;border-radius:50%;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.4);color:#C4B5FD;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s" onmouseover="this.style.background='#7C3AED';this.style.color='#fff';this.style.transform='scale(1.1)'" onmouseout="this.style.background='rgba(124,58,237,.15)';this.style.color='#C4B5FD';this.style.transform='scale(1)'">▶</button>
+  </div>
+</div>
+<div class="vrow" id="row11">
+  <div class="vnum">11</div>
+  
+  <div style="display:flex;align-items:center;justify-content:center;flex-shrink:0">
+    <span style="font-size:8px;font-weight:800;font-family:'DM Mono',monospace;padding:4px 9px;border-radius:6px;white-space:nowrap;background:rgba(245,158,11,.15);color:#fbbf24;border:1px solid rgba(245,158,11,.4)">📱 SHORT</span>
+  </div>
+  
+  <div class="vinfo">
+    <div style="font-size:13px;font-weight:800;color:#E2E8F0;line-height:1.3;margin-bottom:5px">Quando Você Confunde Amor Com Necessidade — A Neurociência Explica</div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:4px">
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(124,58,237,.12);color:#C4B5FD;border:1px solid rgba(124,58,237,.2)">🤝 Relacion.</span>
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.05);color:#94A3B8;border:1px solid rgba(255,255,255,.07)">⏰ Seg 18h</span>
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.05);color:#94A3B8;border:1px solid rgba(255,255,255,.07)">📌 🤝 Relacionamentos Tóxicos e Padrões</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">🌍 Ref: 11M · Psych2Go</span>
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">|</span>
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">Viral Score:</span>
+      <span style="font-family:monospace;color:#F59E0B;letter-spacing:1px;font-size:10px">████████░░</span> <span style="color:#F59E0B;font-weight:800;font-size:11px">79</span>
+    </div>
+  </div>
+  
+  <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+    <a href="https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778680994_Isabela_achava_que_era_amor__e_v8.mp4" download="psi_687.mp4" style="font-size:9px;font-weight:700;padding:6px 10px;border-radius:7px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);color:#94A3B8;text-decoration:none;white-space:nowrap">⬇ DL</a>
+    <button onclick="playVideo(10)" style="width:42px;height:42px;border-radius:50%;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.4);color:#C4B5FD;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s" onmouseover="this.style.background='#7C3AED';this.style.color='#fff';this.style.transform='scale(1.1)'" onmouseout="this.style.background='rgba(124,58,237,.15)';this.style.color='#C4B5FD';this.style.transform='scale(1)'">▶</button>
+  </div>
+</div>
+<div class="vrow" id="row12">
+  <div class="vnum">12</div>
+  
+  <div style="display:flex;align-items:center;justify-content:center;flex-shrink:0">
+    <span style="font-size:8px;font-weight:800;font-family:'DM Mono',monospace;padding:4px 9px;border-radius:6px;white-space:nowrap;background:rgba(124,58,237,.15);color:#C4B5FD;border:1px solid rgba(124,58,237,.4)">📹 LONG</span>
+  </div>
+  
+  <div class="vinfo">
+    <div style="font-size:13px;font-weight:800;color:#E2E8F0;line-height:1.3;margin-bottom:5px">Relacionamento Tóxico: Os Sinais Que Você Está Normalizando</div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:4px">
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(124,58,237,.12);color:#C4B5FD;border:1px solid rgba(124,58,237,.2)">🤝 Relacion.</span>
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.05);color:#94A3B8;border:1px solid rgba(255,255,255,.07)">⏰ Qua 12h</span>
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.05);color:#94A3B8;border:1px solid rgba(255,255,255,.07)">📌 🤝 Relacionamentos Tóxicos e Padrões</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">🌍 Ref: 11M · Psych2Go</span>
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">|</span>
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">Viral Score:</span>
+      <span style="font-family:monospace;color:#10B981;letter-spacing:1px;font-size:10px">████████░░</span> <span style="color:#10B981;font-weight:800;font-size:11px">81</span>
+    </div>
+  </div>
+  
+  <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+    <a href="https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778705967_Sinais_de_um_relacionamento_tx_v8.mp4" download="psi_695.mp4" style="font-size:9px;font-weight:700;padding:6px 10px;border-radius:7px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);color:#94A3B8;text-decoration:none;white-space:nowrap">⬇ DL</a>
+    <button onclick="playVideo(11)" style="width:42px;height:42px;border-radius:50%;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.4);color:#C4B5FD;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s" onmouseover="this.style.background='#7C3AED';this.style.color='#fff';this.style.transform='scale(1.1)'" onmouseout="this.style.background='rgba(124,58,237,.15)';this.style.color='#C4B5FD';this.style.transform='scale(1)'">▶</button>
+  </div>
+</div>
+<div style="margin:20px 0 8px;padding:10px 16px;background:rgba(96,165,250,.08);border-radius:10px;border-left:3px solid rgba(255,255,255,.15)">
+  <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.15em;color:#E2E8F0">Semana 5 — Autoridade e Fidelização</div>
+  <div style="font-size:9px;color:#94A3B8;margin-top:2px">Audiência já te conhece → suporta conteúdo mais profundo</div>
+</div>
+<div class="vrow" id="row13">
+  <div class="vnum">13</div>
+  
+  <div style="display:flex;align-items:center;justify-content:center;flex-shrink:0">
+    <span style="font-size:8px;font-weight:800;font-family:'DM Mono',monospace;padding:4px 9px;border-radius:6px;white-space:nowrap;background:rgba(124,58,237,.15);color:#C4B5FD;border:1px solid rgba(124,58,237,.4)">📹 LONG</span>
+  </div>
+  
+  <div class="vinfo">
+    <div style="font-size:13px;font-weight:800;color:#E2E8F0;line-height:1.3;margin-bottom:5px">Negligência Emocional: O Trauma que Você Nem Sabe que Tem</div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:4px">
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(124,58,237,.12);color:#C4B5FD;border:1px solid rgba(124,58,237,.2)">🟣 Trauma</span>
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.05);color:#94A3B8;border:1px solid rgba(255,255,255,.07)">⏰ Sáb 18h</span>
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.05);color:#94A3B8;border:1px solid rgba(255,255,255,.07)">📌 🟣 Trauma de Infância e Cura</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">🌍 Ref: 19M · Psych2Go</span>
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">|</span>
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">Viral Score:</span>
+      <span style="font-family:monospace;color:#10B981;letter-spacing:1px;font-size:10px">████████░░</span> <span style="color:#10B981;font-weight:800;font-size:11px">85</span>
+    </div>
+  </div>
+  
+  <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+    <a href="https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778705984_Negligncia_emocional_o_trauma__v8.mp4" download="psi_694.mp4" style="font-size:9px;font-weight:700;padding:6px 10px;border-radius:7px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);color:#94A3B8;text-decoration:none;white-space:nowrap">⬇ DL</a>
+    <button onclick="playVideo(12)" style="width:42px;height:42px;border-radius:50%;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.4);color:#C4B5FD;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s" onmouseover="this.style.background='#7C3AED';this.style.color='#fff';this.style.transform='scale(1.1)'" onmouseout="this.style.background='rgba(124,58,237,.15)';this.style.color='#C4B5FD';this.style.transform='scale(1)'">▶</button>
+  </div>
+</div>
+<div class="vrow" id="row14">
+  <div class="vnum">14</div>
+  
+  <div style="display:flex;align-items:center;justify-content:center;flex-shrink:0">
+    <span style="font-size:8px;font-weight:800;font-family:'DM Mono',monospace;padding:4px 9px;border-radius:6px;white-space:nowrap;background:rgba(245,158,11,.15);color:#fbbf24;border:1px solid rgba(245,158,11,.4)">📱 SHORT</span>
+  </div>
+  
+  <div class="vinfo">
+    <div style="font-size:13px;font-weight:800;color:#E2E8F0;line-height:1.3;margin-bottom:5px">Apego Ansioso: 7 Sinais Que Você Tem (e Não Sabe)</div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:4px">
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(124,58,237,.12);color:#C4B5FD;border:1px solid rgba(124,58,237,.2)">💜 Apego</span>
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.05);color:#94A3B8;border:1px solid rgba(255,255,255,.07)">⏰ Seg 12h</span>
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.05);color:#94A3B8;border:1px solid rgba(255,255,255,.07)">📌 💜 Apego Ansioso e Medo do Abandono</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">🌍 Ref: 22M · Psych2Go</span>
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">|</span>
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">Viral Score:</span>
+      <span style="font-family:monospace;color:#10B981;letter-spacing:1px;font-size:10px">████████░░</span> <span style="color:#10B981;font-weight:800;font-size:11px">80</span>
+    </div>
+  </div>
+  
+  <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+    <a href="https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/v2/pipeline_91_1778565294.mp4" download="psi_91.mp4" style="font-size:9px;font-weight:700;padding:6px 10px;border-radius:7px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);color:#94A3B8;text-decoration:none;white-space:nowrap">⬇ DL</a>
+    <button onclick="playVideo(13)" style="width:42px;height:42px;border-radius:50%;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.4);color:#C4B5FD;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s" onmouseover="this.style.background='#7C3AED';this.style.color='#fff';this.style.transform='scale(1.1)'" onmouseout="this.style.background='rgba(124,58,237,.15)';this.style.color='#C4B5FD';this.style.transform='scale(1)'">▶</button>
+  </div>
+</div>
+<div class="vrow" id="row15">
+  <div class="vnum">15</div>
+  
+  <div style="display:flex;align-items:center;justify-content:center;flex-shrink:0">
+    <span style="font-size:8px;font-weight:800;font-family:'DM Mono',monospace;padding:4px 9px;border-radius:6px;white-space:nowrap;background:rgba(124,58,237,.15);color:#C4B5FD;border:1px solid rgba(124,58,237,.4)">📹 LONG</span>
+  </div>
+  
+  <div class="vinfo">
+    <div style="font-size:13px;font-weight:800;color:#E2E8F0;line-height:1.3;margin-bottom:5px">Relacionamento Tóxico: A Ciência Por Que Você Escolhe Errado</div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:4px">
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(124,58,237,.12);color:#C4B5FD;border:1px solid rgba(124,58,237,.2)">🤝 Relacion.</span>
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.05);color:#94A3B8;border:1px solid rgba(255,255,255,.07)">⏰ Qua 18h</span>
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.05);color:#94A3B8;border:1px solid rgba(255,255,255,.07)">📌 🤝 Relacionamentos Tóxicos e Padrões</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">🌍 Ref: 11M · Psych2Go</span>
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">|</span>
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">Viral Score:</span>
+      <span style="font-family:monospace;color:#F59E0B;letter-spacing:1px;font-size:10px">████████░░</span> <span style="color:#F59E0B;font-weight:800;font-size:11px">77</span>
+    </div>
+  </div>
+  
+  <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+    <a href="https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778634393_A_cincia_por_trs_de_escolher_s_v8.mp4" download="psi_690.mp4" style="font-size:9px;font-weight:700;padding:6px 10px;border-radius:7px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);color:#94A3B8;text-decoration:none;white-space:nowrap">⬇ DL</a>
+    <button onclick="playVideo(14)" style="width:42px;height:42px;border-radius:50%;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.4);color:#C4B5FD;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s" onmouseover="this.style.background='#7C3AED';this.style.color='#fff';this.style.transform='scale(1.1)'" onmouseout="this.style.background='rgba(124,58,237,.15)';this.style.color='#C4B5FD';this.style.transform='scale(1)'">▶</button>
+  </div>
+</div>
+<div style="margin:20px 0 8px;padding:10px 16px;background:rgba(16,185,129,.08);border-radius:10px;border-left:3px solid rgba(255,255,255,.15)">
+  <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.15em;color:#E2E8F0">Semana 6 — Monetização e Expansão</div>
+  <div style="font-size:9px;color:#94A3B8;margin-top:2px">Canal com histórico · diversificar público</div>
+</div>
+<div class="vrow" id="row16">
+  <div class="vnum">16</div>
+  
+  <div style="display:flex;align-items:center;justify-content:center;flex-shrink:0">
+    <span style="font-size:8px;font-weight:800;font-family:'DM Mono',monospace;padding:4px 9px;border-radius:6px;white-space:nowrap;background:rgba(124,58,237,.15);color:#C4B5FD;border:1px solid rgba(124,58,237,.4)">📹 LONG</span>
+  </div>
+  
+  <div class="vinfo">
+    <div style="font-size:13px;font-weight:800;color:#E2E8F0;line-height:1.3;margin-bottom:5px">Psicologia do Dinheiro: Por Que o Dinheiro Foge de Você</div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:4px">
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(124,58,237,.12);color:#C4B5FD;border:1px solid rgba(124,58,237,.2)">💰 Dinheiro</span>
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.05);color:#94A3B8;border:1px solid rgba(255,255,255,.07)">⏰ Sáb 12h</span>
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.05);color:#94A3B8;border:1px solid rgba(255,255,255,.07)">📌 💰 Psicologia do Dinheiro e Sucesso</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">🌍 Ref: Top Finance Psych</span>
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">|</span>
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">Viral Score:</span>
+      <span style="font-family:monospace;color:#F59E0B;letter-spacing:1px;font-size:10px">███████░░░</span> <span style="color:#F59E0B;font-weight:800;font-size:11px">73</span>
+    </div>
+  </div>
+  
+  <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+    <a href="https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778705982_Crenas_limitantes_por_que_dinh_v8.mp4" download="psi_696.mp4" style="font-size:9px;font-weight:700;padding:6px 10px;border-radius:7px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);color:#94A3B8;text-decoration:none;white-space:nowrap">⬇ DL</a>
+    <button onclick="playVideo(15)" style="width:42px;height:42px;border-radius:50%;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.4);color:#C4B5FD;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s" onmouseover="this.style.background='#7C3AED';this.style.color='#fff';this.style.transform='scale(1.1)'" onmouseout="this.style.background='rgba(124,58,237,.15)';this.style.color='#C4B5FD';this.style.transform='scale(1)'">▶</button>
+  </div>
+</div>
+<div class="vrow" id="row17">
+  <div class="vnum">17</div>
+  
+  <div style="display:flex;align-items:center;justify-content:center;flex-shrink:0">
+    <span style="font-size:8px;font-weight:800;font-family:'DM Mono',monospace;padding:4px 9px;border-radius:6px;white-space:nowrap;background:rgba(124,58,237,.15);color:#C4B5FD;border:1px solid rgba(124,58,237,.4)">📹 LONG</span>
+  </div>
+  
+  <div class="vinfo">
+    <div style="font-size:13px;font-weight:800;color:#E2E8F0;line-height:1.3;margin-bottom:5px">Apego Ansioso: Medo do Abandono que Controla sua Vida</div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:4px">
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(124,58,237,.12);color:#C4B5FD;border:1px solid rgba(124,58,237,.2)">💜 Apego</span>
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.05);color:#94A3B8;border:1px solid rgba(255,255,255,.07)">⏰ Seg 18h</span>
+      <span style="font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.05);color:#94A3B8;border:1px solid rgba(255,255,255,.07)">📌 💜 Apego Ansioso e Medo do Abandono</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">🌍 Ref: 22M · Psych2Go</span>
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">|</span>
+      <span style="font-size:8px;color:#475569;font-family:'DM Mono',monospace">Viral Score:</span>
+      <span style="font-family:monospace;color:#F59E0B;letter-spacing:1px;font-size:10px">████████░░</span> <span style="color:#F59E0B;font-weight:800;font-size:11px">78</span>
+    </div>
+  </div>
+  
+  <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+    <a href="https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/v2/pipeline_76_1778546722.mp4" download="psi_76.mp4" style="font-size:9px;font-weight:700;padding:6px 10px;border-radius:7px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);color:#94A3B8;text-decoration:none;white-space:nowrap">⬇ DL</a>
+    <button onclick="playVideo(16)" style="width:42px;height:42px;border-radius:50%;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.4);color:#C4B5FD;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s" onmouseover="this.style.background='#7C3AED';this.style.color='#fff';this.style.transform='scale(1.1)'" onmouseout="this.style.background='rgba(124,58,237,.15)';this.style.color='#C4B5FD';this.style.transform='scale(1)'">▶</button>
+  </div>
+</div>
+</div>
 
-<!-- modal -->
-<div id="modal" onclick="if(event.target===this)closeModal()">
+<!-- MODAL -->
+<div id="modal" onclick="if(event.target===this)close()">
   <div class="mbox">
     <div class="mhdr">
       <div class="mhdr-info">
-        <div class="mhdr-title" id="mt"></div>
-        <div class="mhdr-meta" id="mm"></div>
+        <div style="font-size:9px;font-family:'DM Mono',monospace;color:#94A3B8;margin-bottom:4px" id="mpos"></div>
+        <div style="font-size:14px;font-weight:800;color:#E2E8F0;line-height:1.3" id="mtitle"></div>
+        <div class="mstat" id="mmeta"></div>
       </div>
-      <button class="mclose" onclick="closeModal()">&#10005;</button>
+      <button class="mclose" onclick="close()">✕</button>
     </div>
-    <video id="mvideo" controls playsinline style="background:#000;width:100%;display:block;max-height:70vh"></video>
+    <video id="mvid" controls playsinline></video>
     <div class="mftr">
       <div class="mnav">
-        <button class="mbtn" id="mprev" onclick="nav(-1)">&#9664; Anterior</button>
-        <button class="mbtn" id="mnext" onclick="nav(+1)">Pr&#243;ximo &#9654;</button>
+        <button class="mbtn" id="mprev" onclick="nav(-1)">◀ Anterior</button>
+        <button class="mbtn" id="mnext" onclick="nav(+1)">Próximo ▶</button>
       </div>
+      <div style="font-size:9px;color:#475569;font-family:'DM Mono',monospace;padding:0 8px" id="mref"></div>
       <div class="macts">
-        <a class="mact ma-dl" id="mdl" href="#">&#8595; Download</a>
-        <a class="mact ma-pub" href="/publicar.html">&#128640; Publicar</a>
-        <a class="mact ma-yt" id="myt" href="https://www.youtube.com/@psidanielacoelho" target="_blank">&#128250; Canal</a>
+        <a class="ma ma-dl" id="mdl" href="#">⬇ Download</a>
+        <a class="ma ma-yt" href="https://studio.youtube.com" target="_blank">📤 YT Studio</a>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-const SB='https://tpjvalzwkqwttvmszvie.supabase.co';
-const AK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwanZhbHp3a3F3dHR2bXN6dmllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMzUyOTMsImV4cCI6MjA5MTYxMTI5M30.UEgUo0Mw15ihQZykLAY5QApRzgTXkfIewZFzIgwao3Q';
+const VIDEOS=[{"pos": 1, "id": 683, "tipo": "SHORT", "titulo": "Narcisismo: 3 Sinais Que Voc\u00ea Est\u00e1 Ignorando Agora Mesmo", "serie": "\ud83d\udd34 Narcisismo", "ref": "28M \u00b7 Psych2Go", "dia": "S\u00e1b 18h", "playlist": "\ud83d\udd34 Narcisismo, Manipula\u00e7\u00e3o e Gaslighting", "viral": 90, "url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778680583_Narcisismo_encoberto_3_sinais__v8.mp4"}, {"pos": 2, "id": 682, "tipo": "SHORT", "titulo": "Voc\u00ea Checa o Celular 80 Vezes por Dia? N\u00e3o \u00e9 V\u00edcio \u2014 \u00c9 Apego", "serie": "\ud83d\udc9c Apego", "ref": "22M \u00b7 Psych2Go", "dia": "Seg 12h", "playlist": "\ud83d\udc9c Apego Ansioso e Medo do Abandono", "viral": 90, "url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778681220_Voc_checa_o_celular_80_vezes_a_v8.mp4"}, {"pos": 3, "id": 693, "tipo": "LONG", "titulo": "Gaslighting: A Manipula\u00e7\u00e3o Que Faz Voc\u00ea Duvidar da Sua Pr\u00f3pria Sanidade", "serie": "\ud83d\udd34 Narcisismo", "ref": "12M \u00b7 Charisma", "dia": "Qua 18h", "playlist": "\ud83d\udd34 Narcisismo, Manipula\u00e7\u00e3o e Gaslighting", "viral": 85, "url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778706024_Gaslighting_a_manipulao_invisv_v8.mp4"}, {"pos": 4, "id": 688, "tipo": "SHORT", "titulo": "Depress\u00e3o: N\u00e3o Era Pregui\u00e7a. Era o C\u00e9rebro Desligando", "serie": "\ud83d\ude14 Depress\u00e3o", "ref": "18M \u00b7 Psych2Go", "dia": "S\u00e1b 12h", "playlist": "\ud83d\ude14 Depress\u00e3o e Burnout Silenciosos", "viral": 80, "url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778680853_Rafael_no_conseguia_sair_da_ca_v8.mp4"}, {"pos": 5, "id": 692, "tipo": "LONG", "titulo": "Apego Ansioso: O Medo de Abandono Que Controla Cada Rela\u00e7\u00e3o", "serie": "\ud83d\udc9c Apego", "ref": "22M \u00b7 Psych2Go", "dia": "Seg 18h", "playlist": "\ud83d\udc9c Apego Ansioso e Medo do Abandono", "viral": 82, "url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778705685_Apego_Ansioso_o_medo_do_abando_v8.mp4"}, {"pos": 6, "id": 684, "tipo": "SHORT", "titulo": "Ansiedade: O Sinal Silencioso Que 9 em 10 Pessoas Ignoram", "serie": "\ud83d\udd35 Ansiedade", "ref": "15M \u00b7 Psych2Go", "dia": "Qua 12h", "playlist": "\ud83d\udd35 Ansiedade, P\u00e2nico e Pensamentos", "viral": 75, "url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778634218_Sofia_dormia_2_horas_por_noite_v8.mp4"}, {"pos": 7, "id": 686, "tipo": "LONG", "titulo": "Trauma: O Que o Trauma Silencioso Faz Dentro de Voc\u00ea", "serie": "\ud83d\udfe3 Trauma", "ref": "19M \u00b7 Psych2Go", "dia": "S\u00e1b 18h", "playlist": "\ud83d\udfe3 Trauma de Inf\u00e2ncia e Cura", "viral": 87, "url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778634352_O_que_o_trauma_silencioso_faz__v8.mp4"}, {"pos": 8, "id": 685, "tipo": "SHORT", "titulo": "Voc\u00ea Sabota Tudo Quando Est\u00e1 Prestes a Ser Feliz? A Ci\u00eancia Explica", "serie": "\ud83d\udc9b Autoestima", "ref": "15M \u00b7 Improvement Pill", "dia": "Seg 12h", "playlist": "\ud83d\udc9b Autoestima, Autossabotagem e Motiva\u00e7\u00e3o", "viral": 78, "url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778681009_Por_que_voc_sabota_tudo_quando_v8.mp4"}, {"pos": 9, "id": 689, "tipo": "SHORT", "titulo": "Perfeccionista N\u00e3o Tem Medo de Falhar \u2014 Tem Medo de Ser Descoberto", "serie": "\ud83d\udc9b Autoestima", "ref": "15M \u00b7 Improvement Pill", "dia": "Qua 18h", "playlist": "\ud83d\udc9b Autoestima, Autossabotagem e Motiva\u00e7\u00e3o", "viral": 76, "url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778634177_O_perfeccionista_no_tem_medo_d_v8.mp4"}, {"pos": 10, "id": 691, "tipo": "LONG", "titulo": "Trauma de Abandono: Por Que Nunca Se Sente Seguro", "serie": "\ud83d\udfe3 Trauma", "ref": "19M \u00b7 Psych2Go", "dia": "S\u00e1b 12h", "playlist": "\ud83d\udfe3 Trauma de Inf\u00e2ncia e Cura", "viral": 83, "url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778634437_Trauma_de_abandono_por_que_voc_v8.mp4"}, {"pos": 11, "id": 687, "tipo": "SHORT", "titulo": "Quando Voc\u00ea Confunde Amor Com Necessidade \u2014 A Neuroci\u00eancia Explica", "serie": "\ud83e\udd1d Relacion.", "ref": "11M \u00b7 Psych2Go", "dia": "Seg 18h", "playlist": "\ud83e\udd1d Relacionamentos T\u00f3xicos e Padr\u00f5es", "viral": 79, "url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778680994_Isabela_achava_que_era_amor__e_v8.mp4"}, {"pos": 12, "id": 695, "tipo": "LONG", "titulo": "Relacionamento T\u00f3xico: Os Sinais Que Voc\u00ea Est\u00e1 Normalizando", "serie": "\ud83e\udd1d Relacion.", "ref": "11M \u00b7 Psych2Go", "dia": "Qua 12h", "playlist": "\ud83e\udd1d Relacionamentos T\u00f3xicos e Padr\u00f5es", "viral": 81, "url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778705967_Sinais_de_um_relacionamento_tx_v8.mp4"}, {"pos": 13, "id": 694, "tipo": "LONG", "titulo": "Neglig\u00eancia Emocional: O Trauma que Voc\u00ea Nem Sabe que Tem", "serie": "\ud83d\udfe3 Trauma", "ref": "19M \u00b7 Psych2Go", "dia": "S\u00e1b 18h", "playlist": "\ud83d\udfe3 Trauma de Inf\u00e2ncia e Cura", "viral": 85, "url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778705984_Negligncia_emocional_o_trauma__v8.mp4"}, {"pos": 14, "id": 91, "tipo": "SHORT", "titulo": "Apego Ansioso: 7 Sinais Que Voc\u00ea Tem (e N\u00e3o Sabe)", "serie": "\ud83d\udc9c Apego", "ref": "22M \u00b7 Psych2Go", "dia": "Seg 12h", "playlist": "\ud83d\udc9c Apego Ansioso e Medo do Abandono", "viral": 80, "url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/v2/pipeline_91_1778565294.mp4"}, {"pos": 15, "id": 690, "tipo": "LONG", "titulo": "Relacionamento T\u00f3xico: A Ci\u00eancia Por Que Voc\u00ea Escolhe Errado", "serie": "\ud83e\udd1d Relacion.", "ref": "11M \u00b7 Psych2Go", "dia": "Qua 18h", "playlist": "\ud83e\udd1d Relacionamentos T\u00f3xicos e Padr\u00f5es", "viral": 77, "url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778634393_A_cincia_por_trs_de_escolher_s_v8.mp4"}, {"pos": 16, "id": 696, "tipo": "LONG", "titulo": "Psicologia do Dinheiro: Por Que o Dinheiro Foge de Voc\u00ea", "serie": "\ud83d\udcb0 Dinheiro", "ref": "Top Finance Psych", "dia": "S\u00e1b 12h", "playlist": "\ud83d\udcb0 Psicologia do Dinheiro e Sucesso", "viral": 73, "url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/1778705982_Crenas_limitantes_por_que_dinh_v8.mp4"}, {"pos": 17, "id": 76, "tipo": "LONG", "titulo": "Apego Ansioso: Medo do Abandono que Controla sua Vida", "serie": "\ud83d\udc9c Apego", "ref": "22M \u00b7 Psych2Go", "dia": "Seg 18h", "playlist": "\ud83d\udc9c Apego Ansioso e Medo do Abandono", "viral": 78, "url": "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/v2/pipeline_76_1778546722.mp4"}];
+let IDX=0;
 
-const SM={narcis:'Narcisismo',gaslight:'Narcisismo',manipul:'Narcisismo',
-  apego:'Apego',abandono:'Apego',trauma:'Trauma',neglig:'Trauma',
-  ansied:'Ansiedade',burnout:'Burnout',autoestima:'Autoestima',
-  sabota:'Autoestima',relacionamento:'Relacionamentos',toxico:'Relacionamentos',
-  depress:'Depress\u00e3o',dinheiro:'Dinheiro'};
+function playVideo(i){IDX=i;open();}
 
-function serie(t){
-  const s=(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-  for(const[k,v]of Object.entries(SM)) if(s.includes(k)) return v;
-  return'Psicologia';
-}
-
-let ALL=[],FA='t',SORT='pub',FIL=[],IDX=0;
-
-async function load(){
-  document.getElementById('vlist').innerHTML='<div class="empty">&#9749; Carregando v\u00eddeos&#8230;</div>';
-  try{
-    const r=await fetch(
-      SB+'/rest/v1/content_pipeline?mp4_url=not.is.null'+
-      '&select=id,title,youtube_title,mp4_url,youtube_video_id,seo_score,target_platform,status,pub_order'+
-      '&order=pub_order.asc.nullslast,seo_score.desc,id.desc&limit=200',
-      {headers:{apikey:AK,Authorization:'Bearer '+AK},signal:AbortSignal.timeout(10000)}
-    );
-    if(!r.ok){const e=await r.json();throw new Error(e.message||'HTTP '+r.status);}
-    ALL=await r.json();
-    const pub=ALL.filter(v=>v.youtube_video_id).length;
-    document.getElementById('s-mp4').textContent=ALL.length;
-    document.getElementById('s-pub').textContent=pub;
-    document.getElementById('s-wait').textContent=ALL.length-pub;
-    render();
-  }catch(e){
-    document.getElementById('vlist').innerHTML=
-      '<div class="empty">&#10060; '+e.message+'<br><br>'+
-      '<button onclick="load()" style="padding:8px 18px;background:rgba(124,58,237,.2);'+
-      'border:1px solid rgba(124,58,237,.4);color:#C4B5FD;border-radius:8px;cursor:pointer;font-size:12px">'+
-      'Tentar novamente</button></div>';
-  }
-}
-
-function F(el,f){
-  document.querySelectorAll('.ftag').forEach(x=>x.classList.remove('on'));
-  el.classList.add('on');FA=f;render();
-}
-
-function isShort(v){return(v.target_platform||'').toLowerCase().includes('short')}
-
-function render(){
-  let vs=[...ALL];
-  if(FA!=='t'){
-    vs=vs.filter(v=>{
-      const sr=serie(v.youtube_title||v.title||'');
-      const pub=!!v.youtube_video_id;
-      if(FA==='sh')return isShort(v);
-      if(FA==='lo')return!isShort(v);
-      if(FA==='wait')return!pub;
-      if(FA==='ok')return pub;
-      return sr.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')
-        .includes(FA.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''));
-    });
-  }
-  if(SORT==='pub')vs.sort((a,b)=>{
-    const pa=a.pub_order??9999, pb=b.pub_order??9999;
-    return pa!==pb?pa-pb:(b.seo_score||0)-(a.seo_score||0);
-  });
-  if(SORT==='seo') vs.sort((a,b)=>(b.seo_score||0)-(a.seo_score||0));
-  if(SORT==='id')  vs.sort((a,b)=>b.id-a.id);
-  if(SORT==='plat')vs.sort((a,b)=>(a.target_platform||'').localeCompare(b.target_platform||''));
-  FIL=vs;
-  document.getElementById('cnt').textContent=vs.length+' v\u00eddeo'+(vs.length!==1?'s':'');
-  if(!vs.length){
-    document.getElementById('vlist').innerHTML='<div class="empty">Nenhum v\u00eddeo para este filtro.</div>';
-    return;
-  }
-  document.getElementById('vlist').innerHTML=vs.map((v,i)=>{
-    const t=v.youtube_title||v.title||'Sem t\u00edtulo';
-    const sr=serie(t);
-    const short=isShort(v);
-    const pub=!!v.youtube_video_id;
-    const num=v.pub_order!=null?v.pub_order:(i+1);
-    const typeHtml=short
-      ?'<span class="type-short">&#128241; SHORT</span>'
-      :'<span class="type-long">&#127909; LONG</span>';
-    return'<div class="vrow">'+
-      '<div class="vnum">'+num+'</div>'+
-      '<div class="vtype">'+typeHtml+'</div>'+
-      '<div class="vinfo">'+
-        '<div class="vtitle" title="'+t.replace(/"/g,'&quot;')+'">'+t+'</div>'+
-        '<div class="vtags">'+
-          '<span class="chip cs">'+sr+'</span>'+
-          '<span class="chip cp">SEO '+v.seo_score+'</span>'+
-          '<span class="chip cl">#'+v.id+'</span>'+
-          (pub?'<span class="chip ck">&#10003; YT</span>':'')+
-        '</div>'+
-      '</div>'+
-      '<div class="vstatus"><span class="'+(pub?'sd':'sw')+'">'+(pub?'&#10003; Publicado':'&#8987; Aguardando')+'</span></div>'+
-      '<div class="vacts">'+
-        '<a class="bdl" href="'+v.mp4_url+'" download="psi_'+v.id+'.mp4">&#8595;</a>'+
-        '<button class="bplay" onclick="openModal('+i+')" title="Assistir">&#9654;</button>'+
-      '</div>'+
-    '</div>';
-  }).join('');
-}
-
-function openModal(idx){
-  IDX=idx;const v=FIL[idx];
-  const t=v.youtube_title||v.title||'Sem t\u00edtulo';
-  const sr=serie(t);
-  const short=isShort(v);
-  const pub=!!v.youtube_video_id;
-  const yt=pub?'https://youtube.com/watch?v='+v.youtube_video_id:'https://www.youtube.com/@psidanielacoelho';
-  document.getElementById('mt').textContent=t;
-  document.getElementById('mm').innerHTML=
-    (short?'<span class="chip" style="background:rgba(245,158,11,.15);color:#fbbf24;border:1px solid rgba(245,158,11,.3)">&#128241; SHORT</span>'
-          :'<span class="chip" style="background:rgba(124,58,237,.15);color:#C4B5FD;border:1px solid rgba(124,58,237,.3)">&#127909; LONG</span>')+
-    '<span class="chip cs">'+sr+'</span>'+
-    '<span class="chip cp">SEO '+v.seo_score+'</span>'+
-    '<span class="chip cl">#'+v.id+'</span>'+
-    (pub?'<span class="chip ck">&#10003; YouTube</span>':'');
-  const vid=document.getElementById('mvideo');
-  vid.pause();vid.src=v.mp4_url;vid.load();vid.play().catch(()=>{});
-  document.getElementById('mdl').href=v.mp4_url;
+function open(){
+  const v=VIDEOS[IDX];
+  document.getElementById('mpos').textContent='Posição '+v.pos+' de 17 · Semana '+Math.ceil(v.pos/3)+' · '+v.dia;
+  document.getElementById('mtitle').textContent=v.titulo;
+  document.getElementById('mmeta').innerHTML=
+    '<span class="mchip" style="background:rgba(124,58,237,.12);color:#C4B5FD;border:1px solid rgba(124,58,237,.2)">'+v.serie+'</span>'+
+    '<span class="mchip" style="background:rgba(255,255,255,.05);color:#94A3B8;border:1px solid rgba(255,255,255,.07)">'+v.tipo+'</span>'+
+    '<span class="mchip" style="background:rgba(245,158,11,.1);color:#fbbf24;border:1px solid rgba(245,158,11,.2)">Viral '+v.viral+'</span>'+
+    '<span class="mchip" style="background:rgba(255,255,255,.05);color:#94A3B8;border:1px solid rgba(255,255,255,.07)">'+v.playlist+'</span>';
+  document.getElementById('mref').textContent='🌍 Ref mundial: '+v.ref;
+  const vid=document.getElementById('mvid');
+  vid.pause();vid.src=v.url;vid.load();vid.play().catch(()=>{});
+  document.getElementById('mdl').href=v.url;
   document.getElementById('mdl').setAttribute('download','psi_'+v.id+'.mp4');
-  document.getElementById('myt').href=yt;
-  document.getElementById('myt').textContent=pub?'&#9654; YouTube':'&#128250; Canal';
-  document.getElementById('mprev').disabled=(idx===0);
-  document.getElementById('mnext').disabled=(idx===FIL.length-1);
+  document.getElementById('mprev').disabled=(IDX===0);
+  document.getElementById('mnext').disabled=(IDX===VIDEOS.length-1);
   document.getElementById('modal').classList.add('open');
   document.body.style.overflow='hidden';
 }
 
-function closeModal(){
-  const vid=document.getElementById('mvideo');
-  vid.pause();vid.src='';
+function close(){
+  const v=document.getElementById('mvid');v.pause();v.src='';
   document.getElementById('modal').classList.remove('open');
   document.body.style.overflow='';
 }
 
-function nav(dir){const n=IDX+dir;if(n>=0&&n<FIL.length)openModal(n);}
+function nav(d){const n=IDX+d;if(n>=0&&n<VIDEOS.length){IDX=n;open();}}
 
 document.addEventListener('keydown',e=>{
   if(!document.getElementById('modal').classList.contains('open'))return;
-  if(e.key==='Escape')closeModal();
+  if(e.key==='Escape')close();
   if(e.key==='ArrowRight')nav(+1);
   if(e.key==='ArrowLeft')nav(-1);
 });
-
-load();
 </script>
 </body>
 </html>
