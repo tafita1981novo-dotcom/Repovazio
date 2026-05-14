@@ -1,195 +1,173 @@
 <!DOCTYPE html>
 <html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ψ Conectores OAuth — @psidanielacoelho</title>
+<title>ψ Conectores & Bloqueios — psicologia.doc</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800&family=DM+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#06060F;--s1:#0E0E1A;--s2:#12121F;--acc:#7C3AED;--crim:#E11D48;--gold:#F59E0B;--teal:#0D9488;--grn:#10B981;--mist:#C4B5FD;--t1:#E2E8F0;--t2:#94A3B8;--t3:#475569;--bd:rgba(255,255,255,.07)}
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--bg);color:var(--t1);font-family:"DM Sans",sans-serif;min-height:100vh}
-body::before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse 60% 40% at 20% 10%,rgba(124,58,237,.07),transparent)}
-.hdr{padding:14px 24px;border-bottom:1px solid var(--bd);background:rgba(6,6,15,.95);backdrop-filter:blur(20px);position:sticky;top:0;z-index:100;display:flex;align-items:center;gap:14px}
+.hdr{padding:14px 28px;border-bottom:1px solid var(--bd);background:rgba(6,6,15,.95);backdrop-filter:blur(20px);position:sticky;top:0;z-index:100;display:flex;align-items:center;gap:14px}
 .logo{font-size:18px;font-weight:800;color:var(--mist)}
-.wrap{max-width:1100px;margin:0 auto;padding:28px 24px 80px;position:relative;z-index:1}
+.wrap{max-width:1100px;margin:0 auto;padding:28px 24px 80px;position:relative}
 h2{font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--t3);font-family:"DM Mono",monospace;margin-bottom:14px}
-.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:32px}
-.conn-card{background:var(--s1);border:1px solid var(--bd);border-radius:16px;padding:20px;position:relative;overflow:hidden;transition:.2s}
-.conn-card.active{border-color:rgba(16,185,129,.3)}
-.conn-card.inactive{border-color:rgba(225,29,72,.25)}
-.conn-card.partial{border-color:rgba(245,158,11,.25)}
-.conn-hdr{display:flex;align-items:center;gap:14px;margin-bottom:14px}
-.conn-logo{font-size:32px;flex-shrink:0}
-.conn-name{font-size:16px;font-weight:800;color:var(--t1)}
-.conn-channel{font-size:11px;color:var(--t3);font-family:"DM Mono",monospace;margin-top:2px}
-.conn-status{position:absolute;top:16px;right:16px;font-size:9px;font-family:"DM Mono",monospace;padding:3px 10px;border-radius:10px;font-weight:700}
-.s-active{background:rgba(16,185,129,.15);color:var(--grn);border:1px solid rgba(16,185,129,.3)}
-.s-inactive{background:rgba(225,29,72,.15);color:var(--crim);border:1px solid rgba(225,29,72,.3)}
-.s-partial{background:rgba(245,158,11,.15);color:var(--gold);border:1px solid rgba(245,158,11,.3)}
-.token-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)}
-.token-row:last-child{border-bottom:none}
-.token-key{font-size:10px;font-family:"DM Mono",monospace;color:var(--t3)}
-.token-val{font-size:11px;font-weight:600}
-.tv-ok{color:var(--grn)} .tv-miss{color:var(--crim)} .tv-partial{color:var(--gold)}
-.setup-btn{display:inline-block;margin-top:12px;padding:7px 16px;background:rgba(124,58,237,.2);color:var(--mist);border:1px solid rgba(124,58,237,.3);border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;text-decoration:none;transition:.15s}
-.setup-btn:hover{background:rgba(124,58,237,.35)}
-/* EF CLEANUP */
-.ef-card{background:var(--s1);border:1px solid rgba(225,29,72,.2);border-radius:14px;padding:20px;margin-bottom:20px}
-.ef-title{font-size:14px;font-weight:700;color:var(--crim);margin-bottom:10px}
-.ef-count{font-size:32px;font-weight:900;color:var(--crim)}
-.ef-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:12px 0}
-.ef-slug{font-size:9px;font-family:"DM Mono",monospace;background:rgba(225,29,72,.07);border:1px solid rgba(225,29,72,.15);border-radius:5px;padding:4px 6px;color:#FCA5A5}
-.ef-link{display:inline-block;margin-top:10px;padding:8px 20px;background:var(--crim);color:#fff;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none}
+.bloqueio{border-radius:14px;padding:18px 20px;margin-bottom:16px}
+.b-crit{background:rgba(225,29,72,.06);border:1px solid rgba(225,29,72,.2)}
+.b-alto{background:rgba(245,158,11,.05);border:1px solid rgba(245,158,11,.18)}
+.b-medio{background:rgba(124,58,237,.05);border:1px solid rgba(124,58,237,.18)}
+.b-hdr{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.b-badge{font-size:9px;font-family:"DM Mono",monospace;padding:2px 8px;border-radius:9px}
+.bc{background:rgba(225,29,72,.2);color:#FCA5A5;border:1px solid rgba(225,29,72,.3)}
+.ba{background:rgba(245,158,11,.2);color:#FDE68A;border:1px solid rgba(245,158,11,.3)}
+.bm{background:rgba(124,58,237,.2);color:var(--mist);border:1px solid rgba(124,58,237,.3)}
+.b-title{font-size:13px;font-weight:700;color:var(--t1)}
+.b-body{font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:10px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:9px;font-size:12px;font-weight:700;text-decoration:none;cursor:pointer;border:none;margin-right:6px;margin-bottom:4px}
+.btn-go{background:var(--crim);color:#fff}
+.btn-copy{background:rgba(255,255,255,.08);color:var(--t1)}
+.btn-copy:hover{background:rgba(255,255,255,.14)}
+.steps{counter-reset:step;list-style:none;padding:0}
+.steps li{padding:6px 0 6px 28px;position:relative;font-size:12px;color:var(--t2);border-bottom:1px solid rgba(255,255,255,.04)}
+.steps li::before{counter-increment:step;content:counter(step);position:absolute;left:0;top:5px;width:20px;height:20px;border-radius:50%;background:rgba(225,29,72,.15);color:var(--crim);font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.ef-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.ef-tag{background:rgba(255,255,255,.05);border:1px solid var(--bd);border-radius:8px;padding:4px 8px;font-size:10px;font-family:"DM Mono",monospace;color:var(--t3);cursor:pointer;transition:.1s}
+.ef-tag:hover{background:rgba(225,29,72,.1);color:var(--crim);border-color:rgba(225,29,72,.2)}
+.code{font-family:"DM Mono",monospace;font-size:10px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:10px;color:var(--teal);margin-top:8px;cursor:pointer;word-break:break-all}
+.check{font-size:9px;color:var(--grn);font-family:"DM Mono",monospace}
 </style></head>
 <body>
-<!-- NAV V41 -->
-<div style="background:rgba(6,6,15,.95);border-bottom:1px solid rgba(255,255,255,.07);padding:8px 20px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-family:'DM Sans',sans-serif;position:sticky;top:0;z-index:200;backdrop-filter:blur(20px)">
-  <a href="/hub.html" style="font-size:16px;font-weight:900;color:#C4B5FD;text-decoration:none;margin-right:8px">ψ</a>
-  <a href="/comando.html" style="font-size:10px;color:#94A3B8;text-decoration:none;padding:3px 10px;border:1px solid rgba(255,255,255,.07);border-radius:6px">🧠 Comando</a>
-  <a href="/publicar.html" style="font-size:10px;color:#FCA5A5;text-decoration:none;padding:3px 10px;border:1px solid rgba(225,29,72,.3);border-radius:6px;background:rgba(225,29,72,.1)">🚀 Publicar</a>
-  <a href="/brand.html" style="font-size:10px;color:#C4B5FD;text-decoration:none;padding:3px 10px;border:1px solid rgba(124,58,237,.3);border-radius:6px">🎨 Brand</a>
-  <a href="/viral.html" style="font-size:10px;color:#F59E0B;text-decoration:none;padding:3px 10px;border:1px solid rgba(245,158,11,.3);border-radius:6px">🔥 Viral</a>
-  <a href="/monitor.html" style="font-size:10px;color:#0D9488;text-decoration:none;padding:3px 10px;border:1px solid rgba(13,148,136,.3);border-radius:6px">📊 Monitor</a>
-  <a href="/growth.html" style="font-size:10px;color:#10B981;text-decoration:none;padding:3px 10px;border:1px solid rgba(16,185,129,.3);border-radius:6px">📈 Growth</a>
-  <span style="margin-left:auto;font-size:9px;color:#475569;font-family:monospace">V41 · @psidanielacoelho</span>
-</div>
-<!-- /NAV V41 -->
-
 <header class="hdr">
-  <div class="logo">🔗 Conectores OAuth</div>
-  <span style="font-size:10px;color:var(--t3);font-family:monospace;margin-left:auto">@psidanielacoelho · Status das integrações</span>
+  <div class="logo">🔗 Conectores & Bloqueios</div>
+  <span style="font-size:10px;color:var(--t3);font-family:monospace;margin-left:auto">psicologia.doc V42</span>
 </header>
 
 <div class="wrap">
-  <!-- EF CLEANUP ALERT -->
-  <div class="ef-card">
-    <div style="display:flex;align-items:flex-start;gap:16px">
-      <div>
-        <div class="ef-count" id="ef-count">48</div>
-        <div style="font-size:11px;color:var(--crim);font-family:monospace;margin-top:2px">Edge Functions Orphan</div>
-      </div>
-      <div style="flex:1">
-        <div class="ef-title">🔴 Deletar antes de qualquer deploy — bloqueando 100% do free tier</div>
-        <div style="font-size:11px;color:var(--t2);margin-bottom:8px">
-          Acesse o Supabase Dashboard → Edge Functions e delete as funções abaixo.
-          Manter apenas as 28 funções de produção.
-        </div>
-        <div class="ef-grid" id="ef-slugs"></div>
-        <a href="https://app.supabase.com/project/tpjvalzwkqwttvmszvie/functions" 
-           target="_blank" class="ef-link">→ Supabase Dashboard - Edge Functions</a>
-      </div>
+  
+  <!-- BLOQUEIO 1: YT TOKEN -->
+  <h2>🔴 Bloqueios Críticos</h2>
+  <div class="bloqueio b-crit">
+    <div class="b-hdr">
+      <span class="b-badge bc">CRÍTICO 1</span>
+      <div class="b-title">YT_REFRESH_TOKEN expirado — YouTube Publisher bloqueado</div>
+    </div>
+    <div class="b-body">
+      Erro: <code>invalid_grant — Token has been expired or revoked</code><br>
+      16 vídeos com MP4 prontos aguardam publicação. O publisher roda mas falha na autenticação.
+    </div>
+    <ol class="steps">
+      <li>Renovar token em: <a href="https://developers.google.com/oauthplayground" target="_blank" style="color:var(--gold)">developers.google.com/oauthplayground</a></li>
+      <li>OU usar a página de renovação automatizada: <a href="/oauth.html" style="color:var(--gold)">oauth.html</a></li>
+      <li>Scope: <code>https://www.googleapis.com/auth/youtube.upload</code></li>
+      <li>Login com: <strong>psidanielacoelho1982@gmail.com</strong></li>
+      <li>Copiar refresh_token gerado</li>
+      <li>Atualizar em: <a href="https://github.com/tafita81/Repovazio/settings/secrets/actions" target="_blank" style="color:var(--gold)">GitHub Secrets → YT_REFRESH_TOKEN</a></li>
+      <li>Redisparar: <a href="https://github.com/tafita81/Repovazio/actions/workflows/youtube-publisher.yml" target="_blank" style="color:var(--gold)">github.com/actions → YouTube Publisher</a></li>
+    </ol>
+    <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+      <a class="btn btn-go" href="/oauth.html" target="_blank">🔐 Renovar Token Agora</a>
+      <a class="btn btn-copy" href="https://github.com/tafita81/Repovazio/settings/secrets/actions/YT_REFRESH_TOKEN" target="_blank">⚙️ GitHub Secret</a>
     </div>
   </div>
 
-  <!-- CONECTORES -->
-  <h2>Status das Integrações OAuth</h2>
-  <div class="grid" id="conn-grid">
-    <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--t3)">⏳ Verificando tokens...</div>
+  <!-- BLOQUEIO 2: EFs ORPHAN -->
+  <div class="bloqueio b-crit">
+    <div class="b-hdr">
+      <span class="b-badge bc">CRÍTICO 2</span>
+      <div class="b-title">63 Edge Functions Orphan — Supabase free tier 100%</div>
+    </div>
+    <div class="b-body">
+      O limite de Edge Functions foi atingido. Qualquer deploy (cerebro-autonomo, video-generator, youtube-publisher EF) falha com <code>PaymentRequiredException</code>.<br><br>
+      <strong>Solução mais rápida:</strong> Deletar manualmente no Supabase Dashboard ou via GitHub Actions.
+    </div>
+    
+    <div style="margin-bottom:8px;font-size:11px;color:var(--gold)">Clique em cada EF para copiar o comando supabase CLI:</div>
+    <div class="ef-grid" id="ef-grid">
+      <!-- Gerado por JS -->
+    </div>
+    
+    <div class="code" onclick="copyAll()" title="Clique para copiar todos">
+      # Copiar TODOS os comandos de uma vez (clique aqui)<br>
+      <span id="all-cmds">supabase functions delete commit-learn commit-skills commit-chat ...</span>
+    </div>
+    
+    <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+      <a class="btn btn-go" href="https://app.supabase.com/project/tpjvalzwkqwttvmszvie/functions" target="_blank">🗑️ Supabase Dashboard</a>
+      <a class="btn btn-copy" href="https://github.com/tafita81/Repovazio/actions/workflows/supabase-ef-cleanup.yml" target="_blank">⚙️ GitHub Actions (cleanup)</a>
+      <button class="btn btn-copy" onclick="copyAll()">📋 Copiar Todos</button>
+    </div>
   </div>
 
-  <!-- SETUP GUIDE LINKS -->
-  <h2>Guias de Configuração</h2>
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
-    <a href="https://github.com/tafita81/Repovazio/blob/main/SETUP.md" target="_blank" 
-       style="background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:16px;text-decoration:none;color:inherit;display:block">
-      <div style="font-size:20px;margin-bottom:8px">📋</div>
-      <div style="font-size:13px;font-weight:700;color:var(--t1)">SETUP.md</div>
-      <div style="font-size:11px;color:var(--t2);margin-top:4px">Guia completo passo a passo</div>
-    </a>
-    <a href="https://developers.facebook.com/apps/" target="_blank"
-       style="background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:16px;text-decoration:none;color:inherit;display:block">
-      <div style="font-size:20px;margin-bottom:8px">📘</div>
-      <div style="font-size:13px;font-weight:700;color:var(--t1)">Meta Developers</div>
-      <div style="font-size:11px;color:var(--t2);margin-top:4px">Criar app Instagram</div>
-    </a>
-    <a href="https://developers.tiktok.com/apps/" target="_blank"
-       style="background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:16px;text-decoration:none;color:inherit;display:block">
-      <div style="font-size:20px;margin-bottom:8px">🎵</div>
-      <div style="font-size:13px;font-weight:700;color:var(--t1)">TikTok Developers</div>
-      <div style="font-size:11px;color:var(--t2);margin-top:4px">Content Posting API</div>
-    </a>
+  <!-- BLOQUEIO 3: INSTAGRAM -->
+  <h2>🟡 Bloqueios Altos</h2>
+  <div class="bloqueio b-alto">
+    <div class="b-hdr">
+      <span class="b-badge ba">ALTO 3</span>
+      <div class="b-title">OAuth Instagram — distribute.yml pendente</div>
+    </div>
+    <div class="b-body">O distribute.yml roda mas fica em pending_credentials para Instagram, TikTok e Pinterest.</div>
+    <ol class="steps">
+      <li>Criar App em <a href="https://developers.facebook.com/apps/" target="_blank" style="color:var(--gold)">developers.facebook.com</a></li>
+      <li>Adicionar produto: Instagram Graph API</li>
+      <li>Gerar token de longa duração (60 dias)</li>
+      <li>Salvar em GitHub Secrets: <code>INSTAGRAM_ACCESS_TOKEN</code>, <code>INSTAGRAM_ACCOUNT_ID</code></li>
+    </ol>
+  </div>
+
+  <!-- BLOQUEIO 4: GOOGLE ADS -->
+  <div class="bloqueio b-alto">
+    <div class="b-hdr">
+      <span class="b-badge ba">ALTO 4</span>
+      <div class="b-title">Google Discovery Ads R$250/mês — crescimento orgânico lento sem ads</div>
+    </div>
+    <div class="b-body">
+      Fase 0→1K: paid ads são o atalho para atingir 1.000 inscritos (threshold AdSense).<br>
+      Keywords: apego ansioso, gaslighting, narcisismo, síndrome do impostor.
+    </div>
+    <a class="btn btn-go" href="https://ads.google.com" target="_blank">📢 Google Ads</a>
+  </div>
+
+  <!-- BLOQUEIO 5: YOUTUBE BANNER -->
+  <h2>🟣 Bloqueios Médios</h2>
+  <div class="bloqueio b-medio">
+    <div class="b-hdr">
+      <span class="b-badge bm">MÉDIO 5</span>
+      <div class="b-title">Banner YouTube Studio — canal sem arte personalizada</div>
+    </div>
+    <div class="b-body">O banner 2560×1440px está gerado no brand.html. Precisa ser feito upload no YouTube Studio.</div>
+    <a class="btn btn-go" href="/brand.html" target="_blank">🎨 Baixar Banner</a>
+    <a class="btn btn-copy" href="https://studio.youtube.com/channel/UCyCkIpsVgME9yCj_oXJFheA" target="_blank">📺 YouTube Studio</a>
   </div>
 </div>
 
 <script>
-const SB_URL = 'https://tpjvalzwkqwttvmszvie.supabase.co';
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwanZhbHp3a3F3dHR2bXN6dmllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY3MDkxNjUsImV4cCI6MjA1MjI4NTE2NX0.Sn3xzLw6DtGi2y0yyg_HCObPz7YxBObM3RrKs8ylsaA';
-
 const ORPHAN_EFS = [
-  'github-commit','commit-learn','commit-skills','commit-chat','commit-route',
-  'commit-from-chunks','commit-route-final','commit-from-cache','commit-chatia',
-  'commit-chatia-v3','store-v6-p1','commit-v8-route','commit-executor-v7',
-  'commit-ia-v6','test-b64-len','commit-ia-executor','exec-sql','deploy-v9',
-  'commit-v9-runner','do-commit-v9','trigger-commit','do-commit-v10',
-  'commit-v10-final','add-browser','run-now','trigger','v10-trigger',
-  'v10-commit-pat','v10-p0','fix-and-upgrade','commit-v9d','v10-final-commit',
-  'fix-monitor-now','test-pat','v10-chunk-test','commit-v10-now','v10-commit-real',
-  'v10-go','commit-v10-final2','read-file','upgrade-chat-upload','fix-chat-upload2',
-  'fix-browser-route','v10-assemble-commit','assemble-and-commit-v10','assemble-v10',
-  'v12-assemble-commit','v11-assemble-commit'
+  'commit-learn','commit-skills','commit-chat','commit-route',
+  'commit-from-chunks','commit-route-final','commit-from-cache',
+  'commit-chatia','commit-chatia-v3','store-v6-p1','commit-v8-route',
+  'commit-executor-v7','commit-ia-v6','test-b64-len','commit-ia-executor',
+  'deploy-v9','commit-v9-runner','do-commit-v9','trigger-commit',
+  'do-commit-v10','commit-v10-final','add-browser','run-now','trigger',
+  'v10-trigger','v10-commit-pat','v10-p0','fix-and-upgrade','commit-v9d',
+  'v10-final-commit','fix-monitor-now','test-pat','v10-chunk-test',
+  'commit-v10-now','v10-commit-real','v10-go','commit-v10-final2',
+  'read-file','upgrade-chat-upload','fix-chat-upload2','fix-browser-route',
+  'v10-assemble-commit','assemble-and-commit-v10','assemble-v10',
+  'v12-assemble-commit','v11-assemble-commit','v11-fix-parts','fix-cron-route',
+  'v11-final-commit','v11-debug','v11-commit-chunks','v11-fix-together',
+  'v12-all-inserter','v12-ins-01','v12-micro-p0','v12-insert-p4p9',
+  'v12-kv-store','v12-insert-p7','v12-insert-p7-exact','v12-p7-native',
+  'v12-p7-v2','v12-p7-final','v12-p8-fn','create-vercel-project',
+  'debug-sbk','debug-secret-key','debug-envs','exec-sql'
 ];
 
-// Render EF slugs
-document.getElementById('ef-count').textContent = ORPHAN_EFS.length;
-document.getElementById('ef-slugs').innerHTML = ORPHAN_EFS.map(s =>
-  `<div class="ef-slug">${s}</div>`
+document.getElementById('ef-grid').innerHTML = ORPHAN_EFS.map(ef => 
+  `<div class="ef-tag" onclick="navigator.clipboard?.writeText('supabase functions delete ${ef} --project-ref tpjvalzwkqwttvmszvie'); this.textContent='✓ ' + this.textContent; this.style.color='var(--grn)'">${ef}</div>`
 ).join('');
 
-const CONNECTORS = [
-  {
-    name: 'YouTube', logo: '📺', channel: '@psidanielacoelho · UCyCkIpsVgME9yCj_oXJFheA',
-    tokens: ['YOUTUBE_CLIENT_ID','YOUTUBE_CLIENT_SECRET','YOUTUBE_REFRESH_TOKEN','YOUTUBE_CHANNEL_ID'],
-    setupUrl: '#youtube'
-  },
-  {
-    name: 'Instagram (Meta)', logo: '📸', channel: '@psidanielacoelho',
-    tokens: ['META_APP_ID','META_APP_SECRET','META_ACCESS_TOKEN','META_INSTAGRAM_ACCOUNT_ID'],
-    setupUrl: 'https://developers.facebook.com/apps/'
-  },
-  {
-    name: 'TikTok', logo: '🎵', channel: '@psidanielacoelho',
-    tokens: ['TIKTOK_CLIENT_KEY','TIKTOK_CLIENT_SECRET','TIKTOK_ACCESS_TOKEN','TIKTOK_OPEN_ID'],
-    setupUrl: 'https://developers.tiktok.com/apps/'
-  },
-  {
-    name: 'Pinterest', logo: '📌', channel: '@psidanielacoelho',
-    tokens: ['PINTEREST_APP_ID','PINTEREST_APP_SECRET','PINTEREST_ACCESS_TOKEN'],
-    setupUrl: 'https://developers.pinterest.com/apps/'
-  }
-];
+const allCmds = ORPHAN_EFS.map(ef => `supabase functions delete ${ef} --project-ref tpjvalzwkqwttvmszvie`).join('\n');
+document.getElementById('all-cmds').textContent = allCmds.substring(0, 200) + '...';
 
-async function checkTokens() {
-  const r = await fetch(`${SB_URL}/rest/v1/ia_cache?select=cache_key&cache_key=like.secret:%&limit=200`, {
-    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
-  });
-  const d = await r.json();
-  const keys = new Set(d.map(x => x.cache_key.replace('secret:','')));
-  
-  const grid = document.getElementById('conn-grid');
-  grid.innerHTML = CONNECTORS.map(c => {
-    const found = c.tokens.filter(t => keys.has(t)).length;
-    const total = c.tokens.length;
-    const cls = found === total ? 'active' : found > 0 ? 'partial' : 'inactive';
-    const sCls = found === total ? 's-active' : found > 0 ? 's-partial' : 's-inactive';
-    const sLabel = found === total ? '✓ ATIVO' : found > 0 ? `${found}/${total} tokens` : '✗ NÃO CONFIGURADO';
-    return `
-      <div class="conn-card ${cls}">
-        <div class="conn-status ${sCls}">${sLabel}</div>
-        <div class="conn-hdr">
-          <div class="conn-logo">${c.logo}</div>
-          <div>
-            <div class="conn-name">${c.name}</div>
-            <div class="conn-channel">${c.channel}</div>
-          </div>
-        </div>
-        ${c.tokens.map(t => `
-          <div class="token-row">
-            <div class="token-key">${t}</div>
-            <div class="token-val ${keys.has(t)?'tv-ok':'tv-miss'}">${keys.has(t)?'✓ Configurado':'✗ Faltando'}</div>
-          </div>`).join('')}
-        <a href="${c.setupUrl}" target="_blank" class="setup-btn">→ Configurar ${c.name}</a>
-      </div>
-    `;
-  }).join('');
+function copyAll() {
+  navigator.clipboard?.writeText(allCmds).then(() => alert('✅ ' + ORPHAN_EFS.length + ' comandos copiados!'));
 }
-checkTokens();
 </script>
 </body></html>
