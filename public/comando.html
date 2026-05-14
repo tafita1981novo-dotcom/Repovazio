@@ -148,6 +148,28 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 footer{text-align:center;padding:20px;font-size:10px;color:var(--t3);border-top:1px solid var(--bd);font-family:'DM Mono',monospace;line-height:1.8}
 @media(max-width:700px){.wrap{padding:16px 16px 60px}.hero-top{flex-direction:column}.yt-box{width:100%}.phases{grid-template-columns:1fr 1fr}.mrow{grid-template-columns:repeat(3,1fr)}.hooks-list{grid-template-columns:1fr}.cron-grid{grid-template-columns:1fr}}
 </style></head><body>
+<!-- BOTÃO HOME FIXO -->
+<a href="/" title="← Página Principal" style="
+  position:fixed;top:14px;left:14px;z-index:9999;
+  display:flex;align-items:center;gap:6px;
+  background:rgba(6,6,15,.92);
+  border:1px solid rgba(196,181,253,.25);
+  border-radius:10px;
+  padding:6px 12px;
+  color:#C4B5FD;
+  font-family:'DM Sans','DM Mono',monospace,sans-serif;
+  font-size:11px;font-weight:700;
+  text-decoration:none;
+  backdrop-filter:blur(12px);
+  transition:all .15s;
+  box-shadow:0 2px 16px rgba(0,0,0,.4);
+" onmouseover="this.style.borderColor='rgba(196,181,253,.6)';this.style.background='rgba(14,14,26,.97)'"
+  onmouseout="this.style.borderColor='rgba(196,181,253,.25)';this.style.background='rgba(6,6,15,.92)'">
+  <span style="font-size:14px;font-family:serif;font-weight:900">ψ</span>
+  <span>← Início</span>
+</a>
+<!-- /BOTÃO HOME FIXO -->
+
 <header class="hdr">
 <div class="logo">ψ <span>psicologia.doc</span></div>
 <div class="badge">COMMAND CENTER V37</div>
