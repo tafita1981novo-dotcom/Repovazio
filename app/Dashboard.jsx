@@ -655,7 +655,7 @@ function PageDashboard(){
     {load?<div style={{color:"#64748b",padding:"40px",textAlign:"center"}}>⏳ Carregando...</div>:(
     <>
       <div style={{background:"linear-gradient(135deg,rgba(124,58,237,.18),rgba(6,182,212,.1))",border:B,...R,padding:"20px",marginBottom:"14px",display:"flex",gap:"20px",flexWrap:"wrap",alignItems:"center"}}>
-        <div style={{flex:1,minWidth:"180px"}}><div style={{fontWeight:800,fontSize:"17px"}}>@psidanielacoelho</div><div style={{color:"#64748b",fontSize:"12px"}}>UCyCkIpsVgME9yCj_oXJFheA · psidanielacoelho1982@gmail.com</div><div style={{color:"#f43f5e",fontSize:"11px",fontWeight:600,marginTop:"3px"}}>🚫 NUNCA: UCSH63tBfY6wEIdkC4u4zKdg</div></div>
+        <div style={{flex:1,minWidth:"180px"}}><div style={{fontWeight:800,fontSize:"17px"}}>@psidanielacoelho</div><div style={{color:"#64748b",fontSize:"12px"}}>UCyCkIpsVgME9yCj_oXJFheA · psidanielacoelho1982@gmail.com</div><div style={{color:"#f43f5e",fontSize:"11px",fontWeight:600,marginTop:"3px"}}>🚫 NUNCA: UCyCkIpsVgME9yCj_oXJFheA /* CANAL ATIVO @psidanielacoelho */</div></div>
         <div style={{textAlign:"center"}}><div style={{fontSize:"40px",fontWeight:800,color:"#c084fc"}}>{subs.toLocaleString("pt-BR")}</div><div style={{fontSize:"12px",color:"#64748b"}}>subs / 1.000</div><div style={{height:"5px",background:"rgba(255,255,255,.1)",...R,margin:"5px 0",width:"140px",overflow:"hidden"}}><div style={{height:"100%",width:pct+"%",background:"linear-gradient(90deg,#7c3aed,#06b6d4)"}}/></div><div style={{fontSize:"11px",color:"#64748b"}}>{pct}% · faltam {Math.max(0,1000-subs)}</div></div>
         <div style={{textAlign:"center"}}><div style={{fontSize:"26px",fontWeight:800,color:"#38bdf8"}}>{(canal.views_28d||0).toLocaleString("pt-BR")}</div><div style={{fontSize:"11px",color:"#64748b"}}>views 28d</div></div>
         <div style={{textAlign:"center"}}><div style={{fontSize:"26px",fontWeight:800,color:"#34d399"}}>{(canal.ctr_28d||0).toFixed(1)}%</div><div style={{fontSize:"11px",color:"#64748b"}}>CTR</div></div>
@@ -958,10 +958,10 @@ function PageCanais(){
     <div className="ph"><div className="pt">📡 Gestão de Canais</div><div className="ps">YouTube ativo · IG/TikTok/WA aguardando tokens</div></div>
     <div className="body">
       <div style={{background:"rgba(244,63,94,.1)",border:"1px solid rgba(244,63,94,.3)",borderRadius:"12px",padding:"14px",marginBottom:"16px",fontSize:"13px",color:"#fb7185"}}>
-        🚫 <strong>NUNCA publicar em UCSH63tBfY6wEIdkC4u4zKdg</strong> (tafita81@gmail.com). Correto: <strong>UCyCkIpsVgME9yCj_oXJFheA</strong>
+        🚫 <strong>NUNCA publicar em UCyCkIpsVgME9yCj_oXJFheA /* CANAL ATIVO @psidanielacoelho */</strong> (tafita81@gmail.com). Correto: <strong>UCyCkIpsVgME9yCj_oXJFheA</strong>
       </div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"12px",marginBottom:"16px"}}>
-        {[{n:"YouTube ATIVO",h:"@psidanielacoelho",st:"ativo",subs:canal.subscribers||0,views:canal.total_views||0,ok:true,cor:"#f43f5e",ic:"▶"},{n:"Instagram",h:"@psidanielacoelho",st:"aguardando token",ok:false,cor:"#a855f7",ic:"📸"},{n:"TikTok",h:"@psidanielacoelho",st:"aguardando token",ok:false,cor:"#06b6d4",ic:"🎵"},{n:"WhatsApp",h:"Grupos BR",st:"aguardando credenciais",ok:false,cor:"#10b981",ic:"💬"},{n:"YouTube BLOQUEADO",h:"UCSH63tBfY6wEIdkC4u4zKdg",st:"NUNCA USAR",ok:false,cor:"#475569",ic:"🚫"}].map((p,i)=>(
+        {[{n:"YouTube ATIVO",h:"@psidanielacoelho",st:"ativo",subs:canal.subscribers||0,views:canal.total_views||0,ok:true,cor:"#f43f5e",ic:"▶"},{n:"Instagram",h:"@psidanielacoelho",st:"aguardando token",ok:false,cor:"#a855f7",ic:"📸"},{n:"TikTok",h:"@psidanielacoelho",st:"aguardando token",ok:false,cor:"#06b6d4",ic:"🎵"},{n:"WhatsApp",h:"Grupos BR",st:"aguardando credenciais",ok:false,cor:"#10b981",ic:"💬"},{n:"YouTube BLOQUEADO",h:"UCyCkIpsVgME9yCj_oXJFheA /* CANAL ATIVO @psidanielacoelho */",st:"NUNCA USAR",ok:false,cor:"#475569",ic:"🚫"}].map((p,i)=>(
           <div key={i} style={{background:C,border:p.ok?"1px solid rgba(124,58,237,.4)":B,borderRadius:"14px",padding:"16px",opacity:p.ok?1:.65}}>
             <div style={{display:"flex",gap:"10px",alignItems:"center",marginBottom:"10px"}}><span style={{fontSize:"22px"}}>{p.ic}</span><div style={{flex:1}}><div style={{fontWeight:700,fontSize:"14px"}}>{p.n}</div><div style={{fontSize:"12px",color:"#64748b"}}>{p.h}</div></div><span style={{padding:"3px 10px",borderRadius:"20px",fontSize:"11px",fontWeight:600,background:p.ok?"rgba(16,185,129,.2)":"rgba(100,116,139,.2)",color:p.ok?"#34d399":"#64748b"}}>{p.ok?"✅ Ativo":p.st}</span></div>
             {p.ok&&<><div style={{fontSize:"28px",fontWeight:800,color:p.cor}}>{(p.subs||0).toLocaleString("pt-BR")}</div><div style={{fontSize:"12px",color:"#64748b"}}>{(p.views||0).toLocaleString("pt-BR")} views</div></>}
@@ -1245,7 +1245,7 @@ function PageConfig(){
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"14px"}}>
         <div style={{background:C,border:B,borderRadius:"14px",padding:"16px"}}>
           <div style={{fontSize:"11px",textTransform:"uppercase",letterSpacing:"1px",color:"#64748b",marginBottom:"12px",fontWeight:600}}>🧠 Eternal Brain V12</div>
-          {[["Gate global","95pts"],["Gate/dimensão","95pts"],["Iterações máx","5x"],["Duração longs","15-20min"],["Canal ativo","UCyCkIpsVgME9yCj_oXJFheA"],["Canal BLOQUEADO","UCSH63tBfY6wEIdkC4u4zKdg"],["Séries","5 (34 eps)"],["Tópicos","18"],["Padrões virais","8"],["Crons","38+"]].map(([k,v])=>(
+          {[["Gate global","95pts"],["Gate/dimensão","95pts"],["Iterações máx","5x"],["Duração longs","15-20min"],["Canal ativo","UCyCkIpsVgME9yCj_oXJFheA"],["Canal BLOQUEADO","UCyCkIpsVgME9yCj_oXJFheA /* CANAL ATIVO @psidanielacoelho */"],["Séries","5 (34 eps)"],["Tópicos","18"],["Padrões virais","8"],["Crons","38+"]].map(([k,v])=>(
             <div key={k} style={{display:"flex",justifyContent:"space-between",padding:"7px 0",borderBottom:B}}><span style={{fontSize:"12px",color:"#64748b"}}>{k}</span><span style={{fontSize:"12px",fontWeight:700,color:"#c084fc"}}>{v}</span></div>
           ))}
         </div>
