@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ψ Fila de Publicação Manual</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800;900&family=DM+Mono:wght@400;500&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#06060F;--s1:#0C0C1A;--s2:#111126;
+  --v:#7C3AED;--va:rgba(124,58,237,.15);
+  --r:#E11D48;--ra:rgba(225,29,72,.12);
+  --g:#F59E0B;--ga:rgba(245,158,11,.1);
+  --grn:#10B981;--grna:rgba(16,185,129,.1);
+  --m:#C4B5FD;--t1:#E2E8F0;--t2:#94A3B8;--t3:#475569;
+  --bd:rgba(255,255,255,.07);--bdv:rgba(124,58,237,.35);
+  --rad:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--t1);font-family:"DM Sans",sans-serif;min-height:100vh}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 70% 50% at 0% 0%,rgba(124,58,237,.08),transparent 55%),
+             radial-gradient(ellipse 60% 40% at 100% 100%,rgba(13,148,136,.05),transparent 55%)}
+
+/* HOME */
+.home{position:fixed;top:14px;right:16px;z-index:9999;display:flex;align-items:center;gap:6px;
+  background:rgba(6,6,15,.92);border:1px solid rgba(196,181,253,.22);border-radius:10px;
+  padding:6px 14px;color:var(--m);font-size:11px;font-weight:700;text-decoration:none;
+  backdrop-filter:blur(14px);box-shadow:0 2px 16px rgba(0,0,0,.4);transition:.15s}
+.home:hover{border-color:rgba(196,181,253,.6)}
+.home span{font-size:15px;font-family:"Playfair Display",serif}
+
+/* TOP BAR */
+.topbar{
+  position:sticky;top:0;z-index:500;
+  background:rgba(6,6,15,.97);border-bottom:1px solid var(--bd);
+  backdrop-filter:blur(20px);padding:10px 24px;
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+}
+.topbar-title{font-family:"Playfair Display",serif;font-size:16px;color:var(--m)}
+.progress-wrap{flex:1;min-width:180px;display:flex;align-items:center;gap:8px}
+.progress-track{flex:1;height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--v),var(--grn));transition:width .5s}
+.progress-lbl{font-size:10px;font-family:"DM Mono",monospace;color:var(--t2);white-space:nowrap}
+.storage-chip{font-size:9px;font-family:"DM Mono",monospace;padding:3px 10px;border-radius:6px;white-space:nowrap}
+.s-ok  {background:var(--grna);color:var(--grn);border:1px solid rgba(16,185,129,.2)}
+.s-warn{background:var(--ga);color:var(--g);border:1px solid rgba(245,158,11,.2)}
+.s-crit{background:var(--ra);color:#FCA5A5;border:1px solid rgba(225,29,72,.25)}
+
+/* MAIN LAYOUT */
+.main{max-width:1080px;margin:0 auto;padding:20px 24px 100px;display:flex;flex-direction:column;gap:20px}
+
+/* NAVEGAÇÃO ENTRE VÍDEOS */
+.nav-row{display:flex;align-items:center;gap:10px}
+.nav-btn{background:var(--s1);border:1px solid var(--bd);border-radius:var(--rad);
+  padding:8px 16px;font-size:12px;font-weight:700;color:var(--t2);cursor:pointer;
+  text-decoration:none;transition:.15s;display:flex;align-items:center;gap:6px}
+.nav-btn:hover{border-color:var(--bdv);color:var(--m)}
+.nav-btn:disabled{opacity:.3;cursor:not-allowed}
+.vid-counter{flex:1;text-align:center;font-family:"DM Mono",monospace;font-size:11px;color:var(--t3)}
+.vid-counter strong{color:var(--m);font-size:14px}
+
+/* CARD PRINCIPAL */
+.vid-card{background:var(--s1);border:1px solid var(--bd);border-radius:16px;overflow:hidden}
+
+/* VIDEO PLAYER */
+.player-wrap{position:relative;background:#000;width:100%}
+.player-wrap video{width:100%;max-height:520px;object-fit:contain;display:block}
+.vid-type-badge{position:absolute;top:12px;left:12px;font-size:9px;font-family:"DM Mono",monospace;
+  font-weight:700;padding:3px 10px;border-radius:6px;backdrop-filter:blur(8px)}
+.badge-long  {background:rgba(124,58,237,.3);color:var(--m);border:1px solid var(--bdv)}
+.badge-short {background:rgba(245,158,11,.25);color:var(--g);border:1px solid rgba(245,158,11,.3)}
+.vid-order{position:absolute;top:12px;right:12px;font-size:11px;font-family:"DM Mono",monospace;
+  font-weight:700;padding:4px 12px;border-radius:6px;background:rgba(6,6,15,.85);color:var(--t2);
+  border:1px solid var(--bd);backdrop-filter:blur(8px)}
+
+/* CORPO DO CARD */
+.vid-body{padding:20px 24px;display:flex;flex-direction:column;gap:16px}
+.vid-title-row{display:flex;align-items:flex-start;gap:10px}
+.vid-title{font-family:"Playfair Display",serif;font-size:18px;color:var(--t1);line-height:1.3;flex:1}
+.serie-chip{font-size:9px;font-family:"DM Mono",monospace;padding:3px 9px;border-radius:6px;
+  background:var(--va);color:var(--m);border:1px solid rgba(124,58,237,.25);white-space:nowrap;margin-top:4px}
+
+/* CAMPOS COPIÁVEIS */
+.fields{display:flex;flex-direction:column;gap:10px}
+.field-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--t3);
+  font-family:"DM Mono",monospace;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.copy-box{background:var(--s2);border:1px solid var(--bd);border-radius:var(--rad);padding:12px 14px;
+  font-size:12px;color:var(--t1);line-height:1.5;word-break:break-word;position:relative}
+.copy-box pre{white-space:pre-wrap;font-family:"DM Mono",monospace;font-size:11px}
+.copy-btn{position:absolute;top:8px;right:8px;background:var(--va);border:1px solid var(--bdv);
+  border-radius:6px;padding:3px 10px;font-size:9px;font-weight:700;color:var(--m);cursor:pointer;
+  font-family:"DM Mono",monospace;transition:.15s}
+.copy-btn:hover{background:rgba(124,58,237,.3)}
+.copy-btn.ok{background:var(--grna);border-color:rgba(16,185,129,.3);color:var(--grn)}
+
+/* PASSOS DE PUBLICAÇÃO */
+.steps-title{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:var(--t3);
+  font-family:"DM Mono",monospace;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.steps{display:flex;flex-direction:column;gap:6px}
+.step{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;
+  background:var(--s2);border:1px solid var(--bd);border-radius:var(--rad)}
+.step-n{width:22px;height:22px;border-radius:50%;background:var(--va);border:1px solid var(--bdv);
+  display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;
+  color:var(--m);flex-shrink:0;font-family:"DM Mono",monospace}
+.step-text{font-size:12px;color:var(--t2);line-height:1.4;flex:1}
+.step-text strong{color:var(--t1)}
+.step-text a{color:var(--g);font-weight:600;text-decoration:none}
+.step-text a:hover{text-decoration:underline}
+.step.done{border-color:rgba(16,185,129,.25);background:var(--grna)}
+.step.done .step-n{background:var(--grna);border-color:rgba(16,185,129,.3);color:var(--grn)}
+
+/* INPUT YOUTUBE ID */
+.yt-id-wrap{display:flex;flex-direction:column;gap:6px}
+.yt-id-row{display:flex;gap:8px;align-items:stretch}
+.yt-id-input{flex:1;background:var(--s2);border:1px solid var(--bd);border-radius:var(--rad);
+  padding:10px 14px;color:var(--t1);font-family:"DM Mono",monospace;font-size:13px;
+  outline:none;transition:.15s}
+.yt-id-input:focus{border-color:var(--bdv)}
+.yt-id-input::placeholder{color:var(--t3)}
+.yt-id-hint{font-size:10px;color:var(--t3);font-family:"DM Mono",monospace}
+.yt-id-hint a{color:var(--g)}
+
+/* BOTÕES DE AÇÃO */
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+.btn{padding:11px 20px;border-radius:var(--rad);font-size:12px;font-weight:700;cursor:pointer;
+  border:none;font-family:"DM Sans",sans-serif;transition:.15s;text-align:center;display:flex;
+  align-items:center;gap:7px;text-decoration:none}
+.btn-pub{background:linear-gradient(135deg,var(--v),#6D28D9);color:#fff;flex:2}
+.btn-pub:hover{opacity:.85}
+.btn-pub:disabled{opacity:.35;cursor:not-allowed}
+.btn-del{background:var(--ra);border:1px solid rgba(225,29,72,.3);color:#FCA5A5;flex:1}
+.btn-del:hover{background:rgba(225,29,72,.22)}
+.btn-del:disabled{opacity:.35;cursor:not-allowed}
+.btn-skip{background:rgba(255,255,255,.05);border:1px solid var(--bd);color:var(--t3)}
+.btn-skip:hover{color:var(--t2);border-color:rgba(255,255,255,.15)}
+.btn-dl{background:var(--va);border:1px solid var(--bdv);color:var(--m)}
+
+/* STATUS BANNER */
+.status-banner{padding:12px 16px;border-radius:var(--rad);font-size:12px;line-height:1.5;display:none}
+.banner-ok  {background:var(--grna);border:1px solid rgba(16,185,129,.25);color:var(--grn)}
+.banner-warn{background:var(--ga);border:1px solid rgba(245,158,11,.25);color:var(--g)}
+.banner-err {background:var(--ra);border:1px solid rgba(225,29,72,.25);color:#FCA5A5}
+
+/* LISTA LATERAL — todos os vídeos */
+.all-list{background:var(--s1);border:1px solid var(--bd);border-radius:var(--rad);overflow:hidden}
+.all-list-hdr{padding:10px 16px;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;
+  color:var(--t3);font-family:"DM Mono",monospace;border-bottom:1px solid var(--bd);
+  display:flex;align-items:center;justify-content:space-between}
+.list-item{padding:10px 16px;border-top:1px solid var(--bd);display:flex;align-items:center;gap:10px;
+  cursor:pointer;transition:.12s}
+.list-item:first-of-type{border-top:none}
+.list-item:hover{background:rgba(255,255,255,.03)}
+.list-item.active{background:var(--va);border-color:var(--bdv)}
+.list-item.done{opacity:.5}
+.list-n{font-family:"DM Mono",monospace;font-size:10px;color:var(--t3);width:20px;text-align:right}
+.list-title{flex:1;font-size:11px;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.list-item.active .list-title{color:var(--m);font-weight:700}
+.list-pl{font-size:8px;font-family:"DM Mono",monospace;padding:1px 6px;border-radius:4px}
+.pl-long {background:var(--va);color:var(--m)}
+.pl-short{background:var(--ga);color:var(--g)}
+.list-icon{font-size:13px}
+
+/* EMPTY */
+.all-done{text-align:center;padding:60px;color:var(--t3)}
+
+@media(max-width:640px){
+  .vid-title{font-size:15px}
+  .actions{flex-direction:column}
+}
+</style>
+</head>
+<body>
+
+<a class="home" href="/hub.html"><span>ψ</span>Hub</a>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-title">🚀 Fila de Publicação</div>
+  <div class="progress-wrap">
+    <div class="progress-track"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+    <span class="progress-lbl" id="prog-lbl">0/17</span>
+  </div>
+  <span class="storage-chip s-crit" id="storage-chip">storage: carregando…</span>
+</div>
+
+<div class="main">
+
+  <!-- NAVEGAÇÃO -->
+  <div class="nav-row">
+    <button class="nav-btn" id="btn-prev" onclick="go(-1)" disabled>← Anterior</button>
+    <div class="vid-counter" id="vid-counter"><strong>—</strong></div>
+    <button class="nav-btn" id="btn-next" onclick="go(1)">Próximo →</button>
+  </div>
+
+  <!-- CARD DO VÍDEO ATUAL -->
+  <div class="vid-card" id="vid-card">
+    <div class="player-wrap">
+      <video id="player" controls preload="auto" playsinline></video>
+      <span class="vid-type-badge" id="type-badge">—</span>
+      <span class="vid-order" id="order-badge">#—</span>
+    </div>
+    <div class="vid-body">
+      <div class="vid-title-row">
+        <div class="vid-title" id="vid-title">Carregando…</div>
+        <span class="serie-chip" id="serie-chip">—</span>
+      </div>
+
+      <!-- CAMPOS PARA COPIAR -->
+      <div class="fields">
+        <div>
+          <div class="field-label">📋 Título para copiar
+            <button class="copy-btn" onclick="cop('titulo','cb-t')">Copiar</button>
+          </div>
+          <div class="copy-box" id="titulo">—</div>
+        </div>
+        <div>
+          <div class="field-label">📝 Descrição completa (SEO)
+            <button class="copy-btn" onclick="cop('descricao','cb-d')">Copiar</button>
+          </div>
+          <div class="copy-box" style="max-height:160px;overflow-y:auto">
+            <pre id="descricao">—</pre>
+          </div>
+        </div>
+        <div>
+          <div class="field-label">🏷️ Tags (copiar tudo)
+            <button class="copy-btn" onclick="cop('tags-raw','cb-tg')">Copiar</button>
+          </div>
+          <div class="copy-box"><span id="tags-display">—</span><span id="tags-raw" style="display:none">—</span></div>
+        </div>
+      </div>
+
+      <!-- PASSOS DE PUBLICAÇÃO -->
+      <div>
+        <div class="steps-title" id="steps-title">📖 Passo a Passo para Publicar</div>
+        <div class="steps" id="steps-list"><!-- gerado por JS --></div>
+      </div>
+
+      <!-- CONFIRMAR PUBLICAÇÃO -->
+      <div class="yt-id-wrap" id="yt-id-section">
+        <div class="field-label">✅ Após publicar — cole o ID do vídeo do YouTube</div>
+        <div class="yt-id-row">
+          <input class="yt-id-input" id="yt-id-input" type="text"
+            placeholder="Ex: dQw4w9WgXcQ  (parte final da URL do vídeo)"
+            oninput="validarId()">
+        </div>
+        <div class="yt-id-hint">
+          URL do vídeo: youtube.com/watch?v=<strong style="color:var(--m)">dQw4w9WgXcQ</strong> ←
+          copie só esta parte. Ou pelo <a href="https://studio.youtube.com" target="_blank">YouTube Studio → Conteúdo → copie o ID</a>
+        </div>
+      </div>
+
+      <!-- BANNER DE STATUS -->
+      <div class="status-banner" id="status-banner"></div>
+
+      <!-- BOTÕES -->
+      <div class="actions">
+        <button class="btn btn-pub" id="btn-pub" onclick="marcarPublicado()" disabled>
+          ✓ Marcar como Publicado no YouTube
+        </button>
+        <button class="btn btn-del" id="btn-del" onclick="deletarStorage()" disabled>
+          🗑 Apagar do Storage
+        </button>
+        <a class="btn btn-dl" id="btn-dl" href="#" download>⬇ Download</a>
+        <button class="btn btn-skip" onclick="go(1)">Pular →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LISTA DE TODOS OS VÍDEOS -->
+  <div class="all-list">
+    <div class="all-list-hdr">
+      <span>📋 Todos os vídeos — clique para pular para um</span>
+      <span id="list-count" style="font-size:8px;color:var(--t3)">—</span>
+    </div>
+    <div id="list-items"><!-- gerado por JS --></div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+const SB = 'https://tpjvalzwkqwttvmszvie.supabase.co';
+const AK = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwanZhbHp3a3F3dHR2bXN6dmllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY3MDkxNjUsImV4cCI6MjA1MjI4NTE2NX0.Sn3xzLw6DtGi2y0yyg_HCObPz7YxBObM3RrKs8ylsaA';
+
+const H = (h, b={}) => ({apikey:AK, Authorization:'Bearer '+AK, ...b});
+
+let VIDEOS = [];  // todos os vídeos na ordem certa
+let IDX    = 0;   // índice atual
+let PUBLISHED = {}; // {pipeline_id: yt_video_id}
+
+// ── DETECTAR SÉRIE ──
+const SM = {narcis:'Narcisismo',gaslight:'Narcisismo',manipul:'Narcisismo',apego:'Apego',abandono:'Apego',trauma:'Trauma',neglig:'Trauma',ansied:'Ansiedade',relacionamento:'Relacionamentos',tóxico:'Relacionamentos',toxico:'Relacionamentos',autoestima:'Autoestima',sabota:'Autoestima',perfec:'Autoestima',impost:'Autoestima',depress:'Depressão',dinheiro:'Dinheiro'};
+function serie(t){
+  const s=(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  for(const[k,v]of Object.entries(SM)) if(s.includes(k.normalize('NFD').replace(/[\u0300-\u036f]/g,''))) return v;
+  return 'Psicologia';
+}
+
+// ── GERAR DESCRIÇÃO SEO ──
+function gerarDesc(v){
+  const t = v.youtube_title || v.title || '';
+  const s = serie(t);
+  const tags = gerarTags(t, s);
+  return `${t}
+
+Neste vídeo você vai descobrir o que a psicologia revela sobre ${s.toLowerCase()} e como isso afeta sua vida cotidiana.
+
+Se você se identificou com este conteúdo, compartilhe com alguém que precise ver.
+
+👉 Inscreva-se no canal: @psidanielacoelho
+🔔 Ative o sino para não perder nenhum vídeo
+
+━━━━━━━━━━━━━━━━━━━━━━
+📌 SOBRE ESTE CANAL
+Conteúdo de psicologia baseado em evidências científicas.
+Daniela Coelho | @psidanielacoelho
+━━━━━━━━━━━━━━━━━━━━━━
+
+#${s.replace(/\s/g,'')} #psicologia #saudmental #autoconhecimento #emocoes`;
+}
+
+function gerarTags(t, s){
+  const base = ['psicologia','saúde mental','autoconhecimento','emoções','bem-estar','psicóloga','psicologia brasileira'];
+  const serieMap = {
+    'Narcisismo':['narcisismo','narcisista','manipulação','gaslighting','relacionamento tóxico'],
+    'Apego':['apego ansioso','apego evitativo','medo do abandono','relacionamentos','vínculos afetivos'],
+    'Trauma':['trauma','trauma de infância','cura emocional','negligência emocional','trauma silencioso'],
+    'Ansiedade':['ansiedade','síndrome do pânico','ansiedade social','estresse','saúde mental'],
+    'Relacionamentos':['relacionamento tóxico','relacionamentos','amor próprio','vínculos afetivos','abuso emocional'],
+    'Autoestima':['autoestima','autossabotagem','síndrome do impostor','amor próprio','insegurança'],
+    'Depressão':['depressão','saúde mental','crise emocional','burnout','esgotamento emocional'],
+    'Dinheiro':['psicologia do dinheiro','finanças','crenças limitantes','abundância','mentalidade financeira'],
+  };
+  const extra = serieMap[s] || [];
+  return [...new Set([...extra,...base])].join(', ');
+}
+
+// ── PASSOS POR PLATAFORMA ──
+function getSteps(v){
+  const isShort = (v.target_platform||'').includes('short');
+  const canal = 'UCyCkIpsVgME9yCj_oXJFheA';
+  const studioUrl = `https://studio.youtube.com/channel/${canal}/videos/upload?d=ud`;
+
+  const stepsLong = [
+    {t:'Baixar o MP4', d:`Clique em <strong>⬇ Download</strong> acima para salvar o vídeo no seu dispositivo.`},
+    {t:'Abrir o YouTube Studio', d:`Acesse <a href="${studioUrl}" target="_blank">YouTube Studio → Criar → Enviar vídeos</a>. Use a conta <strong>psidanielacoelho1982@gmail.com</strong>.`},
+    {t:'Fazer upload do arquivo', d:`Arraste o arquivo MP4 baixado ou clique em "Selecionar arquivos". Aguarde o upload completar.`},
+    {t:'Copiar e colar o Título', d:`Cole o título exatamente como está no campo acima. Copie com o botão <strong>Copiar</strong>.`},
+    {t:'Copiar a Descrição', d:`Cole a descrição completa (com hashtags). Copie com o botão <strong>Copiar</strong>.`},
+    {t:'Adicionar Tags', d:`No campo "Tags" do YouTube Studio, cole as tags. Copie com o botão <strong>Copiar</strong>.`},
+    {t:'Configurar visibilidade', d:`Selecione <strong>Público</strong>. Categoria: <strong>Pessoas e blogs</strong>. Idioma: <strong>Português</strong>.`},
+    {t:'Thumbnail', d:`Não é obrigatório agora — pode adicionar depois. O YouTube gera automaticamente 3 opções.`},
+    {t:'Publicar', d:`Clique em <strong>Salvar</strong> → <strong>Publicar</strong>. Aguarde aparecer "Processando vídeo".`},
+    {t:'Copiar o ID do Vídeo', d:`Na URL do vídeo publicado: youtube.com/watch?v=<strong>ESTE_É_O_ID</strong>. Cole abaixo e clique em <strong>Marcar como Publicado</strong>.`},
+  ];
+
+  const stepsShort = [
+    {t:'Baixar o MP4', d:`Clique em <strong>⬇ Download</strong> acima. Salve no celular para publicar pelo app.`},
+    {t:'Abrir o YouTube Studio', d:`Acesse <a href="${studioUrl}" target="_blank">YouTube Studio</a> ou use o app do YouTube.`},
+    {t:'Criar Short', d:`No app: toque em <strong>+</strong> → <strong>Criar Short</strong> → selecione o arquivo baixado.`},
+    {t:'Adicionar Título', d:`Cole o título (máx. 100 chars para Shorts). Copie com o botão acima.`},
+    {t:'Adicionar Descrição e Tags', d:`Cole a descrição. Inclua <strong>#Shorts</strong> no início para garantir classificação como Short.`},
+    {t:'Selecionar Público', d:`Escolha <strong>Todos</strong> → <strong>Público</strong>. Não marque "feito para crianças".`},
+    {t:'Publicar', d:`Toque em <strong>Enviar</strong>. O Short aparece no canal em alguns minutos.`},
+    {t:'Copiar o ID', d:`Abra o vídeo publicado, copie o ID da URL e cole abaixo.`},
+  ];
+
+  return isShort ? stepsShort : stepsLong;
+}
+
+// ── CARREGAR VÍDEOS ──
+async function load(){
+  const r = await fetch(
+    `${SB}/rest/v1/content_pipeline?mp4_url=not.is.null`+
+    `&status=not.eq.archived_after_publish&status=not.eq.deleted`+
+    `&select=id,youtube_title,title,target_platform,seo_score,mp4_url,status,youtube_video_id,published_at`+
+    `&order=target_platform.asc,seo_score.desc,id.asc&limit=100`,
+    {headers:H()}
+  );
+  const raw = await r.json();
+  // Ordenar: long primeiro, depois shorts
+  const longs  = raw.filter(v=>!v.youtube_video_id).filter(v=>(v.target_platform||'').includes('long'));
+  const shorts = raw.filter(v=>!v.youtube_video_id).filter(v=>(v.target_platform||'').includes('short'));
+  const pubs   = raw.filter(v=>v.youtube_video_id);
+  VIDEOS = [...longs, ...shorts, ...pubs];
+  
+  // Registrar já publicados
+  pubs.forEach(v=>{ PUBLISHED[v.id] = v.youtube_video_id; });
+  
+  renderAll();
+  renderCurrent();
+  loadStorage();
+}
+
+// ── STORAGE ──
+async function loadStorage(){
+  try{
+    const r = await fetch(`${SB}/rest/v1/rpc/get_storage_status`,{method:'POST',headers:H({'Content-Type':'application/json'}),body:'{}'});
+    const d = await r.json();
+    const chip = document.getElementById('storage-chip');
+    const pct  = d.pct_used || 0;
+    const mb   = d.total_mb || 0;
+    chip.textContent = (mb/1024).toFixed(2)+'GB / 1GB ('+pct+'%)';
+    chip.className   = 'storage-chip ' + (pct>=100?'s-crit':pct>=80?'s-warn':'s-ok');
+  }catch(e){}
+}
+
+// ── RENDERIZAR LISTA ──
+function renderAll(){
+  const unpub = VIDEOS.filter(v=>!PUBLISHED[v.id]);
+  const pub   = VIDEOS.filter(v=>PUBLISHED[v.id]);
+  const total = VIDEOS.length;
+  const done  = pub.length;
+  
+  document.getElementById('prog-fill').style.width = (done/total*100)+'%';
+  document.getElementById('prog-lbl').textContent  = done+'/'+total+' publicados';
+  document.getElementById('list-count').textContent= total+' vídeos';
+  
+  const items = VIDEOS.map((v,i)=>{
+    const isLong  = (v.target_platform||'').includes('long');
+    const isDone  = !!PUBLISHED[v.id];
+    const isCur   = i === IDX;
+    const serieTxt = serie(v.youtube_title||v.title||'');
+    const t = (v.youtube_title||v.title||'').substring(0,55);
+    return `<div class="list-item${isCur?' active':''}${isDone?' done':''}" onclick="jumpTo(${i})">
+      <span class="list-n">${i+1}</span>
+      <span class="list-icon">${isDone?'✅':isLong?'📹':'📱'}</span>
+      <span class="list-title">${t}${(v.youtube_title||'').length>55?'…':''}</span>
+      <span class="list-pl ${isLong?'pl-long':'pl-short'}">${isLong?'Long':'Short'}</span>
+    </div>`;
+  }).join('');
+  document.getElementById('list-items').innerHTML = items;
+}
+
+// ── RENDERIZAR VÍDEO ATUAL ──
+function renderCurrent(){
+  const v = VIDEOS[IDX];
+  if(!v) return;
+  
+  const isLong  = (v.target_platform||'').includes('long');
+  const isDone  = !!PUBLISHED[v.id];
+  const serieTxt = serie(v.youtube_title||v.title||'');
+  const title   = v.youtube_title || v.title || '';
+  const tags    = gerarTags(title, serieTxt);
+  const desc    = gerarDesc(v);
+  const total   = VIDEOS.length;
+  
+  document.getElementById('player').src       = v.mp4_url || '';
+  document.getElementById('vid-title').textContent = title;
+  document.getElementById('serie-chip').textContent = serieTxt;
+  document.getElementById('titulo').textContent     = title;
+  document.getElementById('descricao').textContent  = desc;
+  document.getElementById('tags-display').textContent = tags.substring(0,80)+'…';
+  document.getElementById('tags-raw').textContent    = tags;
+  document.getElementById('order-badge').textContent = '#'+v.id;
+  document.getElementById('vid-counter').innerHTML   =
+    `<strong style="color:var(--m)">${IDX+1} de ${total}</strong> &nbsp;·&nbsp; ${isLong?'Long-form':'Short'} &nbsp;·&nbsp; SEO ${v.seo_score}`;
+  
+  const badge = document.getElementById('type-badge');
+  badge.textContent = isLong ? '📹 LONG-FORM' : '📱 SHORT';
+  badge.className   = 'vid-type-badge ' + (isLong?'badge-long':'badge-short');
+  
+  // Download
+  document.getElementById('btn-dl').href     = v.mp4_url || '#';
+  document.getElementById('btn-dl').download = 'psi_'+v.id+(isLong?'_long':'_short')+'.mp4';
+  
+  // Passos
+  const steps = getSteps(v);
+  document.getElementById('steps-title').textContent = 
+    `📖 Passo a Passo — ${isLong ? 'YouTube Long-form' : 'YouTube Shorts'}`;
+  document.getElementById('steps-list').innerHTML = steps.map((s,i)=>
+    `<div class="step">
+      <div class="step-n">${i+1}</div>
+      <div class="step-text"><strong>${s.t}</strong><br>${s.d}</div>
+    </div>`
+  ).join('');
+  
+  // Navegação
+  document.getElementById('btn-prev').disabled = IDX === 0;
+  document.getElementById('btn-next').disabled = IDX === VIDEOS.length - 1;
+  
+  // Input YT id
+  document.getElementById('yt-id-input').value = '';
+  if(isDone){
+    document.getElementById('yt-id-input').value = PUBLISHED[v.id];
+    document.getElementById('btn-del').disabled  = false;
+    mostrarBanner('ok', '✅ Publicado! ID: '+PUBLISHED[v.id]+
+      ' — Confirme que está acessível no YouTube, depois clique em "Apagar do Storage".');
+  } else {
+    document.getElementById('btn-del').disabled = true;
+    document.getElementById('btn-pub').disabled = true;
+    ocultarBanner();
+  }
+  
+  renderAll(); // rerender lista para destacar ativo
+}
+
+// ── VALIDAR ID ──
+function validarId(){
+  const val = document.getElementById('yt-id-input').value.trim();
+  // Aceitar ID direto (11 chars) ou URL completa
+  let id = val;
+  if(val.includes('watch?v=')) id = val.split('watch?v=')[1].split('&')[0];
+  if(val.includes('youtu.be/')) id = val.split('youtu.be/')[1].split('?')[0];
+  document.getElementById('yt-id-input').value = id;
+  document.getElementById('btn-pub').disabled = id.length < 6;
+}
+
+// ── MARCAR PUBLICADO ──
+async function marcarPublicado(){
+  const v  = VIDEOS[IDX];
+  const id = document.getElementById('yt-id-input').value.trim();
+  if(!id || id.length < 6){ alert('Cole o ID do vídeo primeiro.'); return; }
+  
+  document.getElementById('btn-pub').disabled = true;
+  mostrarBanner('warn', '⏳ Registrando publicação…');
+  
+  try{
+    const r = await fetch(`${SB}/rest/v1/rpc/marcar_publicado_manual`,{
+      method:'POST',
+      headers:H({'Content-Type':'application/json'}),
+      body: JSON.stringify({p_pipeline_id:v.id, p_youtube_video_id:id, p_redes:{yt:true}})
+    });
+    const d = await r.json();
+    if(d.ok){
+      PUBLISHED[v.id] = id;
+      VIDEOS[IDX].youtube_video_id = id;
+      document.getElementById('btn-del').disabled = false;
+      loadStorage();
+      mostrarBanner('ok', '✅ '+d.msg+'\n\nLink: https://youtube.com/watch?v='+id+
+        '\n\nVerifique que o vídeo está acessível, depois apague do storage para liberar espaço.');
+      renderAll();
+    } else {
+      mostrarBanner('err', '❌ Erro: '+(d.erro||d.error||JSON.stringify(d)));
+      document.getElementById('btn-pub').disabled = false;
+    }
+  }catch(e){
+    mostrarBanner('err', '❌ Erro de rede: '+e.message);
+    document.getElementById('btn-pub').disabled = false;
+  }
+}
+
+// ── APAGAR STORAGE ──
+async function deletarStorage(){
+  const v = VIDEOS[IDX];
+  const ytId = PUBLISHED[v.id];
+  
+  if(!ytId){ alert('Marque como publicado primeiro.'); return; }
+  
+  const ok = confirm(
+    '⚠️ Apagar o arquivo do storage?\n\n'+
+    'Confirme que o vídeo está acessível no YouTube:\n'+
+    'https://youtube.com/watch?v='+ytId+'\n\n'+
+    'O vídeo SEMPRE fica no registro permanente (published_videos_log).\n'+
+    'Apenas o arquivo MP4 do storage será apagado para liberar espaço.'
+  );
+  if(!ok) return;
+  
+  document.getElementById('btn-del').disabled = true;
+  mostrarBanner('warn','⏳ Apagando do storage…');
+  
+  try{
+    const r = await fetch(`${SB}/rest/v1/rpc/apagar_storage_publicado`,{
+      method:'POST',
+      headers:H({'Content-Type':'application/json'}),
+      body: JSON.stringify({p_pipeline_id:v.id})
+    });
+    const d = await r.json();
+    if(d.ok){
+      VIDEOS[IDX].mp4_url = null;
+      VIDEOS[IDX].status  = 'archived_after_publish';
+      loadStorage();
+      mostrarBanner('ok','✅ '+d.msg+'\n\nLiberado: '+d.liberado+' MB. Registro mantido para sempre no log.');
+      // Auto-avançar para o próximo
+      setTimeout(()=>{ if(IDX < VIDEOS.length-1) go(1); }, 2500);
+    } else {
+      mostrarBanner('err','❌ '+(d.erro||JSON.stringify(d)));
+      document.getElementById('btn-del').disabled = false;
+    }
+  }catch(e){
+    mostrarBanner('err','❌ '+e.message);
+    document.getElementById('btn-del').disabled = false;
+  }
+}
+
+// ── COPIAR ──
+function cop(id, btnId){
+  const el = document.getElementById(id);
+  navigator.clipboard.writeText(el.textContent).then(()=>{
+    const btn = document.querySelector(`[onclick="cop('${id}','${btnId}')"]`);
+    if(btn){ btn.textContent='✓ Copiado!'; btn.classList.add('ok'); setTimeout(()=>{btn.textContent='Copiar';btn.classList.remove('ok')},1800); }
+  });
+}
+
+// ── NAVEGAÇÃO ──
+function go(d){ IDX = Math.max(0, Math.min(VIDEOS.length-1, IDX+d)); renderCurrent(); window.scrollTo({top:0,behavior:'smooth'}); }
+function jumpTo(i){ IDX=i; renderCurrent(); window.scrollTo({top:0,behavior:'smooth'}); }
+
+// ── BANNERS ──
+function mostrarBanner(tipo, msg){
+  const b = document.getElementById('status-banner');
+  b.style.display = 'block';
+  b.className = 'status-banner banner-'+tipo;
+  b.style.whiteSpace = 'pre-line';
+  b.textContent = msg;
+}
+function ocultarBanner(){ document.getElementById('status-banner').style.display='none'; }
+
+// ── BOOT ──
+load();
+</script>
+</body>
+</html>
