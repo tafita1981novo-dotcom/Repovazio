@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ψ Hub Mestre — psicologia.doc V41</title>
+<title>ψ Hub Mestre — psicologia.doc V42</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800;900&family=DM+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#06060F;--s1:#0E0E1A;--s2:#12121F;--acc:#7C3AED;--crim:#E11D48;--gold:#F59E0B;--teal:#0D9488;--grn:#10B981;--mist:#C4B5FD;--t1:#E2E8F0;--t2:#94A3B8;--t3:#475569;--bd:rgba(255,255,255,.07)}
+:root{--bg:#06060F;--s1:#0E0E1A;--acc:#7C3AED;--crim:#E11D48;--gold:#F59E0B;--teal:#0D9488;--grn:#10B981;--mist:#C4B5FD;--t1:#E2E8F0;--t2:#94A3B8;--t3:#475569;--bd:rgba(255,255,255,.07)}
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--bg);color:var(--t1);font-family:"DM Sans",sans-serif;min-height:100vh}
 body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
@@ -12,162 +12,124 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
 .hdr{position:sticky;top:0;z-index:100;background:rgba(6,6,15,.95);backdrop-filter:blur(20px);
   border-bottom:1px solid var(--bd);padding:14px 28px;display:flex;align-items:center;gap:16px}
 .ψ{font-size:22px;font-weight:900;color:var(--mist);font-family:serif}
-.brand{font-size:14px;font-weight:700;color:var(--t1)}
-.brand span{color:var(--mist)}
-.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--grn);animation:pulse 2s infinite;margin-right:2px}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.4)}}
+.brand{font-size:14px;font-weight:700;color:var(--t1)}.brand span{color:var(--mist)}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--grn);animation:blink 1.5s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 .wrap{position:relative;z-index:1;max-width:1400px;margin:0 auto;padding:28px 24px 80px}
-.hero{text-align:center;padding:24px 0 32px;margin-bottom:24px;border-bottom:1px solid var(--bd)}
-.hero h1{font-size:38px;font-weight:900;letter-spacing:-2px;color:#F0F4FF;line-height:1.1}
+.hero{text-align:center;padding:24px 0 28px;margin-bottom:22px;border-bottom:1px solid var(--bd)}
+.hero h1{font-size:36px;font-weight:900;letter-spacing:-2px;color:#F0F4FF}
 .hero h1 span{color:var(--mist)}
-.hero p{font-size:13px;color:var(--t2);margin-top:10px}
-.hero-stats{display:flex;gap:20px;justify-content:center;margin-top:16px;flex-wrap:wrap}
-.hstat{text-align:center}
-.hstat-n{font-size:24px;font-weight:800}
-.hstat-l{font-size:9px;color:var(--t3);font-family:"DM Mono",monospace;margin-top:2px}
-.section{margin-bottom:32px}
-.sec-hdr{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.hero p{font-size:13px;color:var(--t2);margin-top:8px}
+.hero-stats{display:flex;gap:18px;justify-content:center;margin-top:14px;flex-wrap:wrap}
+.hs{text-align:center}
+.hs-n{font-size:22px;font-weight:800}
+.hs-l{font-size:9px;color:var(--t3);font-family:"DM Mono",monospace;margin-top:2px}
+.section{margin-bottom:28px}
+.sec-hdr{display:flex;align-items:center;gap:12px;margin-bottom:11px}
 .sec-title{font-size:10px;text-transform:uppercase;letter-spacing:3px;color:var(--t3);font-family:"DM Mono",monospace;white-space:nowrap}
 .sec-line{flex:1;height:1px;background:var(--bd)}
-.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
-.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
-.card{background:var(--s1);border:1px solid var(--bd);border-radius:14px;padding:14px;
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.c{background:var(--s1);border:1px solid var(--bd);border-radius:13px;padding:14px;
   text-decoration:none;color:inherit;display:block;transition:.2s;position:relative;overflow:hidden}
-.card::before{content:"";position:absolute;inset:0;opacity:0;transition:.2s;
-  background:linear-gradient(135deg,rgba(124,58,237,.06),transparent)}
-.card:hover{border-color:rgba(124,58,237,.4);transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,0,0,.4)}
-.card:hover::before{opacity:1}
-.card.red:hover{border-color:rgba(225,29,72,.4)} .card.red::before{background:linear-gradient(135deg,rgba(225,29,72,.06),transparent)}
-.card.gold:hover{border-color:rgba(245,158,11,.4)} .card.gold::before{background:linear-gradient(135deg,rgba(245,158,11,.06),transparent)}
-.card.teal:hover{border-color:rgba(13,148,136,.4)} .card.teal::before{background:linear-gradient(135deg,rgba(13,148,136,.06),transparent)}
-.card.grn{border-color:rgba(16,185,129,.2)} .card.grn:hover{border-color:rgba(16,185,129,.4)} .card.grn::before{background:linear-gradient(135deg,rgba(16,185,129,.06),transparent)}
-.card-icon{font-size:22px;margin-bottom:8px;display:block}
-.card-title{font-size:13px;font-weight:700;color:var(--t1);margin-bottom:3px}
-.card-desc{font-size:11px;color:var(--t2);line-height:1.4}
-.badge{position:absolute;top:10px;right:10px;font-size:8px;font-family:"DM Mono",monospace;padding:2px 7px;border-radius:10px}
+.c:hover{border-color:rgba(124,58,237,.4);transform:translateY(-2px);box-shadow:0 10px 30px rgba(0,0,0,.4)}
+.c.r:hover{border-color:rgba(225,29,72,.4)}.c.g:hover{border-color:rgba(245,158,11,.4)}
+.c.t:hover{border-color:rgba(13,148,136,.4)}.c.v:hover{border-color:rgba(16,185,129,.4)}
+.c.w:hover{border-color:rgba(37,211,102,.4)}
+.ci{font-size:20px;margin-bottom:8px;display:block}
+.ct{font-size:12px;font-weight:700;color:var(--t1);margin-bottom:3px}
+.cd{font-size:10px;color:var(--t2);line-height:1.4}
+.badge{position:absolute;top:9px;right:9px;font-size:8px;font-family:"DM Mono",monospace;padding:2px 6px;border-radius:9px}
 .b-live{background:rgba(16,185,129,.15);color:var(--grn);border:1px solid rgba(16,185,129,.3)}
 .b-new{background:rgba(124,58,237,.2);color:var(--mist);border:1px solid rgba(124,58,237,.3)}
 .b-hot{background:rgba(225,29,72,.15);color:var(--crim);border:1px solid rgba(225,29,72,.3)}
 .b-go{background:rgba(245,158,11,.15);color:var(--gold);border:1px solid rgba(245,158,11,.3)}
-.alert-crit{background:rgba(225,29,72,.07);border:1px solid rgba(225,29,72,.2);border-radius:12px;padding:14px 18px;margin-bottom:18px;font-size:12px;color:#FCA5A5;line-height:1.6}
-.alert-crit strong{color:#fff;display:block;margin-bottom:4px}
-@media(max-width:900px){.grid-4{grid-template-columns:1fr 1fr}.grid-3{grid-template-columns:1fr 1fr}}
+.alert{background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:11px;
+  padding:12px 16px;margin-bottom:16px;font-size:11px;color:#FDE68A;line-height:1.6}
+.alert strong{color:#fff;display:block;margin-bottom:3px}
+@media(max-width:900px){.g4{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr 1fr}}
 </style></head>
 <body>
 <header class="hdr">
   <span class="ψ">ψ</span>
-  <span class="brand">psicologia<span>.doc</span> V41</span>
+  <span class="brand">psicologia<span>.doc</span> V42</span>
   <span class="dot"></span>
-  <span style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace" id="live-status">carregando...</span>
-  <span style="margin-left:auto;font-size:10px;color:var(--t3);font-family:'DM Mono',monospace">@psidanielacoelho · UCyCkIpsVgME9yCj_oXJFheA</span>
+  <span style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace" id="sts">ativo</span>
+  <span style="margin-left:auto;font-size:10px;color:var(--t3);font-family:'DM Mono',monospace">@psidanielacoelho</span>
 </header>
 
 <div class="wrap">
   <div class="hero">
     <h1>ψ psicologia<span>.doc</span></h1>
-    <p>Pipeline autônomo 24/7 · 15 páginas live · 16 vídeos prontos · Brand kit completo · $0/mês</p>
+    <p>Pipeline autônomo 24/7 · 18 páginas live · YouTube Publisher rodando · $0/mês</p>
     <div class="hero-stats">
-      <div class="hstat"><div class="hstat-n" id="hs-fila" style="color:var(--mist)">-</div><div class="hstat-l">na fila LLM</div></div>
-      <div class="hstat"><div class="hstat-n" id="hs-mp4" style="color:var(--crim)">16</div><div class="hstat-l">MP4 prontos</div></div>
-      <div class="hstat"><div class="hstat-n" style="color:var(--gold)">47</div><div class="hstat-l">thumbnails</div></div>
-      <div class="hstat"><div class="hstat-n" style="color:var(--teal)">50</div><div class="hstat-l">crons ativos</div></div>
-      <div class="hstat"><div class="hstat-n" style="color:var(--grn)">15</div><div class="hstat-l">páginas live</div></div>
+      <div class="hs"><div class="hs-n" id="h-fila" style="color:var(--mist)">-</div><div class="hs-l">fila LLM</div></div>
+      <div class="hs"><div class="hs-n" id="h-mp4" style="color:var(--crim)">-</div><div class="hs-l">MP4 prontos</div></div>
+      <div class="hs"><div class="hs-n" style="color:var(--gold)">50</div><div class="hs-l">crons</div></div>
+      <div class="hs"><div class="hs-n" style="color:var(--teal)">47</div><div class="hs-l">thumbnails</div></div>
+      <div class="hs"><div class="hs-n" style="color:var(--grn)">18</div><div class="hs-l">páginas live</div></div>
     </div>
   </div>
 
-  <!-- ALERTAS -->
-  <div class="alert-crit">
-    <strong>🔴 3 ações críticas bloqueando crescimento:</strong>
-    1. <a href="/conectores.html" style="color:var(--gold)">conectores.html</a> → deletar 48 orphan EFs (Supabase Dashboard) ·
-    2. <a href="/producao.html" style="color:var(--gold)">YouTube Publisher disparado</a> — verificar em ~5min ·
-    3. <a href="https://github.com/tafita81/Repovazio/blob/main/SETUP.md" style="color:var(--gold)">SETUP.md</a> → OAuth Instagram + TikTok
+  <div class="alert">
+    <strong>🎉 YouTube Publisher rodando agora — verificar em ~10min:</strong>
+    <a href="https://studio.youtube.com/channel/UCyCkIpsVgME9yCj_oXJFheA" style="color:var(--gold)">YouTube Studio</a> ·
+    Ação crítica restante: <a href="/conectores.html" style="color:var(--gold)">deletar 48 EFs orphan</a> · 
+    OAuth: <a href="/conectores.html" style="color:var(--gold)">Instagram + TikTok</a>
   </div>
 
-  <!-- PRODUÇÃO & PUBLICAÇÃO -->
+  <!-- PUBLICAÇÃO -->
   <div class="section">
-    <div class="sec-hdr"><div class="sec-title">🚀 Produção & Publicação</div><div class="sec-line"></div></div>
-    <div class="grid-4">
-      <a class="card grn" href="/producao.html"><span class="badge b-new">100%</span>
-        <span class="card-icon">🎯</span>
-        <div class="card-title">Checklist Produção</div>
-        <div class="card-desc">Status completo · 10 auto · 5 manuais pendentes</div></a>
-      <a class="card red" href="/publicar.html"><span class="badge b-hot">16 PRONTOS</span>
-        <span class="card-icon">🚀</span>
-        <div class="card-title">Publicar Vídeos</div>
-        <div class="card-desc">MP4s com SEO 99 · Publisher disparado · @psidanielacoelho</div></a>
-      <a class="card gold" href="/calendario.html">
-        <span class="card-icon">📅</span>
-        <div class="card-title">Calendário</div>
-        <div class="card-desc">Ter/Qui 19h30 BR · 5 plataformas/dia · 4 semanas</div></a>
-      <a class="card teal" href="/videos-prontos.html"><span class="badge b-live">LIVE</span>
-        <span class="card-icon">🎬</span>
-        <div class="card-title">Galeria Vídeos</div>
-        <div class="card-desc">Todos MP4s · preview · download · status publicação</div></a>
+    <div class="sec-hdr"><div class="sec-title">🚀 Publicação & Crescimento</div><div class="sec-line"></div></div>
+    <div class="g4">
+      <a class="c v" href="/producao.html"><span class="badge b-new">100%</span><span class="ci">🎯</span><div class="ct">Produção 100%</div><div class="cd">Checklist · 10 auto · 5 manual</div></a>
+      <a class="c r" href="/publicar.html"><span class="badge b-hot">RODANDO</span><span class="ci">🚀</span><div class="ct">Publicar Vídeos</div><div class="cd">YouTube Publisher in_progress</div></a>
+      <a class="c g" href="/calendario.html"><span class="ci">📅</span><div class="ct">Calendário</div><div class="cd">Ter/Qui 19h30 BR · 5 plataformas</div></a>
+      <a class="c" href="/growth.html"><span class="ci">🎯</span><div class="ct">Growth Tracker</div><div class="cd">Meta 1K subs · Fase 1 · AdSense</div></a>
     </div>
   </div>
 
-  <!-- BRAND & VISUAL -->
+  <!-- ANALYTICS -->
   <div class="section">
-    <div class="sec-hdr"><div class="sec-title">🎨 Brand Kit & Visual</div><div class="sec-line"></div></div>
-    <div class="grid-4">
-      <a class="card" href="/brand.html"><span class="badge b-new">V1</span>
-        <span class="card-icon">🎨</span>
-        <div class="card-title">Brand Kit</div>
-        <div class="card-desc">Banner YT 2560×1440 · 5 avatars · paleta · bios</div></a>
-      <a class="card red" href="/thumbnail-gen.html">
-        <span class="card-icon">⚡</span>
-        <div class="card-title">Gerador Thumbnails</div>
-        <div class="card-desc">5 estilos · editor ao vivo · SVG/PNG 1280×720</div></a>
-      <a class="card" href="/galeria-thumbnails.html">
-        <span class="card-icon">🖼️</span>
-        <div class="card-title">Galeria Thumbnails</div>
-        <div class="card-desc">47 auto-gerados · filtro · download</div></a>
-      <a class="card teal" href="/insta-templates.html"><span class="badge b-new">NEW</span>
-        <span class="card-icon">📸</span>
-        <div class="card-title">Templates Instagram</div>
-        <div class="card-desc">Post 1:1 · Reels 9:16 · 6 temas · download</div></a>
+    <div class="sec-hdr"><div class="sec-title">📊 Analytics & Monitor</div><div class="sec-line"></div></div>
+    <div class="g4">
+      <a class="c" href="/analytics.html"><span class="badge b-new">NEW</span><span class="ci">📊</span><div class="ct">Analytics Canal</div><div class="cd">Métricas YT · crescimento · pipeline</div></a>
+      <a class="c" href="/monitor.html"><span class="badge b-live">LIVE</span><span class="ci">🔬</span><div class="ct">Monitor Tempo Real</div><div class="cd">Pipeline flow · crons · projections</div></a>
+      <a class="c t" href="/seo-dashboard.html"><span class="ci">📈</span><div class="ct">SEO Dashboard</div><div class="cd">Keywords PT/EN/ES · R$46K projeção</div></a>
+      <a class="c r" href="/viral.html"><span class="ci">🔥</span><div class="ct">Painel Viral</div><div class="cd">CTR 7.31% · 30 hooks · ranking</div></a>
     </div>
   </div>
 
-  <!-- SEO & CRESCIMENTO -->
+  <!-- BRAND -->
   <div class="section">
-    <div class="sec-hdr"><div class="sec-title">📈 SEO & Crescimento</div><div class="sec-line"></div></div>
-    <div class="grid-4">
-      <a class="card gold" href="/seo-dashboard.html">
-        <span class="card-icon">📈</span>
-        <div class="card-title">SEO Dashboard</div>
-        <div class="card-desc">Keywords PT/EN/ES · projeção R$46K/mês</div></a>
-      <a class="card grn" href="/viral.html">
-        <span class="card-icon">🔥</span>
-        <div class="card-title">Painel Viral</div>
-        <div class="card-desc">CTR até 7.31% · 30 hooks · ranking completo</div></a>
-      <a class="card" href="/growth.html">
-        <span class="card-icon">🎯</span>
-        <div class="card-title">Growth Tracker</div>
-        <div class="card-desc">Meta 1K subs · Fase 1 ads R$250/mês · AdSense</div></a>
-      <a class="card teal" href="/setup-canal.html">
-        <span class="card-icon">📺</span>
-        <div class="card-title">Setup do Canal</div>
-        <div class="card-desc">Checklist YouTube Studio · Instagram · TikTok</div></a>
+    <div class="sec-hdr"><div class="sec-title">🎨 Brand & Visual</div><div class="sec-line"></div></div>
+    <div class="g4">
+      <a class="c" href="/brand.html"><span class="ci">🎨</span><div class="ct">Brand Kit</div><div class="cd">Banner · avatars · paleta · bios</div></a>
+      <a class="c r" href="/thumbnail-gen.html"><span class="ci">⚡</span><div class="ct">Gerador Thumbnails</div><div class="cd">5 estilos · SVG/PNG 1280×720</div></a>
+      <a class="c" href="/galeria-thumbnails.html"><span class="ci">🖼️</span><div class="ct">Galeria Thumbs</div><div class="cd">47 auto-gerados · filtro · download</div></a>
+      <a class="c t" href="/insta-templates.html"><span class="ci">📸</span><div class="ct">Templates Instagram</div><div class="cd">Post · Reels · Stories · 6 temas</div></a>
     </div>
   </div>
 
-  <!-- PIPELINE & MONITOR -->
+  <!-- COMUNIDADE -->
   <div class="section">
-    <div class="sec-hdr"><div class="sec-title">🧠 Pipeline & Monitor</div><div class="sec-line"></div></div>
-    <div class="grid-3">
-      <a class="card" href="/monitor.html"><span class="badge b-live">LIVE</span>
-        <span class="card-icon">📊</span>
-        <div class="card-title">Monitor Tempo Real</div>
-        <div class="card-desc">Pipeline flow · 50 crons · projections · logs</div></a>
-      <a class="card red" href="/conectores.html"><span class="badge b-go">AÇÃO</span>
-        <span class="card-icon">🔗</span>
-        <div class="card-title">Conectores OAuth</div>
-        <div class="card-desc">48 EFs orphan para deletar · status tokens</div></a>
-      <a class="card" href="/comando.html">
-        <span class="card-icon">🧠</span>
-        <div class="card-title">Cérebro Autônomo</div>
-        <div class="card-desc">Orquestrador · status · ações críticas</div></a>
+    <div class="sec-hdr"><div class="sec-title">💬 Comunidade & Canal</div><div class="sec-line"></div></div>
+    <div class="g4">
+      <a class="c w" href="/whatsapp.html"><span class="badge b-new">NEW</span><span class="ci">💬</span><div class="ct">WhatsApp Community</div><div class="cd">8 grupos · 7 templates · instrucoes</div></a>
+      <a class="c" href="/daniela.html"><span class="badge b-new">NEW</span><span class="ci">👤</span><div class="ct">Perfil Daniela</div><div class="cd">Links bio · YouTube · Instagram · TikTok</div></a>
+      <a class="c t" href="/setup-canal.html"><span class="ci">📺</span><div class="ct">Setup do Canal</div><div class="cd">Checklist YouTube · Instagram · TikTok</div></a>
+      <a class="c r" href="/conectores.html"><span class="badge b-go">AÇÃO</span><span class="ci">🔗</span><div class="ct">OAuth Conectores</div><div class="cd">48 EFs p/ deletar · status tokens</div></a>
+    </div>
+  </div>
+
+  <!-- VIDEOS -->
+  <div class="section">
+    <div class="sec-hdr"><div class="sec-title">🎬 Vídeos</div><div class="sec-line"></div></div>
+    <div class="g3">
+      <a class="c" href="/videos-prontos.html"><span class="badge b-live">LIVE</span><span class="ci">🎬</span><div class="ct">Galeria de Vídeos</div><div class="cd">Todos MP4s · preview · download</div></a>
+      <a class="c" href="/publicar.html"><span class="ci">📤</span><div class="ct">Publicar Vídeos</div><div class="cd">17 prontos · publisher rodando</div></a>
+      <a class="c g" href="/calendario.html"><span class="ci">📅</span><div class="ct">Calendário</div><div class="cd">Horários pico · schedule 4 semanas</div></a>
     </div>
   </div>
 </div>
@@ -177,14 +139,13 @@ const SB_URL='https://tpjvalzwkqwttvmszvie.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwanZhbHp3a3F3dHR2bXN6dmllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY3MDkxNjUsImV4cCI6MjA1MjI4NTE2NX0.Sn3xzLw6DtGi2y0yyg_HCObPz7YxBObM3RrKs8ylsaA';
 async function load(){
   try{
-    const r=await fetch(`${SB_URL}/rest/v1/content_pipeline?select=status&limit=2000`,
-      {headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
+    const r=await fetch(`${SB_URL}/rest/v1/content_pipeline?select=status&limit=2000`,{headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
     const d=await r.json();
     const cnt={};d.forEach(x=>cnt[x.status]=(cnt[x.status]||0)+1);
-    document.getElementById('hs-fila').textContent=(cnt['pending_generation']||0).toLocaleString('pt-BR');
-    document.getElementById('hs-mp4').textContent=cnt['pending_credentials']||0;
-    document.getElementById('live-status').textContent='ativo · '+new Date().toLocaleTimeString('pt-BR');
-  }catch(e){document.getElementById('live-status').textContent='offline';}
+    document.getElementById('h-fila').textContent=(cnt['pending_generation']||0).toLocaleString('pt-BR');
+    document.getElementById('h-mp4').textContent=cnt['pending_credentials']||0;
+    document.getElementById('sts').textContent='ativo · '+new Date().toLocaleTimeString('pt-BR');
+  }catch(e){document.getElementById('sts').textContent='offline';}
 }
 load();setInterval(load,60000);
 </script>
