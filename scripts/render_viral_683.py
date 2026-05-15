@@ -384,40 +384,16 @@ ADU=float(json.loads(probe.stdout)["format"]["duration"])
 DUR=ADU/N;FPS=25;FR=int(DUR*FPS)
 print(f"Audio {ADU:.1f}s | cena {DUR:.2f}s | {FR}f")
 
-# KEN BURNS via scale+crop (mais simples e confiavel que zoompan)
-# Escala 10% maior e faz crop com offset linear
-# Modos: zi=zoom in, zo=zoom out, pl=pan left, pr=pan right
-KB=["zi","zo","pl","pr","zi","zo","pl","pr","zi","zo",
-    "pl","pr","zi","zo","pl","pr","zi","zo","pl","zi"]
-
-def ken(m,fr):
-    """Scale 10% + crop com motion linear - valores pre-calculados, sem Python ops"""
-    # Scale: 1080*1.10=1188, 1920*1.10=2112 | offset max x=54, y=96
-    if m=="zi":
-        return f"scale=1188:2112,crop=1080:1920:max(0,54-54*n/{fr}):max(0,96-96*n/{fr}),setsar=1"
-    elif m=="zo":
-        return f"scale=1188:2112,crop=1080:1920:min(54,54*n/{fr}):min(96,96*n/{fr}),setsar=1"
-    elif m=="pl":
-        return f"scale=1188:2112,crop=1080:1920:max(0,108-108*n/{fr}):48,setsar=1"
-    elif m=="pr":
-        return f"scale=1188:2112,crop=1080:1920:min(108,108*n/{fr}):48,setsar=1"
-    elif m=="zt":
-        return f"scale=1188:2112,crop=1080:1920:max(0,54-54*n/{fr}):0,setsar=1"
-    else:
-        return "scale=1188:2112,crop=1080:1920:54:48,setsar=1"
-
+# CORTE DURO — 20 cenas distintas, cores radicalmente diferentes
+# Scale simples + concat sem Ken Burns (mais confiavel)
 inp=[]
-for p in paths: inp+=["-loop","1","-t",str(DUR+0.20),"-i",p]
+for p in paths: inp+=["-loop","1","-t",str(DUR),"-i",p]
 
-# Usar setpts para garantir timing correto
 fc=""
 for i in range(N):
-    mode=KB[i%len(KB)]
-    kf=ken(mode,FR)
-    # Cada stream: scale+crop + setpts para tempo correto
-    fc+=f"[{i}:v]setpts=PTS-STARTPTS,{kf}[v{i}];"
+    fc+=f"[{i}:v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,setsar=1[v{i}];"
 fc+="".join(f"[v{i}]" for i in range(N))
-fc+=f"concat=n={N}:v=1:a=0[vout];[vout]eq=saturation=1.20:brightness=0.03:contrast=1.08[vf]"
+fc+=f"concat=n={N}:v=1:a=0[vout];[vout]eq=saturation=1.18:brightness=0.02:contrast=1.06[vf]"
 
 print("Renderizando FFmpeg (20 cenas)...")
 cmd=["ffmpeg","-y"]+inp+["-i","/tmp/v683/audio.mp3",
