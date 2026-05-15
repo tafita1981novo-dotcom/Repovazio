@@ -40,6 +40,12 @@ jobs:
           SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: python3 scripts/render_ffmpeg_v4.py
 
+      - name: Passo 4 — Trim 58s (Regra monetizacao YT Shorts < 60s)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python3 scripts/trim_videos.py
+
       - name: Report
         if: always()
         run: echo "Pipeline V4 School-of-Life concluido - $(date)"
