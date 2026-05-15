@@ -97,13 +97,13 @@ video{width:100%;aspect-ratio:16/9;background:#000;display:block}
 </div>
 
 <script>
-const SB='https://tpjvalzwkqwttvmszvie.supabase.co',K='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwanZhbHp3a3F3dHR2bXN6dmllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY3MDkxNjUsImV4cCI6MjA1MjI4NTE2NX0.Sn3xzLw6DtGi2y0yyg_HCObPz7YxBObM3RrKs8ylsaA';
+const SB='https://tpjvalzwkqwttvmszvie.supabase.co',K='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwanZhbHp3a3F3dHR2bXN6dmllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMzUyOTMsImV4cCI6MjA5MTYxMTI5M30.UEgUo0Mw15ihQZykLAY5QApRzgTXkfIewZFzIgwao3Q';
 const SM={narcis:'Narcisismo',gaslight:'Narcisismo',apego:'Apego',abandono:'Apego',trauma:'Trauma',ansied:'Ansiedade',burnout:'Burnout',autoestima:'Autoestima',sabota:'Autoestima',relacionamento:'Relacionamentos',toxico:'Relacionamentos',depress:'Depressão',dinheiro:'Dinheiro'};
 function s(t){const x=(t||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');for(const[k,v]of Object.entries(SM)){if(x.includes(k))return v;}return'Psicologia';}
 let A=[],fa='t';
 async function load(){
   try{
-    const r=await fetch(`${SB}/rest/v1/content_pipeline?mp4_url=not.is.null&select=id,title,youtube_title,mp4_url,youtube_video_id,seo_score,target_platform&order=seo_score.desc,id.desc&limit=100`,{headers:{apikey:K,Authorization:'Bearer '+K}});
+    const r=await fetch(`${SB}/rest/v1/content_pipeline?mp4_url=not.is.null&select=id,title,youtube_title,mp4_url,youtube_video_id,seo_score,target_platform,pub_order,status,metadata&order=pub_order.asc.nullsfirst,id.asc&limit=100`,{headers:{apikey:K,Authorization:'Bearer '+K}});
     A=await r.json();
     const p=A.filter(v=>v.youtube_video_id).length;
     document.getElementById('st').textContent=A.length;
