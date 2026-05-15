@@ -1,50 +1,10 @@
-name: Render MP4 V2 (ElevenLabs + Pillow Multi-Cena + FFmpeg Ken Burns)
+name: Render MP4 V2 (PAUSADO — usar V3)
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '0 */2 * * *'
 
 jobs:
   render:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install dependencies
-        run: |
-          pip install supabase requests pillow numpy edge-tts
-          sudo apt-get install -y ffmpeg
-
-      - name: Passo 1 — TTS ElevenLabs Sarah PT-BR (voz realista indetectavel)
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
-        run: |
-          python3 scripts/tts_v2.py
-
-      - name: Passo 2 — Gerar imagens multi-cena Psych2Go (NVIDIA + Pillow)
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-          NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
-        run: |
-          python3 scripts/render_quantum_v2.py
-
-      - name: Passo 3 — Render MP4 multi-cena Ken Burns ZERO texto na tela
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-        run: |
-          python3 scripts/render_ffmpeg_v2.py
-
-      - name: Report
-        if: always()
-        run: echo "Pipeline V15.1 concluido - $(date)"
+      - run: echo "V2 pausado — use render-mp4-v3.yml"
