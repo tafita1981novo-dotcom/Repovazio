@@ -1,339 +1,304 @@
 #!/usr/bin/env python3
-"""
-render_quantum_v2.py — Cerebro V14.2 CORRIGIDO
-REGRAS IMUTAVEIS: Long=15min | Short=50-58s | ZERO texto nas imagens | ZERO texto na tela
-"""
-import os, sys, json, time, requests, base64, random, math
-from supabase import create_client
+"""render_quantum_v2.py Cerebro V15 — NVIDIA 3 endpoints + Pillow multi-cena Psych2Go"""
+import os, json, time, requests, base64, random, math
 from PIL import Image, ImageDraw
+from supabase import create_client
 
 SB_URL = os.environ["SUPABASE_URL"]
 SB_KEY = os.environ["SUPABASE_KEY"]
 sb = create_client(SB_URL, SB_KEY)
+SB_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwanZhbHp3a3F3dHR2bXN6dmllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMzUyOTMsImV4cCI6MjA5MTYxMTI5M30.UEgUo0Mw15ihQZykLAY5QApRzgTXkfIewZFzIgwao3Q"
+NVIDIA_KEY = os.environ.get("NVIDIA_API_KEY","")
 
-NVIDIA_KEY = os.environ.get("NVIDIA_API_KEY", "")
-GROQ_KEY   = os.environ.get("GROQ_API_KEY", "")
-
-REGRAS = {
-    "long_target": 900, "long_min": 840, "long_max": 960,
-    "short_target": 54, "short_min": 50, "short_max": 58,
-    "gate_render": 90, "batch_size": 5,
-}
-
-# PALETAS POR EMOCAO (Psych2Go style — pastel 2D)
 PALETAS = {
-    "ansioso":       {"bg": (255, 243, 163), "char": (200, 180, 100), "accent": (230, 200, 50)},
-    "melancolico":   {"bg": (176, 196, 222), "char": (100, 130, 170), "accent": (80, 100, 150)},
-    "tenso":         {"bg": (255, 200, 180), "char": (210, 100, 80),  "accent": (180, 60, 40)},
-    "urgente":       {"bg": (255, 220, 150), "char": (200, 140, 40),  "accent": (180, 100, 0)},
-    "esperanca":     {"bg": (178, 216, 178), "char": (80, 160, 80),   "accent": (40, 120, 40)},
-    "empatia":       {"bg": (255, 220, 200), "char": (200, 130, 90),  "accent": (160, 80, 50)},
-    "contemplativo": {"bg": (232, 193, 232), "char": (160, 90, 160),  "accent": (120, 50, 120)},
-    "calmo":         {"bg": (168, 216, 234), "char": (60, 140, 180),  "accent": (30, 100, 140)},
-    "alivio":        {"bg": (200, 240, 200), "char": (60, 180, 60),   "accent": (20, 120, 20)},
+    "ansioso":[(255,243,163),(200,175,90),(225,185,40)],
+    "melancolico":[(176,196,222),(100,125,168),(70,90,140)],
+    "tenso":[(255,195,175),(210,95,75),(185,50,30)],
+    "urgente":[(255,218,145),(200,135,35),(175,90,0)],
+    "esperanca":[(178,220,178),(75,158,75),(35,118,35)],
+    "empatia":[(255,215,195),(198,125,88),(158,75,45)],
+    "contemplativo":[(230,190,230),(158,88,158),(118,45,118)],
+    "calmo":[(165,213,232),(55,138,178),(25,98,138)],
+    "alivio":[(195,238,195),(55,178,55),(15,118,15)],
 }
-
-PERSONAGENS_EN = [
-    "Brazilian woman 25-30, medium brown skin, dark wavy hair",
-    "Brazilian man 28-35, light olive skin, short dark hair",
-    "Brazilian woman 35-45, Black skin, natural afro hair",
-    "Brazilian young woman 20-25, tan skin, long straight hair",
-    "Brazilian man 30-40, dark skin, friendly face",
+EMOCAO_KEYS = list(PALETAS.keys())
+TONS_PELE = [
+    (245,210,185),(225,180,145),(200,155,115),
+    (175,125,90),(150,100,70),(130,85,60),(110,70,50),(90,55,40),
 ]
-
-SHOT_TYPES = [
-    "extreme close-up face, filling entire frame, massive expressive eyes",
-    "medium shot from waist up, centered, neutral background",
-    "portrait shot head and shoulders, direct gaze at viewer",
-    "close-up chest and head, 3/4 angle, expressive",
-]
+TONS_CABELO = [(90,55,30),(40,25,10),(180,130,60),(60,40,20),(200,60,30),(30,30,30),(160,100,40)]
 
 def detectar_emocao(titulo, script):
-    t = (titulo + " " + script[:300]).lower()
+    t = (titulo + " " + script[:400]).lower()
     if any(x in t for x in ["ansio","panico","medo","abandono","apego"]): return "ansioso"
-    if any(x in t for x in ["trauma","dor","ferida","abuso","negligencia"]): return "melancolico"
-    if any(x in t for x in ["narcis","manipu","toxico","abusivo","gaslight"]): return "tenso"
-    if any(x in t for x in ["burnout","esgota","cansa","depressao"]): return "urgente"
-    if any(x in t for x in ["cura","supera","evolui","cresci","esperanca"]): return "esperanca"
-    if any(x in t for x in ["limites","autoestima","valoriza","amor"]): return "empatia"
+    if any(x in t for x in ["trauma","dor","ferida","abuso"]): return "melancolico"
+    if any(x in t for x in ["narcis","manipu","toxico","gaslight"]): return "tenso"
+    if any(x in t for x in ["burnout","esgota","depressao"]): return "urgente"
+    if any(x in t for x in ["cura","supera","esperanca"]): return "esperanca"
+    if any(x in t for x in ["limites","autoestima","amor"]): return "empatia"
     return "contemplativo"
 
-def gerar_prompt_quantico(titulo, script, emocao):
-    personagem = random.choice(PERSONAGENS_EN)
-    shot = random.choice(SHOT_TYPES)
-    paleta_desc = {
-        "ansioso": "pale yellow #FFF3A3 pastel", "melancolico": "dusty blue #B0C4DE pastel",
-        "tenso": "warm coral red #FF8C6B pastel", "urgente": "amber #FFB347 pastel",
-        "esperanca": "soft mint green #B2D8B2 pastel", "empatia": "warm peach #FFD1BD pastel",
-        "contemplativo": "soft lavender #E8C1E8 pastel",
-    }.get(emocao, "soft lavender #E8C1E8 pastel")
-    expressoes = {
-        "ansioso": "wide anxious eyes, worried expression",
-        "melancolico": "sad thoughtful expression, downcast eyes",
-        "tenso": "alert suspicious expression, narrowed eyes, tense jaw",
-        "urgente": "urgent concerned expression, raised eyebrows, intense",
-        "esperanca": "warm hopeful smile, soft gentle eyes",
-        "empatia": "compassionate warm smile, kind eyes",
-        "contemplativo": "thoughtful pensive expression, slightly tilted head",
-    }
-    expr = expressoes.get(emocao, "thoughtful expressive face")
-    return (
-        f"flat 2D vector art illustration, educational animation style, "
-        f"{shot}, {personagem}, {expr}, "
-        f"solid {paleta_desc} background, bold clean outlines, "
-        f"Psych2Go style, single character centered, emotional educational, "
-        f"NO text NO words NO letters NO numbers NO logos NO watermarks "
-        f"NO brand marks ZERO text in image ZERO writing"
-    )
+def dividir_cenas(script, duracao_min):
+    paras = [p.strip() for p in script.split("\n") if p.strip()]
+    if not paras: paras = [script]
+    n = 5 if duracao_min < 3 else min(18, max(8, len(paras)))
+    chunk = max(1, len(paras)//n)
+    cenas = []
+    for i in range(0, len(paras), chunk):
+        cenas.append(" ".join(paras[i:i+chunk]))
+        if len(cenas) >= n: break
+    return cenas or [script]
 
-def gerar_imagem_pillow(emocao, video_id):
-    """Fallback: gera personagem Psych2Go-style com Pillow (ZERO dependencia externa)"""
-    paleta = PALETAS.get(emocao, PALETAS["contemplativo"])
-    bg = paleta["bg"]
-    char_color = paleta["char"]
-    accent = paleta["accent"]
-    
+def desenhar_personagem(draw, cx, cy, tom_pele, cor_char, cor_acc, seed):
+    pele = tom_pele
+    pele_esc = tuple(max(0,c-30) for c in pele)
+    cabelo = TONS_CABELO[seed % len(TONS_CABELO)]
+    # Sombra
+    draw.ellipse([cx-82,cy+188,cx+82,cy+215], fill=tuple(max(0,c-35) for c in (220,215,210)))
+    # Pernas
+    draw.rounded_rectangle([cx-50,cy+120,cx-14,cy+208], radius=15, fill=pele_esc, outline=cor_acc, width=3)
+    draw.rounded_rectangle([cx+14,cy+120,cx+50,cy+208], radius=15, fill=pele_esc, outline=cor_acc, width=3)
+    # Torso
+    draw.rounded_rectangle([cx-62,cy-12,cx+62,cy+135], radius=20, fill=cor_char, outline=cor_acc, width=4)
+    # Bracos por pose
+    pose = seed % 5
+    if pose == 0:
+        draw.rounded_rectangle([cx-122,cy+18,cx-62,cy+92], radius=14, fill=pele, outline=cor_acc, width=3)
+        draw.rounded_rectangle([cx+62,cy+18,cx+122,cy+92], radius=14, fill=pele, outline=cor_acc, width=3)
+    elif pose == 1:
+        draw.rounded_rectangle([cx-95,cy+22,cx-10,cy+78], radius=13, fill=pele, outline=cor_acc, width=3)
+        draw.rounded_rectangle([cx+10,cy+32,cx+95,cy+88], radius=13, fill=pele, outline=cor_acc, width=3)
+    elif pose == 2:
+        draw.rounded_rectangle([cx-122,cy-48,cx-62,cy+38], radius=14, fill=pele, outline=cor_acc, width=3)
+        draw.rounded_rectangle([cx+62,cy+22,cx+122,cy+88], radius=14, fill=pele, outline=cor_acc, width=3)
+    elif pose == 3:
+        draw.rounded_rectangle([cx-148,cy+10,cx-62,cy+68], radius=14, fill=pele, outline=cor_acc, width=3)
+        draw.rounded_rectangle([cx+62,cy+10,cx+148,cy+68], radius=14, fill=pele, outline=cor_acc, width=3)
+    else:
+        draw.rounded_rectangle([cx-118,cy+20,cx-62,cy+68], radius=13, fill=pele, outline=cor_acc, width=3)
+        draw.rounded_rectangle([cx+62,cy+30,cx+118,cy+78], radius=13, fill=pele, outline=cor_acc, width=3)
+    # Pescoco
+    draw.rounded_rectangle([cx-19,cy-30,cx+19,cy+8], radius=9, fill=pele)
+    # Cabeca SEM ROSTO
+    hr = 73
+    hy = cy - hr - 36
+    draw.ellipse([cx-hr-8,hy-hr-14,cx+hr+8,hy+26], fill=cabelo)
+    draw.ellipse([cx-hr,hy-hr,cx+hr,hy+hr], fill=pele, outline=cor_acc, width=4)
+
+def expressao_abstrata(draw, cx, hy, hr, emocao, cor_acc, seed):
+    if emocao == "tenso":
+        for ang in range(0,360,40):
+            rad = math.radians(ang)
+            x1=cx+int(hr*1.15*math.cos(rad)); y1=hy+int(hr*1.15*math.sin(rad))
+            x2=cx+int(hr*1.48*math.cos(rad)); y2=hy+int(hr*1.48*math.sin(rad))
+            draw.line([x1,y1,x2,y2], fill=cor_acc, width=4)
+    elif emocao == "ansioso":
+        for i in range(0,300,18):
+            rad=math.radians(i); r=hr*1.12+i*0.18
+            x=cx+int(r*math.cos(rad)); y=hy+int(r*math.sin(rad))
+            draw.ellipse([x-4,y-4,x+4,y+4], fill=cor_acc)
+    elif emocao in ["esperanca","alivio","empatia","calmo"]:
+        for dx,dy in [(-hr*1.6,-hr*1.3),(hr*1.6,-hr*1.3),(0,-hr*1.9)]:
+            sx,sy=int(cx+dx),int(hy+dy)
+            draw.ellipse([sx-14,sy-14,sx+14,sy+14], fill=cor_acc)
+            draw.line([sx-22,sy,sx+22,sy], fill=cor_acc, width=3)
+            draw.line([sx,sy-22,sx,sy+22], fill=cor_acc, width=3)
+    elif emocao == "melancolico":
+        for i in range(6):
+            rx=cx-60+i*24; draw.line([rx,hy+hr+4,rx-6,hy+hr+30], fill=cor_acc, width=3)
+    else:
+        draw.arc([cx-hr*1.3,hy-hr*1.3,cx+hr*1.3,hy+hr*1.3], 0, 180, fill=cor_acc, width=3)
+
+def gerar_cena_pillow(emocao, cena_idx, total_cenas, video_id):
+    """Gera cena 2D Psych2Go com personagem sem rosto — rica variacao"""
+    random.seed(cena_idx*17 + video_id*3)
+    # Rotacionar paleta para variedade entre cenas
+    em_idx = (EMOCAO_KEYS.index(emocao) + cena_idx) % len(EMOCAO_KEYS)
+    em_cena = EMOCAO_KEYS[em_idx]
+    bg_c, char_c, acc_c = PALETAS[em_cena]
+
     W, H = 1344, 768
-    img = Image.new("RGB", (W, H), bg)
+    img = Image.new("RGB", (W,H), bg_c)
     draw = ImageDraw.Draw(img)
-    
-    # Gradiente suave no fundo
+    # Gradiente
     for y in range(H):
-        alpha = y / H
-        r = int(bg[0] * (1 - alpha * 0.1))
-        g = int(bg[1] * (1 - alpha * 0.1))
-        b = int(bg[2] * (1 - alpha * 0.05))
-        draw.line([(0, y), (W, y)], fill=(r, g, b))
-    
-    # Personagem humanóide SEM ROSTO (Psych2Go style)
-    cx, cy = W // 2, H // 2
-    
-    # Corpo (torso)
-    draw.ellipse([cx-70, cy-20, cx+70, cy+160], fill=char_color, outline=(*accent, 255), width=4)
-    
-    # Cabeça — círculo branco/pastel SEM ROSTO
-    head_r = 90
-    head_color = tuple(min(255, int(c * 1.3)) for c in char_color)
-    draw.ellipse([cx-head_r, cy-head_r*2-20, cx+head_r, cy-20], 
-                 fill=head_color, outline=(*accent, 255), width=4)
-    
-    # Cabelo estilizado
-    hair_color = tuple(max(0, c-40) for c in char_color)
-    draw.ellipse([cx-head_r+5, cy-head_r*2-30, cx+head_r-5, cy-head_r-10], 
-                 fill=hair_color)
-    draw.rectangle([cx-head_r+5, cy-head_r*2-15, cx+head_r-5, cy-head_r+10],
-                   fill=hair_color)
-    
-    # Braços
-    # Esquerdo
-    draw.ellipse([cx-140, cy+30, cx-60, cy+120], fill=char_color, outline=(*accent,255), width=3)
-    # Direito  
-    draw.ellipse([cx+60, cy+30, cx+140, cy+120], fill=char_color, outline=(*accent,255), width=3)
-    
-    # Pernas (parte inferior)
-    draw.ellipse([cx-60, cy+140, cx+10, cy+220], fill=char_color, outline=(*accent,255), width=3)
-    draw.ellipse([cx-10, cy+140, cx+60, cy+220], fill=char_color, outline=(*accent,255), width=3)
-    
-    # Expressão por emoção — apenas elementos abstratos ACIMA da cabeça
-    if emocao in ["ansioso", "urgente"]:
-        # Linhas de tensão em volta da cabeça
-        for angle in range(0, 360, 45):
-            rad = math.radians(angle)
-            x1 = cx + int(head_r * 1.1 * math.cos(rad))
-            y1 = (cy - head_r - 20) + int(head_r * 1.1 * math.sin(rad))
-            x2 = cx + int(head_r * 1.4 * math.cos(rad))
-            y2 = (cy - head_r - 20) + int(head_r * 1.4 * math.sin(rad))
-            draw.line([x1, y1, x2, y2], fill=accent, width=3)
-    elif emocao in ["esperanca", "alivio"]:
-        # Estrelinhas positivas
-        for dx, dy in [(-head_r*1.5, -head_r*2.5), (head_r*1.5, -head_r*2.5), (0, -head_r*3)]:
-            star_x, star_y = int(cx+dx), int(cy+dy)
-            draw.ellipse([star_x-12, star_y-12, star_x+12, star_y+12], fill=accent)
-    elif emocao in ["melancolico", "tenso"]:
-        # Nuvem escura acima
-        draw.ellipse([cx-60, cy-head_r*3-30, cx+60, cy-head_r*2-10], fill=accent)
-    
-    # Elementos decorativos no fundo
-    for i in range(8):
-        x = random.randint(50, W-50)
-        y = random.randint(50, H-50)
-        r = random.randint(5, 20)
-        alpha_color = tuple(min(255, int(c * 0.7)) for c in accent)
-        draw.ellipse([x-r, y-r, x+r, y+r], fill=alpha_color, width=0)
-    
-    # Sombra do personagem no chão
-    draw.ellipse([cx-80, cy+215, cx+80, cy+240], fill=tuple(max(0,c-30) for c in bg))
-    
-    # Salvar
-    path = f"/tmp/quantum_img_{video_id}.jpg"
-    img.save(path, "JPEG", quality=92)
+        f = 1.0-(y/H)*0.18
+        draw.line([(0,y),(W,y)], fill=tuple(int(c*f) for c in bg_c))
+    # Circulos decorativos
+    for _ in range(20):
+        cx2=random.randint(-60,W+60); cy2=random.randint(-60,H+60)
+        r2=random.randint(20,115)
+        soft=tuple(max(0,int(c*0.80)) for c in bg_c)
+        draw.ellipse([cx2-r2,cy2-r2,cx2+r2,cy2+r2], fill=soft)
+
+    comp = cena_idx % 7
+    pele = TONS_PELE[cena_idx % len(TONS_PELE)]
+
+    if comp == 5 and total_cenas > 3:
+        # Dois personagens (relacionamento)
+        desenhar_personagem(draw, W//3, H//2+10, pele, char_c, acc_c, cena_idx)
+        pele2 = TONS_PELE[(cena_idx+3) % len(TONS_PELE)]
+        char2 = tuple(min(255,c+50) for c in char_c)
+        acc2  = tuple(max(0,c-25) for c in acc_c)
+        desenhar_personagem(draw, W*2//3, H//2+10, pele2, char2, acc2, cena_idx+4)
+        draw.line([W//3+85, H//2, W*2//3-85, H//2], fill=acc_c, width=3)
+    elif comp == 6:
+        # Personagem pequeno em canto (solidao/reflexao)
+        desenhar_personagem(draw, W//4, H//2+20, pele, char_c, acc_c, cena_idx)
+    else:
+        posicoes_x = [W//2, W//3, W*2//3, W//4+80, W*3//4-80, W//2, W//2]
+        cx = posicoes_x[comp]
+        cy = H//2 + (comp%3-1)*15
+        desenhar_personagem(draw, cx, cy, pele, char_c, acc_c, cena_idx)
+        # Expressao abstrata
+        hr = 73; hy = cy - hr - 36
+        expressao_abstrata(draw, cx, hy, hr, em_cena, acc_c, cena_idx)
+
+    path = f"/tmp/cena_{video_id}_{cena_idx}.jpg"
+    img.save(path, "JPEG", quality=93)
     return path
 
-def gerar_imagem_nvidia(prompt, video_id):
-    """Tenta NVIDIA API com debug completo"""
-    if not NVIDIA_KEY:
-        print(f"    ⚠ NVIDIA_KEY vazia")
-        return None
-    
-    # Endpoint correto NVIDIA AI Foundation (2025)
+def tentar_nvidia(prompt, video_id, cena_idx):
+    if not NVIDIA_KEY: return None
     endpoints = [
-        "https://ai.api.nvidia.com/v1/genai/black-forest-labs/flux-schnell",
-        "https://integrate.api.nvidia.com/v1/images/generations",
+        ("https://integrate.api.nvidia.com/v1/images/generations",
+         {"model":"black-forest-labs/flux-schnell","prompt":prompt,
+          "n":1,"size":"1344x768","response_format":"b64_json"}),
+        ("https://ai.api.nvidia.com/v1/genai/black-forest-labs/flux-schnell",
+         {"prompt":prompt,"width":1344,"height":768,"num_inference_steps":4,
+          "guidance_scale":3.5,"num_images":1,"seed":random.randint(1,999999)}),
+        ("https://ai.api.nvidia.com/v1/genai/stabilityai/stable-diffusion-xl",
+         {"prompt":prompt,"width":1344,"height":768,"num_inference_steps":20,
+          "guidance_scale":7.0,"seed":random.randint(1,999999)}),
     ]
-    
-    for endpoint in endpoints:
+    for ep, payload in endpoints:
         try:
-            if "genai" in endpoint:
-                payload = {
-                    "prompt": prompt,
-                    "width": 1344, "height": 768,
-                    "num_inference_steps": 4,
-                    "guidance_scale": 3.5,  # CORRIGIDO: era 0.0
-                    "num_images": 1,
-                    "seed": random.randint(1, 999999)
-                }
-            else:
-                payload = {
-                    "model": "black-forest-labs/flux-schnell",
-                    "prompt": prompt,
-                    "n": 1, "size": "1344x768",
-                    "response_format": "b64_json"
-                }
-            
-            resp = requests.post(
-                endpoint,
-                headers={"Authorization": f"Bearer {NVIDIA_KEY}", "Content-Type": "application/json"},
-                json=payload, timeout=90
-            )
-            
-            print(f"    NVIDIA [{endpoint.split('/')[-2:]}] status={resp.status_code}")
-            
-            if resp.status_code != 200:
-                print(f"    NVIDIA erro body: {resp.text[:300]}")
+            r = requests.post(ep,
+                headers={"Authorization":f"Bearer {NVIDIA_KEY}","Content-Type":"application/json"},
+                json=payload, timeout=90)
+            print(f"    NVIDIA {ep.split('/')[-1]}: {r.status_code}")
+            if r.status_code != 200:
+                try: print(f"      {r.json().get('detail',r.text[:120])}")
+                except: print(f"      {r.text[:120]}")
                 continue
-            
-            data = resp.json()
-            # Tentar extrair base64
-            b64 = None
-            if "artifacts" in data:
-                b64 = data["artifacts"][0].get("base64", "")
-            elif "data" in data:
-                b64 = data["data"][0].get("b64_json", "")
-            
+            data = r.json()
+            b64 = (data.get("artifacts",[{}])[0].get("base64","") or
+                   data.get("data",[{}])[0].get("b64_json",""))
             if b64:
-                img_bytes = base64.b64decode(b64)
-                path = f"/tmp/nvidia_img_{video_id}.jpg"
-                with open(path, "wb") as f:
-                    f.write(img_bytes)
-                print(f"    ✅ NVIDIA ok: {len(img_bytes):,} bytes")
-                return path
-            else:
-                print(f"    NVIDIA sem base64: {list(data.keys())}")
-                
+                p = f"/tmp/nv_{video_id}_{cena_idx}.jpg"
+                with open(p,"wb") as f: f.write(base64.b64decode(b64))
+                print(f"    NVIDIA OK: {len(b64)//1024}KB")
+                return p
         except Exception as e:
-            print(f"    NVIDIA exception: {e}")
-    
+            print(f"    NVIDIA exc: {e}")
     return None
 
-def upload_imagem(path, video_id):
-    """Faz upload da imagem para Supabase storage"""
-    with open(path, "rb") as f:
-        img_bytes = f.read()
-    fname = f"v2/img_{video_id}_{int(time.time())}.jpg"
-    try:
-        sb.storage.from_("videos").upload(
-            fname, img_bytes,
-            file_options={"content-type": "image/jpeg", "x-upsert": "true"}
-        )
-        return f"{SB_URL}/storage/v1/object/public/videos/{fname}"
-    except Exception as e:
-        print(f"    Upload erro: {e}")
-        return None
+def gerar_prompt(titulo, trecho, emocao, cena_idx):
+    personagens = [
+        "Brazilian woman 25-30 medium brown skin dark wavy hair emotional",
+        "Brazilian man 28-35 olive skin short dark hair tense posture",
+        "Brazilian woman 35-45 Black skin natural afro hair thoughtful",
+        "Brazilian young man 22-28 tan skin casual worried expression",
+        "Brazilian woman 40-50 mixed race shoulder hair reflective",
+    ]
+    paletas_desc = {
+        "tenso":"warm coral red pastel background",
+        "ansioso":"pale yellow #FFF3A3 background",
+        "melancolico":"dusty blue #B0C4DE background",
+        "esperanca":"soft mint green background",
+        "empatia":"warm peach background",
+        "contemplativo":"soft lavender background",
+    }
+    expressoes = {
+        "tenso":"tense suspicious expression narrowed eyes",
+        "ansioso":"wide anxious eyes worried trembling",
+        "melancolico":"sad downcast eyes contemplative",
+        "esperanca":"hopeful warm smile gentle eyes",
+        "empatia":"compassionate smile kind understanding",
+        "contemplativo":"thoughtful pensive tilted head",
+    }
+    p = personagens[cena_idx % len(personagens)]
+    pal = paletas_desc.get(emocao,"soft pastel background")
+    expr = expressoes.get(emocao,"expressive emotional face")
+    return (f"flat 2D vector art illustration educational animation style, "
+            f"medium shot, {p}, {expr}, {pal}, bold clean outlines, "
+            f"Psych2Go cartoon style, single character, NO TEXT NO WORDS NO LETTERS "
+            f"NO NUMBERS NO LOGOS NO WATERMARKS ZERO TEXT IN IMAGE")
 
-def get_videos_pendentes():
+def upload_img(path, video_id, cena_idx):
+    fname = f"v2/img_{video_id}_{cena_idx}_{int(time.time())}.jpg"
+    with open(path,"rb") as f: data = f.read()
+    try:
+        sb.storage.from_("videos").upload(fname, data,
+            file_options={"content-type":"image/jpeg","x-upsert":"true"})
+        return f"{SB_URL}/storage/v1/object/public/videos/{fname}"
+    except:
+        r = requests.post(f"{SB_URL}/storage/v1/object/videos/{fname}",
+            headers={"apikey":SB_ANON,"Authorization":f"Bearer {SB_ANON}",
+                     "Content-Type":"image/jpeg","x-upsert":"true"}, data=data)
+        if r.status_code in [200,201]:
+            return f"{SB_URL}/storage/v1/object/public/videos/{fname}"
+    return None
+
+def get_pendentes():
     r = sb.table("content_pipeline").select(
-        "id,title,script,audio_url,metadata,score"
-    ).eq("status", "mp4_ready").is_("mp4_url", None).order("pub_order").limit(REGRAS["batch_size"]).execute()
+        "id,title,script,audio_url,metadata,duracao_min,pub_order"
+    ).eq("status","mp4_ready").is_("mp4_url",None).order("pub_order").limit(5).execute()
     return r.data or []
 
-def processar_video(v):
+def processar(v):
     vid_id = v["id"]
-    title  = v.get("title", "")
-    script = v.get("script", "") or ""
-    audio  = v.get("audio_url", "")
-    
+    title  = v.get("title","")
+    script = v.get("script","") or ""
+    audio  = v.get("audio_url","")
+    dur    = float(v.get("duracao_min") or 0.9)
     print(f"\n  #{vid_id} {title[:55]}")
-    
     if not audio:
-        print(f"    ⚠ sem audio_url — pulando")
-        return False
-    
+        print("    sem audio — pulando"); return False
     emocao = detectar_emocao(title, script)
-    print(f"    emoção: {emocao}")
-    
-    prompt = gerar_prompt_quantico(title, script, emocao)
-    
-    # 1. Tentar NVIDIA
-    img_path = gerar_imagem_nvidia(prompt, vid_id)
-    fonte = "nvidia_flux"
-    
-    # 2. Fallback: Pillow 2D Psych2Go style
-    if not img_path:
-        print(f"    → usando fallback Pillow (Psych2Go 2D style)")
-        img_path = gerar_imagem_pillow(emocao, vid_id)
-        fonte = "pillow_psych2go"
-    
-    # Upload
-    img_url = upload_imagem(img_path, vid_id)
-    if not img_url:
-        print(f"    ⚠ upload falhou")
-        return False
-    
-    print(f"    ✓ imagem ({fonte}): {img_url}")
-    
-    # Atualizar banco
+    cenas  = dividir_cenas(script, dur)
+    print(f"    emocao={emocao} | {len(cenas)} cenas")
+    urls = []
+    for i, trecho in enumerate(cenas):
+        print(f"    cena {i+1}/{len(cenas)}...")
+        prompt = gerar_prompt(title, trecho, emocao, i)
+        img = tentar_nvidia(prompt, vid_id, i)
+        fonte = "nvidia"
+        if not img:
+            img = gerar_cena_pillow(emocao, i, len(cenas), vid_id)
+            fonte = "pillow"
+        url = upload_img(img, vid_id, i)
+        if url:
+            urls.append(url)
+            print(f"      cena {i+1} ({fonte}) OK")
+        time.sleep(0.3)
+    if not urls:
+        print("    sem imagens"); return False
     sb.table("content_pipeline").update({
-        "status": "video_ready",
-        "mp4_url": None,
-        "metadata": (v.get("metadata") or {}) | {
-            "quantum_image": img_url,
-            "emocao": emocao,
-            "render_method": f"flux_kenburns_{fonte}",
-            "prompt_quantico": prompt[:200],
-            "processado_em": int(time.time()),
-            "cerebro_v14": True,
+        "status":"video_ready","mp4_url":None,
+        "metadata":(v.get("metadata") or {}) | {
+            "quantum_images":urls,"quantum_image":urls[0],
+            "n_cenas":len(urls),"emocao":emocao,
+            "render_method":"multi_scene_psych2go_v15",
+            "processado_em":int(time.time()),
         }
-    }).eq("id", vid_id).execute()
-    print(f"    ✓ video_ready salvo")
+    }).eq("id",vid_id).execute()
+    print(f"    video_ready com {len(urls)} cenas")
     return True
 
 def main():
-    print("=== RENDER QUANTICO V2 — Cerebro V14.2 ===")
-    print(f"NVIDIA_KEY: {'OK' if NVIDIA_KEY else 'AUSENTE'}")
-    print(f"Regras: long={REGRAS['long_target']}s | short={REGRAS['short_target']}s")
-    
-    videos = get_videos_pendentes()
-    print(f"Encontrados {len(videos)} vídeos para render")
-    
+    print("=== RENDER QUANTUM V15 multi-cena Psych2Go ===")
+    print(f"NVIDIA: {'OK' if NVIDIA_KEY else 'ausente pillow fallback'}")
+    videos = get_pendentes()
+    print(f"Videos: {len(videos)}")
     ok = 0
     for v in videos:
         try:
-            if processar_video(v):
-                ok += 1
+            if processar(v): ok += 1
             time.sleep(1)
-        except Exception as e:
-            print(f"  ERRO #{v.get('id')}: {e}")
-    
-    print(f"\nConcluido: {ok}/{len(videos)} vídeos processados")
-    
-    try:
-        sb.table("cerebro_evolucao").insert({
-            "versao": "v14.2",
-            "tipo": "render_quantico",
-            "descricao": f"Batch render V2 corrigido: {ok}/{len(videos)} ok",
-            "mudancas": {"batch": ok, "total": len(videos)}
-        }).execute()
-    except: pass
+        except:
+            import traceback; traceback.print_exc()
+    print(f"Concluido: {ok}/{len(videos)}")
 
 if __name__ == "__main__":
     main()
