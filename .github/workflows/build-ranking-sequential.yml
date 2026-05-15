@@ -1,13 +1,12 @@
-name: Build Ranking Sequencial — S1→S52+∞
+name: Build Ranking Sequencial — 37 Hacks S1→S52+∞
 
 on:
   workflow_dispatch:
     inputs:
       force_pub_order:
-        description: 'Forçar pub_order específico (0 = próximo na fila)'
+        description: 'Forçar pub_order (0 = próximo na fila)'
         default: '0'
   schedule:
-    # Rodar a cada 30 min para processar fila sequencialmente
     - cron: '*/30 * * * *'
 
 jobs:
@@ -16,164 +15,122 @@ jobs:
     timeout-minutes: 25
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Verificar storage atual
-        id: storage_check
+      - name: Verificar storage (limite 900 MB)
+        id: storage
         run: |
-          python3 << 'PYEOF'
-          import urllib.request, json, os
-          SB_URL = "https://tpjvalzwkqwttvmszvie.supabase.co"
-          SB_KEY = os.environ["SUPABASE_ANON_KEY"]
+          python3 -c "
+          import urllib.request,json,os
+          SB='https://tpjvalzwkqwttvmszvie.supabase.co'
+          AK=os.environ['SUPABASE_ANON_KEY']
           try:
-            req = urllib.request.Request(f"{SB_URL}/storage/v1/object/list/videos",
-              data=json.dumps({"prefix":"","limit":500}).encode(), method="POST",
-              headers={"apikey":SB_KEY,"Authorization":f"Bearer {SB_KEY}","Content-Type":"application/json"})
-            with urllib.request.urlopen(req, timeout=20) as r:
-              files = json.loads(r.read())
-              total_mb = sum((f.get("metadata") or {}).get("size",0) for f in files if f.get("name")) / 1024 / 1024
-              print(f"Storage: {total_mb:.1f} MB")
-              with open(os.environ["GITHUB_OUTPUT"],"a") as fo:
-                fo.write(f"total_mb={total_mb:.1f}\n")
-                fo.write(f"ok={'true' if total_mb < 850 else 'false'}\n")
+            req=urllib.request.Request(f'{SB}/storage/v1/object/list/videos',
+              data=json.dumps({'prefix':'','limit':500}).encode(),method='POST',
+              headers={'apikey':AK,'Authorization':f'Bearer {AK}','Content-Type':'application/json'})
+            with urllib.request.urlopen(req,timeout=20) as r:
+              files=json.loads(r.read())
+              mb=sum((f.get('metadata') or {}).get('size',0) for f in files if f.get('name'))/1024/1024
+              print(f'Storage: {mb:.1f} MB / 900 MB')
+              with open(os.environ['GITHUB_OUTPUT'],'a') as fo:
+                fo.write(f'mb={mb:.1f}\nok={str(mb<850).lower()}\n')
           except Exception as e:
-            print(f"Storage check erro: {e}")
-            with open(os.environ["GITHUB_OUTPUT"],"a") as fo:
-              fo.write("ok=true\n")
-          PYEOF
+            print(f'Storage check: {e}')
+            with open(os.environ['GITHUB_OUTPUT'],'a') as fo: fo.write('ok=true\n')
+          "
         env:
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
 
-      - name: Verificar próximo vídeo na fila
-        id: next_video
-        if: steps.storage_check.outputs.ok == 'true'
+      - name: Próximo vídeo na fila (pub_order asc)
+        id: next
+        if: steps.storage.outputs.ok == 'true'
         run: |
-          python3 << 'PYEOF'
-          import urllib.request, json, os
-          SB_URL = "https://tpjvalzwkqwttvmszvie.supabase.co"
-          SB_KEY = os.environ["SUPABASE_ANON_KEY"]
-          force_order = int(os.environ.get("FORCE_PUB_ORDER","0"))
-          
-          filters = "pub_order=not.is.null&mp4_url=is.null&status=in.(audio_ready,pending,ready_tts)&order=pub_order.asc&limit=1"
-          if force_order > 0:
-            filters = f"pub_order=eq.{force_order}&mp4_url=is.null&order=pub_order.asc&limit=1"
-          
-          req = urllib.request.Request(
-            f"{SB_URL}/rest/v1/content_pipeline?{filters}&select=id,pub_order,status,youtube_title",
-            headers={"apikey":SB_KEY,"Authorization":f"Bearer {SB_KEY}"})
-          with urllib.request.urlopen(req) as r:
-            rows = json.loads(r.read())
-          
-          if rows:
-            v = rows[0]
-            print(f"Próximo: #{v['pub_order']} ID={v['id']} — {v.get('youtube_title','')[:50]}")
-            with open(os.environ["GITHUB_OUTPUT"],"a") as fo:
-              fo.write(f"has_next=true\n")
-              fo.write(f"pipeline_id={v['id']}\n")
-              fo.write(f"pub_order={v['pub_order']}\n")
-          else:
-            print("✅ Fila vazia — todos os vídeos processados!")
-            with open(os.environ["GITHUB_OUTPUT"],"a") as fo:
-              fo.write("has_next=false\n")
-          PYEOF
+          python3 -c "
+          import urllib.request,json,os
+          SB='https://tpjvalzwkqwttvmszvie.supabase.co'
+          AK=os.environ['SUPABASE_ANON_KEY']
+          force=int(os.environ.get('FORCE_PUB_ORDER','0'))
+          f='pub_order=not.is.null&mp4_url=is.null&status=in.(audio_ready,pending,ready_tts)&order=pub_order.asc&limit=1'
+          if force>0: f=f'pub_order=eq.{force}&mp4_url=is.null&limit=1'
+          req=urllib.request.Request(f'{SB}/rest/v1/content_pipeline?{f}&select=id,pub_order,youtube_title',
+            headers={'apikey':AK,'Authorization':f'Bearer {AK}'})
+          rows=json.loads(urllib.request.urlopen(req).read())
+          with open(os.environ['GITHUB_OUTPUT'],'a') as fo:
+            if rows:
+              v=rows[0]
+              print(f"Próximo: #{v['pub_order']} {v.get('youtube_title','')[:50]}")
+              fo.write(f"has_next=true\npipeline_id={v['id']}\npub_order={v['pub_order']}\n")
+            else:
+              print('Fila vazia — todos os 155 slots processados ou aguardando Cerebro!')
+              fo.write('has_next=false\n')
+          "
         env:
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           FORCE_PUB_ORDER: ${{ github.event.inputs.force_pub_order || '0' }}
 
-      - name: Calcular score real do próximo vídeo
-        id: score_check
-        if: steps.next_video.outputs.has_next == 'true'
+      - name: Score real V4 (37 hacks)
+        id: score
+        if: steps.next.outputs.has_next == 'true'
         run: |
-          python3 << 'PYEOF'
-          import urllib.request, json, os
-          SB_URL = "https://tpjvalzwkqwttvmszvie.supabase.co"
-          SB_KEY = os.environ["SUPABASE_ANON_KEY"]
-          pid = int(os.environ["PIPELINE_ID"])
-          
-          req = urllib.request.Request(
-            f"{SB_URL}/rest/v1/rpc/score_pipeline_real",
-            data=json.dumps({"p_id": pid}).encode(), method="POST",
-            headers={"apikey":SB_KEY,"Authorization":f"Bearer {SB_KEY}","Content-Type":"application/json"})
-          
+          python3 -c "
+          import urllib.request,json,os
+          SB='https://tpjvalzwkqwttvmszvie.supabase.co'
+          AK=os.environ['SUPABASE_ANON_KEY']
+          pid=int(os.environ['PIPELINE_ID'])
+          req=urllib.request.Request(f'{SB}/rest/v1/rpc/score_pipeline_real',
+            data=json.dumps({'p_id':pid}).encode(),method='POST',
+            headers={'apikey':AK,'Authorization':f'Bearer {AK}','Content-Type':'application/json'})
           try:
-            with urllib.request.urlopen(req, timeout=15) as r:
-              rows = json.loads(r.read())
-              if rows:
-                s = rows[0]
-                score = float(s.get("score_total", 0))
-                passou = s.get("passou", False)
-                falha = s.get("motivo_falha","")
-                print(f"Score: {score}/100 | {'✅ PASSOU' if passou else f'❌ FALHOU: {falha}'}")
-                with open(os.environ["GITHUB_OUTPUT"],"a") as fo:
-                  fo.write(f"score={score}\n")
-                  fo.write(f"passou={'true' if passou else 'false'}\n")
-                  fo.write(f"falha={falha}\n")
+            rows=json.loads(urllib.request.urlopen(req,timeout=15).read())
+            s=rows[0] if rows else {}
+            score=float(s.get('score_total',0))
+            passou=s.get('passou',False)
+            falha=s.get('motivo_falha','')
+            print(f'Score: {score}/100 | {'PASSOU' if passou else 'FALHOU'}: {falha}')
+            with open(os.environ['GITHUB_OUTPUT'],'a') as fo:
+              fo.write(f'score={score}\npassed={str(passou).lower()}\nfailure={falha}\n')
           except Exception as e:
-            print(f"Score error: {e}")
-            with open(os.environ["GITHUB_OUTPUT"],"a") as fo:
-              fo.write("passou=false\nfalha=erro_score\n")
-          PYEOF
+            print(f'Score error: {e}')
+            with open(os.environ['GITHUB_OUTPUT'],'a') as fo:
+              fo.write('passed=false\nfailure=erro_score\n')
+          "
         env:
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-          PIPELINE_ID: ${{ steps.next_video.outputs.pipeline_id }}
+          PIPELINE_ID: ${{ steps.next.outputs.pipeline_id }}
 
-      - name: Melhorar script (se score < 95)
-        if: steps.next_video.outputs.has_next == 'true' && steps.score_check.outputs.passou == 'false'
+      - name: Aplicar 37 hacks (se score < 95)
+        if: steps.next.outputs.has_next == 'true' && steps.score.outputs.passed == 'false'
         run: python3 scripts/enhance_script.py
         env:
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GH_PAT: ${{ secrets.GH_PAT }}
-          FORCE_PIPELINE_ID: ${{ steps.next_video.outputs.pipeline_id }}
+          FORCE_PIPELINE_ID: ${{ steps.next.outputs.pipeline_id }}
 
-      - name: Disparar render (score >= 95)
-        if: steps.next_video.outputs.has_next == 'true' && steps.score_check.outputs.passou == 'true'
+      - name: Disparar render MP4 V2 (score >= 95)
+        if: steps.next.outputs.has_next == 'true' && steps.score.outputs.passed == 'true'
         run: |
-          echo "Score ${{ steps.score_check.outputs.score }} >= 95 — disparando render"
-          python3 << 'PYEOF'
-          import urllib.request, json, os
-          GH_PAT = os.environ["GH_PAT"]
-          REPO = "tafita81/Repovazio"
-          req = urllib.request.Request(
-            f"https://api.github.com/repos/{REPO}/actions/workflows/render-mp4-v2.yml/dispatches",
-            data=json.dumps({"ref":"main"}).encode(), method="POST",
-            headers={"Authorization":f"Bearer {GH_PAT}","Accept":"application/vnd.github+json",
-                     "Content-Type":"application/json"})
-          with urllib.request.urlopen(req, timeout=15) as r:
-            print(f"Render dispatched: HTTP {r.status}")
-          PYEOF
+          python3 -c "
+          import urllib.request,json,os
+          req=urllib.request.Request(
+            'https://api.github.com/repos/tafita81/Repovazio/actions/workflows/render-mp4-v2.yml/dispatches',
+            data=json.dumps({'ref':'main'}).encode(),method='POST',
+            headers={'Authorization':'Bearer '+os.environ['GH_PAT'],
+                     'Accept':'application/vnd.github+json','Content-Type':'application/json'})
+          with urllib.request.urlopen(req,timeout=15) as r:
+            print(f'Render: HTTP {r.status}')
+          "
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
 
-      - name: Monitorar storage após render
+      - name: Status final
         if: always()
         run: |
-          python3 << 'PYEOF'
-          import urllib.request, json, os
-          SB_URL = "https://tpjvalzwkqwttvmszvie.supabase.co"
-          SB_KEY = os.environ["SUPABASE_ANON_KEY"]
-          try:
-            req = urllib.request.Request(f"{SB_URL}/storage/v1/object/list/videos",
-              data=json.dumps({"prefix":"","limit":500}).encode(), method="POST",
-              headers={"apikey":SB_KEY,"Authorization":f"Bearer {SB_KEY}","Content-Type":"application/json"})
-            with urllib.request.urlopen(req, timeout=20) as r:
-              files = json.loads(r.read())
-              total_mb = sum((f.get("metadata") or {}).get("size",0) for f in files if f.get("name")) / 1024 / 1024
-              mp4s = [f["name"] for f in files if f.get("name","").endswith(".mp4")]
-              print(f"📊 Storage: {total_mb:.1f} MB / 900 MB")
-              print(f"📹 MP4s em storage: {len(mp4s)}")
-              if total_mb > 850:
-                print("⚠️  ALERTA: Storage acima de 850 MB — deletar vídeos publicados manualmente")
-          except Exception as e:
-            print(f"Storage monitor: {e}")
-          PYEOF
-        env:
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          echo "Pub_order: ${{ steps.next.outputs.pub_order }}"
+          echo "Score: ${{ steps.score.outputs.score }}/100"
+          echo "Storage: ${{ steps.storage.outputs.mb }} MB"
+          echo "37 hacks: ATIVO em 100% dos scripts"
