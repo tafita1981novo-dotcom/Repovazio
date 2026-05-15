@@ -27,7 +27,7 @@ def gerar_fish_audio(script, video_id):
     """Fish Audio API — gratuita, vozes cinematograficas"""
     if not FISH_KEY:
         print("    Fish Audio key ausente")
-        return None
+        return None, None
     for voice_id in FISH_VOICES:
         try:
             r = requests.post(
