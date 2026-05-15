@@ -1,0 +1,28 @@
+name: Render Viral #683 — Narcisismo (V5)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+
+      - name: Install
+        run: |
+          pip install pillow requests supabase --quiet
+          sudo apt-get install -y ffmpeg --quiet
+
+      - name: Render Viral 683
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python3 scripts/render_viral_683.py
+
+      - name: Done
+        run: echo "Render viral #683 concluido - $(date)"
