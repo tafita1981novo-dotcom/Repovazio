@@ -274,7 +274,7 @@ def desenhar_lower_third(draw):
                              fill=(26, 26, 42))
     # ψ icon
     draw.text((bx+14, by+12), "ψ", fill=(124,58,237))
-    draw.text((bx+40, by+12), "Daniela Coelho | Psicóloga Clínica",
+    draw.text((bx+40, by+12), "Daniela Coelho | Saude Mental",
                fill=(240,240,255))
     draw.text((bx+40, by+40), "@psidanielacoelho", fill=(160,130,210))
 
