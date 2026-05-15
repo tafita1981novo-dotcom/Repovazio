@@ -103,7 +103,8 @@ def boneca(draw,cx,cy,pele,cab,roupa,expr="neutro",pose="pe",sc=1.0):
     draw.ellipse([hx-hr-3,hy-hr-5,hx+hr+3,hy-int(hr*0.22)],fill=cab)
     # Fios laterais (feminino)
     for sgn in[-1,1]:
-        draw.rounded_rectangle([hx+sgn*(hr-8),hy-int(hr*0.3),hx+sgn*(hr+8),hy+int(hr*0.6)],radius=8,fill=cab)
+        x_a=min(hx+sgn*(hr-8),hx+sgn*(hr+8));x_b=max(hx+sgn*(hr-8),hx+sgn*(hr+8))
+        draw.rounded_rectangle([x_a,hy-int(hr*0.3),x_b,hy+int(hr*0.6)],radius=8,fill=cab)
     # Coque no topo
     draw.ellipse([hx-int(hr*0.4),hy-hr-int(hr*0.45),hx+int(hr*0.4),hy-hr+int(hr*0.1)],fill=cab)
     rosto_fem(draw,hx,hy,hr,pele,expr)
