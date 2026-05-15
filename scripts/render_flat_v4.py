@@ -1,362 +1,516 @@
 #!/usr/bin/env python3
 """
-render_flat_v4.py — Cerebro V4 — Estilo School of Life + Kurzgesagt
-DNA Visual:
-  - Fundos coloridos e quentes (NAO ESCUROS)
-  - Personagens 2D flat com rosto expressivo (olhos + boca)
-  - Elementos de cena ricos (sol, nuvens, plantas, objetos)
-  - Paletas vibrantes por emocao
-  - Composicoes variadas por cena
-  - Estilo ilustrativo educativo premium
+render_flat_v4.py V2 — CONTEXTUAL SCENE ENGINE
+Imagens refletem EXATAMENTE o que é falado no script.
+Personagens do elenco fixo com tons de pele, props e poses por cena.
 """
-import os, json, time, requests, base64, random, math
-from PIL import Image, ImageDraw
-import numpy as np
+import os, re, time, random, math, base64, json, io, requests
+from PIL import Image, ImageDraw, ImageFilter
 from supabase import create_client
 
-SB_URL = os.environ["SUPABASE_URL"]
-SB_KEY = os.environ["SUPABASE_KEY"]
+SB_URL  = os.environ.get("SUPABASE_URL","")
+SB_KEY  = os.environ.get("SUPABASE_KEY","")
+NVIDIA  = os.environ.get("NVIDIA_API_KEY","")
 sb = create_client(SB_URL, SB_KEY)
-SB_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwanZhbHp3a3F3dHR2bXN6dmllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMzUyOTMsImV4cCI6MjA5MTYxMTI5M30.UEgUo0Mw15ihQZykLAY5QApRzgTXkfIewZFzIgwao3Q"
-NVIDIA_KEY = os.environ.get("NVIDIA_API_KEY","")
 
-# PALETAS VIBRANTES (School of Life / Kurzgesagt)
-PALETAS = {
-    "narcis":  {"bg":(255,235,210), "char":(220,80,60),  "acc":(120,40,20), "sky":(255,200,150)},
-    "manipu":  {"bg":(255,235,210), "char":(220,80,60),  "acc":(120,40,20), "sky":(255,200,150)},
-    "toxico":  {"bg":(255,235,210), "char":(220,80,60),  "acc":(120,40,20), "sky":(255,200,150)},
-    "trauma":  {"bg":(225,230,255), "char":(90,100,200), "acc":(40,50,130), "sky":(180,190,240)},
-    "ansio":   {"bg":(255,248,220), "char":(240,160,30), "acc":(180,100,0), "sky":(255,230,150)},
-    "medo":    {"bg":(255,248,220), "char":(240,160,30), "acc":(180,100,0), "sky":(255,230,150)},
-    "cura":    {"bg":(220,248,220), "char":(60,170,60),  "acc":(20,100,20), "sky":(150,230,150)},
-    "supera":  {"bg":(220,248,220), "char":(60,170,60),  "acc":(20,100,20), "sky":(150,230,150)},
-    "amor":    {"bg":(255,220,230), "char":(220,80,120), "acc":(160,30,70), "sky":(255,180,200)},
-    "autoest": {"bg":(215,240,255), "char":(50,140,220), "acc":(10,80,160), "sky":(150,210,255)},
-    "solidao": {"bg":(230,225,245), "char":(120,90,180), "acc":(70,40,120), "sky":(190,180,220)},
-    "padrao":  {"bg":(255,245,220), "char":(240,160,50), "acc":(180,90,0),  "sky":(255,220,150)},
+W, H = 1080, 1920
+
+# ── ELENCO FIXO (8 personagens, tons de pele, roupas) ──────────────────────
+ELENCO = {
+    "renata":  {"pele":(218,175,130),"cabelo":(90,55,20),"roupa":(220,70,70),  "saias":True},
+    "marina":  {"pele":(230,188,148),"cabelo":(160,110,55),"roupa":(180,80,160),"saias":True},
+    "sofia":   {"pele":(235,192,152),"cabelo":(145,95,45),"roupa":(200,160,40), "saias":True},
+    "lara":    {"pele":(205,158,112),"cabelo":(100,65,28),"roupa":(80,160,180), "saias":True},
+    "ana":     {"pele":(242,200,160),"cabelo":(190,140,75),"roupa":(180,60,160),"saias":True},
+    "lucas":   {"pele":(182,135,90), "cabelo":(55,32,12),"roupa":(55,80,200),   "saias":False},
+    "carlos":  {"pele":(165,118,78), "cabelo":(40,24,8), "roupa":(40,140,80),   "saias":False},
+    "rafael":  {"pele":(188,142,98), "cabelo":(62,38,15),"roupa":(70,100,210),  "saias":False},
+    "default": {"pele":(210,168,120),"cabelo":(90,55,20),"roupa":(220,80,60),   "saias":True},
 }
 
-TONS_PELE = [
-    (255,218,185), (245,198,160), (225,175,130),
-    (200,148,100), (175,115,75),  (150,90,55),
-    (120,70,40),   (95,50,25),
+# ── PALETAS DE FUNDO POR EMOÇÃO ────────────────────────────────────────────
+PALETAS = {
+    "narcis":   {"top":(255,180,160),"bot":(255,220,200),"geo":(220,80,60)},
+    "ansied":   {"top":(180,220,255),"bot":(210,235,255),"geo":(70,130,200)},
+    "burnout":  {"top":(255,210,170),"bot":(255,235,210),"geo":(200,120,40)},
+    "depress":  {"top":(190,200,220),"bot":(220,225,240),"geo":(100,110,160)},
+    "trauma":   {"top":(220,190,255),"bot":(240,220,255),"geo":(140,70,200)},
+    "cura":     {"top":(180,240,200),"bot":(210,255,220),"geo":(60,180,100)},
+    "impostor": {"top":(255,220,170),"bot":(255,240,210),"geo":(200,150,40)},
+    "padrao":   {"top":(255,245,180),"bot":(255,250,220),"geo":(180,140,40)},
+}
+
+# ── MAPA PALAVRA→CENA ──────────────────────────────────────────────────────
+CENA_MAP = [
+    (["cama","acordar","dormir","levantar"],       "cama"),
+    (["celular","telefone","mensagem","tela"],      "celular"),
+    (["trabalho","computador","reunião","startup"], "escritorio"),
+    (["laudo","médic","hospital","jaleco"],         "medico"),
+    (["casal","namorad","casad","juntos"],          "casal"),
+    (["criança","infância","menin"],                "crianca"),
+    (["chorar","lágrima","desabar","dor"],          "emocao_triste"),
+    (["sorrir","sorriso","alegre","celebr"],        "emocao_feliz"),
+    (["ansiedade","coração","disparar","tremer"],   "ansiedade"),
+    (["respirar","calma","paz","transformar"],      "cura"),
+    (["cérebro","neurô","ciência","pesquisa"],      "ciencia"),
+    (["espelh","reflexo","descobrir","verdade"],    "revelacao"),
 ]
 
-def detectar_tema(titulo, script):
-    t = (titulo + " " + script[:300]).lower()
-    for tema in PALETAS:
-        if tema in t: return tema
+def detectar_tema(title, script):
+    t = (title + " " + script[:200]).lower()
+    if any(w in t for w in ["narcis","manipul","gaslight"]): return "narcis"
+    if any(w in t for w in ["celular","apego","ansioso","trauma"]): return "ansied"
+    if any(w in t for w in ["burnout","cama","neurológ","córtex"]): return "burnout"
+    if any(w in t for w in ["depress","silencio","sorri","chora"]): return "depress"
+    if any(w in t for w in ["impostor","perfeccion","fraude","laudo"]): return "impostor"
+    if any(w in t for w in ["trauma","infância","criança"]): return "trauma"
     return "padrao"
 
-def dividir_cenas(script, dur_min):
-    paras = [p.strip() for p in script.split("\n") if p.strip()]
-    if not paras: paras = [script]
-    n = 5 if dur_min < 3 else min(14, max(7, len(paras)))
-    chunk = max(1, len(paras)//n)
+def detectar_personagem(titulo, script):
+    nomes = ["renata","marina","sofia","lara","ana","lucas","carlos","rafael"]
+    ts = (titulo + " " + script[:300]).lower()
+    for n in nomes:
+        if n in ts:
+            return n
+    return "default"
+
+def detectar_tipo_cena(trecho):
+    t = trecho.lower()
+    for kws, tipo in CENA_MAP:
+        if any(k in t for k in kws):
+            return tipo
+    return "personagem"
+
+def dividir_script_cenas(script, n_cenas=6):
+    """Divide o script em N segmentos proporcionais."""
+    sentences = [s.strip() for s in re.split(r'[.!?\n]+', script) if len(s.strip()) > 15]
+    if not sentences: return [""] * n_cenas
+    per = max(1, len(sentences) // n_cenas)
     cenas = []
-    for i in range(0, len(paras), chunk):
-        cenas.append(" ".join(paras[i:i+chunk]))
-        if len(cenas) >= n: break
-    return cenas or [script]
+    for i in range(n_cenas):
+        start = i * per
+        end = start + per if i < n_cenas - 1 else len(sentences)
+        cenas.append(" ".join(sentences[start:end]))
+    return cenas
 
-def desenhar_sol(draw, W, H, cor_sol=(255,220,50), tamanho=80):
-    """Sol com raios — elemento School of Life / Kurzgesagt"""
-    x, y = int(W*0.88), int(H*0.10)
-    # Raios
-    for ang in range(0, 360, 30):
-        rad = math.radians(ang)
-        x1 = x + int((tamanho+8)*math.cos(rad))
-        y1 = y + int((tamanho+8)*math.sin(rad))
-        x2 = x + int((tamanho+22)*math.cos(rad))
-        y2 = y + int((tamanho+22)*math.sin(rad))
-        draw.line([x1,y1,x2,y2], fill=cor_sol, width=4)
-    draw.ellipse([x-tamanho,y-tamanho,x+tamanho,y+tamanho], fill=cor_sol)
+# ── PILLOW DRAW UTILS ──────────────────────────────────────────────────────
+def ellipse(draw, cx, cy, rw, rh, fill, outline=None, lw=0):
+    draw.ellipse([cx-rw, cy-rh, cx+rw, cy+rh], fill=fill,
+                 outline=outline, width=lw)
 
-def desenhar_nuvens(draw, W, H, cor=(255,255,255)):
-    """Nuvens simples estilo flat"""
-    clouds = [(int(W*0.2), int(H*0.12)), (int(W*0.55), int(H*0.07)), (int(W*0.75), int(H*0.15))]
-    for cx, cy in clouds:
-        r = 28
-        draw.ellipse([cx-r,cy-r,cx+r,cy+r], fill=cor)
-        draw.ellipse([cx-r+20,cy-r+8,cx+r+20,cy+r+8], fill=cor)
-        draw.ellipse([cx-r+10,cy-r-8,cx+r+10,cy+r-8], fill=cor)
+def rect(draw, x, y, w, h, fill, r=8):
+    draw.rounded_rectangle([x, y, x+w, y+h], radius=r, fill=fill)
 
-def desenhar_plantas(draw, W, H, cor_caule=(80,140,60), cor_folha=(60,180,60)):
-    """Plantas decorativas — educativo e amigavel"""
-    posicoes = [(int(W*0.05), H), (int(W*0.92), H), (int(W*0.15), H)]
-    for px, py in posicoes:
-        # Caule
-        draw.rectangle([px-5, py-80, px+5, py], fill=cor_caule)
-        # Folhas
-        for dy, dx in [(-70, 25), (-50, -25), (-35, 20)]:
-            draw.ellipse([px+dx-20, py+dy-15, px+dx+20, py+dy+15], fill=cor_folha)
+def lerp_c(c1, c2, t):
+    return tuple(int(c1[i]*(1-t)+c2[i]*t) for i in range(3))
 
-def desenhar_chao(draw, W, H, cor_bg, cor_char):
-    """Linha do chao estilo School of Life"""
-    cor_chao = tuple(max(0, int(c*0.85)) for c in cor_bg)
-    draw.rectangle([0, int(H*0.72), W, H], fill=cor_chao)
+# ── DESENHO DE PERSONAGEM ─────────────────────────────────────────────────
+def desenhar_personagem(draw, cx, cy, p, expressao="neutro", pose="pe", tamanho=1.0):
+    sc = tamanho
+    pele = p["pele"]; roupa = p["roupa"]; cab = p["cabelo"]
+    escuro = tuple(max(0,c-40) for c in pele)
+    sombra_roupa = tuple(max(0,c-50) for c in roupa)
 
-def desenhar_personagem(draw, cx, cy, pele, cor_char, cor_acc, seed, expressao="neutro"):
-    """
-    Personagem flat 2D com ROSTO — estilo School of Life
-    Expressoes: neutro, feliz, triste, surpreso, reflexivo
-    """
-    random.seed(seed*13)
-    pele_esc = tuple(max(0, c-30) for c in pele)
-    cabelo_c = TONS_PELE[(seed*3) % len(TONS_PELE)]
-    # Tons de cabelo (mais escuros que a pele)
-    cabelo_c = tuple(max(0, c-60) for c in pele)
+    head_r = int(52*sc)
+    body_h  = int(120*sc)
+    body_w  = int(84*sc)
+    leg_h   = int(90*sc)
+    arm_l   = int(80*sc)
 
-    altura = 220  # altura total do personagem
+    if pose == "deitado":
+        # Horizontal na cama
+        bx, by = cx - int(200*sc), cy
+        # Corpo
+        draw.rounded_rectangle([bx, by-int(30*sc), bx+int(200*sc), by+int(30*sc)], radius=20, fill=roupa)
+        # Cabeça
+        ellipse(draw, bx-head_r+10, by, head_r, head_r, pele)
+        # Rosto
+        _face(draw, bx-head_r+10, by, head_r, pele, expressao, escuro)
+        # Lençol
+        draw.rounded_rectangle([bx-int(30*sc), by, bx+int(230*sc), by+int(60*sc)], radius=15, fill=(240,240,255))
+        return
 
-    # PERNAS
-    draw.rounded_rectangle([cx-30, cy+60, cx-6, cy+120], radius=10, fill=pele_esc)
-    draw.rounded_rectangle([cx+6, cy+60, cx+30, cy+120], radius=10, fill=pele_esc)
+    if pose == "sentado":
+        cy += int(40*sc)
 
-    # SAPATOS
-    cor_sapato = tuple(max(0, c-40) for c in cor_char)
-    draw.ellipse([cx-38, cy+108, cx-2, cy+130], fill=cor_sapato)
-    draw.ellipse([cx+2, cy+108, cx+38, cy+130], fill=cor_sapato)
+    # Pernas
+    leg_w = int(24*sc)
+    for dx in [-int(18*sc), int(18*sc)]:
+        draw.rounded_rectangle([cx+dx-leg_w//2, cy, cx+dx+leg_w//2, cy+leg_h], radius=8, fill=sombra_roupa)
+        # Sapato
+        ellipse(draw, cx+dx, cy+leg_h, int(18*sc), int(10*sc), (50,40,30))
 
-    # CORPO (camisa/roupa)
-    draw.rounded_rectangle([cx-45, cy-10, cx+45, cy+70], radius=18, fill=cor_char)
+    # Corpo
+    draw.rounded_rectangle([cx-body_w//2, cy-body_h, cx+body_w//2, cy], radius=18, fill=roupa)
 
-    # BRACO ESQ
-    pose = seed % 5
-    if pose == 0:  # Neutro
-        draw.rounded_rectangle([cx-72, cy+5, cx-45, cy+60], radius=10, fill=pele, width=0)
-        draw.rounded_rectangle([cx+45, cy+5, cx+72, cy+60], radius=10, fill=pele, width=0)
-    elif pose == 1:  # Apontando
-        draw.rounded_rectangle([cx-72, cy-20, cx-45, cy+30], radius=10, fill=pele)
-        draw.rounded_rectangle([cx+45, cy+10, cx+72, cy+60], radius=10, fill=pele)
-    elif pose == 2:  # Bracos abertos
-        draw.rounded_rectangle([cx-90, cy+8, cx-45, cy+52], radius=10, fill=pele)
-        draw.rounded_rectangle([cx+45, cy+8, cx+90, cy+52], radius=10, fill=pele)
-    elif pose == 3:  # Mao no queixo (reflexivo)
-        draw.rounded_rectangle([cx-68, cy-5, cx-45, cy+40], radius=10, fill=pele)
-        draw.rounded_rectangle([cx+45, cy+12, cx+68, cy+55], radius=10, fill=pele)
-        draw.ellipse([cx-70, cy-20, cx-40, cy+10], fill=pele)  # mao no queixo
-    else:  # Uma mao acima
-        draw.rounded_rectangle([cx-72, cy+8, cx-45, cy+60], radius=10, fill=pele)
-        draw.rounded_rectangle([cx+45, cy-35, cx+72, cy+25], radius=10, fill=pele)
+    # Braços
+    for dx in [-body_w//2-int(5*sc), body_w//2+int(5*sc)]:
+        sign = -1 if dx < 0 else 1
+        ax, ay = cx+dx, cy-int(70*sc)
+        draw.line([ax, ay, ax+sign*int(30*sc), ay+int(arm_l//2)], fill=pele, width=int(18*sc))
+        ellipse(draw, ax+sign*int(32*sc), ay+int(arm_l//2), int(12*sc), int(12*sc), pele)
 
-    # PESCOCO
-    draw.rounded_rectangle([cx-15, cy-30, cx+15, cy+0], radius=7, fill=pele)
-
-    # CABECA
-    hr = 52
-    hy = cy - hr - 30
-
+    # Cabeça
+    ellipse(draw, cx, cy-body_h-head_r+int(15*sc), head_r, head_r, pele)
     # Cabelo
-    draw.ellipse([cx-hr-8, hy-hr-15, cx+hr+8, hy+20], fill=cabelo_c)
+    ellipse(draw, cx, cy-body_h-head_r*2+int(20*sc), head_r+int(4*sc), int(head_r*0.55), cab)
+
     # Rosto
-    draw.ellipse([cx-hr, hy-hr, cx+hr, hy+hr], fill=pele)
+    _face(draw, cx, cy-body_h-head_r+int(15*sc), head_r, pele, expressao, escuro)
 
-    # ROSTO COM EXPRESSAO (diferencial do dark V3!)
-    eye_y = hy - 8
-    # Olhos (sempre expressivos)
-    draw.ellipse([cx-22, eye_y-10, cx-6, eye_y+10], fill=(30,30,30))
-    draw.ellipse([cx+6, eye_y-10, cx+22, eye_y+10], fill=(30,30,30))
-    # Brilho nos olhos
-    draw.ellipse([cx-18, eye_y-8, cx-13, eye_y-3], fill=(255,255,255))
-    draw.ellipse([cx+10, eye_y-8, cx+15, eye_y-3], fill=(255,255,255))
+def _face(draw, cx, cy, hr, pele, expressao, escuro):
+    # Olhos
+    for dx in [-int(hr*0.35), int(hr*0.35)]:
+        ellipse(draw, cx+dx, cy-int(hr*0.15), int(hr*0.14), int(hr*0.16), (255,255,255))
+        ellipse(draw, cx+dx, cy-int(hr*0.15), int(hr*0.08), int(hr*0.09), (40,30,20))
+        # Brilho
+        ellipse(draw, cx+dx+int(hr*0.04), cy-int(hr*0.20), int(hr*0.04), int(hr*0.04), (255,255,255))
 
-    # Boca por expressao
-    if expressao == "feliz" or pose == 2:
-        draw.arc([cx-18, hy+5, cx+18, hy+28], 0, 180, fill=(60,30,10), width=4)
-    elif expressao == "triste" or pose == 3:
-        draw.arc([cx-16, hy+12, cx+16, hy+30], 180, 360, fill=(60,30,10), width=4)
-    elif expressao == "surpreso" or pose == 1:
-        draw.ellipse([cx-12, hy+8, cx+12, hy+28], fill=(60,30,10))
+    if expressao == "feliz":
+        # Sorriso
+        draw.arc([cx-int(hr*0.4), cy+int(hr*0.05), cx+int(hr*0.4), cy+int(hr*0.45)],
+                  0, 180, fill=escuro, width=int(hr*0.1))
+    elif expressao == "triste":
+        draw.arc([cx-int(hr*0.4), cy+int(hr*0.2), cx+int(hr*0.4), cy+int(hr*0.55)],
+                  180, 0, fill=escuro, width=int(hr*0.1))
+        # Lágrima
+        draw.polygon([
+            (cx-int(hr*0.35), cy+int(hr*0.05)),
+            (cx-int(hr*0.42), cy+int(hr*0.25)),
+            (cx-int(hr*0.28), cy+int(hr*0.25)),
+        ], fill=(100,160,255))
+    elif expressao == "ansioso":
+        draw.arc([cx-int(hr*0.3), cy+int(hr*0.15), cx+int(hr*0.3), cy+int(hr*0.45)],
+                  0, 180, fill=escuro, width=int(hr*0.08))
+        # Suor
+        draw.polygon([(cx+int(hr*0.45), cy-int(hr*0.2)),
+                      (cx+int(hr*0.5), cy-int(hr*0.05)),
+                      (cx+int(hr*0.38), cy-int(hr*0.05))], fill=(100,200,255))
+    elif expressao == "exausto":
+        # Olhos meio fechados
+        for dx in [-int(hr*0.35), int(hr*0.35)]:
+            draw.rectangle([cx+dx-int(hr*0.14), cy-int(hr*0.23),
+                             cx+dx+int(hr*0.14), cy-int(hr*0.12)], fill=pele)
+        draw.line([cx-int(hr*0.25), cy+int(hr*0.3), cx+int(hr*0.25), cy+int(hr*0.28)],
+                   fill=escuro, width=int(hr*0.07))
     else:  # neutro
-        draw.line([cx-14, hy+18, cx+14, hy+18], fill=(60,30,10), width=3)
+        draw.line([cx-int(hr*0.25), cy+int(hr*0.28), cx+int(hr*0.25), cy+int(hr*0.28)],
+                   fill=escuro, width=int(hr*0.07))
 
-    # Sobrancelhas por expressao
-    if pose == 2 or expressao == "feliz":
-        draw.arc([cx-22, eye_y-22, cx-6, eye_y-8], 180, 360, fill=(60,30,10), width=3)
-        draw.arc([cx+6, eye_y-22, cx+22, eye_y-8], 180, 360, fill=(60,30,10), width=3)
-    elif pose == 3 or expressao == "reflexivo":
-        draw.line([cx-22, eye_y-16, cx-6, eye_y-12], fill=(60,30,10), width=3)
-        draw.line([cx+6, eye_y-12, cx+22, eye_y-16], fill=(60,30,10), width=3)
+# ── PROPS / ELEMENTOS DE CENA ──────────────────────────────────────────────
+def desenhar_celular(draw, x, y, s=1.0):
+    cw, ch = int(50*s), int(90*s)
+    draw.rounded_rectangle([x-cw//2, y-ch//2, x+cw//2, y+ch//2], radius=10, fill=(30,30,40))
+    draw.rounded_rectangle([x-cw//2+6, y-ch//2+10, x+cw//2-6, y+ch//2-12], radius=4, fill=(100,180,255))
+    # Notificação
+    ellipse(draw, x+cw//2-8, y-ch//2+8, 10, 10, (220,50,50))
+    draw.text((x+cw//2-12, y-ch//2+2), "!", fill=(255,255,255))
 
-def desenhar_balao_fala(draw, cx, cy, cor_acc, cena_idx):
-    """Balao de fala opcional — estilo educativo"""
-    if cena_idx % 3 != 0: return  # so aparece em algumas cenas
-    bx, by = cx + 65, cy - 100
-    draw.rounded_rectangle([bx-5, by-15, bx+70, by+25], radius=10, fill=(255,255,255), outline=cor_acc, width=2)
-    # Ponteiro do balao
-    draw.polygon([(bx+5,by+25), (bx-5,by+15), (bx+20,by+25)], fill=(255,255,255))
-    draw.polygon([(bx+5,by+25), (bx-5,by+15), (bx+20,by+25)], outline=cor_acc, fill=None)
+def desenhar_cama(draw, cx, cy, s=1.0):
+    bw, bh = int(380*s), int(160*s)
+    # Estrutura
+    draw.rounded_rectangle([cx-bw//2, cy-bh//2, cx+bw//2, cy+bh//2], radius=20, fill=(160,120,80))
+    # Colchão
+    draw.rounded_rectangle([cx-bw//2+15, cy-bh//2+20, cx+bw//2-15, cy+bh//2-15], radius=12, fill=(240,235,255))
+    # Travesseiro
+    draw.rounded_rectangle([cx-bw//2+25, cy-bh//2+25, cx-bw//2+120, cy-bh//2+70], radius=8, fill=(255,255,255))
+    # Cabeceira
+    draw.rounded_rectangle([cx-bw//2, cy-bh//2-40, cx+bw//2, cy-bh//2+10], radius=15, fill=(130,90,50))
 
-def gerar_cena_flat(titulo, trecho, cena_idx, total_cenas, video_id, dur_min):
-    """
-    Gera cena flat 2D estilo School of Life + Kurzgesagt.
-    COLORIDA, EXPRESSIVA, COM PERSONAGENS COM ROSTO.
-    """
-    is_short = dur_min < 3
-    W, H = (1080, 1920) if is_short else (1920, 1080)
+def desenhar_coracao(draw, cx, cy, r, cor=(220,60,80), batendo=False):
+    # Coração simples com círculos
+    ellipse(draw, cx-r//2, cy-r//4, r//2, r//2, cor)
+    ellipse(draw, cx+r//2, cy-r//4, r//2, r//2, cor)
+    draw.polygon([(cx-r, cy),(cx, cy+r),(cx+r, cy)], fill=cor)
 
-    random.seed(cena_idx * 31 + video_id * 7)
-    np.random.seed(cena_idx * 13 + video_id)
+def desenhar_estrelas(draw, n=6):
+    for _ in range(n):
+        x, y = random.randint(50, W-50), random.randint(80, int(H*0.4))
+        r = random.randint(8, 18)
+        c = random.randint(200, 255)
+        ellipse(draw, x, y, r, r//2, (c, c, int(c*0.7)))
 
-    tema = detectar_tema(titulo, trecho)
-    pal = PALETAS.get(tema, PALETAS["padrao"])
-    bg_c = pal["bg"]
-    char_c = pal["char"]
-    acc_c = pal["acc"]
-    sky_c = pal["sky"]
+def desenhar_nuvens(draw, pal):
+    nuvens = [(150,180,3), (450,120,2.5), (680,200,2), (900,150,2.2), (280,250,1.8)]
+    for nx, ny, s in nuvens:
+        for dx, dy in [(0,0),(-30,10),(30,10),(-15,-8),(15,-8)]:
+            ellipse(draw, nx+dx, ny+dy, int(38*s), int(28*s), (255,255,255))
 
-    # FUNDO: gradiente ceu (numpy vetorizado, sem overflow)
-    arr = np.zeros((H, W, 3), dtype=np.uint8)
-    ys = np.linspace(0.0, 1.0, H, dtype=np.float32)
-    for c in range(3):
-        col = np.clip(sky_c[c] * (1.0 - ys * 0.3) + bg_c[c] * ys, 0, 255).astype(np.uint8)
-        arr[:, :, c] = col[:, np.newaxis]
+def desenhar_sol(draw, pal):
+    sx, sy = W-90, 85
+    # Raios
+    for ang in range(0, 360, 45):
+        rad = math.radians(ang)
+        r1, r2 = 55, 80
+        draw.line([int(sx+r1*math.cos(rad)), int(sy+r1*math.sin(rad)),
+                   int(sx+r2*math.cos(rad)), int(sy+r2*math.sin(rad))],
+                   fill=(255,200,50), width=6)
+    ellipse(draw, sx, sy, 48, 48, (255,210,50))
 
-    img = Image.fromarray(arr, "RGB")
+def desenhar_elementos_geo(draw, pal, seed=0):
+    random.seed(seed)
+    geo_c = pal["geo"]
+    formas = []
+    for _ in range(8):
+        x, y = random.randint(30, W-30), random.randint(80, int(H*0.85))
+        tipo = random.choice(["circ","tri","quad"])
+        r = random.randint(10, 28)
+        alpha = random.randint(80, 160)
+        formas.append((x, y, tipo, r, geo_c, alpha))
+    for x, y, tipo, r, c, a in formas:
+        c_a = c + (a,) if len(c)==3 else c
+        if tipo == "circ":
+            ellipse(draw, x, y, r, r, c)
+        elif tipo == "tri":
+            draw.polygon([(x,y-r),(x-r,y+r),(x+r,y+r)], fill=c)
+        else:
+            draw.rectangle([x-r//2, y-r//2, x+r//2, y+r//2], fill=c)
+
+def desenhar_lower_third(draw):
+    bx, by = 28, H-120
+    bw, bh = 420, 72
+    # Fundo
+    draw.rounded_rectangle([bx, by, bx+bw, by+bh], radius=10,
+                             fill=(26, 26, 42))
+    # ψ icon
+    draw.text((bx+14, by+12), "ψ", fill=(124,58,237))
+    draw.text((bx+40, by+12), "Daniela Coelho | Psicóloga Clínica",
+               fill=(240,240,255))
+    draw.text((bx+40, by+40), "@psidanielacoelho", fill=(160,130,210))
+
+def desenhar_watermark_psi(draw):
+    draw.text((W-60, 30), "ψ", fill=(200,200,200))
+
+# ── GERADOR DE CENA CONTEXTUAL ────────────────────────────────────────────
+def gerar_cena_contextual(titulo, trecho, cena_idx, n_cenas, video_id, tema, personagem_nome):
+    img = Image.new("RGB", (W, H), (255,255,255))
     draw = ImageDraw.Draw(img)
 
-    # CHAO
-    desenhar_chao(draw, W, H, bg_c, char_c)
+    pal = PALETAS.get(tema, PALETAS["padrao"])
+    p   = ELENCO.get(personagem_nome, ELENCO["default"])
+    tipo_cena = detectar_tipo_cena(trecho)
 
-    # ELEMENTOS DE CENA (variam por cena)
-    # Sol
-    if cena_idx % 4 != 2:
-        cor_sol = (255, 220, 50) if tema in ["cura","supera","amor","autoest"] else (255, 180, 40)
-        desenhar_sol(draw, W, H, cor_sol, tamanho=int(W*0.038))
-
-    # Nuvens
-    if cena_idx % 3 != 1:
-        desenhar_nuvens(draw, W, H)
-
-    # Plantas
-    if cena_idx % 2 == 0:
-        cor_c = tuple(max(0, c-20) for c in char_c)
-        cor_f = tuple(max(0, c+20) for c in char_c)
-        desenhar_plantas(draw, W, H, cor_c, cor_f)
-
-    # Elementos geometricos decorativos (estilo Kurzgesagt)
-    for _ in range(8):
-        ex = random.randint(0, W)
-        ey = random.randint(int(H*0.05), int(H*0.65))
-        er = random.randint(8, 30)
-        ec = tuple(max(0, int(c*0.80 + random.randint(-20,20))) for c in bg_c)
-        forma = random.randint(0, 2)
-        if forma == 0:
-            draw.ellipse([ex-er,ey-er,ex+er,ey+er], fill=ec)
-        elif forma == 1:
-            draw.rectangle([ex-er,ey-er,ex+er,ey+er], fill=ec)
+    # ── Fundo gradiente ──
+    for y in range(H):
+        t = y / H
+        # 3 zonas: céu quente → meio quente → chão
+        if y < H*0.65:
+            t2 = y / (H*0.65)
+            c = lerp_c(pal["top"], pal["bot"], t2)
         else:
-            draw.polygon([(ex,ey-er),(ex-er,ey+er),(ex+er,ey+er)], fill=ec)
+            t2 = (y - H*0.65) / (H*0.35)
+            c = lerp_c(pal["bot"], (200,185,160), t2)
+        draw.line([(0,y),(W,y)], fill=c)
 
-    # PERSONAGENS (1 ou 2 por cena)
-    pele = TONS_PELE[cena_idx % len(TONS_PELE)]
-    composicao = cena_idx % 7
+    # Chão
+    gy = int(H * 0.72)
+    draw.rectangle([0, gy, W, H], fill=(210,195,170))
 
-    if composicao == 4 and total_cenas > 3:
-        # DOIS PERSONAGENS (discussao, relacionamento)
-        pele2 = TONS_PELE[(cena_idx+3) % len(TONS_PELE)]
-        char2 = tuple(min(255, c+50) for c in char_c)
-        acc2 = tuple(max(0, c-20) for c in acc_c)
-        cx1 = int(W*0.33)
-        cx2 = int(W*0.67)
-        cy  = int(H*0.55)
-        desenhar_personagem(draw, cx1, cy, pele, char_c, acc_c, cena_idx, "reflexivo")
-        desenhar_personagem(draw, cx2, cy, pele2, char2, acc2, cena_idx+4, "surpreso")
-    else:
-        # UM PERSONAGEM — posicao varia
-        posicoes_x = [int(W*0.5), int(W*0.38), int(W*0.62), int(W*0.30), int(W*0.70), int(W*0.5), int(W*0.45)]
-        cx = posicoes_x[composicao]
-        cy = int(H*0.54)
-        expressoes = ["neutro","feliz","reflexivo","triste","neutro","feliz","reflexivo"]
-        expr = expressoes[composicao]
-        desenhar_personagem(draw, cx, cy, pele, char_c, acc_c, cena_idx, expr)
-        # Balao de fala em algumas cenas
-        desenhar_balao_fala(draw, cx, cy, acc_c, cena_idx)
+    # Decorativos
+    desenhar_sol(draw, pal)
+    desenhar_nuvens(draw, pal)
+    desenhar_elementos_geo(draw, pal, seed=cena_idx + video_id * 10)
 
-    path = "/tmp/cena_flat_" + str(video_id) + "_" + str(cena_idx) + ".jpg"
-    img.save(path, "JPEG", quality=94)
+    # ── CENAS CONTEXTUAIS ──────────────────────────────────────────────
+    cx_p = int(W * 0.42)  # posição X do personagem
+
+    if tipo_cena == "cama":
+        # Quarto: cama + personagem deitado
+        desenhar_cama(draw, W//2, gy - 60, s=1.1)
+        desenhar_personagem(draw, W//2, gy-90, p, "exausto", "deitado", tamanho=0.9)
+        # Relógio
+        ellipse(draw, W-120, 300, 45, 45, (240,240,240))
+        draw.text((W-140, 275), "2:00", fill=(50,50,50))
+
+    elif tipo_cena == "celular":
+        # Pessoa em pé com celular na mão
+        desenhar_personagem(draw, cx_p, gy, p, "ansioso", "pe", tamanho=1.0)
+        desenhar_celular(draw, cx_p+80, gy-220, s=1.2)
+        # Ondas de ansiedade
+        for r in [30, 55, 80]:
+            draw.arc([cx_p+60-r, gy-240-r, cx_p+100+r, gy-200+r],
+                      0, 180, fill=(*pal["geo"][:3], 100), width=3)
+
+    elif tipo_cena == "escritorio":
+        # Personagem sentado + mesa + computador
+        desenhar_personagem(draw, cx_p, gy, p, "exausto", "sentado", tamanho=0.95)
+        # Mesa
+        draw.rectangle([cx_p-160, gy-40, cx_p+160, gy+20], fill=(170,130,90))
+        # Computador
+        draw.rounded_rectangle([cx_p-60, gy-180, cx_p+60, gy-60], radius=8, fill=(40,40,60))
+        draw.rounded_rectangle([cx_p-52, gy-172, cx_p+52, gy-68], radius=4, fill=(80,180,255))
+        # Papéis
+        for dx in [-100, -130, -70]:
+            draw.rounded_rectangle([cx_p+dx, gy-55, cx_p+dx+50, gy-30], radius=3, fill=(255,255,240))
+
+    elif tipo_cena == "medico":
+        # Personagem com jaleco + laudos
+        p_med = dict(p); p_med["roupa"] = (255,255,255)
+        desenhar_personagem(draw, cx_p, gy, p_med, "neutro", "pe", tamanho=1.0)
+        # Prancheta
+        draw.rounded_rectangle([cx_p+60, gy-200, cx_p+130, gy-120], radius=5, fill=(255,255,240))
+        for i in range(5):
+            draw.line([cx_p+68, gy-190+i*14, cx_p+122, gy-190+i*14], fill=(180,180,180), width=2)
+        # Cruz médica
+        draw.rectangle([W-100, 200, W-70, 260], fill=(220,50,50))
+        draw.rectangle([W-115, 215, W-55, 245], fill=(220,50,50))
+
+    elif tipo_cena == "casal":
+        # Dois personagens
+        p2 = ELENCO.get("carlos", ELENCO["default"])
+        desenhar_personagem(draw, W//2-110, gy, p, "feliz", "pe", tamanho=0.9)
+        desenhar_personagem(draw, W//2+110, gy, p2, "feliz", "pe", tamanho=0.9)
+        # Coração entre eles
+        desenhar_coracao(draw, W//2, gy-280, 40)
+
+    elif tipo_cena == "crianca":
+        # Criança pequena aguardando
+        p_cri = dict(p); 
+        desenhar_personagem(draw, cx_p, gy, p, "triste", "pe", tamanho=0.65)
+        # Brinquedo no chão
+        ellipse(draw, cx_p+60, gy+10, 20, 20, (220,80,80))
+
+    elif tipo_cena == "emocao_triste":
+        desenhar_personagem(draw, cx_p, gy, p, "triste", "pe", tamanho=1.0)
+        # Chuva
+        for _ in range(12):
+            rx, ry = random.randint(50, W-50), random.randint(80, gy-50)
+            draw.line([(rx, ry), (rx-5, ry+25)], fill=(100,160,220), width=3)
+
+    elif tipo_cena == "emocao_feliz":
+        desenhar_personagem(draw, cx_p, gy, p, "feliz", "pe", tamanho=1.05)
+        # Confetes
+        for _ in range(15):
+            rx, ry = random.randint(50, W-50), random.randint(80, gy-50)
+            c = random.choice([(220,80,60),(80,160,220),(60,180,80),(220,180,40)])
+            draw.rectangle([rx, ry, rx+12, ry+6], fill=c)
+
+    elif tipo_cena == "ansiedade":
+        desenhar_personagem(draw, cx_p, gy, p, "ansioso", "pe", tamanho=1.0)
+        # Coração batendo
+        desenhar_coracao(draw, W//2+160, gy-350, 50, (220,50,50))
+        # Linhas de estresse
+        for i in range(3):
+            draw.arc([cx_p+80+i*15, gy-260+i*10, cx_p+140+i*15, gy-200+i*10],
+                      -30, 30, fill=(220,80,80), width=4)
+
+    elif tipo_cena == "cura":
+        desenhar_personagem(draw, cx_p, gy, p, "feliz", "pe", tamanho=1.05)
+        # Círculos de paz
+        for r in [60, 100, 145]:
+            draw.arc([cx_p-r, gy-380-r, cx_p+r, gy-380+r+100],
+                      0, 360, fill=(*pal["geo"][:3],), width=3)
+        draw.text((cx_p-30, gy-470), "♥", fill=(80,200,120))
+
+    elif tipo_cena == "ciencia":
+        desenhar_personagem(draw, cx_p, gy, p, "neutro", "pe", tamanho=0.95)
+        # Cérebro simplificado
+        ellipse(draw, W//2+200, gy-450, 70, 55, (220,150,160))
+        ellipse(draw, W//2+240, gy-440, 45, 35, (200,130,140))
+        # Ondas cerebrais
+        pontos = []
+        for i in range(60):
+            x2 = W//2+140+i*2
+            y2 = gy-390+int(20*math.sin(i*0.5))
+            pontos.append((x2, y2))
+        if len(pontos) > 1: draw.line(pontos, fill=(180,60,80), width=3)
+
+    elif tipo_cena == "revelacao":
+        desenhar_personagem(draw, cx_p, gy, p, "neutro", "pe", tamanho=1.0)
+        # Espelho / moldura
+        draw.rounded_rectangle([W//2+80, gy-450, W//2+220, gy-250], radius=12, fill=(200,190,180))
+        draw.rounded_rectangle([W//2+90, gy-440, W//2+210, gy-260], radius=8, fill=(210,230,240))
+        # Reflexo
+        desenhar_personagem(draw, W//2+150, gy-310, p, "neutro", "pe", tamanho=0.4)
+
+    else:  # personagem genérico
+        desenhar_personagem(draw, cx_p, gy, p, "neutro", "pe", tamanho=1.0)
+
+    # ── LOWER THIRD + WATERMARK ─────────────────────────────────────────
+    desenhar_lower_third(draw)
+    desenhar_watermark_psi(draw)
+
+    path = f"/tmp/cena_v4ctx_{video_id}_{cena_idx}.jpg"
+    img.save(path, "JPEG", quality=92)
     return path
 
-def gerar_prompt_flat(titulo, trecho, cena_idx, tema):
-    """Prompt NVIDIA para estilo School of Life / Kurzgesagt"""
+# ── NVIDIA PROMPT CONTEXTUAL ───────────────────────────────────────────────
+def gerar_prompt_nvidia(titulo, trecho, cena_idx, tema, personagem, tipo_cena):
     pal = PALETAS.get(tema, PALETAS["padrao"])
-    cor_desc = {
-        "narcis":"warm coral red and cream background",
-        "trauma":"soft lavender blue background",
-        "ansio":"warm golden yellow background",
-        "cura":"fresh green and white background",
-        "amor":"warm pink and rose background",
-        "autoest":"sky blue and white background",
-        "padrao":"warm cream yellow background",
+    r, g, b = pal["top"]
+    cor_desc = f"warm background rgb({r},{g},{b})"
+
+    descricoes_cena = {
+        "cama":         "person lying in bed looking exhausted, bedroom scene",
+        "celular":      "person holding smartphone looking anxious, checking messages compulsively",
+        "escritorio":   "person sitting at desk with laptop looking stressed and tired",
+        "medico":       "person in white coat holding medical clipboard, professional scene",
+        "casal":        "two people standing together, relationship scene",
+        "crianca":      "small child waiting alone, emotional scene",
+        "emocao_triste":"person looking sad with tears, emotional vulnerable scene",
+        "emocao_feliz": "person smiling joyfully, celebrating, happy scene",
+        "ansiedade":    "person with hands on chest looking anxious and overwhelmed",
+        "cura":         "person breathing peacefully with eyes closed, healing scene",
+        "ciencia":      "person with thought bubble showing brain activity, neuroscience",
+        "revelacao":    "person looking at mirror with realization expression",
+        "personagem":   "person standing thoughtfully, educational psychology scene",
     }
-    cd = cor_desc.get(tema, "warm colorful background")
-    cenas_desc = [
-        "person sitting thoughtfully at a table",
-        "person standing and explaining gesturing",
-        "two people having a conversation",
-        "person walking through a colorful environment",
-        "person reading a book in nature",
-        "person looking at the horizon hopeful",
-        "person helping another person",
-    ]
-    cd_cena = cenas_desc[cena_idx % len(cenas_desc)]
+    cena_desc = descricoes_cena.get(tipo_cena, "person in a colorful scene")
+
     return (
-        "flat 2D vector illustration animation educational style, "
-        + cd_cena + ", "
-        + cd + ", warm sunlight, clear blue sky, "
-        "simple geometric characters with expressive faces and visible eyes and smile, "
-        "clean bold outlines, educational animation style like School of Life or Kurzgesagt, "
-        "bright warm colorful palette, simple environment with trees and sun, "
-        "friendly approachable illustration, "
-        "NO TEXT NO WORDS NO LETTERS NO NUMBERS NO LOGOS NO WATERMARKS"
+        f"flat 2D vector illustration, {cena_desc}, {cor_desc}, "
+        f"simple geometric cartoon character with expressive face and visible eyes, "
+        f"bright warm colorful palette, clean bold outlines, "
+        f"School of Life or Kurzgesagt animation style, "
+        f"cheerful educational scene, no text no words no letters no logos"
     )
 
 def tentar_nvidia(prompt, video_id, cena_idx):
-    if not NVIDIA_KEY: return None
+    if not NVIDIA: return None
     endpoints = [
         ("https://integrate.api.nvidia.com/v1/images/generations",
          {"model":"black-forest-labs/flux-schnell","prompt":prompt,
           "n":1,"size":"1344x768","response_format":"b64_json"}),
-        ("https://ai.api.nvidia.com/v1/genai/black-forest-labs/flux-schnell",
-         {"prompt":prompt,"width":1344,"height":768,"num_inference_steps":4,
-          "guidance_scale":3.5,"num_images":1,"seed":random.randint(1,999999)}),
     ]
     for ep, payload in endpoints:
         try:
             r = requests.post(ep,
-                headers={"Authorization":"Bearer "+NVIDIA_KEY,"Content-Type":"application/json"},
+                headers={"Authorization":"Bearer "+NVIDIA,"Content-Type":"application/json"},
                 json=payload, timeout=90)
-            print("    NVIDIA " + ep.split("/")[-1] + ": " + str(r.status_code))
-            if r.status_code != 200:
-                try: print("      " + str(r.json().get("detail",""))[:100])
-                except: print("      " + r.text[:100])
-                continue
+            print(f"    NVIDIA {r.status_code}")
+            if r.status_code != 200: continue
             data = r.json()
-            b64 = (data.get("artifacts",[{}])[0].get("base64","") or
-                   data.get("data",[{}])[0].get("b64_json",""))
+            b64 = data.get("data",[{}])[0].get("b64_json","") or \
+                  data.get("artifacts",[{}])[0].get("base64","")
             if b64:
-                p = "/tmp/nv_" + str(video_id) + "_" + str(cena_idx) + ".jpg"
+                p = f"/tmp/nv_{video_id}_{cena_idx}.jpg"
                 with open(p,"wb") as f: f.write(base64.b64decode(b64))
-                print("    NVIDIA OK: " + str(len(b64)//1024) + "KB")
+                # Converter para portrait 1080x1920
+                img = Image.open(p)
+                # Crop central landscape → portrait
+                img_r = img.resize((1080, int(img.height*1080/img.width)))
+                portrait = Image.new("RGB",(1080,1920),(255,250,230))
+                portrait.paste(img_r, (0, (1920-img_r.height)//2))
+                portrait.save(p, "JPEG", quality=90)
                 return p
         except Exception as e:
-            print("    NVIDIA exc: " + str(e)[:80])
+            print(f"    NVIDIA exc: {e}")
     return None
 
-def upload_img(path, video_id, cena_idx):
-    fname = "v4/flat_" + str(video_id) + "_" + str(cena_idx) + "_" + str(int(time.time())) + ".jpg"
+def upload_retry(path, video_id, cena_idx, tentativas=3):
+    fname = f"v4ctx/flat_{video_id}_{cena_idx}_{int(time.time())}.jpg"
     with open(path,"rb") as f: data = f.read()
-    try:
-        sb.storage.from_("videos").upload(fname, data,
-            file_options={"content-type":"image/jpeg","x-upsert":"true"})
-        return SB_URL + "/storage/v1/object/public/videos/" + fname
-    except:
-        r = requests.post(SB_URL+"/storage/v1/object/videos/"+fname,
-            headers={"apikey":SB_KEY,"Authorization":"Bearer "+SB_KEY,
-                     "Content-Type":"image/jpeg","x-upsert":"true"}, data=data)
-        if r.status_code in [200,201]:
-            return SB_URL + "/storage/v1/object/public/videos/" + fname
+    for i in range(tentativas):
+        try:
+            r = requests.post(SB_URL+"/storage/v1/object/videos/"+fname,
+                headers={"apikey":SB_KEY,"Authorization":"Bearer "+SB_KEY,
+                         "Content-Type":"image/jpeg","x-upsert":"true"},
+                data=data, timeout=120)
+            if r.status_code in [200,201]:
+                return SB_URL+"/storage/v1/object/public/videos/"+fname
+        except Exception as e:
+            print(f"    upload exc: {e}")
+        time.sleep(2)
     return None
 
 def get_pendentes():
@@ -366,55 +520,59 @@ def get_pendentes():
     return r.data or []
 
 def processar(v):
-    vid_id = v["id"]
-    title  = v.get("title","")
-    script = v.get("script","") or ""
-    dur    = float(v.get("duracao_min") or 0.9)
-    print("\n  #" + str(vid_id) + " " + title[:55])
-    tema  = detectar_tema(title, script)
-    cenas = dividir_cenas(script, dur)
-    print("    tema=" + tema + " | " + str(len(cenas)) + " cenas flat 2D")
+    vid_id = v["id"]; title = v.get("title",""); script = v.get("script","") or ""
+    dur = float(v.get("duracao_min") or 0.9)
+    print(f"\n  #{vid_id} {title[:55]}")
+    tema = detectar_tema(title, script)
+    personagem = detectar_personagem(title, script)
+    n_cenas = 6
+    cenas_texto = dividir_script_cenas(script, n_cenas)
+    print(f"    tema={tema} | personagem={personagem} | {n_cenas} cenas contextuais")
+
     urls = []
-    for i, trecho in enumerate(cenas):
-        print("    cena " + str(i+1) + "/" + str(len(cenas)) + "...")
-        prompt = gerar_prompt_flat(title, trecho, i, tema)
+    for i, trecho in enumerate(cenas_texto):
+        tipo = detectar_tipo_cena(trecho)
+        print(f"    cena {i+1}/{n_cenas} tipo={tipo}...")
+        # Tentar NVIDIA primeiro com prompt contextual
+        prompt = gerar_prompt_nvidia(title, trecho, i, tema, personagem, tipo)
         img = tentar_nvidia(prompt, vid_id, i)
         fonte = "nvidia"
         if not img:
-            img = gerar_cena_flat(title, trecho, i, len(cenas), vid_id, dur)
-            fonte = "pillow_flat"
-        url = upload_img(img, vid_id, i)
+            # Fallback: Pillow contextual
+            img = gerar_cena_contextual(title, trecho, i, n_cenas, vid_id, tema, personagem)
+            fonte = "pillow_ctx"
+        url = upload_retry(img, vid_id, i)
         if url:
             urls.append(url)
-            print("      cena " + str(i+1) + " (" + fonte + ") OK")
-        time.sleep(0.3)
+            print(f"      cena {i+1} ({fonte}) OK")
+        time.sleep(0.4)
+
     if not urls: print("    sem imagens"); return False
     sb.table("content_pipeline").update({
         "status":"video_ready","mp4_url":None,
-        "metadata":(v.get("metadata") or {}) | {
+        "metadata": (v.get("metadata") or {}) | {
             "quantum_images":urls,"quantum_image":urls[0],
-            "n_cenas":len(urls),"tema":tema,
-            "render_method":"flat_2d_school_of_life_kurzgesagt_v4",
+            "n_cenas":len(urls),"tema":tema,"personagem":personagem,
+            "render_method":"flat_2d_contextual_v4_2",
             "processado_em":int(time.time()),
         }
     }).eq("id",vid_id).execute()
-    print("    video_ready " + str(len(urls)) + " cenas flat")
+    print(f"    video_ready {len(urls)} cenas contextuais")
     return True
 
 def main():
-    print("=== RENDER FLAT V4 — School of Life + Kurzgesagt ===")
-    print("Estilo: colorido, vibrante, personagens com rosto, cenas ricas")
-    print("NVIDIA: " + ("OK" if NVIDIA_KEY else "ausente, Pillow flat fallback"))
+    print("=== RENDER FLAT V4.2 — CONTEXTUAL SCENE ENGINE ===")
+    print(f"NVIDIA: {'OK' if NVIDIA else 'ausente → Pillow contextual'}")
     videos = get_pendentes()
-    print("Videos: " + str(len(videos)))
+    print(f"Videos: {len(videos)}")
     ok = 0
     for v in videos:
         try:
             if processar(v): ok += 1
-            time.sleep(1)
-        except:
+        except Exception as e:
             import traceback; traceback.print_exc()
-    print("Concluido: " + str(ok) + "/" + str(len(videos)))
+        time.sleep(1)
+    print(f"Concluido: {ok}/{len(videos)}")
 
 if __name__ == "__main__":
     main()
