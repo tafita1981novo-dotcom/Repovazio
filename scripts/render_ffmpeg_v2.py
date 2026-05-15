@@ -1,215 +1,169 @@
 #!/usr/bin/env python3
-"""
-render_ffmpeg_v2.py — Ken Burns + Audio → MP4 Final
-Pega imagens (Pillow/Flux) + audio → renderiza MP4 Short/Long
-ZERO texto na tela. ZERO subtitulos. ZERO overlay.
-Apenas lower third e watermark sao permitidos.
-"""
+"""render_ffmpeg_v2.py Cerebro V15 — Multi-cena Ken Burns variado. ZERO texto na tela."""
 import os, json, time, requests, subprocess, tempfile
 from supabase import create_client
 
 SB_URL = os.environ["SUPABASE_URL"]
 SB_KEY = os.environ["SUPABASE_KEY"]
 sb = create_client(SB_URL, SB_KEY)
-
 SB_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwanZhbHp3a3F3dHR2bXN6dmllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMzUyOTMsImV4cCI6MjA5MTYxMTI5M30.UEgUo0Mw15ihQZykLAY5QApRzgTXkfIewZFzIgwao3Q"
 
-VIOLET = "0x7C3AED"  # lower third cor
+# Ken Burns: 5 movimentos diferentes por cena
+KB_VARIANTS = [
+    "z=\'zoom+0.0006\':x=\'iw/2-(iw/zoom/2)\':y=\'ih/2-(ih/zoom/2)\'",
+    "z=\'zoom+0.0006\':x=\'0\':y=\'0\'",
+    "z=\'zoom+0.0006\':x=\'iw-(iw/zoom)\':y=\'0\'",
+    "z=\'zoom+0.0006\':x=\'iw/2-(iw/zoom/2)\':y=\'ih-(ih/zoom)\'",
+    "z=\'1.10-in*0.0005\':x=\'iw/2-(iw/zoom/2)\':y=\'ih/2-(ih/zoom/2)\'",
+]
 
-def get_videos_video_ready():
-    """Busca videos com imagem pronta aguardando render MP4"""
-    r = sb.table("content_pipeline").select(
-        "id,title,audio_url,duracao_min,metadata,pub_order"
-    ).eq("status", "video_ready").is_("mp4_url", None).order("pub_order").limit(3).execute()
-    return r.data or []
-
-def baixar_arquivo(url, path):
-    """Baixa arquivo de URL publica"""
-    r = requests.get(url, headers={"apikey": SB_ANON}, timeout=60)
-    if r.status_code == 200:
-        with open(path, "wb") as f:
-            f.write(r.content)
-        return True
-    # Tentar sem header
-    r2 = requests.get(url, timeout=60)
-    if r2.status_code == 200:
-        with open(path, "wb") as f:
-            f.write(r2.content)
-        return True
-    print(f"    ERRO download {url}: {r.status_code}")
+def baixar(url, path):
+    for h in [{"apikey":SB_ANON},{}]:
+        try:
+            r = requests.get(url, headers=h, timeout=90)
+            if r.status_code == 200:
+                with open(path,"wb") as f: f.write(r.content)
+                return True
+        except: pass
     return False
 
-def render_video(v):
-    vid_id = v["id"]
-    title = v.get("title","")
+def get_video_ready():
+    r = sb.table("content_pipeline").select(
+        "id,title,audio_url,duracao_min,metadata,pub_order"
+    ).eq("status","video_ready").is_("mp4_url",None).order("pub_order").limit(3).execute()
+    return r.data or []
+
+def render(v):
+    vid_id    = v["id"]
     audio_url = v.get("audio_url","")
-    duracao_min = float(v.get("duracao_min") or 0.9)
-    meta = v.get("metadata") or {}
-    img_url = meta.get("quantum_image","")
-    emocao = meta.get("emocao","contemplativo")
-    
-    print(f"\n  #{vid_id} {title[:50]}")
-    print(f"    duracao_min={duracao_min} | emocao={emocao}")
-    
-    if not img_url or not audio_url:
-        print(f"    ⚠ falta img_url={bool(img_url)} audio_url={bool(audio_url)}")
-        return False
-    
+    dur_min   = float(v.get("duracao_min") or 0.9)
+    meta      = v.get("metadata") or {}
+    imgs      = meta.get("quantum_images") or [meta.get("quantum_image","")]
+    imgs      = [u for u in imgs if u]
+    print(f"\n  #{vid_id} {v.get('title','')[:50]}")
+    print(f"    {len(imgs)} cenas | dur_min={dur_min}")
+    if not imgs or not audio_url:
+        print("    falta imagem ou audio"); return False
+
     with tempfile.TemporaryDirectory() as tmp:
-        img_path = f"{tmp}/img.jpg"
-        audio_path = f"{tmp}/audio.mp3"
-        out_path = f"{tmp}/video.mp4"
-        
-        print(f"    Baixando imagem...")
-        if not baixar_arquivo(img_url, img_path):
-            return False
-            
-        print(f"    Baixando audio...")
-        if not baixar_arquivo(audio_url, audio_path):
-            return False
-        
-        # Detectar duracao real do audio
+        audio_p = f"{tmp}/audio.mp3"
+        out_p   = f"{tmp}/output.mp4"
+        print("    Baixando audio...")
+        if not baixar(audio_url, audio_p): return False
+
         probe = subprocess.run(
-            ["ffprobe", "-v", "quiet", "-print_format", "json", "-show_format", audio_path],
-            capture_output=True, text=True
-        )
-        try:
-            audio_dur = float(json.loads(probe.stdout)["format"]["duration"])
-        except:
-            audio_dur = duracao_min * 60
-        
+            ["ffprobe","-v","quiet","-print_format","json","-show_format",audio_p],
+            capture_output=True, text=True)
+        try: audio_dur = float(json.loads(probe.stdout)["format"]["duration"])
+        except: audio_dur = dur_min * 60
         print(f"    Audio: {audio_dur:.1f}s")
-        
-        # Resolucao por tipo
-        is_short = duracao_min < 3
-        if is_short:
-            W, H = 1080, 1920  # Short vertical
-        else:
-            W, H = 1920, 1080  # Long horizontal
-        
-        # Ken Burns: zoom 100->110% ao longo do video
-        # ZERO texto na tela - so lower third e watermark psi
-        zoom_speed = 0.0005
-        fps = 30
-        total_frames = int(audio_dur * fps)
-        
-        # Filtro de video completo:
-        # 1. Escalar imagem para resolucao correta
-        # 2. Ken Burns suave
-        # 3. Lower third: retangulo roxo + texto "Daniela Coelho | @psidanielacoelho"
-        # 4. Watermark psi no canto (usando unicode psi como texto pequeno)
-        
-        vf = (
-            f"scale={W}:{H}:force_original_aspect_ratio=increase,"
-            f"crop={W}:{H},"
-            f"zoompan=z=\'min(zoom+{zoom_speed},1.1)\':"
-            f"x=\'iw/2-(iw/zoom/2)\':"
-            f"y=\'ih/2-(ih/zoom/2)\':"
-            f"d={total_frames}:s={W}x{H}:fps={fps},"
-            # Lower third - box no rodape
-            f"drawtext=text=\'Daniela Coelho \| Psicologa Clinica\':"
-            f"fontsize={'28' if is_short else '36'}:fontcolor=white:font=DejaVuSans-Bold:"
-            f"x={'30' if is_short else '40'}:y=h-{'60' if is_short else '70'}:"
-            f"box=1:boxcolor=0x7C3AED@0.80:boxborderw={'12' if is_short else '15'},"
-            f"drawtext=text=\'@psidanielacoelho\':"
-            f"fontsize={'22' if is_short else '28'}:fontcolor=0xC4B5FD:font=DejaVuSans:"
-            f"x={'30' if is_short else '40'}:y=h-{'28' if is_short else '32'}:"
-            f"box=1:boxcolor=0x7C3AED@0.80:boxborderw=8,"
-            # Watermark psi
-            f"drawtext=text=\'psi\':"
-            f"fontsize={'22' if is_short else '28'}:fontcolor=white@0.15:font=DejaVuSans:"
-            f"x=w-60:y=20"
-        )
-        
-        cmd = [
-            "ffmpeg", "-y",
-            "-loop", "1", "-i", img_path,
-            "-i", audio_path,
-            "-vf", vf,
-            "-c:v", "libx264", "-preset", "slow", "-crf", "18",
-            "-c:a", "aac", "-b:a", "192k", "-ar", "44100",
-            "-pix_fmt", "yuv420p",
-            "-t", str(audio_dur),
-            "-shortest",
-            out_path
-        ]
-        
-        print(f"    Renderizando MP4 {W}x{H}...")
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
-        
-        if result.returncode != 0:
-            print(f"    FFMPEG ERRO: {result.stderr[-500:]}")
-            return False
-        
-        mp4_size = os.path.getsize(out_path)
-        print(f"    MP4 gerado: {mp4_size:,} bytes ({mp4_size/1024/1024:.1f} MB)")
-        
-        # Upload MP4 para Supabase
+
+        is_short = dur_min < 3
+        W, H = (1080,1920) if is_short else (1920,1080)
+        fps  = 30
+        dur_cena = audio_dur / len(imgs)
+
+        # Baixar imagens
+        img_paths = []
+        for i, url in enumerate(imgs):
+            p = f"{tmp}/img_{i}.jpg"
+            if baixar(url, p): img_paths.append(p)
+        if not img_paths: return False
+        print(f"    {len(img_paths)} imagens baixadas")
+
+        # Renderizar cada cena como clip
+        clip_paths = []
+        lt_sz  = "28" if is_short else "34"
+        lt_y   = "h-62" if is_short else "h-72"
+        lt_y2  = "h-28" if is_short else "h-34"
+        lt_bw  = "10" if is_short else "14"
+
+        for i, ip in enumerate(img_paths):
+            dur = audio_dur / len(img_paths)
+            cp  = f"{tmp}/clip_{i}.mp4"
+            kb  = KB_VARIANTS[i % len(KB_VARIANTS)]
+            nf  = int(dur * fps) + 2
+
+            vf = (
+                f"scale={W}:{H}:force_original_aspect_ratio=increase,"
+                f"crop={W}:{H},"
+                f"zoompan={kb}:d={nf}:s={W}x{H}:fps={fps},"
+                f"drawtext=text=\'Daniela Coelho \| Psicologa Clinica\':"
+                f"fontsize={lt_sz}:fontcolor=white:font=DejaVuSans-Bold:"
+                f"x=40:y={lt_y}:box=1:boxcolor=0x7C3AED@0.82:boxborderw={lt_bw},"
+                f"drawtext=text=\'@psidanielacoelho\':"
+                f"fontsize=22:fontcolor=0xC4B5FD:font=DejaVuSans:"
+                f"x=40:y={lt_y2}:box=1:boxcolor=0x7C3AED@0.82:boxborderw=8,"
+                f"drawtext=text=\'psi\':fontsize=20:fontcolor=white@0.12:font=DejaVuSans:x=w-55:y=18"
+            )
+            r = subprocess.run(
+                ["ffmpeg","-y","-loop","1","-i",ip,"-vf",vf,
+                 "-c:v","libx264","-preset","fast","-crf","20",
+                 "-pix_fmt","yuv420p","-t",str(dur+0.05),"-an",cp],
+                capture_output=True, text=True, timeout=240)
+            if r.returncode != 0:
+                # Fallback sem zoompan
+                subprocess.run(
+                    ["ffmpeg","-y","-loop","1","-i",ip,
+                     "-vf",f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H}",
+                     "-c:v","libx264","-preset","fast","-crf","22",
+                     "-pix_fmt","yuv420p","-t",str(dur),"-an",cp],
+                    capture_output=True, timeout=120)
+            if os.path.exists(cp): clip_paths.append(cp)
+
+        # Concat list
+        concat_p = f"{tmp}/lista.txt"
+        with open(concat_p,"w") as f:
+            for cp in clip_paths:
+                f.write(f"file '{cp}'\n")
+
+        print("    Concat + audio...")
+        r = subprocess.run(
+            ["ffmpeg","-y","-f","concat","-safe","0","-i",concat_p,
+             "-i",audio_p,"-c:v","libx264","-preset","slow","-crf","18",
+             "-c:a","aac","-b:a","192k","-ar","44100",
+             "-pix_fmt","yuv420p","-shortest",out_p],
+            capture_output=True, text=True, timeout=600)
+        if r.returncode != 0:
+            print(f"    ffmpeg erro: {r.stderr[-300:]}"); return False
+
+        sz = os.path.getsize(out_p)
+        print(f"    MP4: {sz:,}B ({sz/1024/1024:.1f}MB)")
         fname = f"mp4s/v{vid_id}_{int(time.time())}.mp4"
-        with open(out_path, "rb") as f:
-            mp4_bytes = f.read()
-        
-        try:
-            sb.storage.from_("videos").upload(
-                fname, mp4_bytes,
-                file_options={"content-type": "video/mp4", "x-upsert": "true"}
-            )
-            mp4_url = f"{SB_URL}/storage/v1/object/public/videos/{fname}"
-            print(f"    ✓ Upload OK: {mp4_url}")
-        except Exception as e:
-            # Tentar upload via requests com anon key
-            r = requests.post(
-                f"{SB_URL}/storage/v1/object/videos/{fname}",
-                headers={"apikey": SB_ANON, "Authorization": f"Bearer {SB_ANON}",
-                         "Content-Type": "video/mp4", "x-upsert": "true"},
-                data=mp4_bytes
-            )
-            if r.status_code in [200, 201]:
-                mp4_url = f"{SB_URL}/storage/v1/object/public/videos/{fname}"
-                print(f"    ✓ Upload anon OK: {mp4_url}")
-            else:
-                print(f"    ⚠ Upload erro: {r.status_code} {r.text[:200]}")
-                return False
-        
-        # Atualizar banco
+        with open(out_p,"rb") as f: mp4 = f.read()
+        r2 = requests.post(f"{SB_URL}/storage/v1/object/videos/{fname}",
+            headers={"apikey":SB_ANON,"Authorization":f"Bearer {SB_ANON}",
+                     "Content-Type":"video/mp4","x-upsert":"true"}, data=mp4)
+        if r2.status_code not in [200,201]:
+            print(f"    upload erro: {r2.status_code}"); return False
+        mp4_url = f"{SB_URL}/storage/v1/object/public/videos/{fname}"
+        print(f"    OK: {mp4_url}")
         sb.table("content_pipeline").update({
-            "status": "mp4_ready",
-            "mp4_url": mp4_url,
-            "metadata": (v.get("metadata") or {}) | {
-                "mp4_url": mp4_url,
-                "mp4_size_bytes": mp4_size,
-                "duration_seconds": audio_dur,
-                "resolution": f"{W}x{H}",
-                "render_version": "v2_kenburns_pillow",
-                "rendered_at": int(time.time()),
-                "zero_texto_na_tela": True,
-                "lower_third": "Daniela Coelho | @psidanielacoelho",
-                "watermark": "psi 15% opacity corner"
+            "status":"mp4_ready","mp4_url":mp4_url,
+            "metadata":(meta) | {
+                "mp4_url":mp4_url,"mp4_size_bytes":sz,
+                "duration_seconds":audio_dur,"resolution":f"{W}x{H}",
+                "render_version":"v2_multi_scene_psych2go_v15",
+                "n_cenas":len(img_paths),"rendered_at":int(time.time()),
+                "zero_texto_na_tela":True,"voz":"ElevenLabs_Sarah_ou_Edge",
+                "lower_third":"Daniela Coelho | @psidanielacoelho",
             }
-        }).eq("id", vid_id).execute()
-        
-        print(f"    ✓ status=mp4_ready salvo")
+        }).eq("id",vid_id).execute()
+        print("    status=mp4_ready")
         return True
 
 def main():
-    print("=== RENDER FFMPEG V2 — Ken Burns + Audio → MP4 ===")
-    print("REGRA: ZERO texto na tela | so lower third e watermark psi")
-    
-    videos = get_videos_video_ready()
-    print(f"Videos video_ready aguardando render: {len(videos)}")
-    
+    print("=== RENDER FFMPEG V15 multi-cena Ken Burns ZERO texto ===")
+    videos = get_video_ready()
+    print(f"Videos: {len(videos)}")
     ok = 0
     for v in videos:
         try:
-            if render_video(v):
-                ok += 1
-            time.sleep(2)
-        except Exception as e:
-            import traceback
-            print(f"  ERRO #{v.get('id')}: {e}")
-            traceback.print_exc()
-    
-    print(f"\nConcluido: {ok}/{len(videos)} videos renderizados")
+            if render(v): ok += 1
+            time.sleep(1)
+        except:
+            import traceback; traceback.print_exc()
+    print(f"Concluido: {ok}/{len(videos)}")
 
 if __name__ == "__main__":
     main()
