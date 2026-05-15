@@ -1,0 +1,29 @@
+name: Trim Videos 58s (Monetizacao YouTube Shorts)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  trim:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup
+        uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Install
+        run: |
+          pip install supabase requests
+          sudo apt-get install -y ffmpeg
+      - name: Trim e re-upload
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python3 scripts/trim_videos.py
+      - name: Update DB (SQL direto)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          echo "Trim concluido - verificar logs acima para URLs"
