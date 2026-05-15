@@ -384,25 +384,48 @@ ADU=float(json.loads(probe.stdout)["format"]["duration"])
 DUR=ADU/N;FPS=25;FR=int(DUR*FPS)
 print(f"Audio {ADU:.1f}s | cena {DUR:.2f}s | {FR}f")
 
-# KEN BURNS — alternando para ritmo dinamico
-KB=["zi","zo","pl","pr","zt","zb","zi","pl","zo","pr",
-    "zt","zi","zo","pl","pr","zi","zo","zt","pl","zi"]
+# KEN BURNS via scale+crop (mais simples e confiavel que zoompan)
+# Escala 10% maior e faz crop com offset linear
+# Modos: zi=zoom in, zo=zoom out, pl=pan left, pr=pan right
+KB=["zi","zo","pl","pr","zi","zo","pl","pr","zi","zo",
+    "pl","pr","zi","zo","pl","pr","zi","zo","pl","zi"]
 
-def kb(m,fr):
-    if m=="zi": z=f"min(zoom+0.0006,1.24)";x="(iw-iw/zoom)/2";y="(ih-ih/zoom)/2"
-    elif m=="zo": z=f"if(eq(on,1),1.24,max(zoom-0.0006,1.0))";x="(iw-iw/zoom)/2";y="(ih-ih/zoom)/2"
-    elif m=="pl": z="1.14";x=f"(iw-iw/zoom)/2+65*((on-1)/{fr})";y="(ih-ih/zoom)/2"
-    elif m=="pr": z="1.14";x=f"max(0,(iw-iw/zoom)/2-65*((on-1)/{fr}))";y="(ih-ih/zoom)/2"
-    elif m=="zt": z=f"min(zoom+0.0006,1.24)";x="(iw-iw/zoom)/2";y="0"
-    else: z=f"if(eq(on,1),1.24,max(zoom-0.0006,1.0))";x="(iw-iw/zoom)/2";y="ih-ih/zoom"
-    return f"zoompan=z='{z}':x='{x}':y='{y}':d={fr}:s=1080x1920:fps={FPS}"
+def ken(m,i,fr):
+    """Scale 10% + crop com motion linear - robusto e confiavel"""
+    # Scale para 10% maior: 1080*1.10=1188, 1920*1.10=2112
+    scale="scale=1188:2112"
+    ox,oy="54","96"  # offset maximo = (1188-1080)/2=54, (2112-1920)/2=96
+    n=f"n"  # frame counter no filtro crop
+    if m=="zi":
+        # Zoom in: comecar com crop offset, ir para centro
+        cx2=f"max(0,{ox}-{ox}*{n}/{fr})"
+        cy2=f"max(0,{oy}-{oy}*{n}/{fr})"
+    elif m=="zo":
+        # Zoom out: comecar no centro, mover para borda
+        cx2=f"min({ox},{ox}*{n}/{fr})"
+        cy2=f"min({oy},{oy}*{n}/{fr})"
+    elif m=="pl":
+        # Pan left: de direita para esquerda
+        cx2=f"max(0,{ox}*2-{ox}*2*{n}/{fr})"
+        cy2=f"{oy}//2"
+    elif m=="pr":
+        # Pan right: de esquerda para direita
+        cx2=f"min({ox}*2,{ox}*2*{n}/{fr})"
+        cy2=f"{oy}//2"
+    else:
+        cx2,cy2=ox,"0"
+    return f"{scale},crop=1080:1920:{cx2}:{cy2},setsar=1"
 
 inp=[]
-for p in paths: inp+=["-loop","1","-t",str(DUR+0.15),"-i",p]
+for p in paths: inp+=["-loop","1","-t",str(DUR+0.20),"-i",p]
 
+# Usar setpts para garantir timing correto
 fc=""
 for i in range(N):
-    fc+=f"[{i}:v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,setsar=1,{kb(KB[i%len(KB)],FR+3)}[v{i}];"
+    mode=KB[i%len(KB)]
+    kf=ken(mode,i,FR)
+    # Cada stream: scale+crop + setpts para tempo correto
+    fc+=f"[{i}:v]setpts=PTS-STARTPTS,{kf}[v{i}];"
 fc+="".join(f"[v{i}]" for i in range(N))
 fc+=f"concat=n={N}:v=1:a=0[vout];[vout]eq=saturation=1.20:brightness=0.03:contrast=1.08[vf]"
 
