@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-trim_videos.py — Corta videos > 60s para 58s
-Regra YouTube Shorts monetizacao: < 60 segundos
+trim_videos.py V2 — Dinâmico: lê do DB todos os vídeos com audio > 60s e trim para 58s
+Regra YouTube Shorts monetizacao: OBRIGATORIO < 60 segundos
 """
 import os, json, time, requests, subprocess, tempfile
 from supabase import create_client
@@ -9,85 +9,84 @@ from supabase import create_client
 SB_URL = os.environ["SUPABASE_URL"]
 SB_KEY = os.environ["SUPABASE_KEY"]
 sb = create_client(SB_URL, SB_KEY)
+MAX_S = 58
 
-# Videos para cortar: id, url_atual, duracao_atual
-VIDEOS = [
-    (682, "mp4s/v682_v4flat_1778847365.mp4", 61.7),
-    (688, "mp4s/v688_v4flat_1778847641.mp4", 61.7),
-    (689, "1778634177_O_perfeccionista_no_tem_medo_d_v8.mp4", 60.6),
-]
-
-MAX_SEGUNDOS = 58  # margem de segurança para < 60s
-
-def download(url, path):
-    r = requests.get(url, timeout=120)
-    if r.status_code == 200:
-        with open(path, "wb") as f: f.write(r.content)
-        return True
-    print("  DL err: " + str(r.status_code))
-    return False
+def probe_duration(path):
+    r = subprocess.run(["ffprobe","-v","quiet","-print_format","json",
+        "-show_format", path], capture_output=True, text=True)
+    try: return float(json.loads(r.stdout)["format"]["duration"])
+    except: return 0.0
 
 def upload_retry(data, fname, tentativas=3):
     for i in range(tentativas):
         try:
-            r = requests.post(
-                SB_URL + "/storage/v1/object/videos/" + fname,
+            r = requests.post(SB_URL+"/storage/v1/object/videos/"+fname,
                 headers={"apikey":SB_KEY,"Authorization":"Bearer "+SB_KEY,
                          "Content-Type":"video/mp4","x-upsert":"true"},
                 data=data, timeout=300)
             if r.status_code in [200,201]:
-                return SB_URL + "/storage/v1/object/public/videos/" + fname
-            print("  upload " + str(i+1) + ": " + str(r.status_code) + " " + r.text[:80])
-        except Exception as e:
-            print("  upload exc: " + str(e)[:80])
+                return SB_URL+"/storage/v1/object/public/videos/"+fname
+        except: pass
         time.sleep(3)
     return None
 
 def main():
-    print("=== TRIM < 60s para monetizacao YouTube Shorts ===")
+    print("=== TRIM V2 — Todos os videos > 60s ===")
+    
+    # Buscar todos os mp4_ready com mp4_url
+    rows = sb.table("content_pipeline").select(
+        "id,mp4_url,metadata"
+    ).eq("status","mp4_ready").not_.is_("mp4_url","null").execute().data or []
+    
+    print(f"Videos mp4_ready com mp4_url: {len(rows)}")
     ok = 0
-    for vid_id, url_path, dur_orig in VIDEOS:
-        print("\n  #" + str(vid_id) + " (" + str(dur_orig) + "s → " + str(MAX_SEGUNDOS) + "s)")
-        url = SB_URL + "/storage/v1/object/public/videos/" + url_path
+    for v in rows:
+        vid_id = v["id"]
+        url = v.get("mp4_url","")
+        if not url: continue
+        
         with tempfile.TemporaryDirectory() as tmp:
-            orig = tmp + "/orig.mp4"
-            cut  = tmp + "/cut.mp4"
-            if not download(url, orig): continue
-            # Cortar com stream copy (rapido, sem re-encode)
-            r = subprocess.run([
-                "ffmpeg","-y","-i",orig,
-                "-t",str(MAX_SEGUNDOS),
-                "-c:v","copy","-c:a","copy", cut
-            ], capture_output=True, text=True, timeout=60)
-            if r.returncode != 0 or not os.path.exists(cut):
-                # Fallback: re-encode
-                subprocess.run([
-                    "ffmpeg","-y","-i",orig,"-t",str(MAX_SEGUNDOS),
+            orig = tmp+"/orig.mp4"
+            cut  = tmp+"/cut.mp4"
+            
+            # Download
+            r = requests.get(url, timeout=120)
+            if r.status_code != 200: continue
+            with open(orig,"wb") as f: f.write(r.content)
+            
+            dur = probe_duration(orig)
+            print(f"  #{vid_id}: {dur:.1f}s")
+            if dur <= 60.0:
+                print(f"    OK — sem trim")
+                continue
+            
+            print(f"    TRIMMING {dur:.1f}s → {MAX_S}s")
+            res = subprocess.run(["ffmpeg","-y","-i",orig,"-t",str(MAX_S),
+                "-c:v","copy","-c:a","copy",cut],capture_output=True,timeout=60)
+            if res.returncode != 0 or not os.path.exists(cut):
+                subprocess.run(["ffmpeg","-y","-i",orig,"-t",str(MAX_S),
                     "-c:v","libx264","-preset","fast","-crf","22",
-                    "-c:a","aac","-b:a","128k","-pix_fmt","yuv420p",cut
-                ], capture_output=True, timeout=180)
-            if not os.path.exists(cut): print("  corte falhou"); continue
-            # Verificar duracao
-            probe = subprocess.run(
-                ["ffprobe","-v","quiet","-print_format","json","-show_format",cut],
-                capture_output=True, text=True)
-            try: new_dur = float(json.loads(probe.stdout)["format"]["duration"])
-            except: new_dur = MAX_SEGUNDOS
+                    "-c:a","aac","-b:a","128k","-pix_fmt","yuv420p",cut],
+                    capture_output=True,timeout=120)
+            if not os.path.exists(cut): continue
+            
+            new_dur = probe_duration(cut)
             sz = os.path.getsize(cut)
-            print("  Novo: " + str(round(new_dur,1)) + "s | " + str(sz) + "B")
+            print(f"    Novo: {new_dur:.1f}s {sz//1024}KB")
+            
             with open(cut,"rb") as f: mp4b = f.read()
-            fname = "mp4s/v" + str(vid_id) + "_58s_" + str(int(time.time())) + ".mp4"
+            fname = f"mp4s/v{vid_id}_58s_{int(time.time())}.mp4"
             mp4_url = upload_retry(mp4b, fname)
             if not mp4_url: continue
-            print("  OK: " + mp4_url)
-            # Atualizar DB
+            
+            print(f"    OK: {mp4_url[-50:]}")
             sb.table("content_pipeline").update({
                 "mp4_url": mp4_url,
-                "metadata": sb.table("content_pipeline").select("metadata").eq("id",vid_id).execute().data[0]["metadata"] or {}
+                "metadata": (v.get("metadata") or {}) | {"duration_seconds": new_dur, "trimmed_58s": True}
             }).eq("id", vid_id).execute()
-            # Update simples via SQL (mais confiavel)
             ok += 1
-    print("\nConcluido: " + str(ok) + "/" + str(len(VIDEOS)))
+    
+    print(f"Concluido: {ok} vídeos trimados")
 
 if __name__ == "__main__":
     main()
