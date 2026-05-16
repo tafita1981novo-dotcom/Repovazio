@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
 render_video_v9.py — psicologia.doc V9 MOTION AI
-Image generation: NVIDIA FLUX.1 Schnell (primary, free 40K/mês) 
-                  + Gemini (fallback) + creme sólido (último recurso)
+Image generation: Pollinations.ai/Flux (primary, free, sem API key)
+                  + NVIDIA (fallback) + Gemini (fallback) + creme (último recurso)
 
 TODAS CORREÇÕES APLICADAS:
-  ✅ NVIDIA FLUX.1 Schnell como gerador principal de imagens chibi
+  ✅ Pollinations.ai Flux como gerador principal (gratuito, sem API key)
   ✅ Gemini Image como fallback (se NVIDIA falhar)
   ✅ Veo 3.x para cenas-chave com real motion
   ✅ reference_image: personagem consistente (NVIDIA gera referência)
@@ -43,10 +43,7 @@ CRF_SHORT   = 25
 CRF_LONG    = 22
 VEO_BUDGET  = 8
 
-# NVIDIA FLUX.1 Schnell (grátis 40K/mês, melhor qualidade chibi)
-NVIDIA_FLUX_URL = "https://ai.api.nvidia.com/v1/genai/black-forest-labs/flux-schnell"
-
-# Gemini fallback
+# Gemini fallback (raramente usado — Pollinations é primary)
 GEMINI_MODELS_IMG = [
     "gemini-2.5-flash-image",
     "gemini-3.1-flash-image-preview",
@@ -145,74 +142,51 @@ RETORNE APENAS O JSON ARRAY."""
              "key": i < min(VEO_BUDGET, max(1, n//4)), "emotion": emotions[i%8]}
             for i in range(n)]
 
-# ── NVIDIA FLUX.1 SCHNELL (principal) ─────────────────────────────────────────
-def nvidia_generate_image(prompt):
+# ── POLLINATIONS.AI (principal, grátis, sem API key) ──────────────────────────
+def pollinations_generate_image(prompt, seed=42):
     """
-    Gera imagem chibi com NVIDIA FLUX.1 Schnell.
-    Grátis: 40.000 imagens/mês.
+    Pollinations.ai — 100% gratuito, sem API key, modelo Flux.
+    Gera imagem chibi direto via GET request.
+    URL: https://image.pollinations.ai/prompt/{encoded}?width=576&height=1024
+    """
+    import urllib.parse
+    full = f"{PSYCH2GO_BASE}, {prompt}. {ANTI_PLAGIO}"
+    encoded = urllib.parse.quote(full)
+    url = (f"https://image.pollinations.ai/prompt/{encoded}"
+           f"?width=576&height=1024&seed={seed}&nologo=true&model=flux")
     
-    ENDPOINTS CORRETOS (ordem de preferência):
-    1. integrate.api.nvidia.com — OpenAI-compatible, retorna b64_json
-    2. ai.api.nvidia.com/genai — retorna artifacts[].base64
-    3. SDXL fallback
-    """
+    r = requests.get(url, timeout=90)
+    if r.status_code != 200:
+        raise ValueError(f"Pollinations {r.status_code}: {r.text[:80]}")
+    if not r.headers.get('content-type','').startswith('image'):
+        raise ValueError(f"Pollinations retornou non-image: {r.headers.get('content-type')}")
+    return r.content
+
+def nvidia_generate_image_fallback(prompt):
+    """NVIDIA FLUX fallback"""
     import random as _random
     full = f"{PSYCH2GO_BASE}, {prompt}. {ANTI_PLAGIO}"
-    
     endpoints = [
-        # OpenAI-compatible endpoint (mais estável)
-        (
-            "https://integrate.api.nvidia.com/v1/images/generations",
-            {"model":"black-forest-labs/flux-schnell",
-             "prompt": full, "n": 1,
-             "size": "1024x1792",          # ~9:16 vertical
-             "response_format": "b64_json"}
-        ),
-        # NIM endpoint direto para FLUX
-        (
-            "https://ai.api.nvidia.com/v1/genai/black-forest-labs/flux-schnell",
-            {"prompt": full,
-             "width": 768, "height": 1344,  # 9:16
-             "num_inference_steps": 4, "guidance_scale": 3.5,
-             "num_images": 1, "seed": _random.randint(1, 999999)}
-        ),
-        # SDXL fallback
-        (
-            "https://ai.api.nvidia.com/v1/genai/stabilityai/stable-diffusion-xl",
-            {"prompt": full,
-             "width": 768, "height": 1344,
-             "num_inference_steps": 20, "guidance_scale": 7.0,
-             "seed": _random.randint(1, 999999)}
-        ),
+        ("https://integrate.api.nvidia.com/v1/images/generations",
+         {"model":"black-forest-labs/flux-schnell","prompt":full,"n":1,
+          "size":"1024x1792","response_format":"b64_json"}),
+        ("https://ai.api.nvidia.com/v1/genai/black-forest-labs/flux-schnell",
+         {"prompt":full,"width":576,"height":1024,
+          "num_inference_steps":4,"guidance_scale":3.5,
+          "num_images":1,"seed":_random.randint(1,999999)}),
     ]
-    
     for ep, payload in endpoints:
         try:
             r = requests.post(ep,
                 headers={"Authorization":f"Bearer {NVIDIA_KEY}","Content-Type":"application/json"},
-                json=payload, timeout=120)
-            
-            print(f"      NVIDIA {ep.split('/')[-1]}: {r.status_code}")
-            if r.status_code != 200:
-                try: print(f"        {r.json().get('detail',r.text[:80])}")
-                except: print(f"        {r.text[:80]}")
-                continue
-            
+                json=payload, timeout=90)
+            if r.status_code != 200: continue
             data = r.json()
-            # Tentar dois formatos de resposta
             b64 = (data.get("artifacts",[{}])[0].get("base64","") or
                    data.get("data",[{}])[0].get("b64_json",""))
-            
-            if b64:
-                print(f"      ✅ NVIDIA OK: {len(b64)//1024}KB")
-                return base64.b64decode(b64)
-            
-            print(f"      Resposta sem base64: {list(data.keys())}")
-        
-        except Exception as e:
-            print(f"      NVIDIA exc: {str(e)[:60]}")
-    
-    raise ValueError("NVIDIA: todos os endpoints falharam")
+            if b64: return base64.b64decode(b64)
+        except: continue
+    raise ValueError("NVIDIA fallback: todos os endpoints falharam")
 
 # ── GEMINI IMAGE (fallback) ───────────────────────────────────────────────────
 def gemini_generate_image(prompt, key):
@@ -235,20 +209,31 @@ def gemini_generate_image(prompt, key):
 
 def generate_image(prompt, idx=0):
     """
-    Tenta em ordem: NVIDIA FLUX → Gemini → ValueError
+    Tenta em ordem: Pollinations.ai (primary, sem key) → NVIDIA → Gemini → ValueError
     """
+    # 1. Pollinations.ai — gratuito, sem API key, funciona sempre
+    try:
+        return pollinations_generate_image(prompt, seed=42 + idx)
+    except Exception as e:
+        print(f"      Pollinations: {str(e)[:60]} → NVIDIA fallback")
+    
+    # 2. NVIDIA (se disponível)
     if NVIDIA_KEY:
         try:
-            return nvidia_generate_image(prompt)
+            return nvidia_generate_image_fallback(prompt)
         except Exception as e:
             print(f"      NVIDIA: {str(e)[:60]} → Gemini fallback")
     
+    # 3. Gemini (raramente funciona, mas tenta)
     gemini_keys = [k for k in [GEMINI_KEY, GEMINI_KEY2] if k]
     k = gemini_keys[idx % len(gemini_keys)] if gemini_keys else ""
     if k:
-        return gemini_generate_image(prompt, k)
+        try:
+            return gemini_generate_image(prompt, k)
+        except Exception as e:
+            print(f"      Gemini: {str(e)[:40]}")
     
-    raise ValueError("Sem chaves de imagem disponíveis")
+    raise ValueError("Todos os backends de imagem falharam")
 
 # ── VEO 3.x ───────────────────────────────────────────────────────────────────
 def veo_generate_clip(veo_prompt, ref_b64, key, duration_s=8):
