@@ -72,35 +72,25 @@ def overlay_lt(img_path, caption_text=None):
     img = Image.open(img_path).convert("RGB")
     draw = ImageDraw.Draw(img)
     
-    # Lower third semitransparente
-    lt_h = 90
-    overlay = Image.new("RGBA",(W,lt_h),(10,8,20,200))
-    img.paste(Image.fromarray(
-        [[(*overlay.getpixel((x,y))[:3],180) for x in range(W)] for y in range(lt_h)],
-        'RGB'
-    ), (0,H-lt_h))
-    draw = ImageDraw.Draw(img)
+    lt_h = 95
+    # Fundo lower third direto (sem fromarray)
+    draw.rectangle([0,H-lt_h,W,H],fill=(8,6,18))
+    draw.rectangle([0,H-lt_h,5,H],fill=VERM)
+    draw.text((22,H-lt_h+12),"psi",fill=AM)
+    draw.text((62,H-lt_h+10),"Daniela Coelho",fill=BR)
+    draw.text((62,H-lt_h+40),"Saude Mental  |  @psidanielacoelho",fill=(185,170,225))
+    draw.rectangle([0,H-4,W,H],fill=VERM)
     
-    # Fundo lower third
-    draw.rectangle([0,H-lt_h,W,H],fill=(10,8,22))
-    draw.rectangle([0,H-lt_h,4,H],fill=VERM)  # barra vermelha lateral
-    
-    # Texto lower third
-    draw.text((22,H-lt_h+12),"ψ",fill=AM)
-    draw.text((52,H-lt_h+10),"Daniela Coelho",fill=BR)
-    draw.text((52,H-lt_h+38),"Saúde Mental  |  @psidanielacoelho",fill=(190,175,230))
-    draw.rectangle([0,H-3,W,H],fill=VERM)
-    
-    # Caption da cena (badge no topo)
+    # Badge caption no topo com texto preto em fundo semi-branco
     if caption_text:
-        cap_words = caption_text.upper()[:30]
-        # Badge azul escuro no topo centro
-        cap_w = min(len(cap_words)*16+40, W-80)
-        cx = W//2
-        cap_y = 55
-        draw.rounded_rectangle([cx-cap_w//2,cap_y-22,cx+cap_w//2,cap_y+22],
-                                 radius=14,fill=(15,15,30,200))
-        draw.text((cx-cap_w//2+20,cap_y-10),cap_words,fill=BR)
+        cap_words = caption_text[:32]
+        cap_w = min(len(cap_words)*14+44, W-60)
+        cx = W//2; cap_y = 56
+        draw.rounded_rectangle([cx-cap_w//2,cap_y-24,cx+cap_w//2,cap_y+24],
+                                 radius=15,fill=(245,245,255))
+        draw.rounded_rectangle([cx-cap_w//2,cap_y-24,cx+cap_w//2,cap_y+24],
+                                 radius=15,outline=(200,200,220),width=2)
+        draw.text((cx-cap_w//2+22,cap_y-10),cap_words,fill=(20,15,45))
     
     img.save(img_path,"JPEG",quality=95)
     return img_path
