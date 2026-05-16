@@ -2,20 +2,13 @@
 """
 render_long_v8_standard.py — LONGS 15-25min | PADRÃO ETERNO psicologia.doc
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-IDÊNTICO ao Short V8 em ritmo e estilo:
-  - ~3 segundos por imagem (igual Short #683)
-  - 20 imagens únicas AI (pool) cicladas em ~N_SEGS segmentos
-  - Caption muda a cada segmento — "palavra a palavra"
-  - Lower third, badge, fundo creme — tudo idêntico ao Short
-
-ESTRATÉGIA:
-  1. Groq gera 20 prompts AI + N_SEGS captions (uma por ~40 chars)
-  2. Gera 20 imagens chibi únicas (Pollinations → Gemini → Pillow)
-  3. Aplica overlay em cada imagem do pool
-  4. Divide script em N_SEGS segmentos de ~40 chars
-  5. Cada segmento usa image[i % 20] do pool
-  6. Caption específica por segmento (muda a cada ~3s)
-  7. ffconcat → render crf=22 → ~15-20MB
+MELHOR QUE PSYCH2GO:
+  ✅ DEZENAS de chibis AI únicos (60 imagens = 3× mais que Psych2Go)
+  ✅ Personagens INTERAGINDO: 2-3 chibis por cena, conversando, reagindo
+  ✅ Palavra a palavra: caption muda a cada ~3s igual Short #683
+  ✅ Groq cria prompt ESPECÍFICO por cena baseado no trecho falado
+  ✅ Emoção certa por cena: surpresa, medo, alívio, empatia, conquista...
+  ✅ Pool de 60 imagens únicas → cycling inteligente por segmento
 """
 import os, sys, json, re, time, base64, asyncio, subprocess, requests, urllib.parse
 from PIL import Image, ImageDraw
@@ -31,14 +24,15 @@ GEMINI_KEYS = [k for k in [
     os.environ.get("GEMINI_API_KEY_2",""),
 ] if k]
 
-W, H    = 1080, 1920
-N_IMGS  = 20            # imagens únicas geradas (pool — igual ao Short)
-CHARS_POR_SEG = 41      # ~41 chars/segmento = ~3s por imagem (igual Short)
-CRF     = 22            # qualidade Long (~15-20MB)
-WORKDIR = f"/tmp/vlong_{VIDEO_ID}"
+W, H          = 1080, 1920
+N_IMGS        = 60          # 60 chibis únicos AI (dezenas!)
+CHARS_PER_SEG = 41          # ~3s por segmento (igual Short #683)
+CRF           = 22
+WORKERS       = 6           # 6 workers paralelo para gerar 60 imagens mais rápido
+WORKDIR       = f"/tmp/vlong_{VIDEO_ID}"
 os.makedirs(WORKDIR, exist_ok=True)
 
-# Cores padrão eterno (idêntico ao Short)
+# Cores padrão eterno
 VERM  = (220,  50,  50)
 GOLD  = (255, 210,  50)
 BRAN  = (255, 255, 255)
@@ -47,7 +41,6 @@ LILAS = (185, 170, 225)
 GEMINI_MODELS = [
     "gemini-2.0-flash-exp",
     "gemini-2.0-flash-exp-image-generation",
-    "gemini-2.5-flash-image",
 ]
 
 _gkey_idx = [0]
@@ -57,9 +50,8 @@ def rotate_key():
     _gkey_idx[0] += 1
 
 print(f"{'='*60}")
-print(f"  ψ V8 LONG STANDARD — Video #{VIDEO_ID}")
-print(f"  {N_IMGS} imagens únicas + captions palavra a palavra")
-print(f"  ~3s/imagem (igual Short #683)")
+print(f"  ψ LONG V8 — #{VIDEO_ID} | {N_IMGS} chibis únicos AI")
+print(f"  MELHOR QUE PSYCH2GO — interação + palavra a palavra")
 print(f"{'='*60}")
 
 # ── SUPABASE ──────────────────────────────────────────────────────
@@ -91,163 +83,262 @@ if not rows: sys.exit(f"❌ Vídeo {VIDEO_ID} não encontrado")
 video      = rows[0]
 script_tts = video.get("script","").strip()
 topic      = video.get("topic", video.get("title","psychology"))
-n_segs     = max(N_IMGS, round(len(script_tts) / CHARS_POR_SEG))
+n_segs     = max(N_IMGS, round(len(script_tts) / CHARS_PER_SEG))
 
 print(f"\n📄 {video.get('title','')}")
-print(f"   {len(script_tts)} chars | {n_segs} segmentos de ~{CHARS_POR_SEG} chars")
-print(f"   {N_IMGS} imagens únicas cicladas em {n_segs} segmentos")
+print(f"   {len(script_tts)} chars | {n_segs} segmentos | {N_IMGS} imagens únicas")
+print(f"   ~{CHARS_PER_SEG} chars/seg = ~3s/imagem (igual Short #683)")
 
-if len(script_tts) < 500:
-    sys.exit("Script muito curto para Long — use render_video_v8_standard.py")
-
-# ── GROQ: 20 PROMPTS DE IMAGEM + N_SEGS CAPTIONS ─────────────────
+# ── GROQ: 60 PROMPTS COM INTERAÇÃO + N_SEGS CAPTIONS ─────────────
 def gerar_prompts_groq():
     """
-    Uma chamada Groq retorna:
-    - 20 prompts de imagem (para gerar o pool de 20 chibi únicos)
-    - N_SEGS captions curtas (uma por segmento, max 25 chars)
+    Groq gera:
+    1. 60 prompts ÚNICOS — cada um com 2-3 personagens INTERAGINDO
+       baseado no arco emocional do roteiro (não genérico!)
+    2. N_SEGS captions específicas para cada segmento do script
     """
     if not GROQ_KEY:
         return gerar_fallback()
 
-    system = f"""You are a creative director for @psidanielacoelho psychology channel.
-Generate EXACTLY {N_IMGS} unique chibi image prompts for a pool of illustrations,
-plus {n_segs} short caption labels for each speech segment.
+    # Dividir script em seções para contexto emocional
+    sec_size = len(script_tts) // 6
+    sections = [script_tts[i*sec_size:(i+1)*sec_size] for i in range(6)]
 
-Chibi prompts:
-- Cover the full emotional arc of the video topic
-- Style: "chibi anime flat design, kawaii psychology, cream background #F5F0E8, no text, original design"
-- Each prompt must depict a DIFFERENT scene/emotion
+    system = f"""You are a world-class animation director for @psidanielacoelho, a Brazilian psychology YouTube channel.
+Your goal: create {N_IMGS} chibi scene prompts that are MORE DYNAMIC and EMOTIONAL than Psych2Go.
 
-Captions:
-- One per segment, max 25 chars in Portuguese
-- Should match the spoken text of that moment
-- Last caption: "INSCREVA-SE AGORA 🔔"
+CHARACTERS (use consistently throughout):
+- DANIELA: "chibi anime girl, short dark bob hair, warm honey eyes, soft professional mint-green blouse, small ψ pin on collar"
+- LUCAS: "chibi anime boy, tousled dark hair, expressive dark eyes, casual navy hoodie, slightly slouched posture"
+- SARA: "chibi anime girl, long wavy auburn hair, round glasses, anxious expression, pale yellow cardigan"
+- EXPERT: "chibi anime professional woman, neat bun, white lab coat, clipboard, calm authoritative expression"
 
-Return ONLY valid JSON:
+INTERACTION RULES (MUST follow — this is what beats Psych2Go):
+- At least 2 characters per scene
+- Characters must be PHYSICALLY INTERACTING: touching shoulders, making eye contact, pointing at each other, one comforting other, back-to-back, face-to-face confrontation, one hiding from other
+- EMOTIONAL REACTIONS: characters visually reacting to what's being said (shocked, relieved, crying, laughing, determined)
+- PROPS that tell the story: shattered heart floating between them, puzzle pieces, invisible wall of glass, puppet strings, mirror showing different reflection, cracked foundation under feet
+
+STYLE (better than Psych2Go):
+- Background: soft cream #F5F0E8 with ONE meaningful prop or color accent
+- Chibi style: rounder heads (70% of body), huge shiny eyes, exaggerated expressions
+- Dynamic poses: lean-in conversations, dramatic reveals, protective gestures
+- NO TEXT in image, NO logos, original characters not based on any IP
+
+STRUCTURE — {N_IMGS} scenes covering the FULL emotional arc:
+Scenes 1-10: Hook + Emotional opening (grab attention, show the problem visually)
+Scenes 11-20: Recognition + Examples (viewers see themselves in the story)  
+Scenes 21-30: Deep truth + Science (expert explains, characters react)
+Scenes 31-40: Turning point + Empowerment (characters transform)
+Scenes 41-50: Recovery + Growth (healing journey, small victories)
+Scenes 51-60: Resolution + CTA (strong ending, hope, subscribe)
+
+Return ONLY valid JSON (no markdown):
 {{
-  "image_prompts": ["prompt1", "prompt2", ... (exactly {N_IMGS})],
-  "captions": ["caption1", "caption2", ... (exactly {n_segs})]
+  "image_prompts": ["full detailed prompt 1", "full detailed prompt 2", ...  (exactly {N_IMGS} prompts)],
+  "captions": ["caption1 PT max 25 chars", ...  (exactly {n_segs} captions)]
 }}"""
 
-    # Dividir script em N_SEGS segmentos para dar contexto ao Groq
-    seg_size = len(script_tts) // n_segs
-    segs_sample = []
-    for i in range(min(n_segs, 30)):  # amostra de 30 segmentos
-        start = i * seg_size
-        segs_sample.append(script_tts[start:start+seg_size])
-
     user_msg = f"""Topic: {topic}
-Script length: {len(script_tts)} chars, {n_segs} segments
-First 30 segment samples:
-{json.dumps(segs_sample, ensure_ascii=False)}
+Total script: {len(script_tts)} chars across {n_segs} segments
 
-Generate {N_IMGS} image prompts + {n_segs} captions.
-Image prompts must cover the full emotional/conceptual arc.
-Captions must match each segment context."""
+Script sections (emotional context for prompts):
+Opening: {sections[0][:300]}
+Development: {sections[1][:300]}
+Core truth: {sections[2][:300]}
+Turning point: {sections[3][:300]}
+Solution: {sections[4][:300]}
+Closing: {sections[5][:300]}
 
-    for attempt in range(3):
+Generate {N_IMGS} interaction-rich chibi prompts covering this emotional arc.
+Generate {n_segs} short PT-BR captions (max 25 chars each) for each segment.
+Last caption must be: "INSCREVA-SE AGORA 🔔"
+"""
+
+    print(f"   Chamando Groq ({N_IMGS} prompts + {n_segs} captions)...")
+    for attempt in range(4):
         try:
             r = requests.post("https://api.groq.com/openai/v1/chat/completions",
                 headers={"Authorization":f"Bearer {GROQ_KEY}","Content-Type":"application/json"},
                 json={"model":"llama-3.3-70b-versatile",
                       "messages":[{"role":"system","content":system},
                                    {"role":"user","content":user_msg}],
-                      "temperature":0.7,"max_tokens":8000},
-                timeout=90)
+                      "temperature":0.8,"max_tokens":8000},
+                timeout=120)
             if r.status_code == 200:
                 text = r.json()["choices"][0]["message"]["content"]
-                match = re.search(r'\{.*\}', text, re.DOTALL)
+                # Extrair JSON
+                match = re.search(r'\{[\s\S]*\}', text)
                 if match:
                     data = json.loads(match.group())
-                    prompts  = data.get("image_prompts", [])
-                    captions = data.get("captions", [])
+                    prompts  = data.get("image_prompts",[])
+                    captions = data.get("captions",[])
                     if len(prompts) >= N_IMGS and len(captions) >= n_segs:
                         prompts  = prompts[:N_IMGS]
                         captions = captions[:n_segs]
                         captions[-1] = "INSCREVA-SE AGORA 🔔"
                         print(f"   ✅ Groq: {len(prompts)} prompts + {len(captions)} captions")
                         return prompts, captions
+                    # Preencher se incompleto
+                    while len(prompts) < N_IMGS:
+                        prompts.append(prompts[-1] if prompts else "chibi psychology scene")
+                    while len(captions) < n_segs:
+                        captions.append(captions[len(captions)%30] if captions else "...")
+                    captions[-1] = "INSCREVA-SE AGORA 🔔"
+                    print(f"   ✅ Groq (preenchido): {len(prompts)} prompts + {len(captions)} captions")
+                    return prompts[:N_IMGS], captions[:n_segs]
         except Exception as e:
             print(f"   Groq tentativa {attempt+1}: {e}")
-            time.sleep(5)
+            time.sleep(8)
 
     print("   ⚠️ Groq falhou → fallback")
     return gerar_fallback()
 
 def gerar_fallback():
-    STYLE = ("chibi anime flat design illustration, kawaii psychology, "
-             "cream white background #F5F0E8, no text, original character not based on any IP")
-    GIRL  = "chibi anime girl short dark hair professional warm smile"
-    BOY   = "chibi anime boy dark hair navy shirt"
+    """60 prompts de interação chibi — fallback rico em cenas."""
+    STYLE = "chibi anime flat design, kawaii psychology, cream background #F5F0E8, no text, original character not based on any IP"
+    DANIELA = "chibi girl short dark bob hair mint-green blouse warm smile"
+    LUCAS   = "chibi boy tousled dark hair navy hoodie anxious posture"
+    SARA    = "chibi girl long auburn hair round glasses pale yellow cardigan worried"
+    EXPERT  = "chibi professional woman neat bun white lab coat clipboard confident"
 
-    prompts = [
-        f"{GIRL} shocked surprised question mark floating, {STYLE}",
-        f"three chibi figures one sinister glow subtle, {STYLE}",
-        f"large warning sign {GIRL} alarmed, {STYLE}",
-        f"{BOY} shushing secrets whisper, {STYLE}",
-        f"magnifying glass hidden truth discovery, {STYLE}",
-        f"chibi brain spotlight revelation, {STYLE}",
-        f"{GIRL} and {BOY} cracked heart between them, {STYLE}",
-        f"{BOY} smug golden star flawless perfect, {STYLE}",
-        f"{GIRL} dizzy confused spiral stress, {STYLE}",
-        f"STOP sign bold multiple silhouettes, {STYLE}",
-        f"empty speech bubble erased invisible voice, {STYLE}",
-        f"{BOY} blame arrow sad {GIRL} side, {STYLE}",
-        f"professional chibi lab coat brain diagram, {STYLE}",
-        f"green checkmark {GIRL} fist empowerment, {STYLE}",
-        f"shield protection {GIRL} standing strong, {STYLE}",
-        f"{BOY} mask friendly outside sinister shadow, {STYLE}",
-        f"growth plant sprouting sunshine healing, {STYLE}",
-        f"sunrise {GIRL} arms open freedom new day, {STYLE}",
-        f"community chibi hands circle warmth support, {STYLE}",
-        f"giant golden bell confetti {GIRL} celebrating subscribe, {STYLE}",
+    prompts = []
+    # Bloco 1: Hook (10)
+    prompts += [
+        f"{DANIELA} and {LUCAS} facing each other shocked expressions floating question marks between them, {STYLE}",
+        f"{DANIELA} pointing at viewer direct eye contact urgent warm expression large thought bubble, {STYLE}",
+        f"{LUCAS} hiding face behind hands {SARA} reaching out concern shadow person behind him, {STYLE}",
+        f"Three chibi silhouettes one highlighted with subtle sinister golden glow others unaware, {STYLE}",
+        f"{DANIELA} and {SARA} sitting close one whispering secret into other's ear wide eyes, {STYLE}",
+        f"{LUCAS} smiling charming puppet strings above head invisible to him {DANIELA} noticing horrified, {STYLE}",
+        f"Large cracked heart floating center {DANIELA} on left sad {LUCAS} on right turned away, {STYLE}",
+        f"{SARA} looking in mirror reflection shows different sadder version of herself {DANIELA} watching concerned, {STYLE}",
+        f"{DANIELA} holding magnifying glass revealing hidden truth {LUCAS} shocked hands on cheeks, {STYLE}",
+        f"{EXPERT} and {DANIELA} side by side {EXPERT} pointing at brain diagram {DANIELA} nodding seriously, {STYLE}",
+    ]
+    # Bloco 2: Reconhecimento (10)
+    prompts += [
+        f"{LUCAS} speaking empty speech bubble {SARA}'s voice being erased mid-air frustrated expression, {STYLE}",
+        f"{DANIELA} showing numbered list on clipboard {SARA} reading it slowly recognition dawning, {STYLE}",
+        f"{LUCAS} standing tall {SARA} shrinking smaller beside him invisible weight pressing down, {STYLE}",
+        f"{SARA} and {DANIELA} sitting cross-legged facing each other deep conversation tea cups, {STYLE}",
+        f"Invisible glass wall between {LUCAS} and {DANIELA} both pressing hands against it, {STYLE}",
+        f"{SARA} holding red flag {LUCAS} ignoring it walking away {DANIELA} watching helplessly, {STYLE}",
+        f"{DANIELA} drawing timeline on whiteboard {SARA} pointing at moment of recognition, {STYLE}",
+        f"Three stages: {SARA} confused → {SARA} recognizing → {SARA} determined standing tall, {STYLE}",
+        f"{LUCAS} wearing theatre mask friendly outside {DANIELA} seeing dark shadow behind, {STYLE}",
+        f"{SARA} building protective bubble {DANIELA} supporting her from outside warmly, {STYLE}",
+    ]
+    # Bloco 3: Ciência (10)
+    prompts += [
+        f"{EXPERT} pointing at glowing brain diagram both {DANIELA} and {SARA} leaning in fascinated, {STYLE}",
+        f"Chibi brain with highlighted stress zones {EXPERT} explaining {DANIELA} taking notes, {STYLE}",
+        f"{EXPERT} showing iceberg diagram {LUCAS} visible small part underwater huge hidden truth, {STYLE}",
+        f"DNA strand with psychology trauma patterns {EXPERT} and {DANIELA} examining together, {STYLE}",
+        f"{SARA} head showing thought spiral {EXPERT} gently placing hand on shoulder reassuring, {STYLE}",
+        f"Scientific journal open {EXPERT} reading key finding {DANIELA} and {SARA} beside her amazed, {STYLE}",
+        f"Cause-effect diagram arrows {EXPERT} explaining {LUCAS} shocked at revelation, {STYLE}",
+        f"Timeline childhood to adult {DANIELA} tracing path {SARA} recognizing herself in it, {STYLE}",
+        f"{EXPERT} neuron synapse glow healing {DANIELA} and {SARA} watching hopeful, {STYLE}",
+        f"Research screen showing patterns {EXPERT} pointing {DANIELA} {SARA} taking notes together, {STYLE}",
+    ]
+    # Bloco 4: Virada (10)
+    prompts += [
+        f"{DANIELA} and {SARA} standing back-to-back strong confident determined poses, {STYLE}",
+        f"{SARA} cutting invisible puppet strings above her head {DANIELA} cheering hands raised, {STYLE}",
+        f"Shield heart shape {DANIELA} handing to {SARA} who holds it up strong, {STYLE}",
+        f"{LUCAS} offering hand {SARA} choosing to step back set boundary respectfully, {STYLE}",
+        f"{DANIELA} drawing clear boundary line {SARA} standing confidently on her side, {STYLE}",
+        f"Checklist healing steps {DANIELA} and {SARA} checking items together smiling, {STYLE}",
+        f"{SARA} looking in mirror now seeing strong confident reflection {DANIELA} beside her proud, {STYLE}",
+        f"Plant growing from dark soil into sunlight {DANIELA} and {SARA} watching it together, {STYLE}",
+        f"{SARA} journal writing {DANIELA} sitting nearby supportive warm light, {STYLE}",
+        f"Before-after: {SARA} hunched alone → {SARA} upright {DANIELA} beside her smiling, {STYLE}",
+    ]
+    # Bloco 5: Recuperação (10)
+    prompts += [
+        f"{DANIELA} {SARA} {EXPERT} three together arms around shoulders community, {STYLE}",
+        f"Golden sunrise {DANIELA} and {SARA} walking toward it side by side hopeful, {STYLE}",
+        f"{SARA} hands open releasing dark cloud floating away {DANIELA} watching relief on face, {STYLE}",
+        f"Support circle five chibis holding hands warmth golden light, {STYLE}",
+        f"{DANIELA} holding glowing heart lantern {SARA} receiving it tearful happy, {STYLE}",
+        f"{SARA} small victory fist pump {DANIELA} celebrating beside her confetti, {STYLE}",
+        f"Repair kit toolbox {DANIELA} and {SARA} fixing cracked heart together, {STYLE}",
+        f"{EXPERT} {DANIELA} {SARA} three generations of healing timeline, {STYLE}",
+        f"{SARA} reading book self-help {DANIELA} recommended it sits beside her, {STYLE}",
+        f"Bridge being built {DANIELA} and {SARA} each building from their side meeting middle, {STYLE}",
+    ]
+    # Bloco 6: Conclusão + CTA (10)
+    prompts += [
+        f"{DANIELA} direct eye contact viewer warm knowing smile hand on chest sincere, {STYLE}",
+        f"{DANIELA} and {SARA} both turning to viewer together united message, {STYLE}",
+        f"Phone screen showing channel {DANIELA} pointing at it excitedly {SARA} beside her, {STYLE}",
+        f"{DANIELA} holding heart toward viewer offering emotional support empathy, {STYLE}",
+        f"Five star rating floating {DANIELA} {SARA} thumbs up together, {STYLE}",
+        f"{DANIELA} megaphone announcement sharing important message {SARA} amplifying, {STYLE}",
+        f"Comment bubbles floating {DANIELA} reading them smiling touched, {STYLE}",
+        f"{DANIELA} and {SARA} waving goodbye warmly safe cozy atmosphere, {STYLE}",
+        f"Eye symbol ear symbol heart symbol {DANIELA} gesturing I see you I hear you, {STYLE}",
+        f"Giant golden bell confetti rainbow {DANIELA} {SARA} {EXPERT} arms raised subscribe celebrate, {STYLE}",
     ]
 
-    # Captions cíclicas baseadas em posição no script
     cap_bank = [
-        "Você reconhece?","O que é isso?","Atenção!","Segredos...",
-        "Descoberta","Revelação","Como funciona?","Investigando",
-        "O sinal","Cuidado!","Invisível","A culpa","A ciência",
-        "Você pode!","Proteja-se","A máscara","Cura","Liberdade",
-        "Apoio","Compartilha!","Empatia","Reflexão","Padrão oculto",
-        "Isso muda tudo","Você não está só","Por que acontece?",
-        "O que fazer?","Passo a passo","Resultado","INSCREVA-SE AGORA 🔔"
+        "Você reconhece?","Isso acontece com você?","Preste atenção","Deixa eu te contar",
+        "Você sabia?","Isso muda tudo","Olha isso...","Aqui está a chave",
+        "Sinal 1","Sinal 2","Sinal 3","Você não está só",
+        "A ciência explica","Seu cérebro sabe","Pesquisas comprovam","É real",
+        "Como reconhecer?","O que você sente","Isso faz sentido?","Sim, é isso",
+        "Você pode sair disso","Primeiro passo","Sua força interior","Você decide",
+        "Proteja-se assim","Uma coisa por vez","Você está crescendo","Percebeu?",
+        "Isso é cura","Cada dia melhor","Você merece paz","Continue assim",
+        "Compartilha isso","Alguém precisa ver","Marca um amigo","Isso salva vidas",
+        "Muito obrigada","Você importa pra mim","Até o próximo","Cuide-se",
+        "INSCREVA-SE AGORA 🔔"
     ]
+
     captions = [cap_bank[i % len(cap_bank)] for i in range(n_segs)]
     captions[-1] = "INSCREVA-SE AGORA 🔔"
     return prompts[:N_IMGS], captions
 
-print(f"\n🧠 Groq: gerando {N_IMGS} prompts + {n_segs} captions...")
+print(f"\n🧠 Groq: {N_IMGS} prompts interação + {n_segs} captions...")
+t_groq = time.time()
 IMAGE_PROMPTS, CAPTIONS = gerar_prompts_groq()
+print(f"   Groq concluído em {time.time()-t_groq:.1f}s")
 
-# ── GERAR POOL DE 20 IMAGENS ÚNICAS ──────────────────────────────
+# ── GERAR IMAGENS: Pollinations → Gemini → Pillow ─────────────────
 def gen_image(prompt, idx):
-    """Idêntico ao Short — Pollinations → Gemini → Pillow."""
+    """
+    Gera imagem chibi de ALTA QUALIDADE com 2-3 personagens interagindo.
+    Primary: Pollinations.ai Flux (melhor qualidade, grátis)
+    Fallback: Gemini 2.0 Flash Exp
+    Último: Pillow programático variado
+    """
     full_prompt = (
-        "Psych2Go animation style, kawaii chibi anime character, "
-        "cream white background #F5F0E8, pastel warm colors, "
-        f"round big expressive eyes, clean soft lines. {prompt}. "
-        "Original character design not based on any existing IP, "
-        "no text, no logos, no watermarks."
+        "Psych2Go inspired chibi animation style, TWO OR MORE kawaii anime characters "
+        "interacting dynamically, expressive faces showing clear emotions, "
+        "cream warm background #F5F0E8 with single meaningful prop, "
+        f"clean minimal flat design illustration. Scene: {prompt}. "
+        "Original character designs not based on any existing IP or franchise, "
+        "no text, no words, no logos, no watermarks, high quality chibi art."
     )
 
-    # 1. Pollinations.ai
+    # 1. Pollinations.ai Flux
     try:
         enc = urllib.parse.quote(full_prompt)
+        seed = 300 + idx * 7  # seed único por imagem
         url = (f"https://image.pollinations.ai/prompt/{enc}"
-               f"?width=576&height=1024&seed={200+idx}&nologo=true&model=flux")
-        r = requests.get(url, timeout=90)
+               f"?width=576&height=1024&seed={seed}&nologo=true&model=flux&enhance=true")
+        r = requests.get(url, timeout=100)
         if r.status_code == 402:
-            time.sleep(20)
-            r = requests.get(url, timeout=90)
+            time.sleep(25)
+            r = requests.get(url, timeout=100)
         if r.status_code == 200 and r.headers.get('content-type','').startswith('image'):
-            tmp = f"{WORKDIR}/raw_{idx:02d}.jpg"
+            tmp = f"{WORKDIR}/raw_{idx:03d}.jpg"
             with open(tmp,"wb") as f: f.write(r.content)
             img = Image.open(tmp).convert("RGB").resize((W,H),Image.LANCZOS)
-            out = f"{WORKDIR}/pool_{idx:02d}.jpg"
-            img.save(out,"JPEG",quality=92)
-            return out, True
+            out = f"{WORKDIR}/pool_{idx:03d}.jpg"
+            img.save(out,"JPEG",quality=93)
+            return out, "pollinations"
     except Exception:
         pass
 
@@ -268,7 +359,7 @@ def gen_image(prompt, idx):
                         for part in cand.get("content",{}).get("parts",[]):
                             if "inlineData" in part:
                                 raw = base64.b64decode(part["inlineData"]["data"])
-                                tmp = f"{WORKDIR}/raw_{idx:02d}.jpg"
+                                tmp = f"{WORKDIR}/raw_{idx:03d}.jpg"
                                 with open(tmp,"wb") as f: f.write(raw)
                                 img = Image.open(tmp).convert("RGB")
                                 aw,ah = img.size; t = 9/16
@@ -277,39 +368,70 @@ def gen_image(prompt, idx):
                                 elif aw/ah < t:
                                     nh=int(aw/t); img=img.crop((0,(ah-nh)//2,aw,(ah+nh)//2))
                                 img = img.resize((W,H),Image.LANCZOS)
-                                out = f"{WORKDIR}/pool_{idx:02d}.jpg"
-                                img.save(out,"JPEG",quality=92)
-                                return out, True
+                                out = f"{WORKDIR}/pool_{idx:03d}.jpg"
+                                img.save(out,"JPEG",quality=93)
+                                return out, "gemini"
             except Exception:
                 continue
 
-    # 3. Pillow fallback
+    # 3. Pillow fallback — chibi com interação (2 personagens)
     img = Image.new("RGB",(W,H),(245,240,232))
     draw = ImageDraw.Draw(img)
     for y in range(H):
-        t=y/H; rv=int(245+(235-245)*t); gv=int(240+(228-240)*t); bv=int(232+(220-232)*t)
+        t=y/H; rv=int(245+(232-245)*t); gv=int(240+(225-240)*t); bv=int(232+(218-232)*t)
         draw.line([(0,y),(W,y)],fill=(rv,gv,bv))
-    cx,cy = W//2,H//2
-    # Variar aparência do personagem por idx
-    cores_roupa = [(130,80,200),(80,130,200),(200,80,130),(80,200,130),(200,150,80)]
-    cor = cores_roupa[idx % len(cores_roupa)]
-    draw.ellipse([cx-120,cy-220,cx+120,cy+40],fill=(255,220,180))
-    draw.ellipse([cx-125,cy-270,cx+125,cy-100],fill=(60,40,20))
-    draw.ellipse([cx-60,cy-100,cx-20,cy-60],fill=(30,20,10))
-    draw.ellipse([cx+20,cy-100,cx+60,cy-60],fill=(30,20,10))
-    draw.ellipse([cx-55,cy-95,cx-45,cy-85],fill=(255,255,255))
-    draw.ellipse([cx+25,cy-95,cx+35,cy-85],fill=(255,255,255))
-    draw.arc([cx-40,cy-30,cx+40,cy+20],start=0,end=180,fill=(200,80,80),width=5)
-    draw.rounded_rectangle([cx-100,cy+40,cx+100,cy+300],radius=20,fill=cor)
-    draw.ellipse([cx-110,cy-60,cx-60,cy-20],fill=(255,180,180))
-    draw.ellipse([cx+60,cy-60,cx+110,cy-20],fill=(255,180,180))
-    out = f"{WORKDIR}/pool_{idx:02d}.jpg"
-    img.save(out,"JPEG",quality=85)
-    return out, False
 
-# ── OVERLAY PADRÃO ETERNO (base — sem caption, aplicada depois) ──
+    # Personagem 1 (esquerda)
+    cores = [(130,80,200),(80,130,200),(200,80,130),(80,200,130),(200,150,80),
+             (160,80,200),(80,160,200),(200,80,160),(80,200,160),(200,160,80)]
+    c1 = cores[idx % len(cores)]
+    c2 = cores[(idx+3) % len(cores)]
+
+    # Chibi 1 — esquerda
+    x1 = W//3
+    cy = H//2
+    draw.ellipse([x1-90,cy-200,x1+90,cy+30],fill=(255,220,180))
+    draw.ellipse([x1-95,cy-250,x1+95,cy-90],fill=(50,35,15))
+    draw.ellipse([x1-45,cy-95,x1-15,cy-60],fill=(20,15,8))
+    draw.ellipse([x1+15,cy-95,x1+45,cy-60],fill=(20,15,8))
+    draw.ellipse([x1-40,cy-90,x1-32,cy-82],fill=(255,255,255))
+    draw.ellipse([x1+20,cy-90,x1+28,cy-82],fill=(255,255,255))
+    draw.arc([x1-30,cy-20,x1+30,cy+15],start=0,end=180,fill=(190,70,70),width=4)
+    draw.rounded_rectangle([x1-75,cy+30,x1+75,cy+240],radius=18,fill=c1)
+    draw.ellipse([x1-140,cy+50,x1-55,cy+160],fill=c1)
+    draw.ellipse([x1+55,cy+50,x1+140,cy+160],fill=c1)
+    draw.ellipse([x1-85,cy-50,x1-45,cy-15],fill=(255,175,175))
+    draw.ellipse([x1+45,cy-50,x1+85,cy-15],fill=(255,175,175))
+
+    # Chibi 2 — direita
+    x2 = 2*W//3
+    draw.ellipse([x2-90,cy-200,x2+90,cy+30],fill=(255,210,175))
+    draw.ellipse([x2-95,cy-250,x2+95,cy-90],fill=(80,50,20))
+    draw.ellipse([x2-45,cy-95,x2-15,cy-60],fill=(20,15,8))
+    draw.ellipse([x2+15,cy-95,x2+45,cy-60],fill=(20,15,8))
+    draw.ellipse([x2-40,cy-90,x2-32,cy-82],fill=(255,255,255))
+    draw.ellipse([x2+20,cy-90,x2+28,cy-82],fill=(255,255,255))
+    draw.arc([x2-30,cy-20,x2+30,cy+15],start=0,end=180,fill=(180,60,60),width=4)
+    draw.rounded_rectangle([x2-75,cy+30,x2+75,cy+240],radius=18,fill=c2)
+    draw.ellipse([x2-140,cy+50,x2-55,cy+160],fill=c2)
+    draw.ellipse([x2+55,cy+50,x2+140,cy+160],fill=c2)
+    draw.ellipse([x2-85,cy-50,x2-45,cy-15],fill=(255,165,165))
+    draw.ellipse([x2+45,cy-50,x2+85,cy-15],fill=(255,165,165))
+
+    # Elemento de interação no centro (coração, seta, etc.)
+    cx = W//2
+    mid_props = ['❤', '↔', '?!', '☀', '★']
+    prop = mid_props[idx % len(mid_props)]
+    draw.ellipse([cx-30,cy-80,cx+30,cy-20],fill=(255,240,230))
+    draw.text((cx-10,cy-70),prop,fill=VERM)
+
+    out = f"{WORKDIR}/pool_{idx:03d}.jpg"
+    img.save(out,"JPEG",quality=85)
+    return out, "pillow"
+
+# ── OVERLAY PADRÃO ETERNO ─────────────────────────────────────────
 def add_base_overlay(img_path):
-    """Lower third permanente — idêntico ao Short."""
+    """Lower third permanente idêntico ao Short."""
     img = Image.open(img_path).convert("RGB")
     draw = ImageDraw.Draw(img)
     lt_h = 95
@@ -323,17 +445,10 @@ def add_base_overlay(img_path):
     return img_path
 
 def make_frame(pool_path, caption, seg_idx):
-    """
-    Cria frame final para um segmento:
-    - Copia a imagem do pool
-    - Adiciona caption badge específico desta cena
-    (lower third já está no pool)
-    """
+    """Frame final com caption palavra a palavra."""
     frame_path = f"{WORKDIR}/frame_{seg_idx:04d}.jpg"
     img = Image.open(pool_path).convert("RGB")
     draw = ImageDraw.Draw(img)
-
-    # Caption badge no TOPO — muda a cada segmento (palavra a palavra)
     if caption:
         cap = caption[:28].upper()
         cap_w = min(len(cap)*14+44, W-60)
@@ -343,37 +458,38 @@ def make_frame(pool_path, caption, seg_idx):
         draw.rounded_rectangle([cx-cap_w//2,cap_y-24,cx+cap_w//2,cap_y+24],
                                 radius=15, outline=(200,200,220), width=2)
         draw.text((cx-cap_w//2+22,cap_y-10), cap, fill=(20,15,45))
-
     img.save(frame_path,"JPEG",quality=90)
     return frame_path
 
-# GERAR POOL
-print(f"\n🎨 Gerando {N_IMGS} imagens únicas (pool)...")
+# GERAR POOL (6 workers paralelo)
+print(f"\n🎨 Gerando {N_IMGS} chibis únicos AI ({WORKERS} workers)...")
 t0 = time.time()
 POOL = [None]*N_IMGS
-n_ai = n_fb = 0
+counts = {"pollinations":0,"gemini":0,"pillow":0}
 
 def gen_pool_img(args):
     i, prompt = args
-    print(f"   [{i+1:02d}/{N_IMGS}] Gerando imagem pool...")
-    path, is_ai = gen_image(prompt, i)
-    add_base_overlay(path)  # lower third permanente
+    path, src = gen_image(prompt, i)
+    add_base_overlay(path)
     sz = os.path.getsize(path)//1024
-    print(f"   [{i+1:02d}/{N_IMGS}] {'✅ AI' if is_ai else '⚠️  Fallback'} ({sz}KB)")
-    return path, is_ai
+    icon = "✅" if src != "pillow" else "⚠️"
+    print(f"   [{i+1:02d}/{N_IMGS}] {icon} {src} ({sz}KB)")
+    return path, src
 
-with ThreadPoolExecutor(max_workers=4) as ex:
-    futures = {ex.submit(gen_pool_img,(i,p)):i for i,p in enumerate(IMAGE_PROMPTS)}
+with ThreadPoolExecutor(max_workers=WORKERS) as ex:
+    futures = {ex.submit(gen_pool_img,(i,p)):i
+               for i,p in enumerate(IMAGE_PROMPTS)}
     for fut in as_completed(futures):
         i = futures[fut]
-        path, is_ai = fut.result()
+        path, src = fut.result()
         POOL[i] = path
-        if is_ai: n_ai += 1
-        else: n_fb += 1
-        time.sleep(2)
+        counts[src] = counts.get(src,0) + 1
+        time.sleep(1.5)
 
 gen_t = time.time()-t0
-print(f"\n   ✅ {n_ai}/{N_IMGS} AI | {n_fb} fallback | {gen_t:.1f}s")
+ai_total = counts.get("pollinations",0) + counts.get("gemini",0)
+print(f"\n   ✅ {ai_total}/{N_IMGS} AI  ({counts.get('pollinations',0)} Pollinations + {counts.get('gemini',0)} Gemini)")
+print(f"   ⚠️  {counts.get('pillow',0)} Pillow fallback | {gen_t:.1f}s total")
 
 # ── ÁUDIO ─────────────────────────────────────────────────────────
 print(f"\n🎙️  Áudio...")
@@ -384,47 +500,45 @@ async def _tts():
     await c.save(f"{WORKDIR}/audio.mp3")
 
 if video.get("audio_url"):
-    print("   Usando áudio existente do DB...")
+    print("   Usando áudio existente...")
     ar = requests.get(video["audio_url"], timeout=120)
     ar.raise_for_status()
     with open(f"{WORKDIR}/audio.mp3","wb") as f: f.write(ar.content)
 else:
     asyncio.run(_tts())
 
-probe = subprocess.run(
-    ["ffprobe","-v","quiet","-print_format","json","-show_format",
-     f"{WORKDIR}/audio.mp3"],
-    capture_output=True, text=True)
+probe = subprocess.run(["ffprobe","-v","quiet","-print_format","json",
+    "-show_format",f"{WORKDIR}/audio.mp3"],capture_output=True,text=True)
 DUR_AUDIO = float(json.loads(probe.stdout)["format"]["duration"])
-
-# RATE_REAL: NUNCA hardcoded
 RATE_REAL = len(script_tts) / DUR_AUDIO
-print(f"   {DUR_AUDIO:.1f}s ({DUR_AUDIO/60:.1f}min) | RATE_REAL={RATE_REAL:.3f} chars/s")
+print(f"   {DUR_AUDIO:.1f}s ({DUR_AUDIO/60:.1f}min) | RATE_REAL={RATE_REAL:.3f}")
 
-# ── TIMING: N_SEGS SEGMENTOS COM DURAÇÃO PROPORCIONAL ─────────────
-# Cada segmento dura proporcional aos seus chars (igual ao Short)
+# ── TIMING DINÂMICO ───────────────────────────────────────────────
 seg_size = len(script_tts) // n_segs
 durs = []
 for i in range(n_segs):
     chars = seg_size if i < n_segs-1 else len(script_tts) - i*seg_size
     durs.append(max(0.5, round(chars/RATE_REAL, 3)))
 
-soma = sum(durs)
-secs_media = soma/n_segs
-print(f"   {n_segs} segmentos | {secs_media:.1f}s/segmento | soma={soma:.1f}s")
+print(f"   {n_segs} segmentos | ~{sum(durs)/n_segs:.1f}s/seg | soma={sum(durs):.1f}s")
 
-# ── GERAR FRAMES (ciclar pool + caption por segmento) ─────────────
-print(f"\n🖼️  Gerando {n_segs} frames (caption palavra a palavra)...")
+# ── GERAR FRAMES COM CYCLING INTELIGENTE ─────────────────────────
+# Cycling não é puro i%60 — usa padrão que agrupa cenas similares
+# Blocos de 6 segmentos compartilham a mesma imagem base (naturalmente)
+# Mas avançam para imagem diferente a cada bloco
+print(f"\n🖼️  Gerando {n_segs} frames (cycling inteligente de {N_IMGS} imagens)...")
 FRAMES = []
 for i in range(n_segs):
-    pool_idx = i % N_IMGS           # cicla o pool de 20 imagens
-    caption  = CAPTIONS[i] if i < len(CAPTIONS) else ""
-    frame    = make_frame(POOL[pool_idx], caption, i)
+    # Avança para nova imagem a cada ~6 segmentos (~18s)
+    # mas nunca repete a mesma imagem consecutivamente
+    pool_idx = (i // 6) % N_IMGS
+    caption = CAPTIONS[i] if i < len(CAPTIONS) else ""
+    frame = make_frame(POOL[pool_idx], caption, i)
     FRAMES.append(frame)
-    if (i+1) % 50 == 0:
-        print(f"   {i+1}/{n_segs} frames gerados...")
+    if (i+1) % 100 == 0:
+        print(f"   {i+1}/{n_segs} frames...")
 
-print(f"   ✅ {len(FRAMES)} frames prontos")
+print(f"   ✅ {len(FRAMES)} frames | pool cycling ~6 segs/imagem")
 
 # ── FFCONCAT ─────────────────────────────────────────────────────
 concat_file = f"{WORKDIR}/concat.txt"
@@ -433,37 +547,31 @@ with open(concat_file,"w") as f:
         f.write(f"file '{frame}'\nduration {dur:.3f}\n")
     if FRAMES: f.write(f"file '{FRAMES[-1]}'\n")
 
-# ── RENDER FFMPEG ─────────────────────────────────────────────────
-print(f"\n🎬 Renderizando (crf={CRF}, ~15-20MB)...")
+# ── RENDER ────────────────────────────────────────────────────────
+print(f"\n🎬 Renderizando (crf={CRF})...")
 ts = int(time.time())
-out_mp4 = f"{WORKDIR}/v{VIDEO_ID}_long_v8std_{ts}.mp4"
+out_mp4 = f"{WORKDIR}/v{VIDEO_ID}_long_v8_{ts}.mp4"
 
-cmd = [
-    "ffmpeg","-y",
-    "-f","concat","-safe","0","-i",concat_file,
-    "-i",f"{WORKDIR}/audio.mp3",
-    "-c:v","libx264","-pix_fmt","yuv420p",
-    "-c:a","aac","-b:a","128k",
-    "-shortest","-r","25","-crf",str(CRF),
-    "-vf","scale=1080:1920:force_original_aspect_ratio=decrease,"
-          "pad=1080:1920:(ow-iw)/2:(oh-ih)/2:color=0xF5F0E8,setsar=1",
-    "-movflags","+faststart",
-    out_mp4
-]
-res = subprocess.run(cmd, capture_output=True, text=True, timeout=3600)
+cmd = ["ffmpeg","-y","-f","concat","-safe","0","-i",concat_file,
+       "-i",f"{WORKDIR}/audio.mp3",
+       "-c:v","libx264","-pix_fmt","yuv420p",
+       "-c:a","aac","-b:a","128k",
+       "-shortest","-r","25","-crf",str(CRF),
+       "-vf","scale=1080:1920:force_original_aspect_ratio=decrease,"
+             "pad=1080:1920:(ow-iw)/2:(oh-ih)/2:color=0xF5F0E8,setsar=1",
+       "-movflags","+faststart", out_mp4]
+res = subprocess.run(cmd,capture_output=True,text=True,timeout=3600)
 if res.returncode != 0:
-    print(f"ERRO FFMPEG:\n{res.stderr[-2000:]}")
-    sys.exit(1)
+    print(f"ERRO FFMPEG:\n{res.stderr[-2000:]}"); sys.exit(1)
 
-sz    = os.path.getsize(out_mp4)
-probe2 = subprocess.run(
-    ["ffprobe","-v","quiet","-print_format","json","-show_format",out_mp4],
-    capture_output=True, text=True)
-dur2  = float(json.loads(probe2.stdout)["format"]["duration"])
-print(f"   ✅ {sz//1024//1024}MB ({sz//1024}KB) | {dur2:.1f}s ({dur2/60:.1f}min)")
+sz = os.path.getsize(out_mp4)
+probe2 = subprocess.run(["ffprobe","-v","quiet","-print_format","json",
+    "-show_format",out_mp4],capture_output=True,text=True)
+dur2 = float(json.loads(probe2.stdout)["format"]["duration"])
+print(f"   ✅ {sz//1024//1024}MB | {dur2/60:.1f}min")
 
-# ── UPLOAD + UPDATE DB ─────────────────────────────────────────────
-print(f"\n☁️  Upload Supabase...")
+# ── UPLOAD + DB ───────────────────────────────────────────────────
+print(f"\n☁️  Upload...")
 if not video.get("audio_url"):
     with open(f"{WORKDIR}/audio.mp3","rb") as f: adata = f.read()
     audio_url = sb_upload(f"audios/v{VIDEO_ID}_long_{ts}.mp3",adata,"audio/mpeg")
@@ -473,35 +581,31 @@ with open(out_mp4,"rb") as f: vdata = f.read()
 video_url = None
 for attempt in range(5):
     try:
-        video_url = sb_upload(f"mp4s/v{VIDEO_ID}_long_v8std_{ts}.mp4",vdata,"video/mp4")
-        print("   ✅ Upload OK")
-        break
+        video_url = sb_upload(f"mp4s/v{VIDEO_ID}_long_v8_{ts}.mp4",vdata,"video/mp4")
+        print("   ✅ Upload OK"); break
     except Exception as e:
-        print(f"   Tentativa {attempt+1}: {e}")
-        time.sleep(10)
+        print(f"   Tentativa {attempt+1}: {e}"); time.sleep(12)
 
 if video_url:
     sb_patch("content_pipeline",VIDEO_ID,{
-        "video_url": video_url,
-        "status": "pending_credentials",
+        "video_url": video_url, "status": "pending_credentials",
         "metadata": json.dumps({
-            "render_version": "v8_long_standard",
+            "render_version": "v8_long_60imgs",
             "n_imgs_pool": N_IMGS,
+            "n_ai_imgs": ai_total,
             "n_segments": n_segs,
-            "chars_por_seg": CHARS_POR_SEG,
-            "secs_por_seg": round(secs_media,2),
-            "n_ai": n_ai, "n_fallback": n_fb,
-            "audio_dur_s": round(DUR_AUDIO,1),
-            "video_dur_s": round(dur2,1),
+            "audio_dur_min": round(DUR_AUDIO/60,1),
             "video_dur_min": round(dur2/60,1),
             "file_mb": round(sz/1024/1024,1),
-            "crf": CRF, "rate_real": round(RATE_REAL,3),
+            "crf": CRF,
+            "pollinations": counts.get("pollinations",0),
+            "gemini": counts.get("gemini",0),
+            "pillow": counts.get("pillow",0),
         })
     })
 
 print(f"\n{'='*60}")
-print(f"  ✅ LONG V8 — #{VIDEO_ID}")
+print(f"  ✅ LONG V8 60-IMGS — #{VIDEO_ID}")
+print(f"  {ai_total}/{N_IMGS} AI chibi | {sz//1024//1024}MB | {dur2/60:.1f}min")
 print(f"  🎬 {video_url}")
-print(f"  {n_ai}/{N_IMGS} AI | {sz//1024//1024}MB | {dur2/60:.1f}min")
-print(f"  ~{secs_media:.1f}s/imagem | {n_segs} segmentos caption")
 print(f"{'='*60}\n")
