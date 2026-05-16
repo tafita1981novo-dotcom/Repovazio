@@ -146,41 +146,51 @@ RETORNE APENAS O JSON ARRAY."""
 def pollinations_generate_image(prompt, seed=42):
     """
     Pollinations.ai — 100% gratuito, sem API key, modelo Flux.
-    Com retry automático em caso de 402 (Queue full).
+    Requisições SEQUENCIAIS com backoff agressivo em 402.
     """
     import urllib.parse
     full = f"{PSYCH2GO_BASE}, {prompt}. {ANTI_PLAGIO}"
     encoded = urllib.parse.quote(full)
-    url = (f"https://image.pollinations.ai/prompt/{encoded}"
-           f"?width=576&height=1024&seed={seed}&nologo=true&model=flux")
     
-    for attempt in range(4):  # 4 tentativas com backoff
-        try:
-            r = requests.get(url, timeout=90)
-            
-            if r.status_code == 402:  # Queue full — aguardar e tentar de novo
-                wait = 10 * (attempt + 1)  # 10s, 20s, 30s...
-                print(f"      Pollinations 402 (fila cheia) — aguardando {wait}s... [{attempt+1}/4]")
-                time.sleep(wait)
-                continue
-            
-            if r.status_code != 200:
-                raise ValueError(f"Pollinations {r.status_code}: {r.text[:80]}")
-            
-            if not r.headers.get('content-type','').startswith('image'):
-                raise ValueError(f"Non-image: {r.headers.get('content-type')}")
-            
-            return r.content
+    # Tentar diferentes modelos se flux falhar
+    models = ["flux", "flux-realism", "turbo"]
+    
+    for model in models:
+        url = (f"https://image.pollinations.ai/prompt/{encoded}"
+               f"?width=576&height=1024&seed={seed}&nologo=true&model={model}"
+               f"&enhance=true")
         
-        except ValueError: raise
-        except Exception as e:
-            if attempt < 3:
-                print(f"      Pollinations exc [{attempt+1}/4]: {str(e)[:50]}, retry...")
-                time.sleep(15)
-            else:
-                raise ValueError(f"Pollinations: {e}")
+        for attempt in range(5):
+            try:
+                r = requests.get(url, timeout=120)
+                
+                if r.status_code == 402:
+                    wait = 15 * (2 ** attempt)  # 15s, 30s, 60s, 120s, 240s
+                    wait = min(wait, 90)  # max 90s
+                    print(f"      Pollinations 402 (fila cheia, {model}) — aguardando {wait}s [{attempt+1}/5]")
+                    time.sleep(wait)
+                    continue
+                
+                if r.status_code == 200:
+                    ct = r.headers.get('content-type','')
+                    if ct.startswith('image'):
+                        print(f"      ✅ Pollinations OK ({model}, {len(r.content)//1024}KB)")
+                        return r.content
+                    raise ValueError(f"Non-image content-type: {ct}")
+                
+                raise ValueError(f"HTTP {r.status_code}: {r.text[:60]}")
+            
+            except ValueError: raise
+            except Exception as e:
+                if attempt < 4:
+                    print(f"      Pollinations exc [{attempt+1}]: {str(e)[:50]}")
+                    time.sleep(20)
+                else:
+                    raise ValueError(f"Pollinations {model}: {e}")
+        
+        # Esse modelo falhou — tentar próximo
     
-    raise ValueError("Pollinations: max tentativas atingido")
+    raise ValueError("Pollinations: todos os modelos falharam")
 
 def nvidia_generate_image_fallback(prompt):
     """NVIDIA FLUX fallback"""
@@ -475,12 +485,15 @@ def main():
         p = s.get("img","kawaii chibi anime psychology channel character, cream white background")
         try:
             b = generate_image(p, idx)
+            # Delay entre imagens para respeitar rate limit do Pollinations
+            time.sleep(3)
             return idx, build_static_clip(b, scene_durs[idx], idx), True
         except Exception as e:
             print(f"   [{idx+1:02d}] imagem falhou: {str(e)[:50]}")
+            time.sleep(2)  # Delay mesmo no fallback
             return idx, build_fallback_clip(scene_durs[idx], idx), False
     
-    with ThreadPoolExecutor(max_workers=2) as ex:  # 2 workers para respeitar rate limit Pollinations
+    with ThreadPoolExecutor(max_workers=1) as ex:  # 1 worker SEQUENCIAL — respeitar rate limit Pollinations
         futs = {ex.submit(render_img,i):i for i in img_indices}
         done = 0
         for fut in as_completed(futs):
