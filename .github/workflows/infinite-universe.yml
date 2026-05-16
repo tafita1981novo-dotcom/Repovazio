@@ -1,0 +1,105 @@
+name: "⚛️ INFINITE UNIVERSE — Geração Infinita de Vídeos"
+
+# Roda 6x/dia + dispatch manual para qualquer vídeo
+on:
+  workflow_dispatch:
+    inputs:
+      video_id:
+        description: "ID do vídeo (vazio = próximo da fila)"
+        required: false
+        default: ""
+      mode:
+        description: "short (até 3min) | long (15min+) | auto"
+        required: false
+        default: "auto"
+  schedule:
+    - cron: "0 */4 * * *"   # A cada 4h — 6x/dia
+
+concurrency:
+  group: infinite-universe-${{ github.event.inputs.video_id || 'batch' }}
+  cancel-in-progress: false
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 📦 Dependências
+        run: |
+          pip install --quiet requests edge-tts Pillow
+          sudo apt-get install -y ffmpeg --quiet 2>/dev/null
+
+      - name: 🎯 Selecionar vídeo por ranking viral
+        id: vid
+        env:
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          if [ -n "${{ github.event.inputs.video_id }}" ]; then
+            VID="${{ github.event.inputs.video_id }}"
+            MODE="${{ github.event.inputs.mode }}"
+          else
+            # Pegar próximo pelo ranking viral
+            RESULT=$(python3 - << 'PY'
+          import requests, os, json
+          key = os.environ['SUPABASE_SERVICE_KEY']
+          url = "https://tpjvalzwkqwttvmszvie.supabase.co"
+          # Buscar próximo por prioridade de render + viral score
+          r = requests.get(f"{url}/rest/v1/content_pipeline",
+            headers={"apikey":key,"Authorization":f"Bearer {key}"},
+            params={"status":"eq.audio_ready","video_url":"is.null",
+                    "select":"id,title,script","order":"id.asc","limit":"1"})
+          rows = r.json()
+          if rows:
+            v = rows[0]
+            chars = len(v.get('script') or '')
+            # > 5000 chars = Long, <= 5000 = Short
+            mode = 'long' if chars > 5000 else 'short'
+            print(f"{v['id']}|{mode}")
+          else:
+            print("NONE|auto")
+          PY
+          )
+            VID=$(echo $RESULT | cut -d'|' -f1)
+            MODE=$(echo $RESULT | cut -d'|' -f2)
+          fi
+
+          echo "video_id=$VID" >> $GITHUB_OUTPUT
+          echo "mode=$MODE" >> $GITHUB_OUTPUT
+          echo "✅ Video: $VID | Mode: $MODE"
+
+      - name: ⚛️ QUANTUM RENDER — Short ou Long
+        if: steps.vid.outputs.video_id != 'NONE'
+        env:
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          VIDEO_ID: ${{ steps.vid.outputs.video_id }}
+          MODE: ${{ steps.vid.outputs.mode }}
+        run: |
+          VID="${{ steps.vid.outputs.video_id }}"
+          MODE="${{ steps.vid.outputs.mode }}"
+
+          if [ "$MODE" = "long" ]; then
+            echo "🎬 Modo LONG (Quantum Universe)"
+            python scripts/render_long_v8_standard.py $VID
+          else
+            echo "🎬 Modo SHORT (Quantum Universe)"
+            python scripts/render_video_v8_standard.py $VID
+          fi
+
+      - name: 📊 Resumo Quantum
+        if: always()
+        run: |
+          echo "## ⚛️ Quantum Universe" >> $GITHUB_STEP_SUMMARY
+          echo "- Video: #${{ steps.vid.outputs.video_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Mode: ${{ steps.vid.outputs.mode }}" >> $GITHUB_STEP_SUMMARY
+          echo "- 15 personagens persistentes | N_IMGS dinâmico" >> $GITHUB_STEP_SUMMARY
+          echo "- Caption palavra a palavra | Lower third Daniela Coelho" >> $GITHUB_STEP_SUMMARY
+          echo "- Arcos emocionais salvos no universo" >> $GITHUB_STEP_SUMMARY
