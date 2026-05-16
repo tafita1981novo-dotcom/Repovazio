@@ -7,6 +7,7 @@ on:
         description: "ID do vídeo (ex: 683)"
         required: true
         default: "683"
+
   schedule:
     - cron: "0 6,12,18 * * *"
 
@@ -17,18 +18,21 @@ concurrency:
 jobs:
   render-v9:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 60
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
       - name: 📦 Instalar dependências
         run: |
-          pip install --quiet requests edge-tts pillow
+          pip install --quiet requests edge-tts higgsfield-client
           sudo apt-get install -y ffmpeg --quiet 2>/dev/null
-          python3 -c "import requests, edge_tts, PIL; print('deps OK')"
+          python3 -c "import requests, edge_tts, higgsfield_client; print('deps OK')"
+          ffmpeg -version | head -1
 
       - name: 🎯 Determinar video_id
         id: get_video
@@ -55,22 +59,32 @@ jobs:
           echo "video_id=$VID" >> $GITHUB_OUTPUT
           echo "✅ Video: $VID"
 
-      - name: 🎬 Render V9 Motion AI
+      - name: 🎬 Render V9 — Higgsfield + Pollinations
         if: steps.get_video.outputs.video_id != 'NONE'
         env:
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          # Higgsfield AI (primário — criar conta grátis em cloud.higgsfield.ai)
+          HF_KEY: ${{ secrets.HF_KEY }}
+          HF_API_KEY: ${{ secrets.HF_API_KEY }}
+          HF_API_SECRET: ${{ secrets.HF_API_SECRET }}
+          # Outros
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-          NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
           python scripts/render_video_v9.py ${{ steps.get_video.outputs.video_id }}
 
+      - name: ℹ️ Fila vazia
+        if: steps.get_video.outputs.video_id == 'NONE'
+        run: echo "✅ Nenhum vídeo pendente"
+
       - name: 📊 Resumo
         if: always()
         run: |
-          echo "## 🎬 V9 Motion AI — psicologia.doc" >> $GITHUB_STEP_SUMMARY
-          echo "- Video: #${{ steps.get_video.outputs.video_id }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Image: Gemini Flash Image (ou Pillow chibi psych2go)" >> $GITHUB_STEP_SUMMARY
+          echo "## 🎬 V9 Motion AI" >> $GITHUB_STEP_SUMMARY
+          echo "- Video: ${{ steps.get_video.outputs.video_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Backend: Higgsfield AI (nano_banana_2/seedream_v4) → Pollinations Flux" >> $GITHUB_STEP_SUMMARY
+          echo "- Motion: Veo 3.x para cenas-chave" >> $GITHUB_STEP_SUMMARY
           echo "- Lower third: Daniela Coelho | Saude Mental | @psidanielacoelho" >> $GITHUB_STEP_SUMMARY
+          echo "- Para usar Higgsfield: adicionar HF_KEY em GitHub Secrets" >> $GITHUB_STEP_SUMMARY
