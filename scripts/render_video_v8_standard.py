@@ -224,12 +224,12 @@ SCENES = gerar_prompts_groq()
 # ── GEMINI: GERAR IMAGENS AI ──────────────────────────────────────
 def gen_gemini_image(prompt, idx):
     """
-    Gera imagem chibi com Gemini.
-    Usa gemini-2.0-flash-exp (funciona sem permissão especial).
-    Recorta para 9:16 e salva como JPEG 92.
+    Gera imagem chibi com 3 backends em cascata:
+    1. Pollinations.ai Flux (grátis, sem API key, funciona sempre)
+    2. Gemini gemini-2.0-flash-exp (se key disponível)
+    3. None → Pillow fallback
     """
-    key = gemini_key()
-    if not key: return None
+    import urllib.parse
 
     full_prompt = (
         "Psych2Go animation style, kawaii chibi anime character, "
@@ -239,41 +239,65 @@ def gen_gemini_image(prompt, idx):
         "no text, no logos, no watermarks, no brand marks."
     )
 
-    for model in GEMINI_MODELS:
-        url = (f"https://generativelanguage.googleapis.com/v1beta"
-               f"/models/{model}:generateContent?key={key}")
-        payload = {
-            "contents": [{"parts": [{"text": full_prompt}]}],
-            "generationConfig": {"responseModalities": ["IMAGE","TEXT"]}
-        }
-        try:
-            r = requests.post(url, json=payload, timeout=90)
-            if r.status_code == 429:
-                rotate_key(); time.sleep(5); continue
-            if r.status_code == 200:
-                for cand in r.json().get("candidates",[]):
-                    for part in cand.get("content",{}).get("parts",[]):
-                        if "inlineData" in part:
-                            raw = base64.b64decode(part["inlineData"]["data"])
-                            tmp = f"{WORKDIR}/raw_{idx:02d}.jpg"
-                            with open(tmp,"wb") as f: f.write(raw)
-                            # Recortar para 9:16 e redimensionar para 1080×1920
-                            img = Image.open(tmp).convert("RGB")
-                            aw, ah = img.size
-                            target = 9/16
-                            if aw/ah > target:  # muito largo → cortar lados
-                                nw = int(ah * target)
-                                img = img.crop(((aw-nw)//2, 0, (aw+nw)//2, ah))
-                            elif aw/ah < target:  # muito alto → cortar topo/base
-                                nh = int(aw / target)
-                                img = img.crop((0, (ah-nh)//2, aw, (ah+nh)//2))
-                            img = img.resize((W, H), Image.LANCZOS)
-                            out = f"{WORKDIR}/ai_{idx:02d}.jpg"
-                            img.save(out, "JPEG", quality=92)
-                            return out
-        except Exception:
-            continue
-    return None
+    # ── 1. Pollinations.ai Flux (primary, gratuito e confiável) ──
+    try:
+        enc = urllib.parse.quote(full_prompt)
+        url = (f"https://image.pollinations.ai/prompt/{enc}"
+               f"?width=576&height=1024&seed={42+idx}&nologo=true&model=flux")
+        r = requests.get(url, timeout=90)
+        if r.status_code == 402:  # fila cheia → aguardar
+            time.sleep(20)
+            r = requests.get(url, timeout=90)
+        if r.status_code == 200 and r.headers.get('content-type','').startswith('image'):
+            raw = r.content
+            tmp = f"{WORKDIR}/raw_{idx:02d}.jpg"
+            with open(tmp,"wb") as f: f.write(raw)
+            img = Image.open(tmp).convert("RGB")
+            img = img.resize((W, H), Image.LANCZOS)
+            out = f"{WORKDIR}/ai_{idx:02d}.jpg"
+            img.save(out, "JPEG", quality=92)
+            return out
+    except Exception:
+        pass
+
+    # ── 2. Gemini (fallback) ──────────────────────────────────────
+    key = gemini_key()
+    if key:
+        for model in GEMINI_MODELS:
+            url2 = (f"https://generativelanguage.googleapis.com/v1beta"
+                   f"/models/{model}:generateContent?key={key}")
+            payload = {
+                "contents": [{"parts": [{"text": full_prompt}]}],
+                "generationConfig": {"responseModalities": ["IMAGE","TEXT"]}
+            }
+            try:
+                r2 = requests.post(url2, json=payload, timeout=90)
+                if r2.status_code == 429:
+                    rotate_key(); time.sleep(5); continue
+                if r2.status_code == 200:
+                    for cand in r2.json().get("candidates",[]):
+                        for part in cand.get("content",{}).get("parts",[]):
+                            if "inlineData" in part:
+                                raw = base64.b64decode(part["inlineData"]["data"])
+                                tmp = f"{WORKDIR}/raw_{idx:02d}.jpg"
+                                with open(tmp,"wb") as f: f.write(raw)
+                                img = Image.open(tmp).convert("RGB")
+                                aw, ah = img.size
+                                target = 9/16
+                                if aw/ah > target:
+                                    nw = int(ah * target)
+                                    img = img.crop(((aw-nw)//2, 0, (aw+nw)//2, ah))
+                                elif aw/ah < target:
+                                    nh = int(aw / target)
+                                    img = img.crop((0, (ah-nh)//2, aw, (ah+nh)//2))
+                                img = img.resize((W, H), Image.LANCZOS)
+                                out = f"{WORKDIR}/ai_{idx:02d}.jpg"
+                                img.save(out, "JPEG", quality=92)
+                                return out
+            except Exception:
+                continue
+
+    return None  # → pillow_fallback
 
 # ── PILLOW FALLBACK ───────────────────────────────────────────────
 def pillow_fallback(idx, caption):
@@ -399,9 +423,10 @@ with ThreadPoolExecutor(max_workers=4) as ex:
         imgs[i] = path
         if is_ai: n_ai += 1
         else: n_fb += 1
+        time.sleep(2)  # delay p/ respeitar rate limit
 
 gen_t = time.time() - t0
-print(f"\n   ✅ {n_ai}/20 Gemini AI | {n_fb} fallback | {gen_t:.1f}s")
+print(f"\n   ✅ {n_ai}/20 AI (Pollinations+Gemini) | {n_fb} Pillow fallback | {gen_t:.1f}s")
 
 # ── EDGE TTS: ÁUDIO ───────────────────────────────────────────────
 print(f"\n🎙️  Edge TTS pt-BR-AntonioNeural...")
