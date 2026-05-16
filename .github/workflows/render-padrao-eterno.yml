@@ -1,0 +1,80 @@
+name: "🎨 Padrão Eterno V8 — Render Video"
+
+on:
+  workflow_dispatch:
+    inputs:
+      video_id:
+        description: "ID do vídeo (ex: 683)"
+        required: true
+        default: "683"
+
+  schedule:
+    # 3x/dia: 6h, 12h, 18h UTC — rende próximo da fila automaticamente
+    - cron: "0 6,12,18 * * *"
+
+concurrency:
+  group: padrao-eterno-${{ github.event.inputs.video_id || 'batch' }}
+  cancel-in-progress: false
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 📦 Dependências
+        run: |
+          pip install --quiet requests edge-tts Pillow
+          sudo apt-get install -y ffmpeg --quiet 2>/dev/null
+          python3 -c "import requests, edge_tts, PIL; print('✅ deps OK')"
+
+      - name: 🎯 Determinar video_id
+        id: vid
+        env:
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VID="${{ github.event.inputs.video_id }}"
+          else
+            VID=$(python3 - << 'PY'
+          import requests, os
+          key = os.environ['SUPABASE_SERVICE_KEY']
+          url = "https://tpjvalzwkqwttvmszvie.supabase.co"
+          r = requests.get(f"{url}/rest/v1/content_pipeline",
+            headers={"apikey":key,"Authorization":f"Bearer {key}"},
+            params={"status":"eq.audio_ready","video_url":"is.null",
+                    "select":"id","order":"id.asc","limit":"1"})
+          rows = r.json()
+          print(rows[0]["id"] if rows else "NONE")
+          PY
+          )
+          fi
+          echo "video_id=$VID" >> $GITHUB_OUTPUT
+          echo "✅ Video: $VID"
+
+      - name: 🎨 PADRÃO ETERNO V8 — Render
+        if: steps.vid.outputs.video_id != 'NONE'
+        env:
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: |
+          python scripts/render_video_v8_standard.py \
+            ${{ steps.vid.outputs.video_id }}
+
+      - name: 📊 Resumo
+        if: always()
+        run: |
+          echo "## 🎨 Padrão Eterno V8" >> $GITHUB_STEP_SUMMARY
+          echo "- Video: #${{ steps.vid.outputs.video_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Imagens: Gemini 2.0 Flash Exp (chibi AI)" >> $GITHUB_STEP_SUMMARY
+          echo "- Caption: badge no topo por cena (palavra a palavra)" >> $GITHUB_STEP_SUMMARY
+          echo "- Lower third: Daniela Coelho | Saude Mental | @psidanielacoelho" >> $GITHUB_STEP_SUMMARY
+          echo "- crf=25 → 3-6MB | pt-BR-AntonioNeural | RATE_REAL dinâmico" >> $GITHUB_STEP_SUMMARY
