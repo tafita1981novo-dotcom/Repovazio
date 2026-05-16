@@ -1,0 +1,88 @@
+name: "🎬 Padrão Eterno V8 — Longs 15min"
+
+on:
+  workflow_dispatch:
+    inputs:
+      video_id:
+        description: "ID do vídeo Long (ex: 693)"
+        required: true
+        default: "693"
+
+  schedule:
+    # 1x/dia: 3h UTC — renderiza próximo Long da fila
+    - cron: "0 3 * * *"
+
+concurrency:
+  group: long-padrao-eterno-${{ github.event.inputs.video_id || 'batch' }}
+  cancel-in-progress: false
+
+jobs:
+  render-long:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180   # Longs podem levar até 3h
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 📦 Dependências
+        run: |
+          pip install --quiet requests edge-tts Pillow
+          sudo apt-get install -y ffmpeg --quiet 2>/dev/null
+          python3 -c "import requests, edge_tts, PIL; print('✅ deps OK')"
+
+      - name: 🎯 Determinar video_id (Long)
+        id: vid
+        env:
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VID="${{ github.event.inputs.video_id }}"
+          else
+            VID=$(python3 - << 'PY'
+          import requests, os
+          key = os.environ['SUPABASE_SERVICE_KEY']
+          url = "https://tpjvalzwkqwttvmszvie.supabase.co"
+          # Pegar Long com audio_ready (script longo > 5000 chars)
+          r = requests.get(f"{url}/rest/v1/content_pipeline",
+            headers={"apikey":key,"Authorization":f"Bearer {key}"},
+            params={"status":"eq.audio_ready","video_url":"is.null",
+                    "platform":"like.youtube*","select":"id,title",
+                    "order":"id.asc","limit":"3"})
+          rows = r.json()
+          # Filtrar Longs pelo ID (acima de 690)
+          for row in rows:
+            if row["id"] in [692,693,695,706]:
+              print(row["id"])
+              break
+          else:
+            print("NONE")
+          PY
+          )
+          fi
+          echo "video_id=$VID" >> $GITHUB_OUTPUT
+          echo "✅ Long: $VID"
+
+      - name: 🎬 PADRÃO ETERNO V8 — Long 15min
+        if: steps.vid.outputs.video_id != 'NONE'
+        env:
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: |
+          python scripts/render_long_v8_standard.py \
+            ${{ steps.vid.outputs.video_id }}
+
+      - name: 📊 Resumo Long
+        if: always()
+        run: |
+          echo "## 🎬 Long Padrão Eterno V8" >> $GITHUB_STEP_SUMMARY
+          echo "- Video: #${{ steps.vid.outputs.video_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "- 50 cenas | 5 capítulos | crf=22 | ~15-20MB" >> $GITHUB_STEP_SUMMARY
+          echo "- Imagens: Pollinations.ai + Gemini chibi" >> $GITHUB_STEP_SUMMARY
+          echo "- Caption por cena + indicador de capítulo" >> $GITHUB_STEP_SUMMARY
+          echo "- Lower third: Daniela Coelho | Saude Mental | @psidanielacoelho" >> $GITHUB_STEP_SUMMARY
