@@ -146,6 +146,25 @@ log(f"  {TOTAL} chars | PMID 37286231 real | gaslighting EN/PT")
 log(f"  Ciência: viés hostil (não '94% culpam' — removido)")
 log(f"{'='*55}\n")
 
+
+# BADGE MULTILINGUAL — PT-BR padrão, EN/ES para termos globais
+SEO_BADGE_MAP = {
+    'gaslighting': 'GASLIGHTING',           # EN universal
+    'covert narcissist': 'COVERT NARCISSIST',
+    'narcisismo encoberto': 'NARCISISMO ENCOBERTO',
+    'covert narcissist': 'COVERT NARCISSIST',
+    'Marcos': 'TOXIC RELATIONSHIP',         # EN: termo global
+    'PMID': 'SCIENCE ✓',
+    'Sinal 1': 'SIGN 1 • SEÑAL 1',          # trilingual
+    'Sinal 2': 'SIGN 2 • SEÑAL 2 • GASLIGHTING',
+    'Sinal 3': 'SIGN 3 • SEÑAL 3',
+    'covert narcissist': 'COVERT NARCISSIST',
+    'mentira': 'THE LIE • LA MENTIRA',
+    'Inscreva': 'SUBSCRIBE • SUSCRÍBETE 🔔',
+    'urgente': 'URGENT • URGENTE',
+    'exagerando': 'YOUR FEELINGS ARE VALID',
+    'válidos': 'YOU ARE NOT ALONE',
+}
 def add_overlay(p, frase):
     """Badge bilíngue: mostra termos EN + PT para SEO global."""
     img=Image.open(p).convert("RGB"); draw=ImageDraw.Draw(img)
@@ -156,18 +175,7 @@ def add_overlay(p, frase):
     draw.text((62,H-88),"Daniela Coelho",fill=BRAN)
     draw.text((62,H-58),"Saúde Mental  |  @psidanielacoelho",fill=LILAS)
     # Badge SEO global — prioriza termos buscados mundialmente
-    seo_map = {
-        "gaslighting": "GASLIGHTING",
-        "Marcos": "TOXIC RELATIONSHIP",
-        "PMID": "SCIENCE",
-        "Sinal 1": "SIGN #1",
-        "Sinal 2": "GASLIGHTING",
-        "Sinal 3": "SIGN #3 ⚠️",
-        "covert narcissist": "COVERT NARCISSIST",
-        "narcisismo encoberto": "COVERT NARCISSIST",
-        "mentira": "THE LIE",
-        "Inscreva": "SUBSCRIBE 🔔",
-    }
+    seo_map = SEO_BADGE_MAP
     cap = frase[:32].upper()
     for key, label in seo_map.items():
         if key.lower() in frase.lower():
