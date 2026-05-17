@@ -62,24 +62,43 @@ def download_bank_image(url, out_path):
     return False
 
 # ── DETECÇÃO DE PERSONAGEM ───────────────────────────────────
-def detect_char_scene(text, pos):
+def detect_char_scene(text, img_idx, n_unique):
+    """
+    SISTEMA CIRCULAR — garante variedade de personagens.
+    Cada personagem aparece ~1/7 das imagens (14-15 vezes).
+    Cena definida por posição no arco narrativo.
+    """
     t = text.lower()
-    if any(k in t for k in ["daniela","pergunta","você está"]):
-        return "daniela", "gancho" if pos < 0.15 else "cta"
-    elif any(k in t for k in ["dra","ana ","harvard","estudo","neurolog","cérebro"]):
-        return "ana", "ciencia"
-    elif any(k in t for k in ["julia","amiga "]):
-        return "julia", "virada"
-    elif any(k in t for k in ["marcos","narcis","manipul"]):
-        return "marcos", "problema"
-    elif any(k in t for k in ["lucas"]):
-        return "lucas", "virada"
-    elif pos < 0.12:
-        return "sara", "gancho"
-    elif pos > 0.85:
-        return "daniela", "cta"
-    else:
-        return "sara", "problema" if pos < 0.6 else "virada"
+    pos = img_idx / n_unique  # 0.0 → 1.0
+
+    # Sistema circular: rotaciona entre todos os personagens
+    CHARS = ["daniela","sara","marcos","julia","ana","lucas","group"]
+    char = CHARS[img_idx % len(CHARS)]
+
+    # Cena por posição no arco
+    if pos < 0.13:   scene = "gancho"
+    elif pos < 0.35: scene = "problema"
+    elif pos < 0.60: scene = "ciencia"
+    elif pos < 0.80: scene = "virada"
+    else:            scene = "cta"
+
+    # Override por keywords fortes (mantém contexto narrativo)
+    if any(k in t for k in ["harvard","pesquisa","estudo mostra","94%","95%","neurolog"]):
+        char, scene = "ana", "ciencia"
+    elif any(k in t for k in ["inscreva","🔔","sino","próximo vídeo"]):
+        char, scene = "group", "cta"
+    elif any(k in t for k in ["sinal 1","primeiro sinal"]):
+        char, scene = "sara", "problema"
+    elif any(k in t for k in ["sinal 2","segundo sinal"]):
+        char, scene = "marcos", "problema"
+    elif any(k in t for k in ["sinal 3","terceiro sinal"]):
+        char, scene = "julia", "virada"
+    elif any(k in t for k in ["julia disse","amiga disse"]):
+        char = "julia"
+    elif any(k in t for k in ["marcos chegava","marcos disse","ele disse"]):
+        char = "marcos"
+
+    return char, scene
 
 # ── SUPABASE ─────────────────────────────────────────────────
 def sb_get_script():
@@ -201,7 +220,7 @@ log(f"{'='*58}\n")
 log("📖 ETAPA 0 — Script...")
 raw = sb_get_script()
 segs = split_300(raw)
-SCRIPT_TTS = ". ".join(segs)
+SCRIPT_TTS = " ".join(segs)   # sem ". " = sem pausa dupla no edge_tts
 log(f"  {len(segs)} segmentos | {len(SCRIPT_TTS)} chars")
 
 # ETAPA 1: ÁUDIO
@@ -222,7 +241,7 @@ IMGS=[None]*N_UNIQUE; counts={"bank":0,"poll":0,"pillow":0}; t0=time.time()
 
 for idx in range(N_UNIQUE):
     seg=segs[idx*3+1]  # segmento do meio do grupo
-    char,scene=detect_char_scene(seg, idx/N_UNIQUE)
+    char,scene=detect_char_scene(seg, idx, N_UNIQUE)
     out=f"{WORKDIR}/ai_{idx:03d}.jpg"
 
     # 1. Tentar banco de imagens
