@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ψ Fila de Publicação — @psidanielacoelho</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --violet: #7B5EA7;
+    --violet-light: #9B7EC8;
+    --crimson: #C13D3D;
+    --gold: #C9A84C;
+    --teal: #3D9A8C;
+    --near-black: #0D0D0F;
+    --dark: #141418;
+    --panel: #1A1A20;
+    --border: rgba(123,94,167,0.25);
+    --text: #E8E4F0;
+    --muted: #8A849A;
+    --short-color: #C13D3D;
+    --long-color: #3D9A8C;
+    --outro-color: #C9A84C;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--near-black);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    background-image: 
+      radial-gradient(ellipse 80% 40% at 50% -10%, rgba(123,94,167,0.15) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 60% at 90% 50%, rgba(61,154,140,0.06) 0%, transparent 60%);
+  }
+
+  header {
+    padding: 48px 32px 32px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  .psi-logo {
+    width: 52px; height: 52px;
+    background: linear-gradient(135deg, var(--violet), var(--teal));
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 26px;
+    font-weight: 900;
+    color: white;
+    flex-shrink: 0;
+    box-shadow: 0 0 30px rgba(123,94,167,0.4);
+  }
+
+  .header-text h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+
+  .header-text p {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 3px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .stats-bar {
+    max-width: 960px;
+    margin: 24px auto;
+    padding: 0 32px;
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .stat {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .stat-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+  }
+
+  .stat span { font-size: 13px; color: var(--muted); }
+  .stat strong { font-size: 15px; font-weight: 600; margin-left: 4px; }
+
+  .publish-tip {
+    max-width: 960px;
+    margin: 0 auto 24px;
+    padding: 0 32px;
+  }
+
+  .tip-box {
+    background: linear-gradient(135deg, rgba(123,94,167,0.12), rgba(61,154,140,0.06));
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 20px;
+    font-size: 13px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .tip-box strong { color: var(--gold); font-size: 13px; }
+
+  .section-label {
+    max-width: 960px;
+    margin: 8px auto 12px;
+    padding: 0 32px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--violet-light);
+    opacity: 0.7;
+  }
+
+  .video-list {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 32px 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .video-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 0;
+    overflow: hidden;
+    transition: border-color 0.2s, transform 0.15s;
+    position: relative;
+  }
+
+  .video-card:hover {
+    border-color: rgba(123,94,167,0.55);
+    transform: translateY(-1px);
+  }
+
+  .video-card-inner {
+    display: grid;
+    grid-template-columns: 56px 1fr auto;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+  }
+
+  .rank-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 900;
+    text-align: center;
+    line-height: 1;
+    color: var(--border);
+    width: 56px;
+    flex-shrink: 0;
+  }
+
+  .rank-num.top3 { color: var(--gold); opacity: 0.9; }
+
+  .video-info { min-width: 0; }
+
+  .video-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 5px;
+    flex-wrap: wrap;
+  }
+
+  .tipo-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-weight: 500;
+  }
+
+  .tipo-badge.short {
+    background: rgba(193,61,61,0.15);
+    color: var(--short-color);
+    border: 1px solid rgba(193,61,61,0.25);
+  }
+
+  .tipo-badge.long {
+    background: rgba(61,154,140,0.15);
+    color: var(--teal);
+    border: 1px solid rgba(61,154,140,0.25);
+  }
+
+  .tipo-badge.outro {
+    background: rgba(201,168,76,0.15);
+    color: var(--gold);
+    border: 1px solid rgba(201,168,76,0.25);
+  }
+
+  .score-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: rgba(123,94,167,0.15);
+    color: var(--violet-light);
+    border: 1px solid rgba(123,94,167,0.25);
+  }
+
+  .new-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: rgba(201,168,76,0.2);
+    color: var(--gold);
+    border: 1px solid rgba(201,168,76,0.3);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
+  .video-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .video-sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 3px;
+    font-style: italic;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .video-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+    align-items: center;
+  }
+
+  .btn-play {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: linear-gradient(135deg, var(--violet), var(--violet-light));
+    color: white;
+    text-decoration: none;
+    padding: 9px 16px;
+    border-radius: 9px;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: opacity 0.15s, transform 0.1s;
+    box-shadow: 0 4px 12px rgba(123,94,167,0.3);
+  }
+
+  .btn-play:hover { opacity: 0.88; transform: scale(0.98); }
+
+  .btn-play svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+  .btn-copy {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--muted);
+    padding: 9px 12px;
+    border-radius: 9px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background 0.15s;
+    display: flex;
+    align-items: center;
+  }
+
+  .btn-copy:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+
+  .day-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 6px 0;
+  }
+
+  .day-line { flex: 1; height: 1px; background: var(--border); }
+
+  .day-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .card-accent {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    border-radius: 14px 0 0 14px;
+  }
+
+  .accent-short { background: var(--short-color); }
+  .accent-long { background: var(--teal); }
+  .accent-outro { background: var(--gold); }
+
+  footer {
+    text-align: center;
+    padding: 20px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  .copy-toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(60px);
+    background: var(--violet);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    transition: transform 0.3s ease;
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  .copy-toast.show { transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 600px) {
+    header, .stats-bar, .publish-tip, .video-list, .section-label { padding-left: 16px; padding-right: 16px; }
+    .video-card-inner { grid-template-columns: 40px 1fr; gap: 12px; }
+    .video-actions { grid-column: 1 / -1; margin-top: -4px; }
+    .rank-num { font-size: 22px; width: 40px; }
+    .btn-play { font-size: 12px; padding: 8px 13px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="psi-logo">ψ</div>
+  <div class="header-text">
+    <h1>Fila de Publicação — @psidanielacoelho</h1>
+    <p>Ordenada por viral_score · Publicar 18–20h horário BR</p>
+  </div>
+</header>
+
+<div class="stats-bar">
+  <div class="stat">
+    <div class="stat-dot" style="background:#C13D3D"></div>
+    <span>Shorts 58s</span><strong>4</strong>
+  </div>
+  <div class="stat">
+    <div class="stat-dot" style="background:#3D9A8C"></div>
+    <span>Longs 15min</span><strong>11</strong>
+  </div>
+  <div class="stat">
+    <div class="stat-dot" style="background:#C9A84C"></div>
+    <span>Outros</span><strong>3</strong>
+  </div>
+  <div class="stat">
+    <div class="stat-dot" style="background:#7B5EA7"></div>
+    <span>Score médio</span><strong>96.4★</strong>
+  </div>
+</div>
+
+<div class="publish-tip">
+  <div class="tip-box">
+    <span>🗓️</span>
+    <div>
+      <strong>Estratégia:</strong> 1 Short (18h) + 1 Long (19h) por dia · Mix Shorts constroem subs · Longs geram RPM R$10-16 com mid-rolls ·
+      <strong>Meta:</strong> 10K subs → Mês 3-4 · 50K → Mês 5-6 · 300K → R$50K/mês
+    </div>
+  </div>
+</div>
+
+<div class="section-label">— RANKING POR VIRAL SCORE —</div>
+
+<div class="video-list" id="videoList">
+
+  <!-- DIA 1 -->
+  <div class="day-divider">
+    <div class="day-line"></div>
+    <div class="day-label">📅 Dia 1 — Começar aqui</div>
+    <div class="day-line"></div>
+  </div>
+
+  <!-- #1 -->
+  <div class="video-card">
+    <div class="card-accent accent-short"></div>
+    <div class="video-card-inner">
+      <div class="rank-num top3">1</div>
+      <div class="video-info">
+        <div class="video-meta">
+          <span class="tipo-badge short">📱 SHORT 58s</span>
+          <span class="score-badge">★ 98</span>
+          <span class="new-badge">✦ SCRIPT NOVO</span>
+        </div>
+        <div class="video-title">#683 — Narcisismo Encoberto: o sinal que ninguém te conta (e que parece cuidado)</div>
+        <div class="video-sub">Dr. Craig Malkin (Harvard) · "4 anos apagando a própria voz" · Hook: "O narcisista mais perigoso não grita. Ele chora."</div>
+      </div>
+      <div class="video-actions">
+        <button class="btn-copy" onclick="copyLink('https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/mp4s/v683_58final_1779059306.mp4')" title="Copiar link">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="15" height="15"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        </button>
+        <a class="btn-play" href="https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/mp4s/v683_58final_1779059306.mp4" target="_blank">
+          <svg fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          Assistir
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- #2 -->
+  <div class="video-card">
+    <div class="card-accent accent-long"></div>
+    <div class="video-card-inner">
+      <div class="rank-num top3">2</div>
+      <div class="video-info">
+        <div class="video-meta">
+          <span class="tipo-badge long">🎬 LONG 15min</span>
+          <span class="score-badge">★ 97</span>
+          <span class="new-badge">✦ SCRIPT NOVO</span>
+        </div>
+        <div class="video-title">#621 — Como uma pessoa se torna narcisista — a infância que vai te surpreender</div>
+        <div class="video-sub">Dr. Bruce Perry (neurocientista) · Dra. Elsa Ronningstam (Harvard) · 74% rastreia à infância</div>
+      </div>
+      <div class="video-actions">
+        <button class="btn-copy" onclick="copyLink('https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/mp4s/v621_long_1779056189.mp4')" title="Copiar link">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="15" height="15"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        </button>
+        <a class="btn-play" href="https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/mp4s/v621_long_1779056189.mp4" target="_blank">
+          <svg fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          Assistir
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIA 2 -->
+  <div class="day-divider">
+    <div class="day-line"></div>
+    <div class="day-label">📅 Dia 2</div>
+    <div class="day-line"></div>
+  </div>
+
+  <!-- #3 -->
+  <div class="video-card">
+    <div class="card-accent accent-long"></div>
+    <div class="video-card-inner">
+      <div class="rank-num top3">3</div>
+      <div class="video-info">
+        <div class="video-meta">
+          <span class="tipo-badge long">🎬 LONG 15min</span>
+          <span class="score-badge">★ 97</span>
+          <span class="new-badge">✦ SCRIPT NOVO</span>
+        </div>
+        <div class="video-title">#622 — Como é viver depois de curar o trauma — o que realmente muda (ninguém te conta isso)</div>
+        <div class="video-sub">Dra. Judith Herman (Harvard) · Dr. Brené Brown (U. Texas) · "Os primeiros 6 meses são os mais difíceis"</div>
+      </div>
+      <div class="video-actions">
+        <button class="btn-copy" onclick="copyLink('https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/mp4s/v622_long_1779056187.mp4')" title="Copiar link">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="15" height="15"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        </button>
+        <a class="btn-play" href="https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/mp4s/v622_long_1779056187.mp4" target="_blank">
+          <svg fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          Assistir
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- #4 -->
+  <div class="video-card">
+    <div class="card-accent accent-outro"></div>
+    <div class="video-card-inner">
+      <div class="rank-num">4</div>
+      <div class="video-info">
+        <div class="video-meta">
+          <span class="tipo-badge outro">🎬 LONG</span>
+          <span class="score-badge">★ 97</span>
+        </div>
+        <div class="video-title">#693 — Gaslighting: A Manipulação Que Faz Você Duvidar da Sua Própria Sanidade</div>
+        <div class="video-sub">Pipeline anterior — revisar qualidade do script antes de publicar</div>
+      </div>
+      <div class="video-actions">
+        <button class="btn-copy" onclick="copyLink('https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/mp4s/v693_quantum_1778962285.mp4')" title="Copiar link">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="15" height="15"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        </button>
+        <a class="btn-play" href="https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/mp4s/v693_quantum_1778962285.mp4" target="_blank">
+          <svg fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          Assistir
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIA 3 -->
+  <div class="day-divider">
+    <div class="day-line"></div>
+    <div class="day-label">📅 Dia 3</div>
+    <div class="day-line"></div>
+  </div>
+
+  <!-- #5 -->
+  <div class="video-card">
+    <div class="card-accent accent-long"></div>
+    <div class="video-card-inner">
+      <div class="rank-num">5</div>
+      <div class="video-info">
+        <div class="video-meta">
+          <span class="tipo-badge long">🎬 LONG 15min</span>
+          <span class="score-badge">★ 96</span>
+          <span class="new-badge">✦ SCRIPT NOVO</span>
+        </div>
+        <div class="video-title">#294 — O Corpo Guarda o Trauma: O Que a Ciência Descobriu Sobre Memória Somática</div>
+        <div class="video-sub">Dr. Bessel van der Kolk (Harvard/Boston Medical) · Neuroimagem e PTSD</div>
+      </div>
+      <div class="video-actions">
+        <button class="btn-copy" onclick="copyLink('https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/mp4s/v294_long_1779056186.mp4')" title="Copiar link">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="15" height="15"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        </button>
+        <a class="btn-play" href="https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/mp4s/v294_long_1779056186.mp4" target="_blank">
+          <svg fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          Assistir
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- #6 -->
+  <div class="video-card">
+    <div class="card-accent accent-long"></div>
+    <div class="video-card-inner">
+      <div class="rank-num">6</div>
+      <div class="video-info">
+        <div class="video-meta">
+          <span class="tipo-badge long">🎬 LONG 15min</span>
+          <span class="score-badge">★ 95</span>
+        </div>
+        <div class="video-title">#695 — Relacionamento Tóxico: Os Sinais Que Você Está Normalizando</div>
+        <div class="video-sub">Pipeline anterior — revisar qualidade do script antes de publicar</div>
+      </div>
+      <div class="video-actions">
+        <button class="btn-copy" onclick="copyLink('https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/mp4s/v695_long_v8std_1778954035.mp4')" title="Copiar link">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="15" height="15"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        </button>
+        <a class="btn-play" href="https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/mp4s/v695_long_v8std_1778954035.mp4" target="_blank">
+          <svg fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          Assistir
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIA 4 -->
+  <div class="day-divider">
+    <div class="day-line"></div>
+    <div class="day-label">📅 Dia 4</div>
+    <div class="day-line"></div>
+  </div>
+
+  <!-- #7 -->
+  <div class="video-card">
+    <div class="card-accent accent-long"></div>
+    <div class="video-card-inner">
+      <div class="rank-num">7</div>
+      <div class="video-info">
+        <div class="video-meta">
+          <span class="tipo-badge long">🎬 LONG 15min</span>
+          <span class="score-badge">★ 94</span>
+        </div>
+        <div class="video-title">#692 — Apego Ansioso: O Medo de Abandono Que Controla Cada Relacionamento</div>
+        <div class="video-sub">Dra. Mary Ainsworth · Dr. John Bowlby · Teoria do apego</div>
+      </div>
+      <div class="video-actions">
+        <button class="btn-copy" onclick="copyLink('https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/mp4s/v692_long_v8std_1778954121.mp4')" title="Copiar link">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="15" height="15"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        </button>
+        <a class="btn-play" href="https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/mp4s/v692_long_v8std_1778954121.mp4" target="_blank">
+          <svg fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          Assistir
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- #8 -->
+  <div class="video-card">
+    <div class="card-accent accent-outro"></div>
+    <div class="video-card-inner">
+      <div class="rank-num">8</div>
+      <div class="video-info">
+        <div class="video-meta">
+          <span class="tipo-badge outro">🎬 LONG</span>
+          <span class="score-badge">★ 92</span>
+        </div>
+        <div class="video-title">#689 — Perfeccionista Não Tem Medo de Falhar — Tem Medo de Ser Descoberto</div>
+        <div class="video-sub">Síndrome do impostor · Pipeline anterior</div>
+      </div>
+      <div class="video-actions">
+        <button class="btn-copy" onclick="copyLink('https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/mp4s/v689_v9_1778944357.mp4')" title="Copiar link">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="15" height="15"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        </button>
+        <a class="btn-play" href="https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/mp4s/v689_v9_1778944357.mp4" target="_blank">
+          <svg fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          Assistir
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIA 5 -->
+  <div class="day-divider">
+    <div class="day-line"></div>
+    <div class="day-label">📅 Dia 5</div>
+    <div class="day-line"></div>
+  </div>
+
+  <!-- #9 -->
+  <div class="video-card">
+    <div class="card-accent accent-long"></div>
+    <div class="video-card-inner">
+      <div class="rank-num">9</div>
+      <div class="video-info">
+        <div class="video-meta">
+          <span class="tipo-badge long">🎬 LONG 15min</span>
+          <span class="score-badge">★ —</span>
+          <span class="new-badge">✦ SCRIPT NOVO</span>
+        </div>
+        <div class="video-title">#32 — Apego Ansioso: O Medo do Abandono</div>
+        <div class="video-sub">Script novo · 15:03 · 39MB · Dr. John Bowlby + Dra. Mary Ainsworth</div>
+      </div>
+      <div class="video-actions">
+        <button class="btn-copy" onclick="copyLink('https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/mp4s/v32_long_1779056590.mp4')" title="Copiar link">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="15" height="15"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        </button>
+        <a class="btn-play" href="https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/mp4s/v32_long_1779056590.mp4" target="_blank">
+          <svg fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          Assistir
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- #10 -->
+  <div class="video-card">
+    <div class="card-accent accent-long"></div>
+    <div class="video-card-inner">
+      <div class="rank-num">10</div>
+      <div class="video-info">
+        <div class="video-meta">
+          <span class="tipo-badge long">🎬 LONG 15min</span>
+          <span class="score-badge">★ —</span>
+        </div>
+        <div class="video-title">#620 — Por que Você Não Consegue Deixar um Narcisista — a Armadilha Psicológica</div>
+        <div class="video-sub">Script novo · Neurobiologia da dependência emocional</div>
+      </div>
+      <div class="video-actions">
+        <button class="btn-copy" onclick="copyLink('https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/mp4s/v620_long_1779056190.mp4')" title="Copiar link">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="15" height="15"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        </button>
+        <a class="btn-play" href="https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/mp4s/v620_long_1779056190.mp4" target="_blank">
+          <svg fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          Assistir
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="day-divider">
+    <div class="day-line"></div>
+    <div class="day-label">📅 Dias 6–8 — Completar semana</div>
+    <div class="day-line"></div>
+  </div>
+
+  <!-- #11 -->
+  <div class="video-card">
+    <div class="card-accent accent-long"></div>
+    <div class="video-card-inner">
+      <div class="rank-num">11</div>
+      <div class="video-info">
+        <div class="video-meta">
+          <span class="tipo-badge long">🎬 LONG 15min</span>
+          <span class="score-badge">★ —</span>
+        </div>
+        <div class="video-title">#603 — De onde Vem o Trauma — Não Precisa ser Guerra para ser Real</div>
+        <div class="video-sub">Script novo · Dr. Bessel van der Kolk</div>
+      </div>
+      <div class="video-actions">
+        <button class="btn-copy" onclick="copyLink('https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/mp4s/v603_long_1779056188.mp4')" title="Copiar link">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="15" height="15"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        </button>
+        <a class="btn-play" href="https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/mp4s/v603_long_1779056188.mp4" target="_blank">
+          <svg fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          Assistir
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- #12 -->
+  <div class="video-card">
+    <div class="card-accent accent-long"></div>
+    <div class="video-card-inner">
+      <div class="rank-num">12</div>
+      <div class="video-info">
+        <div class="video-meta">
+          <span class="tipo-badge long">🎬 LONG 15min</span>
+          <span class="score-badge">★ —</span>
+        </div>
+        <div class="video-title">#608 — O Preço da Autossabotagem — O que Você Deixa de Ser por Medo do Sucesso</div>
+        <div class="video-sub">Script novo · Dr. Robert Cialdini + Dra. Brené Brown</div>
+      </div>
+      <div class="video-actions">
+        <button class="btn-copy" onclick="copyLink('https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/mp4s/v608_long_1779056188.mp4')" title="Copiar link">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="15" height="15"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        </button>
+        <a class="btn-play" href="https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/mp4s/v608_long_1779056188.mp4" target="_blank">
+          <svg fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          Assistir
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- #13 -->
+  <div class="video-card">
+    <div class="card-accent accent-long"></div>
+    <div class="video-card-inner">
+      <div class="rank-num">13</div>
+      <div class="video-info">
+        <div class="video-meta">
+          <span class="tipo-badge long">🎬 LONG 15min</span>
+          <span class="score-badge">★ —</span>
+          <span class="new-badge">✦ SCRIPT NOVO</span>
+        </div>
+        <div class="video-title">#614 — Criança Interior: Como Ela Sabota Sua Vida Adulta Sem Você Perceber</div>
+        <div class="video-sub">Dr. John Bradshaw · Dr. Allan Schore (UCLA) · 71% escolhem padrão aprendido</div>
+      </div>
+      <div class="video-actions">
+        <button class="btn-copy" onclick="copyLink('https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/mp4s/v614_long_1779056189.mp4')" title="Copiar link">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="15" height="15"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        </button>
+        <a class="btn-play" href="https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/mp4s/v614_long_1779056189.mp4" target="_blank">
+          <svg fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          Assistir
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- #14 -->
+  <div class="video-card">
+    <div class="card-accent accent-long"></div>
+    <div class="video-card-inner">
+      <div class="rank-num">14</div>
+      <div class="video-info">
+        <div class="video-meta">
+          <span class="tipo-badge long">🎬 LONG 15min</span>
+          <span class="score-badge">★ —</span>
+        </div>
+        <div class="video-title">#618 — Recuperação depois de um Ambiente Tóxico — O que o Corpo e a Mente Precisam</div>
+        <div class="video-sub">Script novo · Dr. Bessel van der Kolk · Teoria Polivagal</div>
+      </div>
+      <div class="video-actions">
+        <button class="btn-copy" onclick="copyLink('https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/mp4s/v618_long_1779053465.mp4')" title="Copiar link">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="15" height="15"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        </button>
+        <a class="btn-play" href="https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/mp4s/v618_long_1779053465.mp4" target="_blank">
+          <svg fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          Assistir
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- #15 -->
+  <div class="video-card">
+    <div class="card-accent accent-outro"></div>
+    <div class="video-card-inner">
+      <div class="rank-num">15</div>
+      <div class="video-info">
+        <div class="video-meta">
+          <span class="tipo-badge outro">🎬 LONG</span>
+          <span class="score-badge">★ —</span>
+        </div>
+        <div class="video-title">#706 — O Que Narcisistas Fazem Quando Percebem Que Você Os Descobriu</div>
+        <div class="video-sub">Pipeline anterior · Verificar qualidade do script</div>
+      </div>
+      <div class="video-actions">
+        <button class="btn-copy" onclick="copyLink('https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/mp4s/v706_long_v8std_1778957125.mp4')" title="Copiar link">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="15" height="15"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        </button>
+        <a class="btn-play" href="https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/mp4s/v706_long_v8std_1778957125.mp4" target="_blank">
+          <svg fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          Assistir
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- #16 -->
+  <div class="video-card">
+    <div class="card-accent accent-outro"></div>
+    <div class="video-card-inner">
+      <div class="rank-num">16</div>
+      <div class="video-info">
+        <div class="video-meta">
+          <span class="tipo-badge outro">🎬 LONG</span>
+          <span class="score-badge">★ —</span>
+        </div>
+        <div class="video-title">#701 — 8 Sinais de Depressão Silenciosa que Ninguém ao Redor Percebe</div>
+        <div class="video-sub">Pipeline anterior · Verificar qualidade do script</div>
+      </div>
+      <div class="video-actions">
+        <button class="btn-copy" onclick="copyLink('https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/mp4s/v701_v9_1778944346.mp4')" title="Copiar link">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="15" height="15"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        </button>
+        <a class="btn-play" href="https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/mp4s/v701_v9_1778944346.mp4" target="_blank">
+          <svg fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          Assistir
+        </a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  ψ psicologia.doc · @psidanielacoelho · Gerado em 17/mai/2026 · Canal: UCyCkIpsVgME9yCj_oXJFheA
+</footer>
+
+<div class="copy-toast" id="toast">✓ Link copiado!</div>
+
+<script>
+function copyLink(url) {
+  navigator.clipboard.writeText(url).then(() => {
+    const toast = document.getElementById('toast');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2200);
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = url;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    const toast = document.getElementById('toast');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2200);
+  });
+}
+</script>
+</body>
+</html>
