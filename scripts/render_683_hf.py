@@ -130,7 +130,6 @@ def gen_hf(prompt, idx):
         pil_img = client.text_to_image(
             prompt=full_prompt,
             model="black-forest-labs/FLUX.1-schnell",
-            provider="auto",
         )
         if pil_img:
             img = pil_img.convert("RGB").resize((W, H), Image.LANCZOS)
