@@ -1,0 +1,40 @@
+name: "🌐 SEO Trilingual PT-BR + EN + ES"
+
+on:
+  workflow_dispatch:
+    inputs:
+      video_id:
+        description: "ID do vídeo (ou 'all' para todos pendentes)"
+        default: "683"
+        required: true
+  # Roda automaticamente após render completar
+  workflow_run:
+    workflows: ["🎯 Short 58s Score 95+ — PMID + Hook + Two-Pass TTS"]
+    types: [completed]
+
+jobs:
+  generate-seo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: 📦 Deps
+        run: pip install --quiet requests
+      - name: 🌐 Gerar SEO Trilingual
+        env:
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GROQ_API_KEY:         ${{ secrets.GROQ_API_KEY }}
+        run: |
+          VIDEO_ID="${{ github.event.inputs.video_id || '683' }}"
+          python scripts/seo_multilingual_generator.py --id $VIDEO_ID
+      - name: 📊 Resultado
+        if: always()
+        run: |
+          echo "## 🌐 SEO Trilingual Gerado" >> $GITHUB_STEP_SUMMARY
+          echo "- 🇧🇷 PT-BR: idioma padrão (narração + publicação)" >> $GITHUB_STEP_SUMMARY
+          echo "- 🇺🇸 EN: tradução YouTube + tags globais (gaslighting, covert narcissist)" >> $GITHUB_STEP_SUMMARY
+          echo "- 🇪🇸 ES: tradução YouTube + mercado hispânico" >> $GITHUB_STEP_SUMMARY
+          echo "- PMID verificado na source" >> $GITHUB_STEP_SUMMARY
