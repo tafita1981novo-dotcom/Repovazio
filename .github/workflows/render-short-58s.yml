@@ -24,6 +24,9 @@ jobs:
       - name: ⏱️ Render Short 58s
         env:
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          VIDEO_ID: ${{ github.event.inputs.video_id || '683' }}
         run: python scripts/render_short_58s.py
       - name: 📊 Resultado
         if: always()
