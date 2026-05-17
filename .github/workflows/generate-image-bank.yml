@@ -1,0 +1,25 @@
+name: "🎨 Gerar Banco de Imagens (500 imgs)"
+
+on:
+  workflow_dispatch:
+    inputs:
+      batch:
+        description: "Batch 0-9 (50 imagens cada)"
+        default: "0"
+        required: true
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: 📦 Deps
+        run: pip install --quiet requests Pillow
+      - name: 🎨 Gerar Batch
+        env:
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          BATCH: ${{ github.event.inputs.batch }}
+        run: python scripts/generate_image_bank.py
