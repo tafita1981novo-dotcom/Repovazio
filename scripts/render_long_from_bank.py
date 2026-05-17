@@ -15,12 +15,12 @@ VIDEO_ID = int(os.environ.get("VIDEO_ID","683"))
 SB_URL   = "https://tpjvalzwkqwttvmszvie.supabase.co"
 SB_KEY   = os.environ.get("SUPABASE_SERVICE_KEY","")
 W, H     = 1080, 1920
-CRF, FPS = 22, 25
+CRF, FPS = 25, 25  # 25=~35MB (vs 22=59MB, Supabase limit)
 TARGET_S = 900
 IMG_INT  = 3
 N_APPEAR = TARGET_S // IMG_INT  # 300
 N_UNIQUE = N_APPEAR // 3        # 100
-RATE_ADJ = "+0%"
+RATE_ADJ = "+32%"  # 1189s natural → 900s = 15min exatos
 WORKDIR  = f"/tmp/v{VIDEO_ID}_long15"
 os.makedirs(WORKDIR, exist_ok=True)
 
