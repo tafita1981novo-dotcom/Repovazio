@@ -1,0 +1,23 @@
+name: "🌟 Vídeo 1 Gemini Primeiro — #683"
+
+on:
+  workflow_dispatch:
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: 📦 Deps
+        run: |
+          pip install --quiet requests Pillow
+          sudo apt-get install -y ffmpeg --quiet 2>/dev/null
+      - name: 🌟 Render Gemini Primeiro
+        env:
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python scripts/render_683_gemini_first.py
