@@ -114,69 +114,31 @@ if CAPTIONS: CAPTIONS[-1] = "INSCREVA-SE AGORA 🔔"
 
 # ── GERAÇÃO HuggingFace ─────────────────────────────
 def gen_hf(prompt, idx):
-    """HuggingFace Inference API — FLUX.1-schnell (PRIMARY)."""
+    """HuggingFace InferenceClient — FLUX.1-schnell via fal-ai (PRIMARY)."""
     if not HF_TOKEN:
         return None, "no_hf_token"
-    
-    # Modelos HF para anime chibi — do melhor para fallback
-    hf_models = [
-        "black-forest-labs/FLUX.1-schnell",  # MELHOR: rápido e bonito
-        "cagliostrolab/animagine-xl-3.1",    # Especializado anime
-        "Lykon/dreamshaper-xl-1-0",           # Anime/ilustração
-    ]
-    
-    full_prompt = (
-        f"masterpiece, best quality, kawaii chibi anime style, {prompt}, "
-        "Psych2Go animation style, pastel colors, cream background, "
-        "expressive big eyes, clean line art, no text, no watermark"
-    )
-    
-    for model in hf_models:
-        try:
-            url = f"https://api-inference.huggingface.co/models/{model}"
-            headers = {
-                "Authorization": f"Bearer {HF_TOKEN}",
-                "Content-Type": "application/json",
-                "X-use-cache": "false",
-            }
-            payload = {
-                "inputs": full_prompt,
-                "parameters": {
-                    "num_inference_steps": 4 if "FLUX" in model else 25,
-                    "guidance_scale": 0.0 if "FLUX.1-schnell" in model else 7.5,
-                    "width": 576,
-                    "height": 1024,
-                    "seed": 42 + idx * 13,
-                }
-            }
-            
-            r = requests.post(url, headers=headers, json=payload, timeout=120)
-            
-            # Modelo carregando? Esperar
-            if r.status_code == 503:
-                wait = r.json().get("estimated_time", 20)
-                log(f"     [{idx+1}] HF {model.split('/')[1]}: carregando ({wait:.0f}s)...")
-                time.sleep(min(wait + 5, 45))
-                r = requests.post(url, headers=headers, json=payload, timeout=120)
-            
-            if r.status_code == 200:
-                ct = r.headers.get("content-type","")
-                if "image" in ct and len(r.content) > 30000:
-                    tmp = f"{WORKDIR}/raw_hf_{idx:02d}.jpg"
-                    with open(tmp, 'wb') as f: f.write(r.content)
-                    img = Image.open(tmp).convert("RGB")
-                    # Redimensionar para 1080×1920
-                    img = img.resize((W, H), Image.LANCZOS)
-                    out = f"{WORKDIR}/ai_{idx:02d}.jpg"
-                    img.save(out, "JPEG", quality=96)
-                    sz = os.path.getsize(out)//1024
-                    return out, f"hf/{model.split('/')[1]}"
-            else:
-                log(f"     [{idx+1}] HF {model.split('/')[1]}: HTTP {r.status_code}")
-        except Exception as e:
-            log(f"     [{idx+1}] HF err ({model.split('/')[1]}): {str(e)[:60]}")
-        time.sleep(2)
-    
+    try:
+        from huggingface_hub import InferenceClient
+        from io import BytesIO
+        full_prompt = (
+            f"masterpiece, best quality, kawaii chibi anime style, {prompt}, "
+            "Psych2Go animation style, pastel colors, cream background, "
+            "expressive big eyes, clean line art, no text, no watermark"
+        )
+        # Usar provider=auto (HF seleciona fal-ai, replicate, etc automaticamente)
+        client = InferenceClient(api_key=HF_TOKEN)
+        pil_img = client.text_to_image(
+            prompt=full_prompt,
+            model="black-forest-labs/FLUX.1-schnell",
+            provider="auto",
+        )
+        if pil_img:
+            img = pil_img.convert("RGB").resize((W, H), Image.LANCZOS)
+            out = f"{WORKDIR}/ai_{idx:02d}.jpg"
+            img.save(out, "JPEG", quality=96)
+            return out, "hf/FLUX.1-schnell"
+    except Exception as e:
+        log(f"     [{idx+1}] HF err: {str(e)[:80]}")
     return None, "hf_failed"
 
 def gen_gemini(prompt, idx):
