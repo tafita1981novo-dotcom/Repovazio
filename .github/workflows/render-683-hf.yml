@@ -1,0 +1,32 @@
+name: "🌟 Vídeo 1 HuggingFace FLUX.1 — #683"
+
+on:
+  workflow_dispatch:
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: 📦 Deps
+        run: |
+          pip install --quiet requests Pillow
+          sudo apt-get install -y ffmpeg --quiet 2>/dev/null
+      - name: 🌟 Render HuggingFace FLUX.1
+        env:
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python scripts/render_683_hf.py
+      - name: 📊 Resultado
+        if: always()
+        run: |
+          echo "## 🌟 HuggingFace FLUX.1-schnell" >> $GITHUB_STEP_SUMMARY
+          echo "- Primary: HF FLUX.1-schnell (anime chibi)" >> $GITHUB_STEP_SUMMARY
+          echo "- Fallback 1: Gemini 2.5 Flash Image" >> $GITHUB_STEP_SUMMARY
+          echo "- Fallback 2: Pollinations Flux" >> $GITHUB_STEP_SUMMARY
+          echo "- Fallback 3: Pillow Chibi Pro" >> $GITHUB_STEP_SUMMARY
