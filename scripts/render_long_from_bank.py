@@ -21,7 +21,7 @@ TARGET_S = 900
 IMG_INT  = 3
 N_APPEAR = TARGET_S // IMG_INT  # 300
 N_UNIQUE = N_APPEAR // 3        # 100
-RATE_ADJ = "+32%"  # 1189s natural → 900s = 15min exatos
+RATE_ADJ = "+0%"   # George natural não precisa de compressão
 WORKDIR  = f"/tmp/v{VIDEO_ID}_long15"
 os.makedirs(WORKDIR, exist_ok=True)
 
@@ -256,11 +256,11 @@ def gen_audio_george():
                 "text": TTS_CLEAN,
                 "model_id": "eleven_multilingual_v2",
                 "voice_settings": {
-                    "stability": 0.50,
-                    "similarity_boost": 0.85,
-                    "style": 0.35,
-                    "use_speaker_boost": True,
-                    "speed": 1.32   # equivale ao +32% do edge_tts
+                    "stability": 0.30,
+                      "similarity_boost": 0.85,
+                      "style": 0.50,
+                      "use_speaker_boost": True,
+                      "speed": 0.88   # equivale ao +32% do edge_tts
                 }
             },
             timeout=900
@@ -280,7 +280,7 @@ def gen_audio_george():
 async def gen_audio_antonio():
     """Fallback: AntonioNeural edge_tts"""
     import edge_tts
-    c = edge_tts.Communicate(TTS_CLEAN, voice="pt-BR-AntonioNeural", rate=RATE_ADJ)
+    c = edge_tts.Communicate(TTS_CLEAN, voice="pt-BR-AntonioNeural", rate="+5%")  # leve
     await c.save(f"{WORKDIR}/audio.mp3")
     log(f"  ✅ AntonioNeural OK (fallback)")
 
