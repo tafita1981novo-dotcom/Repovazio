@@ -181,15 +181,17 @@ if abs(DUR_NORMAL - TARGET) < 1.0:
     DUR_FINAL  = DUR_NORMAL
     log(f"  ✅ Já está em {DUR_NORMAL:.1f}s — sem ajuste necessário")
 else:
-    # Calcular rate adjustment
-    # rate "-X%" = speech mais lento = duracao maior
-    # target/normal = fator de ajuste
-    adj_factor = DUR_NORMAL / TARGET  # > 1 se normal muito longo
-    adj_pct = (adj_factor - 1) * 100
-    if adj_pct > 0:
-        rate_str = f"+{adj_pct:.0f}%"   # mais rápido
+    # LÓGICA CORRETA:
+    # rate="+X%" → X% mais rápido → nova_dur = DUR_NORMAL / (1 + X/100)
+    # rate="-X%" → X% mais lento  → nova_dur = DUR_NORMAL / (1 - X/100)
+    if DUR_NORMAL > TARGET:
+        # Audio longo → acelerar → rate positivo
+        X = (DUR_NORMAL / TARGET - 1) * 100
+        rate_str = f"+{X:.1f}%"
     else:
-        rate_str = f"{adj_pct:.0f}%"    # mais lento
+        # Audio curto → desacelerar → rate negativo
+        X = (1 - DUR_NORMAL / TARGET) * 100
+        rate_str = f"-{X:.1f}%"
     log(f"  Ajustando rate: {rate_str} (de {DUR_NORMAL:.1f}s → {TARGET}s)")
     asyncio.run(gen_audio(rate_str))
     safe = rate_str.replace('%','pct').replace('+','p').replace('-','m')
