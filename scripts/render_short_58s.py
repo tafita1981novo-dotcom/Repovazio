@@ -175,7 +175,8 @@ def gen_pillow(idx):
 log("🎙️  ETAPA 1 — Gerando áudio (AntonioNeural +8% = 58s)...")
 
 # ── ÁUDIO: ElevenLabs George (qualidade máxima) → fallback edge_tts ──────────
-XI_KEY = os.environ.get("ELEVENLABS_API_KEY", "")
+XI_KEY  = os.environ.get("ELEVENLABS_API_KEY", "")
+RATE_ADJ = "George+0.92" if XI_KEY else "Antonio+8%"  # para metadata
 GEORGE_ID = "JBFqnCBsd6RMkjVDRZzb"  # George — deep, resonant PT-BR multilingual
 
 def gen_george():
