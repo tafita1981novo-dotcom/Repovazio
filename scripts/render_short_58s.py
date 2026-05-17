@@ -174,22 +174,62 @@ def gen_pillow(idx):
 # ── ETAPA 1: ÁUDIO TTS ──────────────────────────────────
 log("🎙️  ETAPA 1 — Gerando áudio (AntonioNeural +8% = 58s)...")
 
-# RATE FIXO +8% → leve aceleração, soa natural, dá ~58s
-RATE_ADJ = "+37%"  # 79s natural / 1.37 = 57.7s ≈ 58s
+# ── ÁUDIO: ElevenLabs George (qualidade máxima) → fallback edge_tts ──────────
+XI_KEY = os.environ.get("ELEVENLABS_API_KEY", "")
+GEORGE_ID = "JBFqnCBsd6RMkjVDRZzb"  # George — deep, resonant PT-BR multilingual
 
-async def gen_audio():
+def gen_george():
+    """ElevenLabs George: voz humana, emoção real, pausas naturais."""
+    if not XI_KEY:
+        log("  ⚠️  ELEVENLABS_API_KEY ausente → fallback edge_tts")
+        return None
+    import requests as _rq
+    log(f"  🎤 George ElevenLabs ({len(SCRIPT_TTS)} chars)...")
+    r = _rq.post(
+        f"https://api.elevenlabs.io/v1/text-to-speech/{GEORGE_ID}",
+        headers={"xi-api-key": XI_KEY, "Content-Type": "application/json"},
+        json={
+            "text": SCRIPT_TTS,
+            "model_id": "eleven_multilingual_v2",
+            "voice_settings": {
+                "stability":        0.32,   # baixo = mais variação emocional
+                "similarity_boost": 0.85,   # mantém identidade de voz
+                "style":            0.50,   # expressivo — ênfase natural
+                "use_speaker_boost": True,  # clareza máxima
+                "speed":            0.92    # levemente mais lento = pausa humana
+            }
+        },
+        timeout=120
+    )
+    if r.status_code == 200:
+        path = f"{WORKDIR}/audio_george.mp3"
+        with open(path, "wb") as f: f.write(r.content)
+        sz = len(r.content) // 1024
+        log(f"  ✅ George: {sz}KB gerado")
+        return path
+    else:
+        log(f"  ⚠️  George erro {r.status_code}: {r.text[:120]}")
+        return None
+
+async def gen_antonio():
+    """Fallback: AntonioNeural levemente acelerado (sem +37%!)."""
     import edge_tts
-    path = f"{WORKDIR}/audio_final.mp3"
-    c = edge_tts.Communicate(SCRIPT_TTS, voice="pt-BR-AntonioNeural", rate=RATE_ADJ)
+    path = f"{WORKDIR}/audio_antonio.mp3"
+    # +8% apenas — natural, sem distorção robótica
+    c = edge_tts.Communicate(SCRIPT_TTS, voice="pt-BR-AntonioNeural", rate="+8%")
     await c.save(path)
     return path
 
-asyncio.run(gen_audio())
-AUDIO_PATH = f"{WORKDIR}/audio_final.mp3"
+# Tentar George primeiro
+AUDIO_PATH = gen_george()
+if AUDIO_PATH is None:
+    log("  Usando AntonioNeural (+8% rate)...")
+    AUDIO_PATH = asyncio.run(gen_antonio())
+    AUDIO_PATH = f"{WORKDIR}/audio_antonio.mp3"
+
 DUR_FINAL  = measure_dur(AUDIO_PATH)
 RATE_REAL  = total_chars / DUR_FINAL
-
-log(f"  ✅ Áudio: {DUR_FINAL:.2f}s @ rate={RATE_ADJ}")
+log(f"  ✅ Áudio: {DUR_FINAL:.2f}s | voz: {'George/ElevenLabs' if 'george' in AUDIO_PATH else 'Antonio/EdgeTTS'}")
 if abs(DUR_FINAL - TARGET) <= 2:
     log(f"  🎯 PERFEITO! {DUR_FINAL:.2f}s ≈ {TARGET}s")
 else:
