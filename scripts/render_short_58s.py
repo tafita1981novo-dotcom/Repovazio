@@ -119,7 +119,7 @@ FRASES  = [s[0] for s in SCENES]
 PROMPTS = [s[1] for s in SCENES]
 N       = len(SCENES)
 # TTS usa ". " sem newlines (evita pausas longas)
-SCRIPT_TTS = ". ".join(FRASES)
+SCRIPT_TTS = " ".join(FRASES)   # sem ponto duplo = sem pausa extra
 # Para cálculo de RATE_REAL: usa chars reais por frase
 CHARS_FRASES = [len(f) for f in FRASES]
 
