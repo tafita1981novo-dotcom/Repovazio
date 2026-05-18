@@ -73,10 +73,19 @@ for p in paragrafos:
         elif len(s) > 3:
             frases.append(s)
 
-# Limitar a 14 frases para 58s
+# Limitar frases — manter Inscreva-se SEMPRE como última
 frases = [f for f in frases if len(f) > 3]
-if len(frases) > 14:
-    frases = frases[:14]
+
+# Garantir que CTA "Inscreva-se" está na última frase
+ultima_para = paragrafos[-1] if paragrafos else ""
+inscreva_ja = any("inscreva" in f.lower() for f in frases)
+if not inscreva_ja and "inscreva" in ultima_para.lower():
+    frases.append(ultima_para.strip())
+
+# Limitar total (mantendo último = Inscreva-se)
+if len(frases) > 16:
+    frases = frases[:15] + [frases[-1]]
+
 N = len(frases)
 
 SCRIPT_TTS = " ".join(frases)
@@ -118,12 +127,17 @@ if XI_KEY:
 
 if AUDIO is None:
     import edge_tts
+    # FranciscaNeural = mais calorosa e empática para conteúdo psicologia
+    # AntonioNeural = mais dramático com rate -5%
+    VOICE_FALLBACK = "pt-BR-FranciscaNeural"
+    RATE_FALLBACK  = "+0%"
     async def _ant():
-        c=edge_tts.Communicate(SCRIPT_TTS,voice="pt-BR-AntonioNeural",rate="+0%")
+        c=edge_tts.Communicate(SCRIPT_TTS,voice=VOICE_FALLBACK,rate=RATE_FALLBACK)
         await c.save(f"{WORKDIR}/audio_ant.mp3")
     asyncio.run(_ant())
     AUDIO = f"{WORKDIR}/audio_ant.mp3"
-    log("  ✅ AntonioNeural fallback")
+    log(f"  ✅ {VOICE_FALLBACK} fallback (ElevenLabs quota indisponível)")
+    voice = VOICE_FALLBACK  # corrigir metadata
 
 DUR_AUDIO = measure_dur(AUDIO)
 log(f"  ✅ Duração bruta: {DUR_AUDIO:.2f}s")
