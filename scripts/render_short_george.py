@@ -142,23 +142,25 @@ if AUDIO is None:
 DUR_AUDIO = measure_dur(AUDIO)
 log(f"  ✅ Duração bruta: {DUR_AUDIO:.2f}s")
 
-# Safety net: atempo APENAS se > 63s (compressão mínima)
-TARGET = 58.0
-if DUR_AUDIO > 63.0:
+# Atempo BIDIRECIONAL: sempre ajusta para 58s (±2s de tolerância)
+TARGET   = 58.0
+TOLERANCIA = 2.0   # até 2s de diferença = sem ajuste (preserva micro-pausas)
+if abs(DUR_AUDIO - TARGET) > TOLERANCIA:
     atempo = DUR_AUDIO / TARGET
     atempo = max(0.5, min(2.0, atempo))
+    direcao = "⬇️ comprimindo" if atempo > 1.0 else "⬆️ expandindo"
     adj = f"{WORKDIR}/audio_adj.mp3"
     r_at = subprocess.run(
         ["ffmpeg","-y","-i",AUDIO,"-filter:a",f"atempo={atempo:.4f}","-q:a","2",adj],
         capture_output=True,text=True,timeout=60)
     if r_at.returncode == 0:
-        AUDIO = adj
+        AUDIO    = adj
         DUR_AUDIO = measure_dur(AUDIO)
-        log(f"  ✅ Ajustado (atempo={atempo:.3f}): {DUR_AUDIO:.2f}s")
+        log(f"  ✅ {direcao}: {atempo:.3f}x → {DUR_AUDIO:.2f}s")
     else:
         log(f"  ⚠️ atempo falhou: {r_at.stderr[-100:]}")
 else:
-    log(f"  ✅ Duração OK — sem compressão ({DUR_AUDIO:.1f}s)")
+    log(f"  ✅ Duração OK ({DUR_AUDIO:.1f}s) — micro-pausas preservadas")
 
 RATE_REAL = total_chars / DUR_AUDIO
 DURS = [max(1.2, round(len(f)/RATE_REAL, 3)) for f in frases]
