@@ -54,56 +54,60 @@ CLEAN = preprocess(RAW)
 paragrafos = [p.strip() for p in CLEAN.split('\n') if p.strip() and len(p.strip()) > 5]
 
 def get_emotion(frase):
-    """Retorna (speed, pause_after_s) baseado no conteúdo emocional da frase."""
+    """Retorna (speed, pause_after_s) — speeds reduzidos 15-20% para voz humana natural."""
     t = frase.lower()
     
-    # CTA — máxima energia
-    if any(k in t for k in ["inscreva","🔔","próximo vídeo"]):
-        return 1.05, 0.0
+    # CTA — solene, marcante (NÃO acelerado)
+    if any(k in t for k in ["inscreva","próximo vídeo","no canal"]):
+        return 0.80, 0.5   # lento e claro, pausa depois para impacto final
     
-    # Impacto máximo — muito lento + pausa longa
+    # "Quatro anos apagando a própria voz" — peso máximo
     if "quatro anos" in t and "apagando" in t:
-        return 0.72, 0.8  # pausa de 0.8s
+        return 0.62, 1.0   # muito lento + pausa longa de 1s
     elif "quatro anos" in t:
-        return 0.75, 0.6
-    elif "apagando" in t or "voz" in t:
-        return 0.78, 0.5
+        return 0.65, 0.8
+    elif "apagando" in t:
+        return 0.65, 0.5
     
-    # Momento do choro — máxima dramaticidade
-    elif "ele chora" in t or (t.strip() == "ele chora.") or ("chora" in t and len(t) < 25):
-        return 0.68, 0.7  # muito lento + pausa dramática
+    # "Ele chora." — momento mais dramático do vídeo
+    elif ("chora" in t and len(t) < 20):
+        return 0.58, 0.9   # muito lento + longa pausa dramática
     
-    # Hook inicial — alertante, sério
-    elif "mais perigoso" in t or "não grita" in t or "não humilha" in t:
-        return 0.82, 0.2
+    # Hook inicial — sério, alertante
+    elif any(k in t for k in ["mais perigoso","não grita","não humilha"]):
+        return 0.72, 0.3
     
-    # Revelação — você é quem está errada
-    elif "afastar" in t or "errada" in t:
-        return 0.85, 0.3
+    # Revelação/torção — gaslight
+    elif any(k in t for k in ["afastar","errada","culpada"]):
+        return 0.75, 0.4
     
-    # Autoridade científica — clara, confiante
-    elif any(k in t for k in ["harvard","pesquisador","estudo","universidade","dr ","dra "]):
-        return 0.92, 0.2
-    
-    # Sinais — pedagogical, claro, pausado
-    elif "sinal 1" in t or "nunca responsável" in t:
-        return 0.88, 0.3
-    elif "sinal 2" in t or "crítica" in t or "aprende" in t:
-        return 0.88, 0.3
-    elif "sinal 3" in t or "desculpar" in t or "sentir" in t or "precisar" in t:
-        return 0.85, 0.4  # mais lento — momento de reconhecimento
-    
-    # Validação — íntimo, caloroso
-    elif "não está exagerando" in t or "sensível demais" in t or "dramática" in t:
-        return 0.83, 0.2
-    elif "normalmente" in t or "anormal" in t:
-        return 0.85, 0.2
-    
-    # Isso tem nome — revelação
+    # "Isso tem nome" — suspense
     elif "isso tem nome" in t:
-        return 0.80, 0.4  # pausa de suspense
+        return 0.70, 0.6
     
-    return 0.90, 0.1  # padrão
+    # Autoridade científica — clara, firme
+    elif any(k in t for k in ["harvard","pesquisador","estudo","universidade","dr ","dra "]):
+        return 0.82, 0.3
+    
+    # Sinais 1/2/3 — pedagógico, numbered
+    elif any(k in t for k in ["sinal 1","sinal 2","sinal 3"]):
+        return 0.78, 0.4
+    
+    # Comportamentos narcísicos
+    elif any(k in t for k in ["nunca responsável","crítica","aprende","falar nada"]):
+        return 0.78, 0.3
+    
+    # Sinal 3 / desculpar por existir — muito pesado
+    elif any(k in t for k in ["desculpar","existir","sentir","precisar"]):
+        return 0.74, 0.5
+    
+    # Validação / empoderamento — íntimo, caloroso
+    elif any(k in t for k in ["não está exagerando","sensível demais","não é dramática"]):
+        return 0.75, 0.3
+    elif any(k in t for k in ["normalmente","anormal","reagindo"]):
+        return 0.77, 0.3
+    
+    return 0.80, 0.2   # padrão = mais lento que antes
 
 frases = []
 emocoes = []
@@ -179,17 +183,43 @@ try:
             log(f"  [{idx:02d}/{N}] ⚠️ erro: {e}")
 
     if all_segments:
-        AUDIO_FULL = np.concatenate(all_segments).astype(np.float32)
-        AUDIO_WAV  = f"{WORKDIR}/audio_kokoro.wav"
-        AUDIO_MP3  = f"{WORKDIR}/audio_kokoro.mp3"
-        sf.write(AUDIO_WAV, AUDIO_FULL, SR)
-        # Converter para mp3 (qualidade alta)
-        subprocess.run(["ffmpeg","-y","-i",AUDIO_WAV,"-b:a","192k",AUDIO_MP3],
-            capture_output=True)
+        # FIX QUALIDADE: salvar cada segmento WAV separado + ffmpeg concat
+        # (evita degradação por numpy concatenação de floats)
+        seg_files = []
+        for si, seg in enumerate(all_segments):
+            sp = f"{WORKDIR}/seg_{si:03d}.wav"
+            sf.write(sp, seg.astype(np.float32), SR)
+            seg_files.append(sp)
+        
+        # Criar lista ffmpeg concat
+        concat_audio = f"{WORKDIR}/concat_audio.txt"
+        with open(concat_audio,'w') as fa:
+            for sp in seg_files:
+                fa.write(f"file '{sp}'\n")
+        
+        AUDIO_WAV = f"{WORKDIR}/audio_kokoro_raw.wav"
+        AUDIO_MP3 = f"{WORKDIR}/audio_kokoro.mp3"
+        
+        # Concatenar WAVs sem reencoding + resample 44100 + MP3 320k (qualidade máxima)
+        subprocess.run([
+            "ffmpeg","-y",
+            "-f","concat","-safe","0","-i",concat_audio,
+            "-ar","44100",           # resample para qualidade CD
+            "-ac","1",               # mono (menor arquivo, sem phase issues)
+            "-af","volume=1.2",      # leve boost de volume
+            AUDIO_WAV
+        ], capture_output=True)
+        
+        subprocess.run([
+            "ffmpeg","-y","-i",AUDIO_WAV,
+            "-codec:a","libmp3lame","-b:a","320k",  # 320k = máxima qualidade MP3
+            AUDIO_MP3
+        ], capture_output=True)
+        
         AUDIO = AUDIO_MP3
         DUR_AUDIO = measure_dur(AUDIO)
-        log(f"  ✅ Kokoro: {DUR_AUDIO:.2f}s | blend pm_santa/pm_alex")
-        VOICE_USED = "Kokoro/pm_santa-pm_alex"
+        log(f"  ✅ Kokoro 44100Hz/320k: {DUR_AUDIO:.2f}s | pm_santa PT-BR")
+        VOICE_USED = "Kokoro/pm_santa"
     else:
         raise RuntimeError("Nenhum segmento gerado")
 
