@@ -175,18 +175,43 @@ if AUDIO is None:
         for idx, (frase, (speed, pause_s)) in enumerate(zip(frases, emocoes), 1):
             seg_path = f"{WORKDIR}/seg_{idx:03d}.wav"
             try:
+                # XTTS v2: sem parâmetro speed — aplicar atempo via ffmpeg depois
                 tts.tts_to_file(
                     text=frase,
                     speaker_wav=GEORGE_REF_WAV,
                     language="pt",
-                    file_path=seg_path,
-                    speed=speed if hasattr(tts, 'speed') else None
+                    file_path=seg_path
                 )
-                seg_dur = measure_dur(seg_path)
-                log(f"  [{idx:02d}/{N}] ✅ {seg_dur:.1f}s | {frase[:45]}")
-                seg_files.append(seg_path)
 
-                # Adicionar silêncio pós-frase
+                if not os.path.exists(seg_path) or os.path.getsize(seg_path) < 1000:
+                    log(f"  [{idx:02d}/{N}] ⚠️ segmento vazio")
+                    continue
+
+                seg_dur = measure_dur(seg_path)
+
+                # Aplicar velocidade via ffmpeg atempo (0.5-2.0)
+                # speed < 1.0 = mais lento; speed > 1.0 = mais rápido
+                if abs(speed - 1.0) > 0.05:
+                    seg_adj = seg_path.replace('.wav','_adj.wav')
+                    atempo_seg = speed  # speed 0.72 = falar 72% da velocidade = mais lento
+                    # atempo inverte: 0.8 = 80% da velocidade original = mais lento
+                    subprocess.run([
+                        "ffmpeg","-y","-i",seg_path,
+                        "-filter:a",f"atempo={atempo_seg:.3f}",
+                        "-ar",str(SR),seg_adj
+                    ], capture_output=True)
+                    if os.path.exists(seg_adj) and os.path.getsize(seg_adj) > 500:
+                        seg_dur_adj = measure_dur(seg_adj)
+                        seg_files.append(seg_adj)
+                        log(f"  [{idx:02d}/{N}] ✅ {seg_dur:.1f}s→{seg_dur_adj:.1f}s (speed={speed}) | {frase[:40]}")
+                    else:
+                        seg_files.append(seg_path)
+                        log(f"  [{idx:02d}/{N}] ✅ {seg_dur:.1f}s (natural) | {frase[:40]}")
+                else:
+                    seg_files.append(seg_path)
+                    log(f"  [{idx:02d}/{N}] ✅ {seg_dur:.1f}s | {frase[:40]}")
+
+                # Silêncio pós-frase para pausas dramáticas
                 if pause_s > 0:
                     sil_path = f"{WORKDIR}/sil_{idx:03d}.wav"
                     subprocess.run([
@@ -194,7 +219,8 @@ if AUDIO is None:
                         "-i",f"anullsrc=r={SR}:cl=mono",
                         "-t",str(pause_s),"-ar",str(SR),sil_path
                     ], capture_output=True)
-                    seg_files.append(sil_path)
+                    if os.path.exists(sil_path):
+                        seg_files.append(sil_path)
 
             except Exception as e:
                 log(f"  [{idx:02d}/{N}] ⚠️ {e}")
