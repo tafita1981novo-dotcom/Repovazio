@@ -1,4 +1,4 @@
-name: "🎙️ Short 60s — XTTS v2 Clone George"
+name: "🎤 Short Teaser — AntonioNeural Masculino"
 
 on:
   workflow_dispatch:
@@ -11,27 +11,18 @@ on:
 jobs:
   render:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/cache@v4
-        with:
-          path: ~/.local/share/tts
-          key: xtts-v2-model-v1
-
       - uses: actions/setup-python@v5
         with: { python-version: "3.11" }
-
       - name: 📦 Deps
         run: |
-          pip install --quiet TTS torch torchaudio soundfile numpy requests edge-tts
-          sudo apt-get install -y espeak-ng ffmpeg --quiet 2>/dev/null
-
-      - name: 🎙️ XTTS v2 George Clone
+          pip install --quiet requests soundfile numpy edge-tts
+          sudo apt-get install -y ffmpeg --quiet 2>/dev/null
+      - name: 🎤 Short Teaser
         env:
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
-          COQUI_TOS_AGREED: "1"
           VIDEO_ID: ${{ github.event.inputs.video_id }}
         run: python scripts/render_short_george.py
