@@ -101,7 +101,7 @@ if XI_KEY:
                     "similarity_boost": 0.85,
                     "style":            0.50,
                     "use_speaker_boost": True,
-                    "speed":            0.92
+                    "speed":            1.05    # 882 chars → ~59s (target 58-60s)
                 }
             },
             timeout=180
@@ -187,28 +187,89 @@ def make_prompt(frase, idx):
 
 PROMPTS = [make_prompt(f, i) for i, f in enumerate(FRASES, 1)]
 
-log(f"\n🎨 ETAPA 2 — {N} IMAGENS POLLINATIONS (sequential)")
+# ── ETAPA 2: IMAGENS — banco Supabase (rápido) → fallback Pollinations ──────
+log(f"\n🎨 ETAPA 2 — {N} IMAGENS (banco → Pollinations fallback)")
+
+def upscale(src, dst):
+    subprocess.run(["ffmpeg","-y","-i",src,"-vf","scale=1080:1920:flags=lanczos","-q:v","2",dst],
+        capture_output=True)
+    return dst
+
+# Buscar imagens do banco Supabase
+CHARS_CYCLE = ["daniela","sara","marcos","julia","ana","lucas","group"]
+banco_imgs = {}
+try:
+    r_banco = requests.get(f"{SB_URL}/rest/v1/image_bank?select=character_slug,scene_type,image_url&limit=200",
+        headers={"apikey":SB_KEY,"Authorization":f"Bearer {SB_KEY}"},timeout=60)
+    banco = r_banco.json()
+    # Organizar por char+scene
+    from collections import defaultdict
+    banco_map = defaultdict(list)
+    for img in banco:
+        k = f"{img['character_slug']}_{img['scene_type']}"
+        banco_map[k].append(img['image_url'])
+    log(f"  🏦 Banco: {len(banco)} imagens disponíveis")
+except Exception as e:
+    log(f"  ⚠️ Banco falhou: {e}")
+    banco_map = {}
+
+def get_char_scene_for_frase(frase, idx):
+    char = CHARS_CYCLE[idx % len(CHARS_CYCLE)]
+    t = frase.lower()
+    if "inscreva" in t or "🔔" in frase: scene = "cta"
+    elif "sinal 1" in t or "sinal 2" in t or "sinal 3" in t: scene = "problema"
+    elif "harvard" in t or "pesquisa" in t or "dra." in t or "dr." in t: scene = "ciencia"
+    elif "não está" in t or "você está" in t or "normalmente" in t: scene = "virada"
+    else: scene = ["gancho","problema","ciencia","virada"][idx % 4]
+    return char, scene
+
 IMGS = []
+banco_used = 0
+poll_used  = 0
+
 for idx, (frase, prompt) in enumerate(zip(FRASES, PROMPTS), 1):
-    seed = 9001 + idx * 77
-    url = f"https://image.pollinations.ai/prompt/{requests.utils.quote(prompt)}?width=576&height=1024&seed={seed}&nologo=true"
+    char, scene = get_char_scene_for_frase(frase, idx-1)
     fpath = f"{WORKDIR}/img_{idx:02d}.jpg"
-    for att in range(3):
+    up    = f"{WORKDIR}/img_up_{idx:02d}.jpg"
+
+    # 1. Tentar banco
+    found = False
+    for key in [f"{char}_{scene}", f"sara_{scene}", f"daniela_{scene}"]:
+        urls = banco_map.get(key, [])
+        if urls:
+            url = urls[(idx * 7) % len(urls)]
+            try:
+                r=requests.get(url,timeout=30)
+                if r.status_code==200 and len(r.content)>5000:
+                    with open(fpath,'wb') as f_: f_.write(r.content)
+                    IMGS.append(upscale(fpath, up))
+                    sz = len(r.content)//1024
+                    log(f"  [{idx:02d}/{N}] 🏦 {sz}KB banco/{char}/{scene} | {frase[:35]}")
+                    banco_used += 1
+                    found = True
+                    break
+            except: pass
+
+    # 2. Fallback Pollinations (apenas se banco falhou)
+    if not found:
+        seed = 9001 + idx * 77
+        url = f"https://image.pollinations.ai/prompt/{requests.utils.quote(prompt)}?width=576&height=1024&seed={seed}&nologo=true"
         try:
-            r=requests.get(url,timeout=60,headers={"User-Agent":"Mozilla/5.0"})
+            r=requests.get(url,timeout=90,headers={"User-Agent":"Mozilla/5.0"})
             if r.status_code==200 and len(r.content)>5000:
                 with open(fpath,'wb') as f_: f_.write(r.content)
-                # Upscale para 1080×1920
-                up=f"{WORKDIR}/img_up_{idx:02d}.jpg"
-                subprocess.run(["ffmpeg","-y","-i",fpath,"-vf","scale=1080:1920:flags=lanczos","-q:v","2",up],
-                    capture_output=True)
-                sz=os.path.getsize(fpath)//1024
-                log(f"  [{idx:02d}/{N}] 🌐 {sz}KB | {frase[:40]}")
-                IMGS.append(up)
-                break
+                IMGS.append(upscale(fpath, up))
+                sz = len(r.content)//1024
+                log(f"  [{idx:02d}/{N}] 🌐 {sz}KB poll | {frase[:35]}")
+                poll_used += 1
+                found = True
         except Exception as e:
-            if att==2: log(f"  [{idx:02d}/{N}] ❌ {e}"); IMGS.append(None)
-        time.sleep(4)
+            log(f"  [{idx:02d}/{N}] ❌ {e}")
+
+    if not found and IMGS:
+        IMGS.append(IMGS[-1])  # reusar última
+
+log(f"  ✅ {banco_used} banco | {poll_used} Pollinations | total {len(IMGS)}")
 
 # Usar imagem placeholder para falhas
 IMGS = [p or IMGS[0] for p in IMGS]
