@@ -1,4 +1,4 @@
-name: "🎤 Short Teaser — AntonioNeural Masculino"
+name: "🎤 Short — Chatterbox George Clone PT-BR"
 
 on:
   workflow_dispatch:
@@ -11,16 +11,26 @@ on:
 jobs:
   render:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: chatterbox-multilingual-v1
+
       - uses: actions/setup-python@v5
         with: { python-version: "3.11" }
-      - name: 📦 Deps
+
+      - name: 📦 Deps (CPU torch + Chatterbox)
         run: |
-          pip install --quiet requests soundfile numpy edge-tts
+          # Instalar torch CPU-only PRIMEIRO para evitar conflito CUDA
+          pip install --quiet torch torchaudio --index-url https://download.pytorch.org/whl/cpu
+          pip install --quiet chatterbox-tts requests edge-tts soundfile
           sudo apt-get install -y ffmpeg --quiet 2>/dev/null
-      - name: 🎤 Short Teaser
+
+      - name: 🎤 Chatterbox — George Clone Short
         env:
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
