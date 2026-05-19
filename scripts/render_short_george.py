@@ -56,38 +56,88 @@ CLEAN = preprocess(RAW)
 # ── 2. FRASES + EMOÇÃO ─────────────────────────────────────────────────
 paragrafos = [p.strip() for p in CLEAN.split('\n') if p.strip() and len(p.strip()) > 5]
 
-# VERSÃO B: ENHANCED DRAMATIC (exag +0.13, cfg -0.13 vs clone George)
-VOICE_VERSION = os.environ.get("VOICE_VERSION", "A")  # A=clone, B=enhanced
-def get_emotion(frase):
-    """Retorna (exaggeration, cfg_weight, pause_s) por tipo emocional.
-    Versão A (clone George): moderado
-    Versão B (enhanced):    mais dramático, mais potente
-    """
+# SISTEMA DE NARRAÇÃO PERFEITA v1
+# Regra 1: CAPS = ênfase natural (Chatterbox responde a maiúsculas)
+# Regra 2: Linha curta sozinha = pausa ANTES e DEPOIS (impacto máximo)
+# Regra 3: "..." no texto = silêncio dramático 1.0s
+# Regra 4: cfg_weight baixo = fala mais lenta e deliberada
+# Regra 5: atempo 0.88 global = 12% mais lento sem pitch change
+
+VOICE_VERSION = os.environ.get("VOICE_VERSION", "B")
+
+def classify_frase(frase):
+    """Classificar tipo de frase para parâmetros corretos."""
     t = frase.lower()
-    boost = 0.13 if VOICE_VERSION == "B" else 0.0
-    cfg_cut = 0.13 if VOICE_VERSION == "B" else 0.0
+    chars = len(frase.strip())
     
-    def adj(exag, cfg, pau):
-        return (min(0.95, exag+boost), max(0.15, cfg-cfg_cut), pau*(1.2 if VOICE_VERSION=="B" else 1.0))
+    # Linha MUITO curta (< 30 chars) = momento de impacto máximo
+    # Ex: "Ele CHORA." / "Ela NÃO estava." / "É QUÍMICA."
+    if chars < 35 and not any(k in t for k in ["salva","canal","vídeo"]):
+        return "IMPACTO"
     
-    if any(k in t for k in ["salva","canal","assistir","mais tarde","depois","inscreva","vídeo completo"]):
-        return adj(0.65, 0.55, 0.3)
-    if "quatro anos" in t and "apagando" in t: return adj(0.80, 0.25, 0.9)
-    elif "quatro anos" in t: return adj(0.78, 0.28, 0.7)
-    elif "apagando" in t: return adj(0.75, 0.30, 0.5)
-    elif ("chora" in t and len(t) < 20): return adj(0.85, 0.20, 0.8)
-    elif any(k in t for k in ["mais perigoso","não grita","não humilha"]): return adj(0.72, 0.35, 0.2)
-    elif any(k in t for k in ["afastar","errada","culpada"]): return adj(0.70, 0.38, 0.3)
-    elif "isso tem nome" in t or "isso se chama" in t: return adj(0.70, 0.32, 0.4)
-    elif any(k in t for k in ["harvard","pesquisador","estudo","dr ","dra "]): return adj(0.60, 0.50, 0.2)
-    elif any(k in t for k in ["sinal 1","sinal 2","sinal 3"]): return adj(0.65, 0.40, 0.3)
-    elif any(k in t for k in ["nunca responsável","crítica","aprende","falar nada"]): return adj(0.65, 0.40, 0.2)
-    elif any(k in t for k in ["desculpar","existir","sentir","precisar"]): return adj(0.70, 0.35, 0.4)
-    elif any(k in t for k in ["não está exagerando","sensível demais","dramática"]): return adj(0.75, 0.35, 0.2)
-    elif any(k in t for k in ["normalmente","anormal","reagindo"]): return adj(0.68, 0.40, 0.2)
-    elif any(k in t for k in ["não era preguiça","não era frescura","não é apego"]): return adj(0.68, 0.38, 0.2)
-    elif any(k in t for k in ["medo de ser","medo de falhar","impostor"]): return adj(0.70, 0.35, 0.3)
-    return adj(0.63, 0.45, 0.15)
+    # CTA final
+    if any(k in t for k in ["salva","canal","assistir","mais tarde","depois","vídeo completo"]):
+        return "CTA"
+    
+    # Revelação ("Isso tem NOME", "Isso se chama...")
+    if any(k in t for k in ["isso tem nome","isso se chama","tem nome","se chama"]):
+        return "REVELACAO"
+    
+    # Dados/ciência
+    if any(k in t for k in ["harvard","pesquisador","estudo","universidade","neurológico","neurológ","química","mecanismo"]):
+        return "CIENCIA"
+    
+    # Virada emocional / não é sua culpa
+    if any(k in t for k in ["não está exagerando","não fosse você","não era sua","não é fraqueza","não é preguiça","não era preguiça"]):
+        return "VIRADA"
+    
+    # Tensão / gaslighting
+    if any(k in t for k in ["errada","acreditar","inventou","culpada","apagada","apagado","vazio"]):
+        return "TENSAO"
+    
+    # Hook inicial (primeiras frases)
+    return "NORMAL"
+
+def get_emotion(frase):
+    """
+    Sistema de narração:
+    Retorna (exaggeration, cfg_weight, pause_s)
+    exaggeration: 0.70-0.95 (B=enhanced dramatic)
+    cfg_weight: 0.10-0.28 (MUITO baixo = fala lenta e deliberada)
+    pause_s: silêncio APÓS a frase (em segundos)
+    """
+    tipo = classify_frase(frase)
+    t = frase.lower()
+    
+    # Adicionar silêncio extra quando frase tem "..."
+    dots_bonus = 0.8 if "..." in frase else 0.0
+    
+    if tipo == "IMPACTO":
+        # Linha curta = dramaticidade MÁXIMA + pausa longa
+        return (0.95, 0.10, 1.5 + dots_bonus)
+    
+    elif tipo == "CTA":
+        # Solene, claro, assertivo — não acelerado
+        return (0.72, 0.28, 0.4)
+    
+    elif tipo == "REVELACAO":
+        # "Isso tem NOME." = peso máximo, lento
+        return (0.90, 0.12, 1.2 + dots_bonus)
+    
+    elif tipo == "CIENCIA":
+        # Autoritário, claro, confiante
+        return (0.75, 0.20, 0.8)
+    
+    elif tipo == "VIRADA":
+        # Cálido, empoderador, direto
+        return (0.78, 0.18, 0.8)
+    
+    elif tipo == "TENSAO":
+        # Pesado, tenso, lento
+        return (0.88, 0.14, 1.0 + dots_bonus)
+    
+    else:  # NORMAL (hook, contextualização)
+        return (0.82, 0.18, 0.8 + dots_bonus)
 
 frases = []
 emocoes = []
@@ -238,7 +288,25 @@ if AUDIO is None:
     log(f"  ✅ AntonioNeural: {measure_dur(AUDIO):.2f}s")
 
 DUR_AUDIO = measure_dur(AUDIO)
-log(f"  ✅ Áudio final: {DUR_AUDIO:.2f}s | {VOICE_USED}")
+log(f"  ✅ Áudio bruto: {DUR_AUDIO:.2f}s | {VOICE_USED}")
+
+# SLOWDOWN GLOBAL 12%: mais deliberado, mais impactante, sem pitch change
+GLOBAL_SLOW = 0.88
+adj_slow = f"{WORKDIR}/audio_slow.mp3"
+subprocess.run(["ffmpeg","-y","-i",AUDIO,"-filter:a",f"atempo={GLOBAL_SLOW}",
+    "-codec:a","libmp3lame","-b:a","256k",adj_slow], capture_output=True, timeout=60)
+if os.path.exists(adj_slow) and os.path.getsize(adj_slow) > 1000:
+    AUDIO = adj_slow
+    DUR_AUDIO = measure_dur(AUDIO)
+    log(f"  ✅ Slowdown 12% aplicado: {DUR_AUDIO:.2f}s")
+# Safety: cap em 62s
+if DUR_AUDIO > 62.0:
+    at = DUR_AUDIO/60.0
+    adj2 = f"{WORKDIR}/audio_cap.mp3"
+    subprocess.run(["ffmpeg","-y","-i",AUDIO,"-filter:a",f"atempo={at:.4f}","-q:a","2",adj2],
+        capture_output=True, timeout=60)
+    if os.path.exists(adj2): AUDIO=adj2; DUR_AUDIO=measure_dur(AUDIO)
+log(f"  ✅ Duração final: {DUR_AUDIO:.2f}s")
 
 # Atempo leve apenas se fora de 37-58s
 if DUR_AUDIO < 37.0:
