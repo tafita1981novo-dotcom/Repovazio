@@ -30,9 +30,11 @@ def dur(p):
         capture_output=True, text=True)
     return float(json.loads(r.stdout)["format"]["duration"])
 def silence(secs, sr, path):
-    subprocess.run(["ffmpeg","-y","-f","lavfi","-i",
-        f"anullsrc=r={sr}:cl=mono","-t",str(secs),"-ar",str(sr), path],
-        capture_output=True)
+    """Gera silêncio com torchaudio (evita problemas com ffmpeg lavfi)"""
+    import torch
+    n_samples = int(float(secs) * int(sr))
+    silent = torch.zeros(1, max(1, n_samples))
+    torchaudio.save(path, silent, int(sr))
 def sb_patch(id_, data):
     requests.patch(f"{SB_URL}/rest/v1/content_pipeline?id=eq.{id_}",
         headers={"apikey":SB_KEY,"Authorization":f"Bearer {SB_KEY}",
@@ -189,33 +191,42 @@ if AUDIO is None:
                 silence(pau, SR, sil_path)
                 seg_files.append(sil_path)
 
-        # Filtrar apenas arquivos que realmente existem e têm tamanho > 0
+        # Concatenar com torchaudio (sem ffmpeg concat — mais confiável)
         seg_files = [sp for sp in seg_files
                      if os.path.exists(sp) and os.path.getsize(sp) > 100]
         
         if seg_files:
-            # Concatenar todos os grupos
-            concat_f = f"{WORKDIR}/concat.txt"
-            with open(concat_f,'w') as f:
-                for sp in seg_files: f.write(f"file '{sp}'\n")
-            log(f"  Concatenando {len(seg_files)} segmentos...")
-            raw = f"{WORKDIR}/audio_raw.wav"
-            mp3 = f"{WORKDIR}/audio_cb.mp3"
-            r_cat = subprocess.run(["ffmpeg","-y","-f","concat","-safe","0","-i",concat_f,
-                "-ar","44100","-ac","1","-af","volume=1.1", raw],
-                capture_output=True, text=True)
-            if r_cat.returncode != 0:
-                log(f"  ⚠️ ffmpeg concat: {r_cat.stderr[-200:]}")
-                # Tentar sem silêncios
-                seg_only = [sp for sp in seg_files if 'sil_' not in sp]
-                with open(concat_f,'w') as f:
-                    for sp in seg_only: f.write(f"file '{sp}'\n")
-                subprocess.run(["ffmpeg","-y","-f","concat","-safe","0","-i",concat_f,
-                    "-ar","44100","-ac","1","-af","volume=1.1", raw], capture_output=True)
-            subprocess.run(["ffmpeg","-y","-i",raw,"-codec:a","libmp3lame",
-                "-b:a","256k", mp3], capture_output=True)
-            AUDIO = mp3
-            log(f"  ✅ Chatterbox: {dur(AUDIO):.2f}s @ 44100Hz/256kbps")
+            import torch
+            log(f"  Concatenando {len(seg_files)} segmentos via torchaudio...")
+            tensors = []
+            target_sr = SR
+            for sp in seg_files:
+                try:
+                    wf, sr_f = torchaudio.load(sp)
+                    if sr_f != target_sr:
+                        wf = torchaudio.functional.resample(wf, sr_f, target_sr)
+                    if wf.shape[0] > 1:
+                        wf = wf.mean(dim=0, keepdim=True)
+                    tensors.append(wf)
+                except Exception as e:
+                    log(f"    ⚠️ skip {os.path.basename(sp)}: {e}")
+            
+            if tensors:
+                combined = torch.cat(tensors, dim=1)
+                # Volume +10%
+                combined = combined * 1.1
+                combined = torch.clamp(combined, -1.0, 1.0)
+                raw = f"{WORKDIR}/audio_raw.wav"
+                mp3 = f"{WORKDIR}/audio_cb.mp3"
+                torchaudio.save(raw, combined, target_sr)
+                # Converter para MP3 256k via ffmpeg (só encode, não concat)
+                subprocess.run(["ffmpeg","-y","-i",raw,
+                    "-codec:a","libmp3lame","-b:a","256k", mp3],
+                    capture_output=True)
+                AUDIO = mp3
+                log(f"  ✅ Chatterbox: {dur(AUDIO):.2f}s @ 44100Hz/256kbps")
+            else:
+                raise RuntimeError("Todos os segmentos falharam")
         else:
             raise RuntimeError("Nenhum grupo gerado")
 
