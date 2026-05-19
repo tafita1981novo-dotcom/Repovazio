@@ -1,0 +1,79 @@
+name: "🎤 George Batch — Re-render 9 Shorts"
+
+on:
+  workflow_dispatch:
+    inputs:
+      force_antonio:
+        description: "Forçar AntonioNeural mesmo sem George (true/false)"
+        default: "false"
+
+jobs:
+  test_george:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      george_ok: ${{ steps.test.outputs.george_ok }}
+    steps:
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: 🔍 Testar George ElevenLabs
+        id: test
+        env:
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+        run: |
+          python3 << 'EOF'
+          import requests, os, sys
+          xi = os.environ.get("ELEVENLABS_API_KEY","")
+          if not xi:
+              print("george_ok=false"); sys.exit(0)
+          r = requests.get("https://api.elevenlabs.io/v1/user/subscription",
+              headers={"xi-api-key": xi}, timeout=10)
+          if r.status_code != 200:
+              print("george_ok=false")
+          else:
+              data = r.json()
+              used = data.get("character_count", 0)
+              limit = data.get("character_limit", 0)
+              left = limit - used
+              print(f"Quota: {used}/{limit} ({left} restantes)")
+              print(f"george_ok={'true' if left > 2000 else 'false'}")
+          EOF
+          python3 << 'PYEOF' | tail -1 >> "$GITHUB_OUTPUT"
+          import requests, os
+          xi = os.environ.get("ELEVENLABS_API_KEY","")
+          r = requests.get("https://api.elevenlabs.io/v1/user/subscription",
+              headers={"xi-api-key": xi}, timeout=10)
+          if r.status_code == 200:
+              d = r.json()
+              left = d.get("character_limit",0) - d.get("character_count",0)
+              print(f"george_ok={'true' if left>2000 else 'false'}")
+          else:
+              print("george_ok=false")
+          PYEOF
+
+  render_all:
+    needs: test_george
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      matrix:
+        video_id: [683, 682, 684, 688, 689, 701, 710, 711, 712]
+      max-parallel: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: 📦 Deps
+        run: |
+          pip install --quiet requests soundfile numpy edge-tts
+          sudo apt-get install -y ffmpeg --quiet 2>/dev/null
+      - name: 🎤 Render #${{ matrix.video_id }}
+        env:
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          VIDEO_ID: ${{ matrix.video_id }}
+          GEORGE_OK: ${{ needs.test_george.outputs.george_ok }}
+          FORCE_ANTONIO: ${{ github.event.inputs.force_antonio }}
+        run: |
+          echo "George disponível: $GEORGE_OK"
+          python scripts/render_short_george.py
