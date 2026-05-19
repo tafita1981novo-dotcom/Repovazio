@@ -425,44 +425,42 @@ except Exception as e:
 IMGS = []
 banco_cnt = poll_cnt = 0
 
+# Lista plana de todas as URLs do banco para fallback aleatório
+all_banco_urls = [u for urls in banco_map.values() for u in urls]
+
 for idx, (frase, prompt) in enumerate(zip(frases, PROMPTS), 1):
     fpath = f"{WORKDIR}/img_{idx:02d}.jpg"
     up    = f"{WORKDIR}/img_up_{idx:02d}.jpg"
     found = False
     t = frase.lower()
     
-    # Forçar Pollinations para cenas emocionais chave
-    force_poll = any(k in t for k in [
-        "salva","canal","assistir","mais tarde","depois",
-        "inscreva","não está exagerando",
-        "ele chora","mais perigoso","afastar","errada"
-    ])
+    # 1. Tentar banco com key específica
+    if "sinal 1" in t or "nunca responsável" in t: key = "marcos_problema"
+    elif "sinal 2" in t or "crítica" in t: key = "sara_problema"
+    elif "sinal 3" in t or "desculpar" in t: key = "sara_virada"
+    elif any(k in t for k in ["harvard","estudo","pesquisador","universidade","neurológ","química"]): key = "ana_ciencia"
+    elif any(k in t for k in ["normalmente","anormal","reagindo"]): key = "daniela_virada"
+    elif any(k in t for k in ["salva","canal","assistir","mais tarde"]): key = "daniela_cta"
+    else: key = None
     
-    if not force_poll:
-        if "sinal 1" in t or "nunca responsável" in t: key = "marcos_problema"
-        elif "sinal 2" in t or "crítica" in t: key = "sara_problema"
-        elif "sinal 3" in t or "desculpar" in t: key = "sara_virada"
-        elif any(k in t for k in ["harvard","estudo","pesquisador","universidade"]): key = "ana_ciencia"
-        elif any(k in t for k in ["normalmente","anormal"]): key = "daniela_virada"
-        else: key = None
-        
-        if key and banco_map.get(key):
-            url = banco_map[key][(idx * 17) % len(banco_map[key])]
-            try:
-                r = requests.get(url, timeout=30)
-                if r.status_code == 200 and len(r.content) > 5000:
-                    with open(fpath,'wb') as f: f.write(r.content)
-                    IMGS.append(upscale(fpath,up))
-                    log(f"  [{idx:02d}/{N}] 🏦 banco/{key} | {frase[:35]}")
-                    banco_cnt += 1
-                    found = True
-            except: pass
+    if key and banco_map.get(key):
+        url = banco_map[key][(idx * 17) % len(banco_map[key])]
+        try:
+            r = requests.get(url, timeout=15, headers={"User-Agent":"Mozilla/5.0"})
+            if r.status_code == 200 and len(r.content) > 5000:
+                with open(fpath,'wb') as f: f.write(r.content)
+                IMGS.append(upscale(fpath,up))
+                log(f"  [{idx:02d}/{N}] 🏦 {key} | {frase[:35]}")
+                banco_cnt += 1
+                found = True
+        except: pass
     
+    # 2. Pollinations (se banco não teve match)
     if not found:
         seed = 7777 + idx * 191 + VIDEO_ID
         poll_url = (f"https://image.pollinations.ai/prompt/"
                     f"{requests.utils.quote(prompt)}?width=576&height=1024&seed={seed}&nologo=true")
-        for att in range(4):
+        for att in range(2):  # só 2 tentativas (evitar timeout longo)
             try:
                 r = requests.get(poll_url, timeout=90, headers={"User-Agent":"Mozilla/5.0"})
                 if r.status_code == 200 and len(r.content) > 5000:
@@ -477,7 +475,20 @@ for idx, (frase, prompt) in enumerate(zip(frases, PROMPTS), 1):
     
     if not found:
         IMGS.append(IMGS[-1] if IMGS else None)
-        log(f"  [{idx:02d}/{N}] ⚠️ fallback")
+        # 3. Fallback final: banco aleatório (garante sempre ter imagem)
+        if not found and all_banco_urls:
+            url = all_banco_urls[(idx * 31 + VIDEO_ID) % len(all_banco_urls)]
+            try:
+                r = requests.get(url, timeout=15, headers={"User-Agent":"Mozilla/5.0"})
+                if r.status_code == 200 and len(r.content) > 5000:
+                    with open(fpath,'wb') as f: f.write(r.content)
+                    IMGS.append(upscale(fpath,up))
+                    log(f"  [{idx:02d}/{N}] 🏦 banco_rnd | {frase[:35]}")
+                    banco_cnt += 1
+                    found = True
+            except: pass
+        if not found:
+            log(f"  [{idx:02d}/{N}] ⚠️ sem imagem")
 
 log(f"  ✅ {banco_cnt} banco | {poll_cnt} poll | {banco_cnt+poll_cnt}/{N}")
 
