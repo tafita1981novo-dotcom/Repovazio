@@ -447,7 +447,7 @@ for idx, (frase, prompt) in enumerate(zip(frases, PROMPTS), 1):
         url = banco_map[key][(idx * 17) % len(banco_map[key])]
         try:
             r = requests.get(url, timeout=15, headers={"User-Agent":"Mozilla/5.0"})
-            if r.status_code == 200 and len(r.content) > 5000:
+            if r.status_code == 200 and len(r.content) > 5000 and r.content[:3] in (b'\xff\xd8\xff', b'\x89PN'):
                 with open(fpath,'wb') as f: f.write(r.content)
                 IMGS.append(upscale(fpath,up))
                 log(f"  [{idx:02d}/{N}] 🏦 {key} | {frase[:35]}")
@@ -463,24 +463,26 @@ for idx, (frase, prompt) in enumerate(zip(frases, PROMPTS), 1):
         for att in range(2):  # só 2 tentativas (evitar timeout longo)
             try:
                 r = requests.get(poll_url, timeout=90, headers={"User-Agent":"Mozilla/5.0"})
-                if r.status_code == 200 and len(r.content) > 5000:
+                is_img = r.content[:3] in (b'\xff\xd8\xff', b'\x89PN') if len(r.content) > 3 else False
+                if r.status_code == 200 and len(r.content) > 5000 and is_img:
                     with open(fpath,'wb') as f: f.write(r.content)
                     IMGS.append(upscale(fpath,up))
                     log(f"  [{idx:02d}/{N}] 🌐 poll {len(r.content)//1024}KB | {frase[:35]}")
                     poll_cnt += 1
                     found = True
                     break
+                else:
+                    log(f"  [{idx:02d}/{N}] ⚠️ poll {'HTML' if not is_img else str(r.status_code)} att={att+1}")
             except: pass
             time.sleep(4)
     
     if not found:
-        IMGS.append(IMGS[-1] if IMGS else None)
         # 3. Fallback final: banco aleatório (garante sempre ter imagem)
-        if not found and all_banco_urls:
+        if all_banco_urls:
             url = all_banco_urls[(idx * 31 + VIDEO_ID) % len(all_banco_urls)]
             try:
                 r = requests.get(url, timeout=15, headers={"User-Agent":"Mozilla/5.0"})
-                if r.status_code == 200 and len(r.content) > 5000:
+                if r.status_code == 200 and len(r.content) > 5000 and r.content[:3] in (b'\xff\xd8\xff', b'\x89PN'):
                     with open(fpath,'wb') as f: f.write(r.content)
                     IMGS.append(upscale(fpath,up))
                     log(f"  [{idx:02d}/{N}] 🏦 banco_rnd | {frase[:35]}")
@@ -488,7 +490,8 @@ for idx, (frase, prompt) in enumerate(zip(frases, PROMPTS), 1):
                     found = True
             except: pass
         if not found:
-            log(f"  [{idx:02d}/{N}] ⚠️ sem imagem")
+            IMGS.append(IMGS[-1] if IMGS else None)  # duplicar última imagem
+            log(f"  [{idx:02d}/{N}] ⚠️ sem imagem — usando anterior")
 
 log(f"  ✅ {banco_cnt} banco | {poll_cnt} poll | {banco_cnt+poll_cnt}/{N}")
 
