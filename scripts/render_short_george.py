@@ -489,12 +489,30 @@ OVERLAY = (
     "borderw=2:bordercolor=black:x=20:y=h-48"
 )
 concat_txt = f"{WORKDIR}/concat.txt"
+imgs_validos = [(img, dur) for img, dur in zip(IMGS, DURS)
+                if img and os.path.exists(img) and os.path.getsize(img) > 1000]
+log(f"  Imagens válidas: {len(imgs_validos)}/{len(IMGS)}")
+if not imgs_validos:
+    log("❌ Nenhuma imagem válida — tentando fallback com última disponível")
+    # Fallback: usar qualquer imagem que existe
+    for img in IMGS:
+        if img and os.path.exists(img) and os.path.getsize(img) > 500:
+            imgs_validos = [(img, DUR_AUDIO)]
+            break
+    if not imgs_validos:
+        log("❌ Sem imagens — abortando"); sys.exit(1)
+
 with open(concat_txt,'w') as f:
-    for img, dur in zip(IMGS, DURS):
-        if img and os.path.exists(img):
-            f.write(f"file '{img}'\nduration {dur:.3f}\n")
-    if IMGS[-1] and os.path.exists(IMGS[-1]):
-        f.write(f"file '{IMGS[-1]}'\n")
+    for img, dur in imgs_validos:
+        f.write(f"file '{img}'\nduration {dur:.3f}\n")
+    f.write(f"file '{imgs_validos[-1][0]}'\n")
+
+# Verificar que concat_txt tem conteúdo
+with open(concat_txt) as f:
+    ct = f.read()
+log(f"  concat.txt: {len(ct)} chars, {ct.count('file')} entradas")
+if len(ct) < 20:
+    log("❌ concat.txt vazio — abortando"); sys.exit(1)
 
 OUT = f"{WORKDIR}/output.mp4"
 r = subprocess.run([
