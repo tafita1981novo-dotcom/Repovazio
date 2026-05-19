@@ -236,6 +236,8 @@ RATE_REAL = len(SCRIPT_TTS.replace('\n',' ')) / DUR_AUDIO
 linhas_all = [l for l in SCRIPT_RAW.split('\n') if l.strip()]
 DURS = [max(1.2, round(len(l)/RATE_REAL, 3)) for l in linhas_all]
 diff = DUR_AUDIO - sum(DURS); DURS[0] = round(DURS[0]+diff, 3)
+frases = linhas_all   # alias para compatibilidade com seção de imagens
+N = len(frases)
 
 
 # ── 5. PROMPTS OTIMIZADOS PARA AUDIÊNCIA 72% MULHERES 25-35 BR ─────
