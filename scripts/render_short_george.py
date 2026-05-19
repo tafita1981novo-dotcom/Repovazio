@@ -433,66 +433,57 @@ for idx, (frase, prompt) in enumerate(zip(frases, PROMPTS), 1):
     up    = f"{WORKDIR}/img_up_{idx:02d}.jpg"
     found = False
     t = frase.lower()
-    
-    # 1. Tentar banco com key específica
+
+    def is_valid_img(content):
+        return len(content) > 5000 and content[:3] in (b'\xff\xd8\xff', b'\x89PN', b'\x89PG')
+
+    def dl(url, timeout=20):
+        try:
+            r = requests.get(url, timeout=timeout, headers={"User-Agent":"Mozilla/5.0"})
+            return r.content if r.status_code == 200 and is_valid_img(r.content) else None
+        except: return None
+
+    # KEY específica
     if "sinal 1" in t or "nunca responsável" in t: key = "marcos_problema"
     elif "sinal 2" in t or "crítica" in t: key = "sara_problema"
     elif "sinal 3" in t or "desculpar" in t: key = "sara_virada"
-    elif any(k in t for k in ["harvard","estudo","pesquisador","universidade","neurológ","química"]): key = "ana_ciencia"
+    elif any(k in t for k in ["harvard","estudo","pesquisador","neurológ","química"]): key = "ana_ciencia"
     elif any(k in t for k in ["normalmente","anormal","reagindo"]): key = "daniela_virada"
     elif any(k in t for k in ["salva","canal","assistir","mais tarde"]): key = "daniela_cta"
     else: key = None
-    
-    if key and banco_map.get(key):
-        url = banco_map[key][(idx * 17) % len(banco_map[key])]
-        try:
-            r = requests.get(url, timeout=15, headers={"User-Agent":"Mozilla/5.0"})
-            if r.status_code == 200 and len(r.content) > 5000 and r.content[:3] in (b'\xff\xd8\xff', b'\x89PN'):
-                with open(fpath,'wb') as f: f.write(r.content)
-                IMGS.append(upscale(fpath,up))
-                log(f"  [{idx:02d}/{N}] 🏦 {key} | {frase[:35]}")
-                banco_cnt += 1
-                found = True
-        except: pass
-    
-    # 2. Pollinations (se banco não teve match)
-    if not found:
-        seed = 7777 + idx * 191 + VIDEO_ID
-        poll_url = (f"https://image.pollinations.ai/prompt/"
-                    f"{requests.utils.quote(prompt)}?width=576&height=1024&seed={seed}&nologo=true")
-        for att in range(2):  # só 2 tentativas (evitar timeout longo)
-            try:
-                r = requests.get(poll_url, timeout=90, headers={"User-Agent":"Mozilla/5.0"})
-                is_img = r.content[:3] in (b'\xff\xd8\xff', b'\x89PN') if len(r.content) > 3 else False
-                if r.status_code == 200 and len(r.content) > 5000 and is_img:
-                    with open(fpath,'wb') as f: f.write(r.content)
-                    IMGS.append(upscale(fpath,up))
-                    log(f"  [{idx:02d}/{N}] 🌐 poll {len(r.content)//1024}KB | {frase[:35]}")
-                    poll_cnt += 1
-                    found = True
-                    break
-                else:
-                    log(f"  [{idx:02d}/{N}] ⚠️ poll {'HTML' if not is_img else str(r.status_code)} att={att+1}")
-            except: pass
-            time.sleep(4)
-    
-    if not found:
-        # 3. Fallback final: banco aleatório (garante sempre ter imagem)
-        if all_banco_urls:
-            url = all_banco_urls[(idx * 31 + VIDEO_ID) % len(all_banco_urls)]
-            try:
-                r = requests.get(url, timeout=15, headers={"User-Agent":"Mozilla/5.0"})
-                if r.status_code == 200 and len(r.content) > 5000 and r.content[:3] in (b'\xff\xd8\xff', b'\x89PN'):
-                    with open(fpath,'wb') as f: f.write(r.content)
-                    IMGS.append(upscale(fpath,up))
-                    log(f"  [{idx:02d}/{N}] 🏦 banco_rnd | {frase[:35]}")
-                    banco_cnt += 1
-                    found = True
-            except: pass
-        if not found:
-            IMGS.append(IMGS[-1] if IMGS else None)  # duplicar última imagem
-            log(f"  [{idx:02d}/{N}] ⚠️ sem imagem — usando anterior")
 
+    # 1. Banco key específica
+    if not found and key and banco_map.get(key):
+        data = dl(banco_map[key][(idx*17) % len(banco_map[key])])
+        if data:
+            with open(fpath,'wb') as f: f.write(data)
+            IMGS.append(upscale(fpath,up)); banco_cnt += 1; found = True
+            log(f"  [{idx:02d}/{N}] 🏦 {key}")
+
+    # 2. Banco aleatório (sempre antes de Pollinations)
+    if not found and all_banco_urls:
+        data = dl(all_banco_urls[(idx*31 + VIDEO_ID) % len(all_banco_urls)])
+        if data:
+            with open(fpath,'wb') as f: f.write(data)
+            IMGS.append(upscale(fpath,up)); banco_cnt += 1; found = True
+            log(f"  [{idx:02d}/{N}] 🏦 rnd")
+
+    # 3. Pollinations — último recurso, timeout curto
+    if not found:
+        seed = 7777 + idx*191 + VIDEO_ID
+        purl = (f"https://image.pollinations.ai/prompt/"
+                f"{requests.utils.quote(prompt)}?width=576&height=1024&seed={seed}&nologo=true")
+        data = dl(purl, timeout=30)
+        if data:
+            with open(fpath,'wb') as f: f.write(data)
+            IMGS.append(upscale(fpath,up)); poll_cnt += 1; found = True
+            log(f"  [{idx:02d}/{N}] 🌐 poll {len(data)//1024}KB")
+        else:
+            log(f"  [{idx:02d}/{N}] ⚠️ poll sem resposta válida")
+
+    if not found:
+        IMGS.append(IMGS[-1] if IMGS else None)
+        log(f"  [{idx:02d}/{N}] ⚠️ duplicando anterior")
 log(f"  ✅ {banco_cnt} banco | {poll_cnt} poll | {banco_cnt+poll_cnt}/{N}")
 
 # ── 6. RENDER ────────────────────────────────────────────────────────
