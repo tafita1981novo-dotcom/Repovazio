@@ -189,15 +189,29 @@ if AUDIO is None:
                 silence(pau, SR, sil_path)
                 seg_files.append(sil_path)
 
+        # Filtrar apenas arquivos que realmente existem e têm tamanho > 0
+        seg_files = [sp for sp in seg_files
+                     if os.path.exists(sp) and os.path.getsize(sp) > 100]
+        
         if seg_files:
             # Concatenar todos os grupos
             concat_f = f"{WORKDIR}/concat.txt"
             with open(concat_f,'w') as f:
                 for sp in seg_files: f.write(f"file '{sp}'\n")
+            log(f"  Concatenando {len(seg_files)} segmentos...")
             raw = f"{WORKDIR}/audio_raw.wav"
             mp3 = f"{WORKDIR}/audio_cb.mp3"
-            subprocess.run(["ffmpeg","-y","-f","concat","-safe","0","-i",concat_f,
-                "-ar","44100","-ac","1","-af","volume=1.1", raw], capture_output=True)
+            r_cat = subprocess.run(["ffmpeg","-y","-f","concat","-safe","0","-i",concat_f,
+                "-ar","44100","-ac","1","-af","volume=1.1", raw],
+                capture_output=True, text=True)
+            if r_cat.returncode != 0:
+                log(f"  ⚠️ ffmpeg concat: {r_cat.stderr[-200:]}")
+                # Tentar sem silêncios
+                seg_only = [sp for sp in seg_files if 'sil_' not in sp]
+                with open(concat_f,'w') as f:
+                    for sp in seg_only: f.write(f"file '{sp}'\n")
+                subprocess.run(["ffmpeg","-y","-f","concat","-safe","0","-i",concat_f,
+                    "-ar","44100","-ac","1","-af","volume=1.1", raw], capture_output=True)
             subprocess.run(["ffmpeg","-y","-i",raw,"-codec:a","libmp3lame",
                 "-b:a","256k", mp3], capture_output=True)
             AUDIO = mp3
