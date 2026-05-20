@@ -189,8 +189,8 @@ if AUDIO is None:
             SCRIPT_TTS,
             audio_prompt_path=GEORGE_REF,
             language_id="pt",
-            exaggeration=0.80,
-            cfg_weight=0.20
+            exaggeration=0.82,   # um toque mais expressivo
+            cfg_weight=0.12      # mais lento e deliberado (era 0.20)
         )
         raw_wav = f"{WORKDIR}/cb_raw.wav"
         mp3_out = f"{WORKDIR}/audio_cb.mp3"
