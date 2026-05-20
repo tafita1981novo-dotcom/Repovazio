@@ -42,21 +42,13 @@ def upscale(src, dst):
     return dst if os.path.exists(dst) else src
 
 def is_valid_img(content):
-    # Só verificar tamanho — magic bytes causam false negatives em Supabase
-    return len(content) > 5000
+    return len(content) > 5000 and content[:3] in (b'\xff\xd8\xff', b'\x89PN', b'\x89PG')
 
-def dl_img(url, timeout=25):
-    """Download image com headers Supabase + fallback sem auth."""
-    for headers in [
-        {"apikey": SB_KEY, "Authorization": f"Bearer {SB_KEY}", "User-Agent": "Mozilla/5.0"},
-        {"User-Agent": "Mozilla/5.0"},
-    ]:
-        try:
-            r = requests.get(url, timeout=timeout, headers=headers, allow_redirects=True)
-            if r.status_code == 200 and is_valid_img(r.content):
-                return r.content
-        except: pass
-    return None
+def dl_img(url, timeout=20):
+    try:
+        r = requests.get(url, timeout=timeout, headers={"User-Agent":"Mozilla/5.0"})
+        return r.content if r.status_code == 200 and is_valid_img(r.content) else None
+    except: return None
 
 def sb_patch(id_, data):
     requests.patch(f"{SB_URL}/rest/v1/content_pipeline?id=eq.{id_}",
