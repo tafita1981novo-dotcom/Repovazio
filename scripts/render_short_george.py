@@ -280,7 +280,12 @@ if AUDIO is None:
                 for s in seg_only: f.write(f"file '{s}'\n")
             subprocess.run(["ffmpeg","-y","-f","concat","-safe","0",
                 "-i",concat_f,"-ar","44100","-ac","1",raw], capture_output=True, timeout=120)
-        subprocess.run(["ffmpeg","-y","-i",raw,"-codec:a","libmp3lame","-b:a","256k",mp3_out],
+        # NOISE GATE: elimina noise floor do Chatterbox (-38dB) nas pausas
+        # threshold=0.018 ≈ -35dB: abaixo disso → silêncio | fala em -22dB → preservada
+        # release=150ms: mantém gate aberto ao fim de cada sílaba (natural)
+        subprocess.run(["ffmpeg","-y","-i",raw,
+            "-af","highpass=f=80,agate=threshold=0.018:ratio=1000:attack=3:release=150",
+            "-codec:a","libmp3lame","-b:a","256k", mp3_out],
             capture_output=True, timeout=60)
         if os.path.exists(mp3_out) and os.path.getsize(mp3_out) > 5000:
             AUDIO = mp3_out
