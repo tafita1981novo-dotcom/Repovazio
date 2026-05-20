@@ -35,6 +35,20 @@ def silence(secs, sr, path):
     n_samples = int(float(secs) * int(sr))
     silent = torch.zeros(1, max(1, n_samples))
     torchaudio.save(path, silent, int(sr))
+def upscale(src, dst):
+    subprocess.run(["ffmpeg","-y","-i",src,"-vf","scale=1080:1920:flags=lanczos","-q:v","2",dst],
+        capture_output=True)
+    return dst if os.path.exists(dst) else src
+
+def is_valid_img(content):
+    return len(content) > 5000 and content[:3] in (b'\xff\xd8\xff', b'\x89PN', b'\x89PG')
+
+def dl_img(url, timeout=20):
+    try:
+        r = requests.get(url, timeout=timeout, headers={"User-Agent":"Mozilla/5.0"})
+        return r.content if r.status_code == 200 and is_valid_img(r.content) else None
+    except: return None
+
 def sb_patch(id_, data):
     requests.patch(f"{SB_URL}/rest/v1/content_pipeline?id=eq.{id_}",
         headers={"apikey":SB_KEY,"Authorization":f"Bearer {SB_KEY}",
@@ -434,15 +448,6 @@ for idx, (frase, prompt) in enumerate(zip(frases, PROMPTS), 1):
     found = False
     t = frase.lower()
 
-    def is_valid_img(content):
-        return len(content) > 5000 and content[:3] in (b'\xff\xd8\xff', b'\x89PN', b'\x89PG')
-
-    def dl(url, timeout=20):
-        try:
-            r = requests.get(url, timeout=timeout, headers={"User-Agent":"Mozilla/5.0"})
-            return r.content if r.status_code == 200 and is_valid_img(r.content) else None
-        except: return None
-
     # KEY específica
     if "sinal 1" in t or "nunca responsável" in t: key = "marcos_problema"
     elif "sinal 2" in t or "crítica" in t: key = "sara_problema"
@@ -454,7 +459,7 @@ for idx, (frase, prompt) in enumerate(zip(frases, PROMPTS), 1):
 
     # 1. Banco key específica
     if not found and key and banco_map.get(key):
-        data = dl(banco_map[key][(idx*17) % len(banco_map[key])])
+        data = dl_img(banco_map[key][(idx*17) % len(banco_map[key])])
         if data:
             with open(fpath,'wb') as f: f.write(data)
             IMGS.append(upscale(fpath,up)); banco_cnt += 1; found = True
@@ -462,7 +467,7 @@ for idx, (frase, prompt) in enumerate(zip(frases, PROMPTS), 1):
 
     # 2. Banco aleatório (sempre antes de Pollinations)
     if not found and all_banco_urls:
-        data = dl(all_banco_urls[(idx*31 + VIDEO_ID) % len(all_banco_urls)])
+        data = dl_img(all_banco_urls[(idx*31 + VIDEO_ID) % len(all_banco_urls)])
         if data:
             with open(fpath,'wb') as f: f.write(data)
             IMGS.append(upscale(fpath,up)); banco_cnt += 1; found = True
@@ -473,7 +478,7 @@ for idx, (frase, prompt) in enumerate(zip(frases, PROMPTS), 1):
         seed = 7777 + idx*191 + VIDEO_ID
         purl = (f"https://image.pollinations.ai/prompt/"
                 f"{requests.utils.quote(prompt)}?width=576&height=1024&seed={seed}&nologo=true")
-        data = dl(purl, timeout=30)
+        data = dl_img(purl, timeout=30)
         if data:
             with open(fpath,'wb') as f: f.write(data)
             IMGS.append(upscale(fpath,up)); poll_cnt += 1; found = True
