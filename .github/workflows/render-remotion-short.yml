@@ -1,0 +1,102 @@
+name: 🎬 Remotion Short V31 — React Animations
+
+on:
+  workflow_dispatch:
+    inputs:
+      video_id:
+        description: "ID do vídeo no Supabase content_pipeline"
+        required: true
+        default: "683"
+      composition:
+        description: "Composição Remotion (PsychShort | PsychLong)"
+        required: false
+        default: "PsychShort"
+
+env:
+  VIDEO_ID: ${{ github.event.inputs.video_id }}
+  COMPOSITION: ${{ github.event.inputs.composition || 'PsychShort' }}
+  SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+  NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+  GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+
+jobs:
+  render-remotion:
+    name: ⚡ Remotion React Render
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Node.js para Remotion
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: "remotion/package.json"
+
+      # Python para geração de áudio e props
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # Deps do sistema (Chromium para Remotion)
+      - name: Install system deps
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y chromium-browser ffmpeg
+
+      # Deps Node (Remotion)
+      - name: Install Remotion deps
+        run: |
+          cd remotion
+          npm install --prefer-offline
+          echo "✅ Remotion instalado"
+
+      # Deps Python (áudio)
+      - name: Install Python deps
+        run: |
+          pip install --break-system-packages \
+            requests edge-tts soundfile \
+            torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+          pip install --break-system-packages chatterbox-tts || echo "Chatterbox unavailable, using EdgeTTS"
+          echo "✅ Python deps instaladas"
+
+      # Gerar props.json (áudio + imagens + timing)
+      - name: Generate Remotion props
+        run: |
+          python scripts/render_remotion_short.py
+        env:
+          VIDEO_ID: ${{ env.VIDEO_ID }}
+
+      # Render com Remotion React
+      - name: Render with Remotion
+        run: |
+          PROPS_PATH=$(ls /tmp/remotion_${VIDEO_ID}_*/props.json | head -1)
+          OUTPUT=$(ls /tmp/remotion_${VIDEO_ID}_*/*.mp4 2>/dev/null | head -1)
+          if [ -f "$OUTPUT" ]; then
+            echo "✅ MP4 gerado pelo script Python: $OUTPUT"
+          else
+            echo "🎬 Renderizando via npx remotion..."
+            cd remotion
+            npx remotion render src/index.tsx ${COMPOSITION} /tmp/output_v${VIDEO_ID}.mp4 \
+              --props="$PROPS_PATH" \
+              --codec=h264 \
+              --fps=30 \
+              --width=576 \
+              --height=1024 \
+              --browser-executable=$(which chromium-browser)
+            echo "✅ Remotion render concluído"
+          fi
+
+      - name: Upload artifact (debug)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: remotion-short-${{ env.VIDEO_ID }}
+          path: /tmp/remotion_${{ env.VIDEO_ID }}_*/*.mp4
+          if-no-files-found: ignore
+          retention-days: 3
