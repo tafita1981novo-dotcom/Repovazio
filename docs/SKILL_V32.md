@@ -1,995 +1,659 @@
 ---
 name: psicologia-doc-v27
 description: Use esta SKILL sempre que o usuário mencionar: psicologia.doc, repovazio, Daniela Coelho, @psidanielacoelho, canal YouTube psicologia, viral, cérebro autônomo, tokens sociais, Instagram, TikTok, WhatsApp grupos, monetização, 1000 subs, crescimento, setup tokens, espelhamento viral.
-version: 32.0
+version: 32.0 — API OMNIBUS
 date: 2026-05-21
 ---
 
-# SKILL — psicologia.doc V32 — CONHECIMENTO COMPLETO + TODOS OS LINKS
+# SKILL psicologia.doc V32 — API OMNIBUS COMPLETA
+
+> Integra milhares de APIs públicas de 7 diretórios globais, curadas e testadas para o pipeline de vídeo psicologia.doc
 
 ---
 
 ## ⚠️ REGRA DE OURO
 
 ```
-NUNCA liberar vídeo sem testar #683 PRIMEIRO.
-1. GitHub Action video_id=683, voice_version=B
-2. RMS trough=-inf (silêncio digital perfeito)
-3. Cada frame reflete a frase sendo dita
-4. SÓ após aprovação: disparar os demais
+NUNCA liberar vídeo sem testar #683 primeiro.
+RMS trough = -inf obrigatório. Gate duplo por segmento + global.
 ```
 
 ---
 
-## 🏗️ INFRA CORE
+## INFRA CORE
 
 ```
-Supabase:   tpjvalzwkqwttvmszvie  →  https://app.supabase.com/project/tpjvalzwkqwttvmszvie
-Vercel:     repovazio.vercel.app   →  https://vercel.com/tafita81/repovazio
-GitHub:     tafita81/Repovazio    →  https://github.com/tafita81/Repovazio
-
-Canal ATIVO:   UCyCkIpsVgME9yCj_oXJFheA
-               @psidanielacoelho
-               psidanielacoelho1982@gmail.com
-               https://youtube.com/@psidanielacoelho
-
-Canal ⛔ BLOQUEADO: UCSH63tBfY6wEIdkC4u4zKdg — REMOVIDO 2026-05-07, NUNCA publicar
-
-Scripts:
-  Short V31:  scripts/render_short_george.py
-  Long  V31:  scripts/render_long_15min.py
-
-Workflows:
-  Short:  .github/workflows/render-short-george.yml   (45min timeout)
-  Long:   .github/workflows/render-long-15min.yml     (120min timeout)
-
-Páginas Vercel:
-  Hub:          https://repovazio.vercel.app/hub.html
-  Vídeos:       https://repovazio.vercel.app/videos-prontos.html
-  Painel 400:   https://repovazio.vercel.app/painel-400.html
-  Setup Tokens: https://repovazio.vercel.app/setup-tokens.html
-
-Docs GitHub:
-  SKILL V32:    https://github.com/tafita81/Repovazio/blob/main/docs/SKILL_V31.md
-  Painel 400:   https://github.com/tafita81/Repovazio/blob/main/public/painel-400.html
+Supabase: tpjvalzwkqwttvmszvie | Vercel: repovazio.vercel.app | GitHub: tafita81/Repovazio
+Canal ATIVO:   UCyCkIpsVgME9yCj_oXJFheA · @psidanielacoelho
+Canal ⛔:      UCSH63tBfY6wEIdkC4u4zKdg — BLOQUEADO, NUNCA publicar
+Módulo APIs:   scripts/psicologia_apis.py (51+ APIs integradas)
 ```
 
 ---
 
-## 📚 DIRETÓRIOS DE APIS PÚBLICAS (MEGA-LISTAS)
-
-### Os 7 Maiores Diretórios
-
-```
-1. public-apis (GitHub) — 1.400+ APIs  ⭐ MAIS FAMOSO
-   https://github.com/public-apis/public-apis
-   - Categorias: animais, arte, clima, finanças, saúde, música, ciência, etc.
-   - JSON API própria: https://api.publicapis.org/entries
-   - Busca por categoria: https://api.publicapis.org/entries?category=Science
-
-2. publicapis.dev — 1.400+ APIs navegáveis (MELHOR UI)
-   https://publicapis.dev
-   - Colaborativa, filtrável por auth/HTTPS/CORS
-   - Atualizada pela comunidade
-
-3. public-apis.io — 1.000+ APIs categorizadas
-   https://public-apis.io
-   - Inclui: filmes, anime, clima, música, jogos, câmbio, esportes, ciência
-
-4. publicapis.io — 1.000+ com exemplos de código
-   https://publicapis.io
-   - Inclui chaves de API, exemplos de código e documentação
-
-5. public-api-lists (GitHub) — 48 categorias
-   https://github.com/public-api-lists/public-api-lists
-   - JSON API gratuita própria
-   - Inclui APIs brasileiras de dados públicos
-
-6. mixedanalytics — ~200 APIs SEM AUTH (sem chave)
-   https://mixedanalytics.com/blog/list-actually-free-open-no-auth-needed-apis/
-   - Foco: APIs que não exigem nenhuma autenticação
-   - Ideal para testes rápidos
-
-7. RapidAPI Marketplace — 40.000+ APIs
-   https://rapidapi.com
-   - Maior marketplace do mundo
-   - Inclui tiers gratuitos para maioria
-   - Hub de dev: https://rapidapi.com/hub
-
-EXTRA — Diretórios especializados:
-  Free LLM APIs:     https://freellm.net
-  Free LLM (GitHub): https://github.com/open-free-llm-api/awesome-freellm-apis
-  Free AI Tools:     https://github.com/ShaikhWarsi/free-ai-tools
-  No-Cost AI:        https://github.com/zebbern/no-cost-ai
-  Awesome Free LLM:  https://github.com/amardeeplakshkar/awesome-free-llm-apis
-  Awesome Free LLM2: https://github.com/mnfst/awesome-free-llm-apis
-```
-
----
-
-## 🎤 APIS DE VOZ — COMPLETO COM LINKS
-
-### HIERARQUIA DE PRIORIDADE
-
-```
-P1 → Chatterbox Multilingual (PADRÃO — MIT, grátis, ilimitado)
-P2 → Qwen3-TTS (PRÓXIMO UPGRADE — Apache 2.0, PT-BR, ilimitado)
-P3 → Kokoro TTS (offline, MIT, leve)
-P4 → ElevenLabs George (quota mensal)
-P5 → Edge TTS ThalitaMultilingualNeural (Long — grátis, ilimitado)
-P6 → Pollinations Audio (sem key)
-P7 → F5-TTS (zero-shot, MIT)
-P8 → IndexTTS Bilibili (Apache 2.0)
-P9 → VoxCPM 1.5 (MIT)
-P10 → OmniVoice (600+ idiomas)
-P11 → Kokoro ONNX (browser/offline)
-P12 → Piper TTS (offline, rápido)
-```
-
-### P1 — Chatterbox Multilingual ✅ PADRÃO ATUAL
+## 📚 OS 7 DIRETÓRIOS DE APIs PÚBLICAS (FONTE PRINCIPAL)
 
 ```python
-# Repositório:     https://github.com/resemble-ai/chatterbox
-# PyPI:            https://pypi.org/project/chatterbox-tts/
-# Licença: MIT | Custo: $0 | Limite: ilimitado | PT-BR: ✅
-# 63.75% preferem ao ElevenLabs em testes cegos
-# 23 idiomas incluindo PT-BR
-# Modelos: Chatterbox base + Chatterbox Multilingual + Chatterbox Turbo
-
-pip install chatterbox-tts torch --index-url https://download.pytorch.org/whl/cpu
-
-from chatterbox.tts import ChatterboxMultilingualTTS
-model = ChatterboxMultilingualTTS.from_pretrained(device="cpu")
-wav = model.generate(texto,
-    audio_prompt_path=GEORGE_REF,   # referência 14s
-    language_id="pt",
-    exaggeration=0.96,              # drama máximo
-    cfg_weight=0.09)                # fala lenta
-
-# Self-hosted server (OpenAI-compatible API):
-# https://github.com/devnen/Chatterbox-TTS-Server
-# Docker: docker compose up -d
-
-# Referência George (14s áudio limpo):
-GEORGE_REF = "https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/mp4s/v683_george_1779065193.mp4"
-```
-
-### P2 — Qwen3-TTS (Alibaba — Apache 2.0) 🔥 PRÓXIMO UPGRADE
-
-```python
-# Repositório:     https://github.com/QwenLM/Qwen3-TTS
-# HuggingFace 0.6B: https://huggingface.co/Qwen/Qwen3-TTS-0.6B
-# HuggingFace 1.7B: https://huggingface.co/Qwen/Qwen3-TTS-1.7B
-# Paper:           https://arxiv.org/abs/2501.xxxxx
-# Licença: Apache 2.0 | PT-BR: ✅ | Latência: 97ms | Custo: $0
-# Clonagem com 3s de áudio | 10 idiomas | supera ElevenLabs
-# Idiomas: PT, EN, ZH, JA, KO, DE, FR, RU, ES, IT
-# Modo Voice Design: instruções em linguagem natural
-
-pip install torch transformers
-from transformers import AutoModelForSpeechSeq2Seq
-# Demo online: https://qwen3tts.com
-```
-
-### P3 — Kokoro TTS (MIT, 82M params, offline)
-
-```python
-# Repositório:   https://github.com/hexgrad/kokoro
-# ONNX version:  https://github.com/thewh1teagle/kokoro-onnx
-# Browser demo:  https://offlinetts.com
-# PyPI:          https://pypi.org/project/kokoro-onnx/
-# Licença: MIT | PT-BR: ✅ | 54 vozes | 9 idiomas | $0
-
-pip install kokoro-onnx soundfile
-from kokoro_onnx import Kokoro
-kokoro = Kokoro("kokoro-v1.0.onnx", "voices.bin")
-samples, sr = kokoro.create(texto, voice="bf_emma", lang="pt-br")
-```
-
-### P4 — ElevenLabs George (JBFqnCBsd6RMkjVDRZzb)
-
-```python
-# Dashboard:    https://elevenlabs.io/app
-# API Docs:     https://elevenlabs.io/docs/api-reference
-# Voice ID:     JBFqnCBsd6RMkjVDRZzb (George)
-# Custo: 32K chars/mês free tier (reseta mensalmente)
-# stability=0.20, similarity_boost=0.85, style=0.70, speed=1.0
-```
-
-### P5 — Microsoft Edge TTS (grátis, ilimitado, sem key)
-
-```python
-# GitHub:       https://github.com/rany2/edge-tts
-# PyPI:         https://pypi.org/project/edge-tts/
-# Vozes PT-BR:  ThalitaMultilingualNeural (PADRÃO LONG)
-#               FranciscaNeural (forte entonação)
-#               AntonioNeural (emergência)
-# Custo: $0 | Limite: ilimitado | Sem key
-
-pip install edge-tts
-import edge_tts, asyncio
-async def gen():
-    c = edge_tts.Communicate(texto, voice="pt-BR-ThalitaMultilingualNeural", rate="+32%")
-    await c.save("output.mp3")
-asyncio.run(gen())
-
-# Listar todas as vozes PT-BR:
-# edge-tts --list-voices | grep pt-BR
-```
-
-### P6 — Pollinations Audio (grátis, sem key)
-
-```python
-# API Docs:     https://github.com/pollinations/pollinations/blob/main/APIDOCS.md
-# Endpoint:     https://gen.pollinations.ai/audio
-# Developer:    https://enter.pollinations.ai
-# Vozes:        alloy, echo, fable, onyx, nova, shimmer, coral, verse, ballad, ash, sage
-# Custo: $0 | Sem key anônimo (1 req/15s) | Registro grátis = 1 req/5s
-
-import requests
-r = requests.post("https://gen.pollinations.ai/audio", json={
-    "model": "openai-audio",
-    "voice": "nova",                # onyx = masculino, nova = feminino
-    "input": texto,
-    "response_format": "mp3"
-})
-with open("audio.mp3", "wb") as f: f.write(r.content)
-```
-
-### P7 — F5-TTS (MIT, zero-shot cloning)
-
-```python
-# Repositório:  https://github.com/SWivid/F5-TTS
-# HuggingFace:  https://huggingface.co/SWivid/F5-TTS
-# Demo Space:   https://huggingface.co/spaces/mrfakename/E2-F5-TTS
-# Licença: MIT | Zero-shot cloning 5-10s | PT-BR com sample
-pip install f5-tts
-```
-
-### P8 — IndexTTS (Bilibili, Apache 2.0)
-
-```python
-# Repositório:  https://github.com/index-tts/IndexTTS
-# HuggingFace:  https://huggingface.co/IndexTeam/IndexTTS
-# Licença: Apache 2.0 | Zero-shot | Multilingual
-pip install indextts
-```
-
-### P9 — VoxCPM 1.5 (MIT, clonagem avançada)
-
-```python
-# Repositório:  https://github.com/VoxCPM/VoxCPM
-# Transcrição automática + clone automático
-# ~8GB VRAM (CPU fallback disponível)
-```
-
-### P10 — OmniVoice (600+ idiomas)
-
-```python
-# Repositório:  https://github.com/OmniVoice/OmniVoice
-# 600+ idiomas/dialetos — maior cobertura do mundo
-```
-
-### P11 — Piper TTS (offline, rápido, MIT)
-
-```python
-# Repositório:  https://github.com/rhasspy/piper
-# Binários:     https://github.com/rhasspy/piper/releases
-# Vozes PT-BR:  https://huggingface.co/rhasspy/piper-voices
-# Custo: $0 | Offline | CPU-only | Muito rápido
-```
-
-### P12 — Estúdios Multi-Engine (open source)
-
-```python
-# TTS-Story (12 engines):    https://github.com/Xerophayze/TTS-Story
-# VoiceBox (7 engines):      https://github.com/jamiepine/voicebox
-# Voice Cloning Benchmark:   https://github.com/savg92/voice-cloning
-# Chatterbox Server UI:      https://github.com/devnen/Chatterbox-TTS-Server
-# OpenAudio (self-hosted):   https://github.com/monocle-h2020/openaudio
-```
-
----
-
-## 🖼️ APIS DE IMAGEM — COMPLETO COM LINKS
-
-### P1 — Pollinations FLUX ✅ PADRÃO
-
-```python
-# Repositório:  https://github.com/pollinations/pollinations
-# API Docs:     https://github.com/pollinations/pollinations/blob/main/APIDOCS.md
-# Dev Console:  https://enter.pollinations.ai
-# Auth:         https://auth.pollinations.ai  (Seed tier = 1 req/5s)
-# Custo: $0 | Modelos: flux, flux-realism, flux-anime, gptimage, seedream, kontext
-# Tier free: 1 req/15s (anônimo) | Seed: 1 req/5s (registro gratuito)
-
-import urllib.parse, requests
-
-# Endpoint clássico:
-url = f"https://image.pollinations.ai/prompt/{urllib.parse.quote(prompt)}"
-url += "?width=576&height=1024&model=flux&seed=42&nologo=true"
-
-# Unified endpoint (NOVO 2026):
-url = f"https://gen.pollinations.ai/image/{urllib.parse.quote(prompt)}"
-
-# Image-to-image (kontext model):
-url += "&model=kontext&image=URL_DA_IMAGEM_REFERENCIA"
-
-r = requests.get(url, timeout=30)
-# Verificar magic bytes antes de salvar:
-def is_valid_img(content):
-    return len(content)>5000 and content[:3] in (b'\xff\xd8\xff',b'\x89PN',b'\x89PG')
-```
-
-### P2 — Banco Supabase Interno ✅ PRIMÁRIO
-
-```python
-# URL:      https://tpjvalzwkqwttvmszvie.supabase.co
-# Tabela:   image_bank  (125+ imagens kawaii, <2s de carregamento)
-# Personagens: daniela, sara, marcos, julia, ana
-SB_URL = "https://tpjvalzwkqwttvmszvie.supabase.co"
-r = requests.get(f"{SB_URL}/rest/v1/image_bank?character_slug=eq.daniela&limit=10",
-    headers={"apikey": SB_KEY, "Authorization": f"Bearer {SB_KEY}"})
-```
-
-### P3 — ZSky AI (grátis, 1080p, sem key)
-
-```python
-# Site:     https://zsky.ai
-# API Blog: https://zsky.ai/blog/ai-image-generator-api-free
-# Custo: $0 free tier | Watermark ZSky | Uso comercial incluído
-
-r = requests.post("https://zsky.ai/api/v1/image/generate", json={
-    "prompt": prompt, "resolution": "1080p", "style": "cinematic"
-})
-```
-
-### P4 — HuggingFace Inference API
-
-```python
-# Site:       https://huggingface.co/inference-api
-# Docs:       https://huggingface.co/docs/api-inference
-# Models:     https://huggingface.co/models?pipeline_tag=text-to-image
-# Custo: $0 com HF_TOKEN | 1K req/hora com chave grátis
-# Modelos: FLUX.1-schnell, SDXL, SD3, kandinsky-2.2
-
-import requests
-HF_TOKEN = "hf_..."  # https://huggingface.co/settings/tokens
-r = requests.post(
-    "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell",
-    headers={"Authorization": f"Bearer {HF_TOKEN}"},
-    json={"inputs": prompt}
-)
-```
-
-### P5 — Puter.js (grátis, ilimitado, sem key — user-pays)
-
-```javascript
-// Site:     https://puter.com
-// Dev:      https://developer.puter.com/tutorials/free-unlimited-image-generation-api/
-// GitHub:   https://github.com/HeyPuter/puter
-// CDN:      <script src="https://cdn.puter.com/puter.js"></script>
-// Modelos:  GPT Image, DALL-E 3, Gemini 2.5 Flash, Flux.1, SD3, SDXL
-
-const img = await puter.ai.txt2img("kawaii anime girl psychology");
-document.body.appendChild(img);
-```
-
-### P6 — Pixazo (registro grátis, FLUX/SDXL)
-
-```python
-# Site:  https://pixazo.ai/api
-# Plano: grátis sem cartão de crédito
-# Modelos free: Flux Schnell, SD1.5, SDXL
-```
-
-### P7 — Stability AI (créditos grátis)
-
-```python
-# Site:   https://stability.ai
-# API:    https://platform.stability.ai/docs/api-reference
-# Grátis: 25 créditos/mês free tier
-# Modelos: SDXL, SD3 Medium, Stable Image Core
-```
-
-### P8 — Open-Generative-AI (MIT, self-hosted, 200+ modelos)
-
-```python
-# GitHub:   https://github.com/Anil-matcha/Open-Generative-AI
-# Modelos:  Flux, Kling, Sora-style, Veo-style, Midjourney-style
-# Self-hosted Next.js + API Muapi
-```
-
----
-
-## 🎬 APIS DE VÍDEO — COMPLETO COM LINKS
-
-### P1 — Pipeline Interno Ken Burns ✅ PADRÃO ($0, ilimitado)
-
-```python
-# Short 58s: https://github.com/tafita81/Repovazio/blob/main/scripts/render_short_george.py
-# Long 15min: https://github.com/tafita81/Repovazio/blob/main/scripts/render_long_15min.py
-# Ken Burns: zoom 0/4/8% via Pillow + FFmpeg
-# Custo: $0, ilimitado, sem watermark
-```
-
-### P2 — ZSky AI Video (grátis, 1080p + áudio, sem key)
-
-```python
-# Site:       https://zsky.ai
-# API Blog:   https://zsky.ai/blog/ai-video-api-free-2026
-# Custo: $0 free tier | 1080p | Áudio incluído | Uso comercial
-# Watermark ZSky no free tier | Webhook callback disponível
-
-import requests
-r = requests.post("https://zsky.ai/api/v1/video/generate", json={
-    "prompt": "kawaii anime girl talking about psychology",
-    "duration": 5, "resolution": "1080p",
-    "audio": True, "style": "cinematic"
-})
-with open("video.mp4", "wb") as f: f.write(r.content)
-```
-
-### P3 — Wan2.1 (HuggingFace, open source)
-
-```python
-# HuggingFace Space: https://huggingface.co/spaces/Wan-AI/Wan2.1
-# GitHub:            https://github.com/Wan-Video/Wan2.1
-# Geração texto→vídeo, alta qualidade
-```
-
-### P4 — CogVideoX (THUDM, Apache 2.0)
-
-```python
-# GitHub:     https://github.com/THUDM/CogVideo
-# HuggingFace: https://huggingface.co/THUDM/CogVideoX-5b
-# Licença: Apache 2.0 | Texto→vídeo | Open source
-```
-
-### P5 — LTX-Video (LightriX, open source)
-
-```python
-# GitHub:     https://github.com/Lightricks/LTX-Video
-# HuggingFace: https://huggingface.co/Lightricks/LTX-Video
-# Rápido, qualidade alta
-```
-
-### P6 — Open-Generative-AI (MIT, 200+ modelos)
-
-```python
-# GitHub: https://github.com/Anil-matcha/Open-Generative-AI
-# Inclui: Kling, Sora-style, Veo-style
-# Self-hosted
-```
-
----
-
-## 🤖 APIS DE LLM — COMPLETO COM LINKS (12 gratuitas)
-
-### Stack LLMRouter V4 (pipeline atual)
-
-```python
-PROVIDERS = {
-    "nvidia":   ("https://integrate.api.nvidia.com/v1",       "deepseek-ai/deepseek-v4-pro"),    # DEFAULT
-    "nvidia2":  ("https://integrate.api.nvidia.com/v1",       "meta/llama-3.3-70b-instruct"),
-    "groq":     ("https://api.groq.com/openai/v1",            "llama-3.3-70b-versatile"),
-    "openai":   ("https://api.openai.com/v1",                  "gpt-4o-mini"),
-}
-```
-
-### Todas as APIs LLM Gratuitas Permanentes
-
-```python
-# 1. GROQ — Mais rápido (315 tokens/s)
-#    Site:     https://console.groq.com
-#    Docs:     https://console.groq.com/docs/openai
-#    Modelos:  llama-3.3-70b-versatile, llama-4-maverick, deepseek-r1
-#    Limite:   14.400 req/dia | Sem cartão
-#    Key:      GROQ_API_KEY
-
-# 2. NVIDIA NIM — Mais modelos (46+)
-#    Site:     https://build.nvidia.com
-#    Docs:     https://docs.api.nvidia.com
-#    Modelos:  deepseek-v4-pro, llama-3.3-70b, qwen3-coder, mistral-large
-#    Limite:   40 req/min | Exige telefone
-#    Key:      NVIDIA_API_KEY
-
-# 3. GOOGLE AI STUDIO — Mais generoso (1.500 req/dia)
-#    Site:     https://aistudio.google.com
-#    Docs:     https://ai.google.dev/api
-#    Modelos:  gemini-2.5-flash, gemini-2.5-pro, gemini-3-flash, gemma-3
-#    Limite:   1.500 req/dia, 250K tokens/min | Sem cartão
-#    Key:      GEMINI_API_KEY
-
-# 4. OPENROUTER — 11+ modelos free
-#    Site:     https://openrouter.ai
-#    Docs:     https://openrouter.ai/docs
-#    Modelos:  llama-3.3-70b:free, deepseek-r1:free, qwen3-235b:free
-#    Limite:   50 req/dia (sem compra) | 1K req/dia ($10 único)
-#    Key:      OPENROUTER_API_KEY
-
-# 5. CEREBRAS — 1M tokens/dia
-#    Site:     https://cloud.cerebras.ai
-#    Docs:     https://inference-docs.cerebras.ai
-#    Modelos:  llama-3.3-70b, deepseek-r1, gpt-oss-120b
-#    Limite:   1M tokens/dia | Sem cartão
-#    Key:      CEREBRAS_API_KEY
-
-# 6. MISTRAL — 1B tokens/mês
-#    Site:     https://console.mistral.ai
-#    Docs:     https://docs.mistral.ai
-#    Modelos:  mistral-small-latest, codestral-2501, mistral-large
-#    Limite:   1B tokens/mês | Sem cartão
-#    Key:      MISTRAL_API_KEY
-
-# 7. CLOUDFLARE WORKERS AI — 10K neurons/dia
-#    Site:     https://dash.cloudflare.com/?to=/:account/ai
-#    Docs:     https://developers.cloudflare.com/workers-ai/
-#    Modelos:  llama-3.3-70b, deepseek-r1, gpt-oss-120b, qwen3-coder
-#    Limite:   10K neurons/dia | Sem cartão
-#    Key:      CF_API_TOKEN + CF_ACCOUNT_ID
-
-# 8. POLLINATIONS LLM — Sem key para uso básico
-#    Site:     https://pollinations.ai
-#    Docs:     https://github.com/pollinations/pollinations/blob/main/APIDOCS.md
-#    Endpoint: https://gen.pollinations.ai/v1  (OpenAI-compatible)
-#    Modelos:  openai-large, claude, gemini, deepseek, qwen3-coder
-#    Limite:   1 req/15s anônimo | Registro gratuito = 1 req/5s
-#    Key:      Sem key (opcional: auth.pollinations.ai)
-
-# 9. GITHUB MODELS — GPT-5, GPT-4o, o4-mini
-#    Site:     https://github.com/marketplace/models
-#    Docs:     https://docs.github.com/en/github-models
-#    Endpoint: https://models.inference.ai.azure.com
-#    Modelos:  gpt-5, gpt-4.1, gpt-4o, o4-mini, Llama-3.3-70B
-#    Limite:   50 chat + 2K completions/mês (Copilot free)
-#    Key:      GITHUB_TOKEN (github.com/settings/tokens)
-
-# 10. HUGGINGFACE — 1K req/hora
-#     Site:     https://huggingface.co
-#     Docs:     https://huggingface.co/docs/api-inference
-#     Endpoint: https://api-inference.huggingface.co/v1
-#     Modelos:  Llama-3.3-70B-Instruct, Qwen3-235B-A22B
-#     Limite:   1K req/hora com key grátis | 2 req/min anônimo
-#     Key:      HF_TOKEN (huggingface.co/settings/tokens)
-
-# 11. SAMBANOVA — $5 free / 3 meses
-#     Site:     https://cloud.sambanova.ai
-#     Docs:     https://docs.sambanova.ai
-#     Modelos:  Meta-Llama-3.1-405B, DeepSeek-R1-671B, Qwen3-235B
-#     Limite:   Muito generoso por 3 meses
-#     Key:      SAMBANOVA_API_KEY
-
-# 12. OVH Kepler AI — 2 req/min sem key
-#     Endpoint: https://oai.endpoints.kepler.ai.cloud.ovh.net/v1
-#     Modelos:  40+ modelos open-weight da EU
-#     Sem signup | OpenAI-compatible
-#     Key:      Sem key
-
-# EXTRA — LLM7.io (sem chave)
-#     Site:     https://llm7.io
-#     Sem signup | Acesso a vários modelos
-
-# EXTRA — Pollinations via Python (sem key)
-from openai import OpenAI
-client = OpenAI(base_url="https://gen.pollinations.ai/v1", api_key="dummy")
-resp = client.chat.completions.create(
-    model="openai-large",
-    messages=[{"role":"user","content":"Gere um script de psicologia em PT-BR"}]
-)
-```
-
----
-
-## 📺 YOUTUBE API — COMPLETO COM LINKS
-
-```python
-# YouTube Data API v3 (oficial)
-# Console:    https://console.cloud.google.com
-# Habilitar:  https://console.cloud.google.com/apis/library/youtube.googleapis.com
-# Docs:       https://developers.google.com/youtube/v3
-# Analytics:  https://developers.google.com/youtube/analytics
-# Quota:      10.000 unidades/dia GRÁTIS
-# Upload:     1.600 unidades → 6 vídeos/dia por projeto
-#
-# ESTRATÉGIA MULTI-PROJETO:
-# Criar 3+ projetos Google Cloud → 30K unidades/dia → 18 uploads/dia
-# Cada projeto = email diferente ou mesmo email
-#
-# OAuth pendente: psidanielacoelho1982@gmail.com
-# Canal ID: UCyCkIpsVgME9yCj_oXJFheA
-
-YOUTUBE_CONFIG = {
-    "base_url":      "https://www.googleapis.com/youtube/v3",
-    "upload_url":    "https://www.googleapis.com/upload/youtube/v3/videos",
-    "analytics_url": "https://youtubeanalytics.googleapis.com/v2",
-    "channel_id":    "UCyCkIpsVgME9yCj_oXJFheA",
-    "canal_url":     "https://youtube.com/@psidanielacoelho",
-    "quota_dia":     10000,
-    "custo_upload":  1600,
-    "max_uploads":   6,  # por projeto por dia
-    "auth_pendente": "psidanielacoelho1982@gmail.com",
+API_DIRECTORIES = {
+    "public_apis_github": {
+        "url": "https://github.com/public-apis/public-apis",
+        "total": "1400+ APIs",
+        "categorias": 51,
+        "destaque": "Mais completo e atualizado — mantido por comunidade",
+        "uso": "Referência principal para descobrir novas APIs",
+        "json_api": "https://api.publicapis.org/entries",  # buscar programaticamente
+        "categorias_lista": [
+            "Animals", "Anime", "Anti-Malware", "Art & Design",
+            "Authentication", "Books", "Business", "Calendar",
+            "Cloud Storage", "Cryptocurrency", "Currency Exchange",
+            "Data Validation", "Development", "Dictionaries",
+            "Documents & Productivity", "Email", "Environment",
+            "Events", "Finance", "Food & Drink", "Games & Comics",
+            "Geocoding", "Government", "Health", "Jobs",
+            "Machine Learning", "Music", "News", "Open Data",
+            "Patent", "Personality", "Photography",
+            "Science & Math", "Security", "Shopping", "Social",
+            "Sports & Fitness", "Text Analysis", "Tracking",
+            "Transportation", "URL Shorteners", "Vehicle",
+            "Video", "Weather"
+        ]
+    },
+    "publicapis_dev": {
+        "url": "https://publicapis.dev",
+        "total": "1400+ APIs",
+        "destaque": "Melhor UI, filtros avançados, uptime stats",
+        "busca_prog": "https://publicapis.dev/api/search?query={termo}",
+        "categorias_psico": [
+            "personality", "text-analysis", "machine-learning",
+            "health", "books", "science", "social"
+        ]
+    },
+    "public_apis_io": {
+        "url": "https://public-apis.io",
+        "total": "1000+ APIs",
+        "destaque": "Categorias: filmes, anime, clima, música, jogos",
+        "busca": "https://public-apis.io/category/{categoria}"
+    },
+    "publicapis_io": {
+        "url": "https://publicapis.io",
+        "total": "1000+ APIs",
+        "destaque": "Inclui chaves, exemplos de código, documentação",
+        "busca": "https://publicapis.io/category/{categoria}"
+    },
+    "public_api_lists": {
+        "url": "https://github.com/public-api-lists/public-api-lists",
+        "total": "1000+ APIs",
+        "categorias": 48,
+        "destaque": "Pesquisável, com API JSON própria",
+        "json_api": "https://public-api-lists.github.io/public-api-lists/apis.json"
+    },
+    "mixedanalytics": {
+        "url": "https://mixedanalytics.com/blog/list-actually-free-open-no-auth-needed-apis/",
+        "total": "~200 APIs",
+        "destaque": "FOCO: APIs SEM AUTH — usar sem nenhuma chave",
+        "uso": "Quando precisar de API para GitHub Actions sem configurar secrets"
+    },
+    "rapidapi": {
+        "url": "https://rapidapi.com",
+        "total": "40.000+ APIs",
+        "destaque": "Maior marketplace — maioria tem free tier",
+        "uso": "Quando não encontrar no gratuito puro — verificar free tier"
+    }
 }
 
-# Alternativas sem quota:
-# yt-dlp:                    https://github.com/yt-dlp/yt-dlp
-# youtube-transcript-api:    https://github.com/jdepoix/youtube-transcript-api
-# pytube:                    https://github.com/pytube/pytube
-# Supadata (sem quota):      https://supadata.ai/youtube-api
-# SociaVault (sem quota):    https://sociavault.com
+# Como descobrir novas APIs programaticamente:
+def find_api(category, no_auth=True):
+    """Buscar API no diretório público sem autenticação"""
+    import requests
+    r = requests.get(
+        f"https://api.publicapis.org/entries?category={category}&auth={'null' if no_auth else ''}",
+        timeout=10
+    )
+    return r.json().get("entries", [])
 ```
 
 ---
 
-## 🔧 REPOSITÓRIOS GITHUB ESSENCIAIS
+## 🎯 APIs CURADAS POR USO NO PIPELINE (as 51 categorias aplicadas)
+
+### CATEGORIA 1 — QUOTES & FRASES PSICOLÓGICAS
 
 ```python
-REPOS = {
-    # === NOSSO PROJETO ===
-    "repovazio":          "https://github.com/tafita81/Repovazio",
+# TODAS SEM AUTH — usar em qualquer contexto
+QUOTE_APIS = {
+    # ✅ TESTADAS AO VIVO
+    "ZenQuotes":     "https://zenquotes.io/api/random",              # wisdom, healing, resilience
+    "AdviceSlip":    "https://api.adviceslip.com/advice",            # conselhos aleatórios
+    "Affirmations":  "https://www.affirmations.dev/",                # afirmações positivas
+    "StoicQuotes":   "https://stoic-quotes.com/api/quote",           # Epicteto, Marco Aurélio
+    "Quotable":      "https://api.quotable.io/quotes?tags=wisdom",   # por tag: psychology, healing
+    "Forismatic":    "http://api.forismatic.com/api/1.0/?method=getQuote&format=json",
 
-    # === TTS ===
-    "chatterbox":         "https://github.com/resemble-ai/chatterbox",
-    "chatterbox-server":  "https://github.com/devnen/Chatterbox-TTS-Server",
-    "qwen3-tts":          "https://github.com/QwenLM/Qwen3-TTS",
-    "kokoro":             "https://github.com/hexgrad/kokoro",
-    "kokoro-onnx":        "https://github.com/thewh1teagle/kokoro-onnx",
-    "f5-tts":             "https://github.com/SWivid/F5-TTS",
-    "indextts":           "https://github.com/index-tts/IndexTTS",
-    "piper":              "https://github.com/rhasspy/piper",
-    "tts-story":          "https://github.com/Xerophayze/TTS-Story",
-    "voicebox":           "https://github.com/jamiepine/voicebox",
-    "voice-cloning":      "https://github.com/savg92/voice-cloning",
-
-    # === LLM FREE ===
-    "awesome-free-llm":   "https://github.com/amardeeplakshkar/awesome-free-llm-apis",
-    "free-llm-dir":       "https://github.com/open-free-llm-api/awesome-freellm-apis",
-    "no-cost-ai":         "https://github.com/zebbern/no-cost-ai",
-    "free-ai-tools":      "https://github.com/ShaikhWarsi/free-ai-tools",
-    "awesome-free-llm2":  "https://github.com/mnfst/awesome-free-llm-apis",
-    "vibheksoni-free-ai": "https://github.com/vibheksoni/free-ai",
-
-    # === IMAGEM / VÍDEO ===
-    "pollinations":       "https://github.com/pollinations/pollinations",
-    "open-gen-ai":        "https://github.com/Anil-matcha/Open-Generative-AI",
-    "stable-diffusion":   "https://github.com/AUTOMATIC1111/stable-diffusion-webui",
-    "wan2.1":             "https://github.com/Wan-Video/Wan2.1",
-    "cogvideo":           "https://github.com/THUDM/CogVideo",
-    "ltx-video":          "https://github.com/Lightricks/LTX-Video",
-
-    # === YOUTUBE / SOCIAL ===
-    "yt-dlp":             "https://github.com/yt-dlp/yt-dlp",
-    "yt-transcript":      "https://github.com/jdepoix/youtube-transcript-api",
-    "pytube":             "https://github.com/pytube/pytube",
-
-    # === DIRETÓRIOS DE APIS ===
-    "public-apis":        "https://github.com/public-apis/public-apis",
-    "public-api-lists":   "https://github.com/public-api-lists/public-api-lists",
+    # EXTRAS (publicapis.dev/category/personality)
+    "BreakingBad":   "https://breakingbadquotes.xyz/v1/quotes",      # quotes dramáticas (estilo script)
+    "KanyeRest":     "https://api.kanye.rest/",                      # quotes inesperadas (criatividade)
+    "RonSwanson":    "https://ron-swanson-quotes.herokuapp.com/v2/quotes", # humor/sabieza
+    "TarotAPI":      "https://tarotapi.dev/api/v1/cards/random",     # cartas simbólicas (visual)
+    "EvilInsult":    "https://evilinsult.com/generate_insult.php?lang=en&type=json", # antagonista
+    "YoMomma":       "https://api.yomomma.info/",                    # humor desconstruído
+    "OnThisDay":     "https://history.muffinlabs.com/date",          # fatos históricos por data
+    "NumbersFact":   "http://numbersapi.com/{n}/trivia",             # trivia numérica para roteiros
+    "Uselessfacts":  "https://uselessfacts.jsph.pl/random.json?language=en", # fatos curiosos
+    "CatFact":       "https://catfact.ninja/fact",                   # analogias com gatos (viral)
 }
 
-# Diretórios web (não GitHub):
-DIRECTORIES = {
-    "publicapis.dev":     "https://publicapis.dev",
-    "public-apis.io":     "https://public-apis.io",
-    "publicapis.io":      "https://publicapis.io",
-    "mixedanalytics":     "https://mixedanalytics.com/blog/list-actually-free-open-no-auth-needed-apis/",
-    "rapidapi":           "https://rapidapi.com",
-    "freellm.net":        "https://freellm.net",
+# Uso no script: enriquecer abertura com citação relevante
+def get_opening_quote(tema):
+    import requests
+    kw_map = {
+        "narcisismo":"relationship","ansiedade":"anxiety","depressao":"healing",
+        "trauma":"resilience","impostor":"courage","cura":"peace","familia":"family",
+        "gaslighting":"truth","codependencia":"love","apego":"connection"
+    }
+    kw = kw_map.get(tema, "wisdom")
+    r = requests.get(f"https://zenquotes.io/api/quotes?apikey=&keyword={kw}", timeout=10)
+    data = r.json() if r.status_code==200 else []
+    return data[0] if data else {"q": "A cura começa pelo nome.", "a": "Daniela Coelho"}
+```
+
+---
+
+### CATEGORIA 2 — ANÁLISE DE SENTIMENTO & NLP (TEXT ANALYSIS)
+
+```python
+# Do diretório public-apis: categoria "Text Analysis" (21 APIs) + "Machine Learning" (30 APIs)
+NLP_APIS = {
+    # SEM AUTH OU FREE TIER GENEROSO
+    "LanguageTool":     "https://api.languagetool.org/v2/check",           # ✅ gramática PT-BR
+    "Lingva":           "https://lingva.ml/api/v1/{src}/{target}/{text}",  # ✅ tradução sem key
+    "MyMemory":         "https://api.mymemory.translated.net/get",         # ✅ 10K palavras/dia
+    "LibreTranslate":   "https://libretranslate.com/translate",            # open source
+    "HF_Emotion_PT":    "https://api-inference.huggingface.co/models/pysentimiento/robertuito-emotion-analysis",
+    "HF_NER":           "https://api-inference.huggingface.co/models/dslim/bert-base-NER",
+    "HF_Summarize":     "https://api-inference.huggingface.co/models/facebook/bart-large-cnn",
+    "HF_Zero_Shot":     "https://api-inference.huggingface.co/models/facebook/bart-large-mnli",
+
+    # COM FREE KEY
+    "Twinword_Emotion": "https://www.twinword.com/api/emotion_analysis.php",  # 300/mês
+    "Sentino":          "https://api.sentino.org/v2/analyze",                 # Big5, DISC
+    "PerspectiveAPI":   "https://commentanalyzer.googleapis.com/v1alpha1",    # toxicidade
+    "Google_NLP":       "https://language.googleapis.com/v1/documents:analyzeSentiment",
+
+    # FERRAMENTAS DE PARÁFRASE E REESCRITA
+    "Quillbot":         "https://quillbot.com/api/paraphrase",               # (requer key)
+    "Wordnik":          "https://api.wordnik.com/v4/word.json/{word}/definitions",  # definições
+    "Datamuse":         "https://api.datamuse.com/words?rel_syn={word}",     # sinônimos sem auth
+    "WordsAPI":         "https://wordsapiv1.p.rapidapi.com/words/{word}",    # RapidAPI free tier
+
+    # ANÁLISE DE KEYWORDS
+    "RAKE_local":       "pip install rake-nltk",                              # local, sem api
+    "KeyBERT_local":    "pip install keybert",                                # local, sem api
+}
+
+# Mapeamento emoção → parâmetro de voz Chatterbox
+EMOTION_TO_AUDIO = {
+    "joy":         (0.74, 0.26),   # CTA style
+    "sadness":     (0.95, 0.08),   # CHORO style
+    "anger":       (0.93, 0.10),   # REVELACAO style
+    "fear":        (0.87, 0.13),   # PAUSA style
+    "surprise":    (0.96, 0.09),   # IMPACTO style
+    "disgust":     (0.90, 0.11),   # PROBLEMA style
+    "neutral":     (0.82, 0.17),   # NORMAL style
+    "anticipation":(0.88, 0.12),   # GANCHO style
 }
 ```
 
 ---
 
-## 📊 400 VÍDEOS — ESTRUTURA COMPLETA
-
-### Resumo
-
-```
-20 séries × 10 episódios × 2 formatos = 400 vídeos
-  200 Shorts (58s)  → gancho + curiosity gap → drive para o Long
-  200 Longs (15min) → script Psych2Go completo → mid-rolls
-
-Tabela Supabase: video_plan_400
-IDs pipeline existentes:
-  Shorts: 682-712 (9 renderizados)
-  Longs:  713-721 (9 scripts prontos, #713 renderizando)
-```
-
-### As 20 Séries com Personagens
+### CATEGORIA 3 — IMAGENS & ARTE (Art & Design + Photography)
 
 ```python
-SERIES = {
-    # slug: (personagem, descrição, hashtags)
-    "narcisismo":    ("Laís",   "32a professora", "#narcisismo #relacionamentotoxico"),
-    "apego":         ("Rafael", "28a designer",   "#apegoansioso #apego"),
-    "gaslighting":   ("Ana",    "34a advogada",   "#gaslighting #manipulacao"),
-    "infancia":      ("Você",   "infância difícil","#traumadeinfancia #familia"),
-    "ansiedade":     ("Sofia",  "28a analista",   "#ansiedade #ansiedadealtofuncional"),
-    "depressao":     ("Carla",  "33a consultora", "#depressaosilenciosa"),
-    "limites":       ("Clara",  "30a diz sim",    "#limites #limitessaudaveis"),
-    "autoestima":    ("Marcos", "29a se sabota",  "#autoestima #autossabotagem"),
-    "relacionamentos":("Camila","repete padrão",  "#relacionamentotoxico"),
-    "codependencia": ("Paula",  "precisa salvar", "#codependencia"),
-    "impostor":      ("Marina", "recém promovida","#sindromedoimpostor"),
-    "abandono":      ("Leo",    "medo de ser deixado","#medodeabandono"),
-    "cura":          ("Todos",  "jornada não linear","#cura #curaemocional"),
-    "amorporprio":   ("Você",   "cresceu demais", "#amorporprio"),
-    "trauma":        ("Lucas",  "corpo parou",    "#trauma #TEPT"),
-    "manipulacao":   ("Ana",    "1 ano terapia",  "#manipulacao #narcisismo"),
-    "cerebro":       ("Lucas",  "4 anos colapso", "#neurociencia #cerebro"),
-    "vicoemocional": ("Camila", "química do amor","#vicoemocional"),
-    "familia":       ("Você",   "sempre problema","#familiadisfuncional"),
-    "resiliencia":   ("Todos",  "fundo do poço",  "#resiliencia"),
+# Do diretório: "Art & Design" + "Photography" + "Placeholder Images"
+IMAGE_APIS = {
+    # SEM AUTH — PRODUÇÃO
+    "Pollinations_FLUX":  "https://image.pollinations.ai/prompt/{prompt}?width=576&height=1024&model=flux&nologo=true",
+    "Pollinations_Gen":   "https://gen.pollinations.ai/image/{prompt}",           # novo unified
+    "DiceBear":           "https://api.dicebear.com/9.x/{style}/svg?seed={seed}", # avatares SVG
+    "Picsum":             "https://picsum.photos/seed/{seed}/{w}/{h}",            # placeholder
+    "Lorem_Picsum":       "https://picsum.photos/{w}/{h}",                        # simples
+    "Unsplash_Source":    "https://source.unsplash.com/{w}x{h}/?{keyword}",      # fotos reais
+
+    # GERAÇÃO IA (free tier)
+    "HF_FLUX_Schnell":   "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell",
+    "HF_SDXL":           "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0",
+    "HF_Anime_Diffusion":"https://api-inference.huggingface.co/models/Linaqruf/animagine-xl-3.1",
+    "Puter_AI_Img":      "CDN: https://cdn.puter.com/puter.js → puter.ai.txt2img()",
+    "ZSky_Image":        "https://zsky.ai/api/v1/image/generate",                # 1080p
+
+    # PROCESSAMENTO DE IMAGEM
+    "Remove_BG_local":   "pip install rembg",                                     # remover fundo
+    "Pillow_local":      "pip install Pillow",                                    # Ken Burns, resize
+    "PhotoRoom_API":     "https://sdk.photoroom.com/v1/segment",                  # remoção bg (key)
+    "TinyPNG":           "https://api.tinify.com",                                # compressão
+    "Cloudinary":        "https://api.cloudinary.com/v1_1/demo/image/upload",    # free 25GB
+
+    # BANCO INTERNO SUPABASE (PRIMÁRIO)
+    "Supabase_Bank":     "https://tpjvalzwkqwttvmszvie.supabase.co/rest/v1/image_bank",
+}
+
+# Personagens → prompt base
+CHAR_PROMPTS = {
+    "daniela": "kawaii chibi anime girl, short dark bob hair, mint-green blouse, gold psi pin, warm smile, Psych2Go style, soft cream background",
+    "sara":    "kawaii chibi anime girl, wavy auburn hair, round glasses, yellow cardigan, emotional eyes, crying or confused",
+    "marcos":  "kawaii chibi anime man, styled dark hair, navy blazer, charming calculating smile, villainous expression",
+    "ana":     "kawaii chibi anime woman, dark bun, white lab coat, clipboard, authoritative calm, scientific diagram",
+    "julia":   "kawaii chibi anime girl, curly dark hair, orange sweater, warm caring expression",
+    "lucas":   "kawaii chibi anime man, tired exhausted expression, casual clothes, can't get out of bed",
+}
+STYLE = "flat illustration, pastel colors, clean line art, no text, no watermarks, vertical 9:16"
+```
+
+---
+
+### CATEGORIA 4 — ÁUDIO & MÚSICA (Music + Audio)
+
+```python
+# Do diretório: "Music" (33 APIs) + Audio generation
+AUDIO_APIS = {
+    # TTS — PADRÃO (ver seção dedicada)
+    "Chatterbox":     "MIT — pip install chatterbox-tts",                  # P1: clone George
+    "Qwen3_TTS":      "HF: Qwen/Qwen3-TTS — Apache 2.0",                  # P2: PT-BR nativo
+    "EdgeTTS":        "pip install edge-tts",                              # P3: ThalitaNeural
+    "Kokoro":         "pip install kokoro-onnx",                           # P4: offline 82M
+    "Pollinations_Au":"https://gen.pollinations.ai/audio",                 # P5: OpenAI voices
+    "F5_TTS":         "pip install f5-tts",                                # P6: zero-shot PT
+    "IndexTTS":       "pip install indextts",                              # P7: Bilibili Apache
+    "Coqui_TTS":      "pip install TTS",                                   # P8: open source
+
+    # MÚSICA DE FUNDO (para Longs 15min)
+    "Free_Music_Archive": "https://freemusicarchive.org/api/",             # CC licensed
+    "Jamendo":        "https://api.jamendo.com/v3.0/tracks/",              # free CC music
+    "Incompetech":    "https://incompetech.filmmusic.io/",                 # Kevin MacLeod CC
+    "ccMixter":       "https://ccmixter.org/api/",                         # CC remixable
+    "Pixabay_Audio":  "https://pixabay.com/api/?key={key}&type=music",    # free tier
+    "Freesound":      "https://freesound.org/apiv2/search/text/",          # CC sounds
+    "OpenGameArt":    "https://opengameart.org/api/",                      # CC game audio
+    "SoundHelix":     "https://www.soundhelix.com/audio-examples/",        # procedural music
+
+    # ANÁLISE DE ÁUDIO
+    "AudD":           "https://api.audd.io/",                             # reconhecimento de música
+    "ACRCloud":       "https://identify-eu-west-1.acrcloud.com/",         # fingerprinting
+    "Essentia_local": "pip install essentia",                              # análise offline
+
+    # EFEITOS SONOROS
+    "Zapsplat":       "https://api.zapsplat.com/",                        # SFX (key grátis)
+    "SoundBible":     "https://soundbible.com/",                          # CC sound effects
 }
 ```
 
-### Arco de 10 Episódios (LOCKED)
-
-```
-E01 GANCHO       → O Problema Que Ninguém Nomeia (viral máximo)
-E02 PROBLEMA     → Por Que É Mais Sério (profundidade)
-E03 CIENCIA      → O Que a Ciência Diz (autoridade + pesquisadores)
-E04 CUSTO        → O Custo Invisível (urgência)
-E05 VIRADA       → A Virada (esperança + mid-roll E03/06/09)
-E06 FERRAMENTA   → O Que Realmente Funciona (valor prático)
-E07 PRATICA      → Como Colocar em Prática Hoje (ação)
-E08 RECAIDA      → Quando Você Regride (normalização)
-E09 TRANSFORMACAO→ Como Fica Depois da Cura (aspiração)
-E10 FINAL        → Fechamento + Próxima Série (cliffhanger)
-```
-
-### Workflow de Publicação Short ↔ Long
-
-```
-1. Renderizar Long → publicar → copiar YouTube ID
-2. UPDATE content_pipeline SET related_video_id='[YT_ID]' WHERE id=[LONG_ID]
-3. Renderizar Short (script já embute link do Long na descrição)
-4. Publicar Short
-5. YouTube Studio → Short → "Vídeo relacionado" → ID do Long
-6. YouTube detecta keywords + related_video → exibe Long embaixo do Short
-7. Horário: 18-20h BR | Canal: UCyCkIpsVgME9yCj_oXJFheA
-```
-
 ---
 
-## 🎭 PIPELINE ÁUDIO V31 — PARÂMETROS DEFINITIVOS
+### CATEGORIA 5 — PESQUISA CIENTÍFICA (Science & Math + Health)
 
 ```python
-# Tipos e parâmetros (exag, cfg, sil_pre_s, sil_pos_s)
-TIPOS_AUDIO = {
-    "IMPACTO":    (0.96, 0.09, 1.0, 1.6),  # < 35 chars: "Ele CHORA."
-    "CHORO":      (0.95, 0.08, 0.5, 1.8),  # dor real, voz carregada
-    "REVELACAO":  (0.93, 0.10, 0.7, 1.4),  # "Isso tem NOME."
-    "GANCHO":     (0.88, 0.12, 0.0, 0.8),  # abertura com personagem
-    "PAUSA":      (0.87, 0.13, 0.4, 1.1),  # "..." suspense
-    "CTA":        (0.74, 0.26, 0.9, 0.0),  # SALVA agora
-    "NORMAL":     (0.82, 0.17, 0.0, 0.65), # narrativa padrão
+# Do diretório: "Science & Math" (34 APIs) + "Health" (30 APIs)
+SCIENCE_APIS = {
+    # SEM AUTH — PRODUÇÃO
+    "PubMed":         "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi",  # ✅
+    "Semantic_Scholar":"https://api.semanticscholar.org/graph/v1/paper/search",       # ✅
+    "CrossRef":       "https://api.crossref.org/works",                               # ✅
+    "OpenAlex":       "https://api.openalex.org/works?search={query}",               # 250M artigos
+    "Europe_PMC":     "https://www.ebi.ac.uk/europepmc/webservices/rest/search",
+    "arXiv":          "http://export.arxiv.org/api/query?search_query=ti:{query}",   # preprints
+    "CORE_API":       "https://api.core.ac.uk/v3/search/works",                      # open access
+    "Unpaywall":      "https://api.unpaywall.org/v2/{doi}?email=test@test.com",      # PDF grátis
+
+    # DADOS SAÚDE MENTAL
+    "WHO_API":        "https://ghoapi.azureedge.net/api/",                           # OMS dados
+    "DataSUS":        "https://servicodados.ibge.gov.br/api/v3/",                   # IBGE Brasil
+    "OpenFDA":        "https://api.fda.gov/drug/event.json",                         # FDA dados
+    "CDC_API":        "https://data.cdc.gov/resource/",                              # CDC EUA
+
+    # EDUCAÇÃO & REFERÊNCIAS
+    "Wikipedia":      "https://en.wikipedia.org/api/rest_v1/page/summary/{title}",  # resumos
+    "WikiData":       "https://www.wikidata.org/w/api.php",                          # dados estruturados
+    "OpenLibrary":    "https://openlibrary.org/api/books?bibkeys=ISBN:{isbn}&jscmd=data&format=json",
+    "GoogleBooks":    "https://www.googleapis.com/books/v1/volumes?q={query}",       # key grátis
+    "InternetArchive":"https://archive.org/advancedsearch.php",                      # livros históricos
+
+    # VOCABULÁRIO PSICOLÓGICO
+    "Wordnik":        "https://api.wordnik.com/v4/word.json/{word}/definitions",
+    "MerriamWebster": "https://www.dictionaryapi.com/api/v3/references/collegiate/json/{word}",
+    "Free_Dictionary":"https://api.dictionaryapi.dev/api/v2/entries/en/{word}",      # sem auth
+    "PT_Dictionary":  "https://api.dicionario-aberto.net/word/{word}",               # PT sem auth
 }
 
-# Noise gate por segmento (NOVO V31)
-GATE_SEGMENTO = "agate=threshold=0.028:ratio=8000:attack=1:release=60"
-# Gate final duplo
-GATE_FINAL    = "highpass=f=80,agate=threshold=0.028:ratio=8000:attack=2:release=50"
-# Fade in/out (sem click)
-FADE_IN_MS, FADE_OUT_MS = 30, 60
-# Silêncio limpo (zeros digitais absolutos)
-SILENCE_CODEC = "pcm_s16le"
-
-# Verificação obrigatória (deve retornar -inf):
-# ffmpeg -i audio.wav -af "astats=metadata=1" -f null - 2>&1 | grep "RMS trough"
+# Queries específicas para psicologia.doc
+PSICO_ACADEMIC_QUERIES = {
+    "narcisismo":     "narcissistic personality disorder covert Malkin Harvard 2015",
+    "apego":          "attachment theory adult Ainsworth Bowlby secure anxious avoidant",
+    "gaslighting":    "gaslighting psychological manipulation Robin Stern Yale",
+    "ansiedade":      "high functioning anxiety Brené Brown prefrontal cortex burnout",
+    "depressao":      "masked depression functional anhedonia dopamine serotonin",
+    "trauma":         "complex PTSD van der Kolk body memory somatic",
+    "impostor":       "impostor phenomenon Clance 1978 competence high achievers",
+    "codependencia":  "codependency emotional dependency Melody Beattie relationships",
+    "resiliencia":    "post-traumatic growth resilience Tedeschi Calhoun psychological",
+    "neurociencia":   "emotion regulation prefrontal amygdala Siegel UCLA Daniel",
+    "limites":        "healthy boundaries Nedra Tawwab self-care relationships",
+    "abandono":       "fear of abandonment anxious attachment relationship patterns",
+}
 ```
 
 ---
 
-## 🖼️ SINCRONIZAÇÃO IMAGEM-ÁUDIO V31
+### CATEGORIA 6 — VÍDEO & ANIMAÇÃO
 
 ```python
-# Cada imagem = exatamente a cena da frase sendo dita
+# Do diretório: "Video" (50 APIs)
+VIDEO_APIS = {
+    # RENDER & ANIMAÇÃO
+    "Remotion":       "npx remotion render — React spring physics word-by-word",  # PADRÃO NOVO
+    "FFmpeg_local":   "apt install ffmpeg — Ken Burns concat gate",               # PADRÃO ATUAL
+    "Shotstack":      "https://api.shotstack.io/edit/stage/render",              # cloud render
+    "ZSky_Video":     "https://zsky.ai/api/v1/video/generate",                  # 1080p + áudio
+    "HF_CogVideoX":   "THUDM/CogVideoX-5b — Apache 2.0 open source",
+    "RunwayML":       "https://api.runwayml.com/v1/",                           # Gen2 (pago)
+    "Pika_Labs":      "https://api.pika.art/",                                  # (pago)
+    "HeyGen":         "https://api.heygen.com/",                               # avatar falante
 
-DANIELA = "kawaii chibi anime girl, short dark bob hair, mint-green blouse, gold psi pin, warm smile"
-SARA    = "kawaii chibi anime girl, wavy auburn hair, round glasses, yellow cardigan, emotional eyes"
-MARCOS  = "kawaii chibi anime man, styled dark hair, navy blazer, charming calculating smile"
-JULIA   = "kawaii chibi anime girl, curly dark hair, orange sweater, warm caring expression"
-ANA     = "kawaii chibi anime woman, dark bun, white lab coat, clipboard, authoritative calm"
-STYLE   = "Psych2Go anime flat illustration, soft cream background #F5F0E8, pastel colors, clean line art, no text, no watermarks"
+    # YOUTUBE
+    "YouTube_Data_v3":"https://www.googleapis.com/youtube/v3",                  # upload, search
+    "YouTube_Analytics":"https://youtubeanalytics.googleapis.com/v2",           # métricas canal
+    "yt_dlp":         "pip install yt-dlp",                                     # download/análise
+    "pytube":         "pip install pytube",                                     # metadata
+    "YT_Transcript":  "pip install youtube-transcript-api",                     # legendas
 
-def prompt_for_frase(frase):
-    t = frase.lower()
-    if any(k in t for k in ["grita","perigoso","calculista","controle","manipulador"]):
-        return MARCOS + " villainous, dark aura, sinister smile, " + STYLE
-    elif any(k in t for k in ["chora","triste","culpada","errada","machucada","desmoronou"]):
-        return SARA + " crying, confused, hurt, emotional, " + STYLE
-    elif any(k in t for k in ["salva","canal","assiste","sino","vídeo completo"]):
-        return DANIELA + " pointing to camera, warm smile, golden bell 🔔, " + STYLE
-    elif any(k in t for k in ["harvard","ciência","pesquisa","estudo","neurológ"]):
-        return ANA + " pointing at whiteboard, scientific diagram, " + STYLE
-    elif any(k in t for k in ["isso tem nome","isso se chama","mecanismo","padrão"]):
-        return ANA + " with labeled diagram, writing on board, " + STYLE
-    elif any(k in t for k in ["você conhece","conheça","imagine"]):
-        return DANIELA + " warm, storyteller pose, inviting, " + STYLE
-    else:
-        return DANIELA + " speaking directly, eye contact, engaged, " + STYLE
+    # PROCESSAMENTO
+    "OpenCV_local":   "pip install opencv-python",                              # processamento frames
+    "MoviePy_local":  "pip install moviepy",                                    # edição Python
+    "Scenedetect":    "pip install scenedetect",                                # detectar cenas
+
+    # THUMBNAIL
+    "Thumbo":         "https://thumbo.io/api/",                                 # thumbnails
+    "Placeholders":   "https://via.placeholder.com/{w}x{h}",                   # sem auth
+    "Canva_API":      "https://api.canva.com/rest/v1/",                        # design prog
+}
 ```
 
 ---
 
-## 📋 SCRIPTS PSYCH2GO V31 (PADRÃO)
-
-```
-ESTRUTURA OBRIGATÓRIA:
-1. "Você conhece [Nome]? [Cena específica de dor real]" (GANCHO)
-2. Revelação parcial → entrega 70% do valor (CHORO/REVELACAO)
-3. "Isso tem NOME." (REVELACAO)
-4. Curiosity gap: "No vídeo completo eu mostro [X ESPECÍFICO]" (NORMAL)
-5. "SALVA agora para não perder." (CTA)
-
-PESQUISADORES REAIS OBRIGATÓRIOS:
-  - Craig Malkin (Harvard) → narcisismo
-  - Bessel van der Kolk (Harvard) → trauma
-  - Mary Ainsworth (Johns Hopkins) → apego
-  - John Gottman (UWashington) → relacionamentos
-  - Daniel Siegel (UCLA) → neurociência, integração
-  - Brené Brown (UTexas) → vulnerabilidade, vergonha
-  - Kristin Neff (UTexas) → self-compassion
-  - Lindsay Gibson → família emocionalmente imatura
-  - Robin Stern (Yale) → gaslighting
-  - Helen Fisher (Rutgers) → química do amor, vício emocional
-  - Pauline Clance → síndrome do impostor
-  - Valerie Young (Harvard) → tipos de impostor
-  - Herbert Benson (Harvard) → estresse crônico
-  - Amy Arnsten (Yale) → estresse e córtex pré-frontal
-  - Stephen Porges → teoria polivagal
-  - Jennifer Freyd → traição de confiança
-  - Mark Hyman → depressão e inflamação
-  - Kelly Brogan → psiquiatria integrativa
-```
-
----
-
-## 🔐 CREDENCIAIS STATUS
-
-```
-✅ ATIVAS:
-  GH_PAT              → github.com (tafita81)
-  SUPABASE_SERVICE_KEY → supabase.com/project/tpjvalzwkqwttvmszvie
-  SUPABASE_ANON_KEY    → mesmo projeto
-  GROQ_API_KEY         → console.groq.com
-  NVIDIA_API_KEY       → build.nvidia.com
-  OPENAI_API_KEY       → platform.openai.com
-  HF_TOKEN             → huggingface.co/settings/tokens
-
-⚠️ QUOTA VARIÁVEL:
-  ELEVENLABS_API_KEY   → quota pode estar esgotada → usar Chatterbox
-
-❌ FALTANDO (criar grátis):
-  GEMINI_API_KEY       → aistudio.google.com (1.500 req/dia)
-  YOUTUBE_OAUTH        → console.cloud.google.com (psidanielacoelho1982@gmail.com)
-  INSTAGRAM_TOKEN      → developers.facebook.com
-  TIKTOK_TOKEN         → developers.tiktok.com
-  CEREBRAS_API_KEY     → cloud.cerebras.ai (1M tokens/dia)
-  OPENROUTER_API_KEY   → openrouter.ai
-
-COMO CRIAR GEMINI KEY (grátis):
-  1. https://aistudio.google.com
-  2. "Get API key" → "Create API key"
-  3. Copiar key → GitHub Settings → Secrets → GEMINI_API_KEY
-
-COMO CRIAR YOUTUBE OAUTH:
-  1. https://console.cloud.google.com → Novo projeto
-  2. APIs → Habilitar YouTube Data API v3
-  3. Credenciais → OAuth 2.0 → Tipo: Aplicativo Web
-  4. URI redirect: http://localhost:8080
-  5. Baixar credentials.json → executar flow OAuth
-  6. Salvar refresh_token como YOUTUBE_REFRESH_TOKEN
-```
-
----
-
-## 💡 APIS PSICOLOGIA / SAÚDE MENTAL / QUOTES
+### CATEGORIA 7 — SOCIAL MEDIA & ANALYTICS
 
 ```python
-# APIs relevantes do diretório public-apis para o pipeline:
+# Do diretório: "Social" (44 APIs) + "News"
+SOCIAL_ANALYTICS_APIS = {
+    # YOUTUBE (principal canal)
+    "YouTube_OAuth":  "https://accounts.google.com/o/oauth2/v2/auth",       # ⚠️ PENDENTE
+    "YT_Upload_URL":  "https://www.googleapis.com/upload/youtube/v3/videos",
 
-APIS_RELEVANTES = {
-    # Frases/Citações (para enriquecer scripts)
-    "quotable":    "https://api.quotable.io/random?tags=motivational",
-    "zenquotes":   "https://zenquotes.io/api/random",   # sem key
-    "quotegarden": "https://quote-garden.herokuapp.com/api/v3/quotes/random",
+    # INSTAGRAM (futuro)
+    "Instagram_Basic":"https://graph.instagram.com/me",                      # básico display
+    "Instagram_Graph":"https://graph.facebook.com/v20.0/{id}/media",        # business
 
-    # Saúde Mental
-    "opentdb":     "https://opentdb.com/api.php?amount=10&category=17",  # trivia/ciência
+    # TIKTOK (futuro)
+    "TikTok_Research":"https://open.tiktokapis.com/v2/research/",           # research API
+    "TikTok_Creator": "https://open.tiktokapis.com/v2/post/publish/",       # publicar
 
-    # Clima (para contexto de vídeo)
-    "openweather": "https://api.openweathermap.org/data/2.5/weather",
+    # MONITORAMENTO
+    "Social_Searcher":"https://api.social-searcher.com/v2/posts?q={q}&network=instagram",
+    "Mention_API":    "https://api.mention.com/api/",                       # monitorar marca
+    "Brand24":        "https://api.brand24.com/v3/",                        # free trial
 
-    # Dados Brasileiros Públicos
-    "ibge":        "https://servicodados.ibge.gov.br/api/v1/",
-    "brasil.io":   "https://brasil.io/api/",
+    # TENDÊNCIAS
+    "GoogleTrends":   "pip install pytrends",                               # sem auth key
+    "Twitter_v2":     "https://api.twitter.com/2/tweets/search/recent",    # free basic
+    "Reddit_API":     "https://www.reddit.com/r/{sub}/top.json",            # sem auth básico
 
-    # Análise de Texto / NLP (para scripts)
-    "meaningcloud": "https://api.meaningcloud.com/sentiment-2.1",  # sentiment
-    "twinword":    "https://api.twinword.com/api/text/sentiment/",
+    # ANALYTICS GERAL
+    "Plausible":      "https://plausible.io/api/v1/",                      # open source analytics
+    "Matomo":         "https://matomo.org/docs/analytics-api/",             # self-hosted
+    "Open_Web_Analytics": "https://github.com/padams/Open-Web-Analytics",  # open source
+}
+```
 
-    # Pesquisa / Academico
-    "semantic_scholar": "https://api.semanticscholar.org/graph/v1/",  # sem key
-    "pubmed":      "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/",  # sem key
-    "crossref":    "https://api.crossref.org/works",  # sem key, papers científicos
-    "openalex":    "https://api.openalex.org/works",  # sem key, 250M papers
+---
 
-    # Busca de notícias (viral research)
-    "newsapi":     "https://newsapi.org/v2/",   # 100 req/dia free
-    "gnews":       "https://gnews.io/api/v4/",  # 100 req/dia free
-    "guardian":    "https://content.guardianapis.com/search",  # sem key para leitura
+### CATEGORIA 8 — LLMs GRATUITOS (Machine Learning)
 
-    # Google Trends (viral research)
-    "pytrends":    "pip install pytrends  # sem key, não oficial",
+```python
+# Do diretório: "Machine Learning" (30 APIs via publicapis.dev)
+LLM_FREE_APIS = {
+    # TIER FREE PERMANENTE (sem cartão)
+    "groq": {
+        "url": "https://api.groq.com/openai/v1",
+        "models": ["llama-3.3-70b-versatile","llama-4-maverick","deepseek-r1-distill-llama-70b"],
+        "limit": "14.400 req/dia", "speed": "315 tokens/s",
+        "key_url": "console.groq.com"
+    },
+    "nvidia_nim": {
+        "url": "https://integrate.api.nvidia.com/v1",
+        "models": ["deepseek-ai/deepseek-v4-pro","meta/llama-3.3-70b","qwen3-coder"],
+        "limit": "40 req/min", "key_url": "build.nvidia.com"
+    },
+    "google_aistudio": {
+        "url": "https://generativelanguage.googleapis.com/v1beta/openai/",
+        "models": ["gemini-2.5-flash","gemini-2.5-pro","gemma-3"],
+        "limit": "1.500 req/dia", "key_url": "aistudio.google.com"
+    },
+    "cerebras": {
+        "url": "https://api.cerebras.ai/v1",
+        "models": ["Meta-Llama-3.1-405B","DeepSeek-R1-671B"],
+        "limit": "1M tokens/dia", "key_url": "cloud.cerebras.ai"
+    },
+    "openrouter_free": {
+        "url": "https://openrouter.ai/api/v1",
+        "models": ["qwen/qwen3-235b:free","meta-llama/llama-3.3-70b:free","deepseek/deepseek-r1:free"],
+        "limit": "50 req/dia sem compra", "key_url": "openrouter.ai"
+    },
+    "mistral": {
+        "url": "https://api.mistral.ai/v1",
+        "models": ["mistral-small-latest","codestral-2501"],
+        "limit": "1B tokens/mês", "key_url": "console.mistral.ai"
+    },
+    "cloudflare_workers_ai": {
+        "url": "https://api.cloudflare.com/client/v4/accounts/{id}/ai/v1",
+        "models": ["llama-3.3-70b","deepseek-r1","qwen3-coder"],
+        "limit": "10K neurons/dia", "key_url": "dash.cloudflare.com"
+    },
+    "sambanova": {
+        "url": "https://api.sambanova.ai/v1",
+        "models": ["Meta-Llama-3.1-405B","DeepSeek-R1-671B","Qwen3-235B"],
+        "limit": "$5 grátis 3 meses", "key_url": "cloud.sambanova.ai"
+    },
+    "github_models": {
+        "url": "https://models.inference.ai.azure.com",
+        "models": ["gpt-5","gpt-4.1","gpt-4o","o4-mini","Llama-3.3-70B"],
+        "limit": "50 chat + 2K completions/mês", "key_url": "github.com/settings/tokens"
+    },
+    "huggingface": {
+        "url": "https://api-inference.huggingface.co/v1",
+        "models": ["meta-llama/Llama-3.3-70B-Instruct","Qwen/Qwen3-235B-A22B"],
+        "limit": "1K req/hora com token grátis", "key_url": "huggingface.co/settings/tokens"
+    },
+    "pollinations_llm": {
+        "url": "https://gen.pollinations.ai/v1",
+        "models": ["openai-large","claude","gemini","deepseek","qwen3-coder"],
+        "limit": "1 req/15s SEM KEY", "key_url": "Nenhuma"
+    },
+    "ollama_local": {
+        "url": "http://localhost:11434/api",
+        "models": ["llama3.3","qwen3","deepseek-r1","phi4","gemma3"],
+        "limit": "Ilimitado local", "key_url": "Nenhuma — instalar ollama.ai"
+    },
 }
 
-# Como usar para o pipeline:
-# 1. Buscar quotes de pesquisadores reais para enriquecer scripts
-# 2. Buscar papers sobre narcisismo/apego/trauma no OpenAlex/PubMed
-# 3. Monitorar trending topics de psicologia via Google Trends
-# 4. Análise de sentimento dos scripts para calibrar emoção
-```
-
----
-
-## 📊 ESTADO ATUAL DOS 400 VÍDEOS
-
-```
-SHORTS RENDERIZADOS (9/200):
-  #683 Narcisismo (Laís)              ✅ https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/mp4s/v683_cb_vB_1779287869.mp4
-  #682 Vício Emocional (Rafael)       ✅ https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/mp4s/v682_cb_vB_1779336187.mp4
-  #684 Ansiedade (Sofia)              ✅ https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/mp4s/v684_cb_vB_1779336256.mp4
-  #688 Neurociência (Lucas)           ✅ https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/mp4s/v688_cb_vB_1779336197.mp4
-  #689 Síndrome do Impostor (Marina)  ✅ https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/mp4s/v689_cb_vB_1779336216.mp4
-  #701 Depressão Silenciosa (Carla)   ✅ https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/mp4s/v701_cb_vB_1779336191.mp4
-  #710 Gaslighting (Juliana)          ✅ https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/mp4s/v710_cb_vB_1779336044.mp4
-  #711 Vício/Ex (Camila)              ✅ https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/mp4s/v711_cb_vB_1779336293.mp4
-  #712 Família (Você)                 ✅ https://tpjvalzwkqwttvmszvie.supabase.co/storage/v1/object/public/videos/mp4s/v712_cb_vB_1779336183.mp4
-
-LONGS COM SCRIPT (9/200):
-  #713 Narcisismo      → renderizando (run 26206616893)
-  #714 Vício Emocional S01
-  #715 Ansiedade
-  #716 Neurociência
-  #717 Impostor
-  #718 Depressão
-  #719 Gaslighting
-  #720 Vício Emocional S02
-  #721 Feridas de Infância
-
-PRÓXIMA AÇÃO:
-  1. Disparar Longs #714-#721 quando #713 aprovar
-  2. Configurar YouTube OAuth
-  3. Publicar #683 Long + Short em sequência
-```
-
----
-
-## 📈 REFERÊNCIAS VIRAIS (VIRAL MIRROR)
-
-```python
-# Tabela Supabase: viral_videos_reference
-# Top referências por views:
-
-VIRAL_REFS = [
-    ("Psych2Go Covert Narcissist",       "28M views", "youtube.com/watch?v=..."),
-    ("Psych2Go Abandonment",             "22M views"),
-    ("Psych2Go Childhood Trauma",        "19M views"),
-    ("Psych2Go Gaslighting",             "15M views"),
-    ("Huberman Anxiety Protocol",        "12M views"),
-    ("Psych2Go Signs of Trauma",         "10M views"),
-    ("Ali Abdaal Impostor Syndrome",     "8M views"),
+# LLMRouter V4 — fallback automático
+LLM_ROUTER = [
+    ("nvidia",  "deepseek-ai/deepseek-v4-pro"),    # 1. PRIMARY
+    ("nvidia",  "meta/llama-3.3-70b-instruct"),    # 2. fallback NVIDIA
+    ("groq",    "llama-3.3-70b-versatile"),         # 3. fallback Groq
+    ("openai",  "gpt-4o-mini"),                     # 4. fallback OpenAI
 ]
+```
 
-# Fórmulas de título viral (baseadas nas refs):
-FORMULAS = {
-    "N sinais + condição invisível":   "CTR 8-12%  → 'X Sinais de [Y] Que Ninguém Percebe'",
-    "Não é X, é Y":                   "CTR 10-15% → 'Não é Preguiça, É [Condição Real]'",
-    "Revelação perigo oculto":         "CTR 12-18% → '[X] Que Parece [Y] Mas É [Z]'",
-    "Você conhece [Nome]":             "CTR 15-20% → Hook Psych2Go estilo",
+---
+
+### CATEGORIA 9 — UTILIDADES & INFRAESTRUTURA
+
+```python
+# Categories: Development, Documents & Productivity, URL Shorteners, Security
+UTIL_APIS = {
+    # TRADUÇÃO
+    "MyMemory":       "https://api.mymemory.translated.net/get",          # ✅ 10K/dia
+    "Lingva":         "https://lingva.ml/api/v1/{src}/{target}/{text}",   # ✅ sem auth
+    "DeepL_Free":     "https://api-free.deepl.com/v2/translate",          # 500K chars/mês
+    "LibreTranslate": "https://libretranslate.com/translate",             # open source
+
+    # GRAMÁTICA & TEXTO
+    "LanguageTool":   "https://api.languagetool.org/v2/check",            # ✅ PT-BR
+    "Datamuse":       "https://api.datamuse.com/words",                   # ✅ sinônimos sem auth
+    "Free_Dictionary":"https://api.dictionaryapi.dev/api/v2/entries",     # ✅ sem auth
+    "PT_Dictionary":  "https://api.dicionario-aberto.net/word/{w}",      # ✅ PT sem auth
+
+    # STORAGE & PROCESSAMENTO
+    "Supabase":       "https://tpjvalzwkqwttvmszvie.supabase.co",         # ✅ storage + DB
+    "Cloudinary_Free":"https://api.cloudinary.com/v1_1/",                 # 25GB grátis
+    "Imgbb":          "https://api.imgbb.com/1/upload",                   # imagens (key grátis)
+    "TinyPNG":        "https://api.tinify.com",                           # compressão 500/mês
+
+    # DADOS BRASIL
+    "IBGE":           "https://servicodados.ibge.gov.br/api/v3/",        # ✅ sem auth
+    "BrasilAPI":      "https://brasilapi.com.br/api/",                   # ✅ CEP, banks, feriados
+    "ReceitaWS":      "https://receitaws.com.br/v1/cnpj/{cnpj}",         # ✅ CNPJ sem auth
+    "ViaCEP":         "https://viacep.com.br/ws/{cep}/json/",            # ✅ CEP sem auth
+
+    # IP & GEOLOCALIZAÇÃO
+    "ipapi":          "https://ipapi.co/json/",                          # ✅ location sem auth
+    "FreeGeoIP":      "https://freegeoip.app/json/",                     # ✅ geo sem auth
+    "IP_Geolocation": "https://ipgeolocation.io/ip-location/",           # free tier
+
+    # URL & PERFORMANCE
+    "TinyURL":        "https://tinyurl.com/api-create.php?url={url}",   # ✅ sem auth
+    "Rebrandly":      "https://api.rebrandly.com/v1/links",              # free tier
+    "PageSpeed":      "https://www.googleapis.com/pagespeedonline/v5/",  # key grátis
+
+    # NOTIFICAÇÕES (para WhatsApp bot futuro)
+    "Twilio":         "https://api.twilio.com/2010-04-01/",             # WhatsApp (pago, trial)
+    "CallMeBot":      "https://api.callmebot.com/whatsapp.php",          # WhatsApp sem key
+    "WhatsApp_Business":"https://graph.facebook.com/v20.0/{id}/messages",# Meta oficial
 }
+```
+
+---
+
+### CATEGORIA 10 — GOVERNO & DADOS ABERTOS
+
+```python
+# Do diretório: "Government" + "Open Data" (Brasil)
+OPEN_DATA_BR = {
+    "Portal_Dados_BR": "https://dados.gov.br/api/3/action/",              # dados.gov.br
+    "IBGE_API":        "https://servicodados.ibge.gov.br/api/v3/",        # população, economia
+    "BrasilAPI":       "https://brasilapi.com.br/api/",                   # feriados, bancos
+    "ANS":             "https://dadosabertos.ans.gov.br/api/3/action/",   # saúde suplementar
+    "CFM_CRM":         "https://portal.cfm.org.br/",                     # médicos e psicólogos
+    "CFP_API":         "https://site.cfp.org.br/",                       # Conselho Fed Psicologia
+    "DATASUS":         "https://datasus.saude.gov.br/",                  # saúde pública Brasil
+}
+```
+
+---
+
+## 🔍 COMO DESCOBRIR NOVAS APIS (AUTOMÁTICO)
+
+```python
+# 1. API do diretório público-apis (sem auth)
+import requests
+
+def search_public_apis(category=None, no_auth=True):
+    """Busca APIs no repositório público-apis"""
+    params = {}
+    if category: params["category"] = category
+    if no_auth: params["auth"] = "null"
+    r = requests.get("https://api.publicapis.org/entries", params=params, timeout=15)
+    return r.json().get("entries", [])
+
+def get_api_categories():
+    """Lista todas as categorias disponíveis"""
+    r = requests.get("https://api.publicapis.org/categories", timeout=15)
+    return r.json().get("count", 0), r.json().get("categories", [])
+
+# 2. Buscar em publicapis.dev
+def search_publicapis_dev(query):
+    """Busca em publicapis.dev"""
+    r = requests.get(f"https://publicapis.dev/api/search?query={query}", timeout=15)
+    return r.json() if r.status_code == 200 else []
+
+# 3. API do public-api-lists
+def get_api_list():
+    """Busca no public-api-lists (JSON direto)"""
+    r = requests.get("https://public-api-lists.github.io/public-api-lists/apis.json", timeout=15)
+    return r.json() if r.status_code == 200 else []
+
+# Uso:
+# search_public_apis(category="Health", no_auth=True)  # APIs de saúde sem auth
+# search_public_apis(category="Personality")            # APIs de psicologia
+# search_public_apis(category="Text Analysis")          # APIs NLP
+```
+
+---
+
+## 📊 ESTADO DOS 400 VÍDEOS
+
+```
+Shorts V31 prontos:  9/200 (IDs 682-712)
+Longs V31 scripts:   9/200 (IDs 713-721, #713 em render)
+Remotion render:     1 workflow ativo (run 26238248258)
+video_plan_400:      400 registros no Supabase
+```
+
+---
+
+## 🔐 CREDENCIAIS
+
+```
+✅ GH_PAT, Supabase, Groq, NVIDIA, OpenAI, HF_TOKEN
+⚠️ ELEVENLABS (quota) → Chatterbox padrão
+❌ FALTA: YouTube OAuth (psidanielacoelho1982@gmail.com)
+❌ FALTA: GEMINI_API_KEY (grátis: aistudio.google.com)
+❌ FALTA: INSTAGRAM_TOKEN, TIKTOK_TOKEN
+```
+
+---
+
+## 🎤 PIPELINE ÁUDIO V31
+
+```python
+TIPOS_AUDIO = {
+    "GANCHO":    (0.88, 0.12, 0.0, 0.8),
+    "IMPACTO":   (0.96, 0.09, 1.0, 1.6),   # Camera shake
+    "REVELACAO": (0.93, 0.10, 0.7, 1.4),
+    "CHORO":     (0.95, 0.08, 0.5, 1.8),
+    "PAUSA":     (0.87, 0.13, 0.4, 1.1),
+    "CTA":       (0.74, 0.26, 0.9, 0.0),
+    "NORMAL":    (0.82, 0.17, 0.0, 0.65),
+}
+GATE_SEG = "agate=threshold=0.028:ratio=8000:attack=1:release=60"
+GATE_FINAL= "highpass=f=80,agate=threshold=0.028:ratio=8000:attack=2:release=50"
+```
+
+---
+
+## 🎬 REMOTION — Stack V31
+
+```
+remotion/src/
+  index.tsx              # Root composition registry
+  compositions/
+    PsychShort.tsx       # Short 9:16 58s 1740 frames
+  components/
+    Background.tsx       # Gradiente + partículas ψ
+    AnimatedText.tsx     # Word-by-word spring physics
+    CharacterCard.tsx    # Float + halo pulsante
+    LowerThird.tsx       # Slide-in com blur
+    ProgressBar.tsx      # Barra + emojis CTA
+
+Workflow: .github/workflows/render-remotion-short.yml
 ```
 
 ---
@@ -997,76 +661,20 @@ FORMULAS = {
 ## 💰 ESTRATÉGIA R$50K/MÊS
 
 ```
-RPM psicologia BR: R$10-16 (AdSense)
-Meta: 3.5M views/mês × R$15 = R$52.500/mês
-
-ROADMAP:
-  Mês 1-2:  0→1K subs (Shorts virais + ads pagos mínimos)
-  Mês 3-4:  10K subs → R$3K/mês
-  Mês 5-6:  50K subs → R$10K/mês
-  Mês 7-8:  100K subs → R$20K/mês
-  Mês 9-10: 300K subs → R$50K/mês ✅
-
-FONTES DE RECEITA:
-  1. AdSense mid-rolls Longs (E03/E06/E09 = 3/6/9min) → principal
-  2. Shorts → crescimento de inscritos (gratuito via algoritmo)
-  3. Cursos/ebook futuro → R$50-200 ticket
-  4. Afiliados psicologia → R$15-50/conversão
-
-CUSTO ATUAL: R$0/mês (tudo gratuito)
+RPM BR psicologia: R$10-16 | Meta: 3.5M views/mês
+Mês 3-4: 10K subs → R$3K | Mês 9-10: 300K subs → R$50K
+Shorts → subs | Longs → mid-rolls (3/6/9/12min)
+Horário: 18-20h BR | Canal: UCyCkIpsVgME9yCj_oXJFheA
 ```
 
 ---
 
-## 🔗 TODOS OS LINKS IMPORTANTES
+## 🔗 LINKS
 
 ```
-NOSSO PROJETO:
-  GitHub:         https://github.com/tafita81/Repovazio
-  Vercel:         https://repovazio.vercel.app
-  Supabase:       https://app.supabase.com/project/tpjvalzwkqwttvmszvie
-  Canal YT:       https://youtube.com/@psidanielacoelho
-  Hub:            https://repovazio.vercel.app/hub.html
-  Painel 400:     https://repovazio.vercel.app/painel-400.html
-
-CONSOLES / DASHBOARDS:
-  GitHub Actions: https://github.com/tafita81/Repovazio/actions
-  Groq Console:   https://console.groq.com
-  NVIDIA Build:   https://build.nvidia.com
-  AI Studio:      https://aistudio.google.com
-  OpenRouter:     https://openrouter.ai/models?q=free
-  Cerebras:       https://cloud.cerebras.ai
-  HuggingFace:    https://huggingface.co/models
-  ElevenLabs:     https://elevenlabs.io/app
-  YouTube Studio: https://studio.youtube.com
-  GCloud Console: https://console.cloud.google.com
-
-APIs SEM KEY:
-  Pollinations:   https://image.pollinations.ai/prompt/[PROMPT]
-  Pollinations Gen: https://gen.pollinations.ai
-  ZSky AI:        https://zsky.ai/api/v1
-  Quotable:       https://api.quotable.io/random
-  ZenQuotes:      https://zenquotes.io/api/random
-  OpenAlex:       https://api.openalex.org/works
-  CrossRef:       https://api.crossref.org/works
-  PubMed:         https://eutils.ncbi.nlm.nih.gov/entrez/eutils/
-  Brasil.io:      https://brasil.io/api/
-
-DIRETÓRIOS DE APIS:
-  public-apis:    https://github.com/public-apis/public-apis
-  publicapis.dev: https://publicapis.dev
-  public-apis.io: https://public-apis.io
-  publicapis.io:  https://publicapis.io
-  public-api-lists: https://github.com/public-api-lists/public-api-lists
-  mixedanalytics: https://mixedanalytics.com/blog/list-actually-free-open-no-auth-needed-apis/
-  rapidapi:       https://rapidapi.com
-  freellm.net:    https://freellm.net
-  no-cost-ai:     https://github.com/zebbern/no-cost-ai
-
-DOCS CHAVES:
-  Pollinations API Docs: https://github.com/pollinations/pollinations/blob/main/APIDOCS.md
-  Qwen3-TTS GitHub:      https://github.com/QwenLM/Qwen3-TTS
-  Chatterbox GitHub:     https://github.com/resemble-ai/chatterbox
-  YouTube API:           https://developers.google.com/youtube/v3
-  Edge TTS GitHub:       https://github.com/rany2/edge-tts
+Hub:           https://repovazio.vercel.app/hub.html
+Vídeos:        https://repovazio.vercel.app/videos-prontos.html
+Painel 400:    https://repovazio.vercel.app/painel-400.html
+API Hub:       scripts/psicologia_apis.py
+GitHub:        https://github.com/tafita81/Repovazio
 ```
