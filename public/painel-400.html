@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ψ psicologia.doc — 400 Vídeos</title>
+<style>
+  :root{--bg:#06060F;--violet:#7C3AED;--crimson:#E11D48;--gold:#F59E0B;--gray:#1a1a2e}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:#e2e8f0;font-family:'DM Sans',sans-serif;padding:20px}
+  h1{color:var(--violet);font-size:1.4rem;margin-bottom:4px}
+  .sub{color:var(--gold);font-size:.85rem;margin-bottom:20px}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+  .stat{background:var(--gray);border-radius:10px;padding:14px;text-align:center}
+  .stat-num{font-size:2rem;font-weight:700;color:var(--violet)}
+  .stat-label{font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em}
+  .filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  .filter-btn{background:var(--gray);border:1px solid #333;color:#e2e8f0;padding:6px 12px;border-radius:20px;cursor:pointer;font-size:.8rem;transition:.2s}
+  .filter-btn.active,.filter-btn:hover{background:var(--violet);border-color:var(--violet)}
+  table{width:100%;border-collapse:collapse;font-size:.8rem}
+  th{background:var(--gray);color:#94a3b8;text-transform:uppercase;font-size:.65rem;letter-spacing:.08em;padding:8px;text-align:left;position:sticky;top:0}
+  td{padding:8px;border-bottom:1px solid #1a1a2e}
+  tr:hover td{background:#0f0f1a}
+  .badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:.7rem;font-weight:600}
+  .rendered{background:#064e3b;color:#6ee7b7}
+  .script_ready{background:#1e3a5f;color:#93c5fd}
+  .pending_script{background:#3b1a1a;color:#fca5a5}
+  .planned{background:#1a1a1a;color:#64748b}
+  .long-badge{background:#3b1f63;color:#c4b5fd}
+  .short-badge{background:#1f3b63;color:#93c5fd}
+  a{color:var(--violet);text-decoration:none}
+  a:hover{color:var(--gold)}
+  .search{background:var(--gray);border:1px solid #333;color:#e2e8f0;padding:8px 14px;border-radius:8px;font-size:.85rem;width:100%;margin-bottom:16px}
+  .progress-bar{background:#1a1a2e;border-radius:4px;height:6px;margin-top:4px}
+  .progress-fill{background:var(--violet);height:6px;border-radius:4px;transition:.3s}
+</style>
+</head>
+<body>
+<h1>ψ psicologia.doc — Painel dos 400 Vídeos</h1>
+<div class="sub">20 séries × 10 episódios × 2 formatos (Short 58s + Long 15min) = 400 vídeos</div>
+
+<div class="stats" id="stats">
+  <div class="stat"><div class="stat-num" id="total">400</div><div class="stat-label">Total Planejado</div></div>
+  <div class="stat"><div class="stat-num" id="rendered" style="color:#6ee7b7">0</div><div class="stat-label">Renderizados</div></div>
+  <div class="stat"><div class="stat-num" id="script_r" style="color:#93c5fd">0</div><div class="stat-label">Script Pronto</div></div>
+  <div class="stat"><div class="stat-num" id="pending" style="color:#fca5a5">0</div><div class="stat-label">Pendente</div></div>
+</div>
+
+<input class="search" id="search" type="text" placeholder="Buscar série, episódio, personagem...">
+
+<div class="filter-bar">
+  <button class="filter-btn active" onclick="filter('all')">Todos</button>
+  <button class="filter-btn" onclick="filter('short')">Shorts</button>
+  <button class="filter-btn" onclick="filter('long')">Longs</button>
+  <button class="filter-btn" onclick="filter('rendered')">Renderizados</button>
+  <button class="filter-btn" onclick="filter('script_ready')">Script Pronto</button>
+  <button class="filter-btn" onclick="filter('pending_script')">Pendente</button>
+</div>
+
+<div id="table-container"><p style="color:#94a3b8">Carregando dados do Supabase...</p></div>
+
+<script>
+const SB_URL='https://tpjvalzwkqwttvmszvie.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwanZhbHp3a3F3dHR2bXN6dmllIiwicm9sZSI6ImFub24iLCJpYXQiOjE2OTcwNTYyNjMsImV4cCI6MjAxMjYzMjI2M30.placeholder';
+
+let allData=[];let activeFilter='all';
+
+async function loadData(){
+  // Carregar do video_plan_400
+  const url=`${SB_URL}/rest/v1/video_plan_400?select=*&order=series_slug,ep_number,video_type&limit=500`;
+  const r=await fetch(url,{headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`}}).catch(()=>null);
+  if(r&&r.ok){
+    allData=await r.json();
+    updateStats();
+    renderTable(allData);
+  } else {
+    // Fallback: mostrar estrutura estática
+    renderStaticTable();
+  }
+}
+
+function updateStats(){
+  document.getElementById('total').textContent=allData.length;
+  document.getElementById('rendered').textContent=allData.filter(v=>v.status==='rendered').length;
+  document.getElementById('script_r').textContent=allData.filter(v=>v.status==='script_ready').length;
+  document.getElementById('pending').textContent=allData.filter(v=>v.status==='pending_script'||v.status==='planned').length;
+}
+
+function filter(f){
+  activeFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(b=>{
+    b.classList.toggle('active',b.onclick.toString().includes(`'${f}'`));
+  });
+  applyFilters();
+}
+
+function applyFilters(){
+  const q=document.getElementById('search').value.toLowerCase();
+  let data=allData;
+  if(activeFilter!=='all') data=data.filter(v=>activeFilter==='short'||activeFilter==='long'?v.video_type===activeFilter:v.status===activeFilter);
+  if(q) data=data.filter(v=>(v.series_slug+v.title+v.character_name+v.hook).toLowerCase().includes(q));
+  renderTable(data);
+}
+
+function renderTable(data){
+  const prog=data.filter(v=>v.status==='rendered').length;
+  const pct=data.length?Math.round(prog/data.length*100):0;
+  const rows=data.map(v=>`
+    <tr>
+      <td><span class="badge ${v.video_type==='long'?'long-badge':'short-badge'}">${v.video_type.toUpperCase()}</span></td>
+      <td style="color:#c4b5fd">${v.series_slug}</td>
+      <td style="color:#94a3b8">E${String(v.ep_number).padStart(2,'0')}</td>
+      <td>${v.character_name||'—'}</td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${v.hook||v.title}</td>
+      <td><span class="badge ${v.status}">${v.status}</span></td>
+      <td>${v.youtube_id?`<a href="https://youtube.com/watch?v=${v.youtube_id}" target="_blank">▶</a>`:'—'}</td>
+    </tr>`).join('');
+  document.getElementById('table-container').innerHTML=`
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+      <span style="color:#94a3b8;font-size:.8rem">${data.length} vídeos | ${pct}% concluído</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+    <br>
+    <table><thead><tr>
+      <th>Formato</th><th>Série</th><th>Ep</th><th>Personagem</th><th>Hook</th><th>Status</th><th>YT</th>
+    </tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function renderStaticTable(){
+  document.getElementById('table-container').innerHTML='<p style="color:#94a3b8">Configure a anon key do Supabase para ver dados em tempo real.</p>';
+}
+
+document.getElementById('search').addEventListener('input',applyFilters);
+loadData();
+</script>
+</body>
+</html>
