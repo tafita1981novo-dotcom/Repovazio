@@ -1,0 +1,21 @@
+{
+  "name": "psicologia-doc-remotion",
+  "version": "1.0.0",
+  "description": "Psicologia.doc — Animações React/Remotion superiores ao Psych2Go",
+  "scripts": {
+    "start": "npx remotion studio",
+    "build": "npx remotion render",
+    "render:short": "npx remotion render src/index.tsx PsychShort",
+    "render:long": "npx remotion render src/index.tsx PsychLong"
+  },
+  "dependencies": {
+    "@remotion/renderer": "^4.0.0",
+    "remotion": "^4.0.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.0",
+    "typescript": "^5.0.0"
+  }
+}
