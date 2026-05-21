@@ -4,11 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       video_id:
-        description: "ID do vídeo no Supabase content_pipeline"
+        description: "ID do vídeo no Supabase"
         required: true
         default: "683"
       composition:
-        description: "Composição Remotion (PsychShort | PsychLong)"
+        description: "PsychShort ou PsychLong"
         required: false
         default: "PsychShort"
 
@@ -16,8 +16,6 @@ env:
   VIDEO_ID: ${{ github.event.inputs.video_id }}
   COMPOSITION: ${{ github.event.inputs.composition || 'PsychShort' }}
   SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-  NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
-  GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
 
 jobs:
   render-remotion:
@@ -26,77 +24,153 @@ jobs:
     timeout-minutes: 90
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      # Node.js para Remotion
       - name: Setup Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
-          cache-dependency-path: "remotion/package.json"
 
-      # Python para geração de áudio e props
       - name: Setup Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      # Deps do sistema (Chromium para Remotion)
-      - name: Install system deps
+      - name: Install Chromium
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y chromium-browser ffmpeg
+          echo "CHROMIUM=$(which chromium-browser)" >> $GITHUB_ENV
 
-      # Deps Node (Remotion)
       - name: Install Remotion deps
         run: |
           cd remotion
-          npm install --prefer-offline
+          npm install
           echo "✅ Remotion instalado"
 
-      # Deps Python (áudio)
       - name: Install Python deps
+        continue-on-error: true
         run: |
-          pip install --break-system-packages \
-            requests edge-tts soundfile \
-            torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
-          pip install --break-system-packages chatterbox-tts || echo "Chatterbox unavailable, using EdgeTTS"
-          echo "✅ Python deps instaladas"
+          pip install --break-system-packages requests edge-tts || true
+          pip install --break-system-packages chatterbox-tts || echo "Chatterbox indisponível"
 
-      # Gerar props.json (áudio + imagens + timing)
-      - name: Generate Remotion props
+      - name: Generate props.json from Supabase
         run: |
-          python scripts/render_remotion_short.py
-        env:
-          VIDEO_ID: ${{ env.VIDEO_ID }}
+          python3 - << 'EOF'
+          import os, json, re, asyncio, subprocess, sys, requests
 
-      # Render com Remotion React
+          VIDEO_ID = os.environ.get("VIDEO_ID", "683")
+          SB_URL   = "https://tpjvalzwkqwttvmszvie.supabase.co"
+          SB_KEY   = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
+          FPS, TOTAL = 30, 1740
+
+          # Buscar script
+          rows = requests.get(f"{SB_URL}/rest/v1/content_pipeline?id=eq.{VIDEO_ID}&select=id,title,script,series_slug,ep_number",
+            headers={"apikey":SB_KEY,"Authorization":f"Bearer {SB_KEY}"}, timeout=15).json()
+          if not rows: sys.exit(1)
+          row = rows[0]
+
+          lines = [l.strip() for l in row.get("script","").split("\n") if l.strip()]
+
+          def classify(l):
+            t = l.lower()
+            if any(k in t for k in ["salva","não perder","vídeo completo"]): return "CTA"
+            if any(k in t for k in ["tem nome","se chama","chama-se"]): return "REVELACAO"
+            if any(k in t for k in ["chora","desmorou","não conseguia"]): return "CHORO"
+            if len(l) < 35: return "IMPACTO"
+            if "..." in l or l.endswith("?"): return "PAUSA"
+            if any(k in t for k in ["você conhece","conheça","imagine"]): return "GANCHO"
+            return "NORMAL"
+
+          # Grupos + timing
+          SILENCE = {"GANCHO":(0,25),"IMPACTO":(27,42),"REVELACAO":(21,36),
+                     "CHORO":(15,54),"CTA":(27,0),"PAUSA":(12,33),"NORMAL":(0,20)}
+          groups_raw = []
+          i = 0
+          while i < len(lines):
+            tp = classify(lines[i])
+            if tp in ("IMPACTO","REVELACAO","CHORO","GANCHO","PAUSA","CTA"):
+              groups_raw.append((lines[i], tp))
+            else:
+              if i+1 < len(lines) and classify(lines[i+1]) == "NORMAL":
+                groups_raw.append((lines[i]+" "+lines[i+1], "NORMAL")); i += 1
+              else:
+                groups_raw.append((lines[i], "NORMAL"))
+            i += 1
+
+          weights = [len(t)*1.5 + SILENCE.get(tp,(0,20))[0] + SILENCE.get(tp,(0,20))[1] for t,tp in groups_raw]
+          total_w = sum(weights) or 1
+          avail   = TOTAL - 40
+          CHAR_MAP = {"GANCHO":"daniela","NORMAL":"daniela","IMPACTO":"marcos",
+                      "CHORO":"sara","REVELACAO":"ana","PAUSA":"sara","CTA":"daniela"}
+          SB_IMG_URL = f"{SB_URL}/storage/v1/object/public/images/bank"
+
+          groups, images, cur = [], [], 30
+          for j,(text,tp) in enumerate(groups_raw):
+            groups.append({"text":text,"type":tp,"startFrame":cur})
+            char = CHAR_MAP.get(tp,"daniela")
+            img = f"https://image.pollinations.ai/prompt/{char}%20kawaii%20chibi%20anime?width=576&height=1024&seed={int(VIDEO_ID)+j}&nologo=true"
+            images.append({"url":img,"startFrame":cur,"character":char})
+            cur += int((weights[j]/total_w)*avail)
+
+          props = {"videoId":int(VIDEO_ID),"title":row["title"],"audioUrl":"",
+                   "groups":groups,"images":images,
+                   "seriesSlug":row.get("series_slug",""),"epNumber":row.get("ep_number",1)}
+
+          os.makedirs("/tmp/remotion_props", exist_ok=True)
+          with open("/tmp/remotion_props/props.json","w") as f:
+            json.dump(props, f, ensure_ascii=False, indent=2)
+          print(f"✅ props.json: {len(groups)} grupos, {len(images)} imagens")
+          EOF
+
       - name: Render with Remotion
         run: |
-          PROPS_PATH=$(ls /tmp/remotion_${VIDEO_ID}_*/props.json | head -1)
-          OUTPUT=$(ls /tmp/remotion_${VIDEO_ID}_*/*.mp4 2>/dev/null | head -1)
-          if [ -f "$OUTPUT" ]; then
-            echo "✅ MP4 gerado pelo script Python: $OUTPUT"
-          else
-            echo "🎬 Renderizando via npx remotion..."
-            cd remotion
-            npx remotion render src/index.tsx ${COMPOSITION} /tmp/output_v${VIDEO_ID}.mp4 \
-              --props="$PROPS_PATH" \
-              --codec=h264 \
-              --fps=30 \
-              --width=576 \
-              --height=1024 \
-              --browser-executable=$(which chromium-browser)
-            echo "✅ Remotion render concluído"
-          fi
+          mkdir -p /tmp/remotion_out
+          cd remotion
+          npx remotion render src/index.tsx $COMPOSITION /tmp/remotion_out/v${VIDEO_ID}_remotion.mp4 \
+            --props="/tmp/remotion_props/props.json" \
+            --codec=h264 \
+            --fps=30 \
+            --width=576 \
+            --height=1024 \
+            --browser-executable=$CHROMIUM \
+            --log=verbose
+          echo "✅ Render concluído"
+          ls -lh /tmp/remotion_out/
 
-      - name: Upload artifact (debug)
+      - name: Upload to Supabase Storage
+        run: |
+          python3 - << 'EOF'
+          import os, requests
+
+          SB_URL = "https://tpjvalzwkqwttvmszvie.supabase.co"
+          SB_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY","")
+          VID    = os.environ.get("VIDEO_ID","683")
+          mp4    = f"/tmp/remotion_out/v{VID}_remotion.mp4"
+          if not os.path.exists(mp4):
+            print("❌ MP4 não encontrado"); exit(1)
+
+          with open(mp4,"rb") as f: data = f.read()
+          r = requests.put(f"{SB_URL}/storage/v1/object/videos/mp4s/v{VID}_remotion.mp4",
+            headers={"apikey":SB_KEY,"Authorization":f"Bearer {SB_KEY}",
+                     "Content-Type":"video/mp4","x-upsert":"true"},
+            data=data, timeout=120)
+          if r.status_code >= 300:
+            print(f"❌ Upload: {r.text}"); exit(1)
+
+          video_url = f"{SB_URL}/storage/v1/object/public/videos/mp4s/v{VID}_remotion.mp4"
+          requests.patch(f"{SB_URL}/rest/v1/content_pipeline?id=eq.{VID}",
+            headers={"apikey":SB_KEY,"Authorization":f"Bearer {SB_KEY}",
+                     "Content-Type":"application/json","Prefer":"return=minimal"},
+            json={"video_url":video_url,"status":"pending_credentials"})
+          print(f"✅ {video_url}")
+          EOF
+
+      - name: Upload artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: remotion-short-${{ env.VIDEO_ID }}
-          path: /tmp/remotion_${{ env.VIDEO_ID }}_*/*.mp4
+          name: remotion-v${{ env.VIDEO_ID }}
+          path: /tmp/remotion_out/*.mp4
           if-no-files-found: ignore
-          retention-days: 3
+          retention-days: 7
