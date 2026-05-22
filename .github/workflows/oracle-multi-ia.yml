@@ -1,0 +1,31 @@
+name: Oracle Multi-IA Daily Content
+
+on:
+  schedule:
+    - cron: "0 12 * * *"   # Meio-dia UTC = 9h BR
+  workflow_dispatch:
+    inputs:
+      topico:
+        description: "Topico do video"
+        default: "narcisismo encoberto sinais"
+
+jobs:
+  oracle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install requests --break-system-packages
+      - name: Oracle Multi-IA - Gerar conteudo com 5 LLMs
+        env:
+          GROQ_API_KEY:              ${{ secrets.GROQ_API_KEY }}
+          NVIDIA_API_KEY:            ${{ secrets.NVIDIA_API_KEY }}
+          CEREBRAS_API_KEY:          ${{ secrets.CEREBRAS_API_KEY }}
+          TOGETHER_API_KEY:          ${{ secrets.TOGETHER_API_KEY }}
+          OPENROUTER_API_KEY:        ${{ secrets.OPENROUTER_API_KEY }}
+          SUPABASE_URL:              ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          HF_TOKEN:                  ${{ secrets.HF_TOKEN }}
+        run: python3 scripts/multi_ai_oracle.py
