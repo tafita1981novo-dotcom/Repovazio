@@ -1,0 +1,29 @@
+name: Brain Expand — Meta 40K APIs
+
+on:
+  schedule:
+    - cron: "30 2 * * *"   # 1x por dia 02:30 UTC
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Meta de APIs"
+        default: "40000"
+
+jobs:
+  expand:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install requests huggingface-hub --break-system-packages
+      - name: Expand Brain to 40K
+        env:
+          SUPABASE_URL:              ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          HF_TOKEN:                  ${{ secrets.HF_TOKEN }}
+          TARGET:                    ${{ github.event.inputs.target || '40000' }}
+        run: |
+          echo "Meta: $TARGET APIs"
+          python3 scripts/brain_auto_expand_40k.py
