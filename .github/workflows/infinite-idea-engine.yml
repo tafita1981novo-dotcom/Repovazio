@@ -1,0 +1,29 @@
+name: Infinite Idea Engine — Gerador Combinatorial Infinito
+
+on:
+  schedule:
+    - cron: "0 4,12,20 * * *"  # 3x por dia: 4h 12h 20h UTC
+  workflow_dispatch:
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install requests --break-system-packages
+      - name: Run Infinite Idea Engine
+        env:
+          GROQ_API_KEY:              ${{ secrets.GROQ_API_KEY }}
+          NVIDIA_API_KEY:            ${{ secrets.NVIDIA_API_KEY }}
+          SUPABASE_URL:              ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: python3 scripts/infinite_idea_engine.py
+      - name: Run Quantum Brain Combinatorial
+        env:
+          GROQ_API_KEY:              ${{ secrets.GROQ_API_KEY }}
+          SUPABASE_URL:              ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: python3 scripts/quantum_brain_engine.py 5
