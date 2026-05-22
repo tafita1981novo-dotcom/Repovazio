@@ -1,0 +1,39 @@
+name: Affiliate UGC Engine — Auto Run
+
+on:
+  schedule:
+    - cron: "0 10,18 * * *"   # Roda 2x/dia: 7h e 15h BR (picos TikTok/IG)
+  workflow_dispatch:
+    inputs:
+      nicho:
+        description: "Nicho específico (ou vazio para auto)"
+        default: ""
+      plataforma:
+        description: "Plataforma afiliado (shopee/amazon/hotmart)"
+        default: "shopee"
+
+jobs:
+  gerar-conteudo-afiliado:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      
+      - name: Install dependencies
+        run: pip install requests --break-system-packages
+      
+      - name: Pesquisar nicho e gerar workflow
+        env:
+          GROQ_API_KEY:            ${{ secrets.GROQ_API_KEY }}
+          NVIDIA_API_KEY:          ${{ secrets.NVIDIA_API_KEY }}
+          HIGFIELD_API_KEY:        ${{ secrets.HIGFIELD_API_KEY }}
+          HEYGEN_API_KEY:          ${{ secrets.HEYGEN_API_KEY }}
+          DID_API_KEY:             ${{ secrets.DID_API_KEY }}
+          SUPABASE_URL:            ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: python3 scripts/affiliate_ugc_engine.py
+      
+      - name: Salvar resultado
+        run: |
+          echo "Workflow de afiliados executado: $(date)" >> logs/affiliate.log
