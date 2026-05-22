@@ -1,0 +1,166 @@
+{
+  "album": "Psicologia Sonora — Vol. 1",
+  "artista": "Daniela Coelho",
+  "genero": "Ambient / Wellness / Psychology",
+  "distribuidora": "Amuse (gratis) ou DistroKid",
+  "trilhas": [
+    {
+      "numero": 1,
+      "titulo": "Regulação do Sistema Nervoso",
+      "duracao_min": 8,
+      "prompt_stable_audio": "Calm ambient music for nervous system regulation, slow theta waves 6Hz, soft piano, warm pads, nature sounds subtle rain, no melody just texture, 8 minutes, psychological healing, 432Hz tuning, peaceful and grounding",
+      "tags_spotify": [
+        "ambient",
+        "wellness",
+        "anxiety relief",
+        "nervous system",
+        "calm"
+      ],
+      "descricao": "Trilha para exercícios de regulação do sistema nervoso autônomo. Frequência theta associada a estados de relaxamento profundo.",
+      "royalty_uso": "Meditação guiada, yoga, terapia, estudo"
+    },
+    {
+      "numero": 2,
+      "titulo": "Processamento de Trauma",
+      "duracao_min": 12,
+      "prompt_stable_audio": "Deep healing ambient soundscape for trauma processing, EMDR session background music, bilateral sound movement left to right, soft orchestral strings, no sudden changes, very gentle and safe feeling, 12 minutes, 528Hz healing frequency",
+      "tags_spotify": [
+        "trauma",
+        "EMDR",
+        "healing",
+        "therapy",
+        "bilateral"
+      ],
+      "descricao": "Música bilateral para acompanhar sessões de EMDR e processamento de memórias traumáticas. Movimento sonoro suave entre canais.",
+      "royalty_uso": "Terapeutas, sessões EMDR, self-healing"
+    },
+    {
+      "numero": 3,
+      "titulo": "Ansiedade — Retorno ao Presente",
+      "duracao_min": 10,
+      "prompt_stable_audio": "Grounding meditation music for anxiety relief, 5-4-3-2-1 senses exercise background, earthy tones, low frequency drone, forest sounds, slow breathing rhythm suggestion, 10 minutes, gentle and present-moment focused",
+      "tags_spotify": [
+        "anxiety",
+        "grounding",
+        "mindfulness",
+        "panic relief",
+        "breathing"
+      ],
+      "descricao": "Trilha para o exercício dos 5 sentidos. Frequências graves que ativam o sistema parassimpático e retornam ao momento presente.",
+      "royalty_uso": "Ataques de pânico, ansiedade generalizada, mindfulness"
+    },
+    {
+      "numero": 4,
+      "titulo": "Sono Profundo — Ondas Delta",
+      "duracao_min": 45,
+      "prompt_stable_audio": "Sleep music delta waves 1-4Hz binaural beats, very slow ambient drone, no percussion, dark and warm tones, gradually slowing tempo, 45 minutes, deep sleep induction, soft pink noise layer, peaceful and heavy",
+      "tags_spotify": [
+        "sleep",
+        "delta waves",
+        "insomnia",
+        "deep sleep",
+        "binaural"
+      ],
+      "descricao": "45 minutos de batidas binaurais delta (1-4Hz) para indução do sono profundo. Estudos mostram que ondas delta reduzem cortisol em 30%.",
+      "royalty_uso": "Insônia, distúrbios do sono, recuperação"
+    },
+    {
+      "numero": 5,
+      "titulo": "Foco Cognitivo — Ondas Alpha",
+      "duracao_min": 25,
+      "prompt_stable_audio": "Focus music alpha waves 8-12Hz, study and concentration background, light piano, no lyrics, steady rhythm, 25 minutes, cognitive enhancement, gentle white noise, Pomodoro friendly, clear and bright tone",
+      "tags_spotify": [
+        "focus",
+        "alpha waves",
+        "study",
+        "concentration",
+        "ADHD"
+      ],
+      "descricao": "Frequências alpha para estados de foco relaxado. Amplamente usadas por estudantes e profissionais com TDAH.",
+      "royalty_uso": "Estudo, trabalho, TDAH, performance cognitiva"
+    },
+    {
+      "numero": 6,
+      "titulo": "Autocompaixão — Voz Interior",
+      "duracao_min": 15,
+      "prompt_stable_audio": "Self-compassion meditation music, warm and gentle, mother's heartbeat rhythm 72bpm, soft strings, safe and nurturing feeling, healing tone, 15 minutes, inner child work, soft and embracing, no tension",
+      "tags_spotify": [
+        "self-compassion",
+        "inner child",
+        "healing",
+        "self-love",
+        "meditation"
+      ],
+      "descricao": "Ritmo cardíaco materno (72bpm) associado à sensação de segurança primária. Base para trabalho de autocompaixão e criança interior.",
+      "royalty_uso": "Meditação, terapia de autocompaixão, TCC"
+    },
+    {
+      "numero": 7,
+      "titulo": "Limites Saudáveis — Força Interior",
+      "duracao_min": 8,
+      "prompt_stable_audio": "Empowerment ambient music for boundary setting, grounded and strong feeling, low cello, steady pulse, earthy and rooted, 8 minutes, inner strength, courage building, not aggressive but firm and clear",
+      "tags_spotify": [
+        "empowerment",
+        "boundaries",
+        "strength",
+        "self-worth",
+        "courage"
+      ],
+      "descricao": "Para momentos antes de conversas difíceis. Frequências que ativam o sistema de autoafirmação sem criar estado de luta ou fuga.",
+      "royalty_uso": "Comunicação assertiva, estabelecer limites"
+    },
+    {
+      "numero": 8,
+      "titulo": "Luto — Espaço para Sentir",
+      "duracao_min": 20,
+      "prompt_stable_audio": "Grief music and emotional release ambient, safe container for crying and feeling, melancholic but not despairing, solo cello, slow tempo 50bpm, 20 minutes, emotional processing, gentle and holding space",
+      "tags_spotify": [
+        "grief",
+        "loss",
+        "emotional processing",
+        "healing",
+        "cry"
+      ],
+      "descricao": "Container sonoro seguro para o processo de luto. Pesquisas de Kübler-Ross mostram que a expressão emocional ativa acelera a integração da perda.",
+      "royalty_uso": "Luto, perdas, divórcio, término de relacionamentos"
+    },
+    {
+      "numero": 9,
+      "titulo": "Apego Seguro — Regulação Relacional",
+      "duracao_min": 18,
+      "prompt_stable_audio": "Secure attachment ambient music, warm relational field, gentle call and response musical phrases suggesting healthy relationship, 18 minutes, attachment healing, safe and connected, peaceful harmony, no dissonance",
+      "tags_spotify": [
+        "attachment",
+        "relationships",
+        "healing",
+        "secure base",
+        "love"
+      ],
+      "descricao": "Baseada na teoria do apego de Ainsworth. Padrões sonoros de call-and-response que simulam interação segura e responsiva.",
+      "royalty_uso": "Terapia de casal, trabalho de apego, relacionamentos"
+    },
+    {
+      "numero": 10,
+      "titulo": "Neuroplasticidade — Criação de Novos Padrões",
+      "duracao_min": 30,
+      "prompt_stable_audio": "Neuroplasticity meditation music, gamma waves 40Hz subtle, new pattern formation, open and expansive feeling, 30 minutes, brain rewiring, hopeful and potential-filled tone, gentle evolution in the music, building and growing",
+      "tags_spotify": [
+        "neuroplasticity",
+        "brain",
+        "change",
+        "growth",
+        "transformation"
+      ],
+      "descricao": "Frequências gamma (40Hz) associadas à consolidação de memórias e formação de novos padrões neurais. Estudos do MIT mostram melhora cognitiva.",
+      "royalty_uso": "Neuroreabilitação, mudança de hábitos, TCC"
+    }
+  ],
+  "instrucoes_upload": {
+    "passo_1": "Gerar cada trilha: huggingface.co/spaces/stabilityai/stable-audio-open (gratis, sem login)",
+    "passo_2": "Exportar como WAV 44.1kHz",
+    "passo_3": "Criar conta Amuse.io (gratis) ou DistroKid ($19/ano todos os álbuns)",
+    "passo_4": "Upload album completo — Spotify recebe em 24-48h",
+    "passo_5": "Registrar no ASCAP.com (gratis) para performance royalties USA",
+    "passo_6": "Royalties chegam mensalmente via PayPal/transferência"
+  }
+}
