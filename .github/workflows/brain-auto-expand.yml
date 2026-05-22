@@ -1,35 +1,22 @@
-name: Quantum Brain Auto-Expand
+name: Brain Auto-Expand 40K APIs
 
 on:
   schedule:
-    - cron: "0 3 * * *"  # 3h UTC = 0h BR — expande o cérebro toda noite
+    - cron: "0 3 * * *"   # 3h UTC diario
   workflow_dispatch:
-    inputs:
-      mode:
-        description: "Modo de descoberta (all/hf/publicapis/apis_guru)"
-        default: "all"
 
 jobs:
-  expand-brain:
+  expand:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: { python-version: "3.11" }
-      
-      - name: Install deps
-        run: pip install requests --break-system-packages
-      
-      - name: Run Discovery Engine
+        with: {python-version: "3.11"}
+      - run: pip install requests --break-system-packages
+      - name: Auto-Expand Brain to 40K
         env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_URL:              ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: |
-          MODE="${{ github.event.inputs.mode || 'all' }}"
-          python3 scripts/discovery_engine.py --$MODE
-      
-      - name: Report count
-        env:
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: |
-          python3 scripts/brain_card.py --stats
+          GROQ_API_KEY:              ${{ secrets.GROQ_API_KEY }}
+        run: python3 scripts/brain_auto_expand_40k.py
