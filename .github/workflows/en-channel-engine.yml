@@ -1,0 +1,23 @@
+name: EN Channel Engine — Auto Translate PT→EN
+
+on:
+  workflow_dispatch:
+    inputs:
+      video_id:
+        description: "ID do video para traduzir"
+        default: "683"
+
+jobs:
+  translate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install requests --break-system-packages
+      - name: Run EN Channel Engine
+        env:
+          DEEPL_API_KEY:             ${{ secrets.DEEPL_API_KEY }}
+          SUPABASE_URL:              ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: python3 scripts/en_channel_engine.py
