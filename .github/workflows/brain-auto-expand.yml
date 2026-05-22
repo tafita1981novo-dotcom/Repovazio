@@ -1,0 +1,35 @@
+name: Quantum Brain Auto-Expand
+
+on:
+  schedule:
+    - cron: "0 3 * * *"  # 3h UTC = 0h BR — expande o cérebro toda noite
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Modo de descoberta (all/hf/publicapis/apis_guru)"
+        default: "all"
+
+jobs:
+  expand-brain:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      
+      - name: Install deps
+        run: pip install requests --break-system-packages
+      
+      - name: Run Discovery Engine
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          MODE="${{ github.event.inputs.mode || 'all' }}"
+          python3 scripts/discovery_engine.py --$MODE
+      
+      - name: Report count
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          python3 scripts/brain_card.py --stats
