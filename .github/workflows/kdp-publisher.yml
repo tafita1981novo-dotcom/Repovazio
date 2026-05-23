@@ -1,0 +1,24 @@
+name: KDP — Gerar PDF Workbook
+
+on:
+  workflow_dispatch:
+
+jobs:
+  kdp:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install reportlab requests --break-system-packages
+      - name: Generate KDP PDF
+        env:
+          GH_PAT:              ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY:   ${{ github.repository }}
+        run: python3 scripts/kdp_converter.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kdp-workbook-pdf
+          path: output/kdp/*.pdf
+          retention-days: 90
