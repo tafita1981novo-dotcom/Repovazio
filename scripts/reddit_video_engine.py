@@ -56,7 +56,7 @@ def transformar_em_roteiro(posts: list, idioma: str = "PT-BR") -> dict:
         headers={"Authorization": f"Bearer {GROQ_KEY}", "Content-Type": "application/json"},
         json={"model": "llama-3.3-70b-versatile",
               "messages": [{"role":"user","content": f"""
-Você é Daniela Coelho, psicóloga brasileira.
+Você é Daniela Coelho, pesquisadora de comportamento humano brasileira.
 Estas são perguntas reais de pessoas em sofrimento no Reddit:
 {posts_texto}
 
