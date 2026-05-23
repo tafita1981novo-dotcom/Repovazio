@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "esnext",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": false,
@@ -14,9 +18,27 @@
     "jsx": "preserve",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"]
+      "@/*": [
+        "./*"
+      ]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"],
-  "exclude": ["node_modules", "supabase/**", "scripts/**", "backups/**"]
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.js",
+    "**/*.jsx"
+  ],
+  "exclude": [
+    "node_modules",
+    "supabase/**",
+    "scripts/**",
+    "backups/**",
+    "remotion",
+    "remotion/**",
+    "scripts",
+    "output",
+    "**/*.py"
+  ]
 }
