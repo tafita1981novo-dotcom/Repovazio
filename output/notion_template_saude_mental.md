@@ -131,7 +131,7 @@ Baseado em SMART + valores pessoais
 
 ## SOBRE A CRIADORA
 
-Daniela Coelho é psicóloga com foco em regulação emocional e relações interpessoais. Este template é baseado em décadas de pesquisa em TCC, teoria do apego, neurociência afetiva e mindfulness.
+Daniela Coelho é pesquisadora de comportamento humano com foco em regulação emocional e relações interpessoais. Este template é baseado em décadas de pesquisa em TCC, teoria do apego, neurociência afetiva e mindfulness.
 
 *Se este template te ajudou, compartilhe com alguém que precisa.*
 
