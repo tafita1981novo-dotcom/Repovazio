@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Interview Assistant Pro — Coach de Entrevistas em Inglês com IA</title>
+<meta name="description" content="IA que ouve a pergunta e gera sua resposta com fonética em tempo real. Para analistas de dados brasileiros.">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:#0A0A0F;color:#E8E8F0;min-height:100vh}
+.hero{text-align:center;padding:5rem 2rem 3rem;background:linear-gradient(180deg,#0D0D1A 0%,#0A0A0F 100%)}
+.badge{display:inline-block;background:#1A2744;color:#60A5FA;font-size:.75rem;font-weight:600;padding:.3rem .8rem;border-radius:100px;margin-bottom:1.5rem;letter-spacing:.05em}
+h1{font-size:clamp(1.8rem,5vw,3rem);font-weight:700;line-height:1.15;margin-bottom:1rem}
+h1 span{color:#3B82F6}
+.sub{font-size:1.1rem;color:#94A3B8;max-width:600px;margin:0 auto 2rem;line-height:1.7}
+.cta-row{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-bottom:1rem}
+.btn-primary{background:#3B82F6;color:#fff;padding:.9rem 2rem;border-radius:8px;font-size:1rem;font-weight:600;text-decoration:none;transition:background .2s}
+.btn-primary:hover{background:#2563EB}
+.btn-ghost{background:transparent;color:#94A3B8;padding:.9rem 2rem;border-radius:8px;font-size:1rem;border:1px solid #334155;text-decoration:none}
+.price-note{font-size:.85rem;color:#64748B}
+.demo-box{background:#0F172A;border:1px solid #1E293B;border-radius:16px;padding:1.5rem;max-width:500px;margin:2rem auto;text-align:left}
+.demo-label{font-size:.7rem;font-weight:600;color:#64748B;letter-spacing:.08em;text-transform:uppercase;margin-bottom:.5rem}
+.demo-question{background:#1E293B;border-radius:8px;padding:.75rem 1rem;margin-bottom:1rem;font-size:.9rem;color:#CBD5E1}
+.demo-answer{background:#172554;border:1px solid #1D4ED8;border-radius:8px;padding:.75rem 1rem;margin-bottom:.5rem;font-size:.9rem;color:#BFDBFE;line-height:1.7}
+.demo-phonetic{font-size:.75rem;color:#60A5FA;font-style:italic}
+.section{padding:4rem 2rem;max-width:900px;margin:0 auto}
+.section h2{font-size:1.75rem;font-weight:700;margin-bottom:.75rem;text-align:center}
+.section .lead{text-align:center;color:#94A3B8;margin-bottom:3rem}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.5rem}
+.card{background:#0F172A;border:1px solid #1E293B;border-radius:12px;padding:1.5rem}
+.card .icon{font-size:2rem;margin-bottom:.75rem}
+.card h3{font-size:1rem;font-weight:600;margin-bottom:.5rem}
+.card p{font-size:.88rem;color:#94A3B8;line-height:1.6}
+.pricing{background:#0F172A;border:2px solid #3B82F6;border-radius:16px;padding:2rem;max-width:400px;margin:0 auto;text-align:center}
+.price{font-size:2.5rem;font-weight:700;color:#3B82F6;margin:1rem 0 .25rem}
+.price-sub{font-size:.85rem;color:#64748B;margin-bottom:1.5rem}
+.list{list-style:none;padding:0;text-align:left;margin-bottom:2rem}
+.list li{display:flex;align-items:center;gap:.6rem;padding:.4rem 0;font-size:.9rem;color:#CBD5E1}
+.list li::before{content:"✓";color:#3B82F6;font-weight:700}
+.faq{max-width:700px;margin:0 auto}
+.faq-item{border-bottom:1px solid #1E293B;padding:1.25rem 0}
+.faq-item h4{font-size:.95rem;font-weight:600;margin-bottom:.5rem;color:#E8E8F0}
+.faq-item p{font-size:.88rem;color:#94A3B8;line-height:1.6}
+footer{text-align:center;padding:2rem;color:#475569;font-size:.8rem;border-top:1px solid #1E293B}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="badge">🔴 AO VIVO · IA em Tempo Real</div>
+  <h1>Nunca mais trave em uma<br><span>entrevista em inglês</span></h1>
+  <p class="sub">A IA ouve a pergunta, gera sua resposta ideal com fonética e você fala com confiança — em segundos. Para analistas de dados brasileiros.</p>
+  <div class="cta-row">
+    <a href="https://interview-assistant-pro-sigma.vercel.app" class="btn-primary" target="_blank">Experimentar grátis 7 dias →</a>
+    <a href="#como-funciona" class="btn-ghost">Ver como funciona</a>
+  </div>
+  <p class="price-note">Sem cartão · Cancela quando quiser</p>
+
+  <div class="demo-box">
+    <div class="demo-label">Entrevistador pergunta:</div>
+    <div class="demo-question">💬 "Tell me about a time you improved reporting performance at your company."</div>
+    <div class="demo-label">IA gera sua resposta:</div>
+    <div class="demo-answer">At Coca-Cola, I redesigned our Power BI dashboards using star schema and DAX optimization, cutting report load time by 70% and increasing adoption by 45%.</div>
+    <div class="demo-phonetic">🔊 At (et) Coca-Cola (Koka-Kola), I (Ai) redesigned (ri-di-záind) our (áuer) Power BI (páuer bi-ái)...</div>
+  </div>
+</div>
+
+<div class="section" id="como-funciona">
+  <h2>Como funciona</h2>
+  <p class="lead">Simples. Discreto. Funciona durante a entrevista real.</p>
+  <div class="grid3">
+    <div class="card">
+      <div class="icon">🎙</div>
+      <h3>1. Abre no celular</h3>
+      <p>Acesse pelo celular durante a entrevista. O entrevistador não vê sua tela — só você.</p>
+    </div>
+    <div class="card">
+      <div class="icon">⚡</div>
+      <h3>2. IA ouve a pergunta</h3>
+      <p>Ative o microfone. A IA transcreve e identifica a pergunta em segundos.</p>
+    </div>
+    <div class="card">
+      <div class="icon">📖</div>
+      <h3>3. Leia com fonética</h3>
+      <p>A resposta aparece com fonética em português. Você pronuncia corretamente sem pensar.</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>Para quem é</h2>
+  <p class="lead">Criado por analista de dados brasileiro, para analistas de dados brasileiros.</p>
+  <div class="grid3">
+    <div class="card">
+      <div class="icon">📊</div>
+      <h3>Analistas de Dados</h3>
+      <p>Power BI, Tableau, SQL, Python, dbt — a IA conhece sua stack e gera respostas técnicas precisas.</p>
+    </div>
+    <div class="card">
+      <div class="icon">🌎</div>
+      <h3>Vagas Internacionais</h3>
+      <p>Empresas americanas, europeias ou remoto global. Entrevistas em inglês que você não pode errar.</p>
+    </div>
+    <div class="card">
+      <div class="icon">🎯</div>
+      <h3>Nível Sênior / Lead</h3>
+      <p>Perguntas comportamentais (STAR), leadership, data strategy — respostas no nível certo.</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>Preço</h2>
+  <p class="lead">Quanto vale a vaga que você vai conseguir?</p>
+  <div class="pricing">
+    <div style="font-size:.85rem;color:#64748B">Acesso completo</div>
+    <div class="price">$197</div>
+    <div class="price-sub">pagamento único · acesso vitalício</div>
+    <ul class="list">
+      <li>Respostas ilimitadas em tempo real</li>
+      <li>Fonética para todas as respostas</li>
+      <li>Perguntas técnicas (SQL, Python, BI)</li>
+      <li>Perguntas comportamentais (STAR)</li>
+      <li>Salary negotiation em inglês</li>
+      <li>Atualiza com novas features</li>
+    </ul>
+    <a href="https://interview-assistant-pro-sigma.vercel.app" class="btn-primary" style="display:block;text-align:center;text-decoration:none" target="_blank">Comprar acesso vitalício</a>
+    <p style="font-size:.75rem;color:#475569;margin-top:.75rem">Ou 7 dias grátis · sem cartão necessário</p>
+  </div>
+</div>
+
+<div class="section">
+  <h2>Perguntas Frequentes</h2>
+  <div class="faq">
+    <div class="faq-item">
+      <h4>O entrevistador vai saber que estou usando?</h4>
+      <p>Não. Você usa no celular, fora do campo de visão da câmera. A interface é discreta — parece qualquer app de notas.</p>
+    </div>
+    <div class="faq-item">
+      <h4>Funciona para entrevistas de emprego internacionais?</h4>
+      <p>Sim. As respostas são em inglês americano neutro, com fonética adaptada para falantes de português brasileiro.</p>
+    </div>
+    <div class="faq-item">
+      <h4>Precisa de internet durante a entrevista?</h4>
+      <p>Sim, precisa de conexão para processar a voz e gerar a resposta. Recomendamos Wi-Fi estável ou dados 4G/5G.</p>
+    </div>
+    <div class="faq-item">
+      <h4>A IA conhece meu perfil?</h4>
+      <p>O assistente foi treinado com perfil de Senior Data Analyst com 18+ anos de experiência em Power BI, Tableau, SQL, Python, Databricks e multi-cloud.</p>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Interview Assistant Pro · Powered by AI · Para analistas de dados brasileiros
+</footer>
+
+</body>
+</html>
