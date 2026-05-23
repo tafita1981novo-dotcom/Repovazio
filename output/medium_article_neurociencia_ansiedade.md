@@ -1,6 +1,6 @@
 # Neurociência da Ansiedade: O Que Acontece no Seu Cérebro (e Por Que Isso Muda Tudo)
 
-*Por Daniela Coelho | Psicóloga*
+*Por Daniela Coelho | Daniela Coelho*
 
 ---
 
@@ -72,4 +72,4 @@ O mesmo se aplica à ansiedade. A saída não é pensar diferente. É primeiro d
 
 ---
 
-*Daniela Coelho é psicóloga especialista em neuropsicologia clínica e regulação emocional. Referências: van der Kolk (2014), LeDoux (2015), Sapolsky (2004), Beck (1979).*
+*Daniela Coelho é pesquisadora de comportamento humano especialista em neuropsicologia clínica e regulação emocional. Referências: van der Kolk (2014), LeDoux (2015), Sapolsky (2004), Beck (1979).*
