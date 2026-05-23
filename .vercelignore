@@ -1,0 +1,8 @@
+# Ignorar arquivos que não são parte do app Next.js
+remotion/
+scripts/
+output/
+*.py
+*.md
+*.yml
+.github/
