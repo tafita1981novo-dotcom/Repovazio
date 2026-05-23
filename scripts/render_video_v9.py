@@ -19,7 +19,7 @@ STACK:
 CORREÇÕES COMPLETAS:
   ✅ Gemini: gemini-2.0-flash-exp (FUNCIONA sem permissão especial)
   ✅ Lower third: "Daniela Coelho | Saude Mental | @psidanielacoelho"
-  ✅ SEM Psicóloga até jan/2027
+  ✅ SEM Daniela Coelho até jan/2027
   ✅ SEM fontweight=bold (não existe no ffmpeg)
   ✅ RATE_REAL dinâmico (len(script)/dur_audio)
   ✅ crf=25 Shorts (~3MB), crf=22 Longs (~18MB)
@@ -475,7 +475,7 @@ def finalize_video(concat_path, audio_path, out_path, total_dur, is_long):
     """
     Lower third + progress bar + 🔔 Inscreva-se + áudio.
     CORRIGIDO: sem fontweight (não existe no ffmpeg drawtext).
-    Lower third: SEM Psicóloga até jan/2027.
+    Lower third: SEM Daniela Coelho até jan/2027.
     """
     crf = CRF_LONG if is_long else CRF_SHORT
     end_start = max(0.0, total_dur - 4.0)
