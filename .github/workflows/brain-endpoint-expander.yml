@@ -1,0 +1,25 @@
+name: Brain Endpoint Expander — Entra nos Links 1000+/hora
+
+on:
+  schedule:
+    - cron: "10 * * * *"   # todo hora :10 (entra em cada link conhecido)
+  workflow_dispatch:
+
+jobs:
+  expand:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: Instalar dependências
+        run: pip install requests pyyaml --break-system-packages
+      - name: Expandir endpoints de cada link conhecido
+        env:
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GROQ_API_KEY:         ${{ secrets.GROQ_API_KEY }}
+          HF_TOKEN:             ${{ secrets.HF_TOKEN }}
+          GH_PAT:               ${{ secrets.GH_PAT }}
+        run: python3 scripts/brain_endpoint_expander.py
