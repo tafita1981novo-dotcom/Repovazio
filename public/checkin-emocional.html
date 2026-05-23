@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Check-in Emocional — Mente em Foco</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#06060F;color:#E8E8F0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:2rem 1rem}
+.psi{font-size:2.5rem;color:#7C3AED;display:block;text-align:center;margin-bottom:.5rem}
+h1{font-size:1.5rem;text-align:center;margin-bottom:.25rem}
+.sub{font-size:.9rem;color:#9CA3AF;text-align:center;margin-bottom:2rem}
+.card{background:#0F0F1E;border:1px solid #1F1F35;border-radius:12px;padding:1.5rem;width:100%;max-width:520px;margin-bottom:1rem}
+.card h2{font-size:1rem;margin-bottom:1rem;color:#C4B5FD}
+.question{margin-bottom:1.25rem}
+.question label{display:block;font-size:.9rem;margin-bottom:.5rem;color:#D1D5DB}
+.scale{display:flex;gap:.4rem;flex-wrap:wrap}
+.scale button{flex:1;min-width:36px;padding:.5rem .25rem;background:#1A1A2E;border:1px solid #2D2D4E;border-radius:6px;color:#9CA3AF;cursor:pointer;font-size:.85rem;transition:all .15s}
+.scale button.sel{background:#7C3AED;border-color:#7C3AED;color:#fff}
+.scale button:hover{border-color:#7C3AED;color:#C4B5FD}
+.emotions{display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem}
+.emotions button{padding:.5rem;background:#1A1A2E;border:1px solid #2D2D4E;border-radius:6px;color:#9CA3AF;cursor:pointer;font-size:.8rem;transition:all .15s}
+.emotions button.sel{background:#5B21B6;border-color:#7C3AED;color:#E9D5FF}
+.emotions button:hover{border-color:#7C3AED}
+textarea{width:100%;background:#1A1A2E;border:1px solid #2D2D4E;border-radius:6px;color:#E8E8F0;padding:.75rem;font-size:.9rem;resize:vertical;min-height:80px}
+.btn-primary{width:100%;padding:1rem;background:#7C3AED;color:#fff;border:none;border-radius:8px;font-size:1rem;cursor:pointer;transition:background .2s;margin-top:.5rem}
+.btn-primary:hover{background:#6D28D9}
+#resultado{display:none}
+.resultado-card{background:#0F0F1E;border:1px solid #2D2D4E;border-radius:12px;padding:1.5rem;width:100%;max-width:520px}
+.score-big{font-size:3rem;font-weight:bold;text-align:center;margin:1rem 0}
+.analise-item{padding:.75rem 0;border-bottom:1px solid #1F1F35;font-size:.9rem;line-height:1.6}
+.analise-item:last-child{border-bottom:none}
+.analise-item strong{color:#C4B5FD;display:block;margin-bottom:.25rem}
+.tag-bem{color:#34D399;background:#064E3B;padding:2px 8px;border-radius:100px;font-size:.75rem}
+.tag-atencao{color:#FCD34D;background:#78350F;padding:2px 8px;border-radius:100px;font-size:.75rem}
+.tag-alerta{color:#F87171;background:#7F1D1D;padding:2px 8px;border-radius:100px;font-size:.75rem}
+.cta{margin-top:1.5rem;text-align:center}
+.cta a{color:#A78BFA;font-size:.9rem}
+.prog{width:100%;background:#1A1A2E;border-radius:100px;height:8px;margin:.5rem 0}
+.prog-fill{height:100%;border-radius:100px;background:linear-gradient(90deg,#7C3AED,#5B21B6);transition:width .5s}
+footer{margin-top:2rem;font-size:.75rem;color:#6B7280;text-align:center}
+</style>
+</head>
+<body>
+<span class="psi">ψ</span>
+<h1>Check-in Emocional</h1>
+<p class="sub">Daniela Coelho · Psicologia baseada em evidências · Gratuito</p>
+
+<div id="formulario">
+<div class="card">
+  <h2>Como você está hoje?</h2>
+  
+  <div class="question">
+    <label>Humor geral (1 = muito mal, 10 = excelente)</label>
+    <div class="scale" id="s-humor"></div>
+  </div>
+  
+  <div class="question">
+    <label>Energia física e mental (1 = esgotado, 10 = cheio de energia)</label>
+    <div class="scale" id="s-energia"></div>
+  </div>
+  
+  <div class="question">
+    <label>Nível de ansiedade (1 = calmo, 10 = muito ansioso)</label>
+    <div class="scale" id="s-ansiedade"></div>
+  </div>
+  
+  <div class="question">
+    <label>Qualidade do sono esta semana (1 = péssimo, 10 = ótimo)</label>
+    <div class="scale" id="s-sono"></div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Que emoções você está sentindo?</h2>
+  <div class="emotions" id="emocoes">
+    <button onclick="toggleEmo(this)">Ansiedade</button>
+    <button onclick="toggleEmo(this)">Tristeza</button>
+    <button onclick="toggleEmo(this)">Alegria</button>
+    <button onclick="toggleEmo(this)">Raiva</button>
+    <button onclick="toggleEmo(this)">Medo</button>
+    <button onclick="toggleEmo(this)">Esperança</button>
+    <button onclick="toggleEmo(this)">Frustração</button>
+    <button onclick="toggleEmo(this)">Gratidão</button>
+    <button onclick="toggleEmo(this)">Solidão</button>
+    <button onclick="toggleEmo(this)">Entusiasmo</button>
+    <button onclick="toggleEmo(this)">Exaustão</button>
+    <button onclick="toggleEmo(this)">Paz</button>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Algo que está pesando? (opcional)</h2>
+  <textarea id="texto-livre" placeholder="Descreva como está se sentindo com suas próprias palavras..."></textarea>
+</div>
+
+<button class="btn-primary" onclick="analisar()">Ver minha análise →</button>
+</div>
+
+<div id="resultado"></div>
+
+<footer>ψ Daniela Coelho | @psidanielacoelho<br>Este check-in não substitui acompanhamento psicológico profissional.</footer>
+
+<script>
+const scores = {};
+const emocoesSel = new Set();
+
+function makeScale(id, key) {
+  const c = document.getElementById(id);
+  for (let i=1;i<=10;i++) {
+    const b = document.createElement('button');
+    b.textContent = i;
+    b.onclick = () => {
+      c.querySelectorAll('button').forEach(x=>x.classList.remove('sel'));
+      b.classList.add('sel');
+      scores[key] = i;
+    };
+    c.appendChild(b);
+  }
+}
+makeScale('s-humor','humor');
+makeScale('s-energia','energia');
+makeScale('s-ansiedade','ansiedade');
+makeScale('s-sono','sono');
+
+function toggleEmo(btn) {
+  if (btn.classList.toggle('sel')) emocoesSel.add(btn.textContent);
+  else emocoesSel.delete(btn.textContent);
+}
+
+function analisar() {
+  const {humor=5, energia=5, ansiedade=5, sono=5} = scores;
+  const bem_estar = Math.round(((humor + energia + (11-ansiedade) + sono) / 4) * 10);
+  
+  const emosNeg = [...emocoesSel].filter(e => ['Ansiedade','Tristeza','Raiva','Medo','Frustração','Solidão','Exaustão'].includes(e));
+  const emosPos = [...emocoesSel].filter(e => ['Alegria','Esperança','Gratidão','Entusiasmo','Paz'].includes(e));
+  const texto = document.getElementById('texto-livre').value;
+  
+  let nivel, cor, tag;
+  if (bem_estar >= 70) { nivel='Bem-estar positivo'; cor='#34D399'; tag='tag-bem'; }
+  else if (bem_estar >= 45) { nivel='Atenção ao equilíbrio'; cor='#FCD34D'; tag='tag-atencao'; }
+  else { nivel='Cuidado especial necessário'; cor='#F87171'; tag='tag-alerta'; }
+  
+  const insights = [];
+  if (ansiedade >= 7) insights.push({t:'Ansiedade elevada', s:'Técnica imediata: respiração 4-7-8. Inspire 4s, segure 7s, expire 8s. Repita 4x. A pesquisa de Gross (Stanford) mostra queda de ativação da amígdala em minutos.'});
+  if (energia <= 4) insights.push({t:'Energia baixa', s:'Burnout pode estar se instalando. Sono, movimento físico (mesmo 15 min de caminhada) e uma refeição sem tela são as três intervenções com maior impacto documentado.'});
+  if (sono <= 4) insights.push({t:'Sono prejudicado', s:'Matthew Walker (UC Berkeley) documenta que sono insuficiente amplifica a reatividade emocional em até 60%. Prioridade 1: 10 min sem tela antes de dormir.'});
+  if (emosNeg.length >= 3) insights.push({t:`${emosNeg.length} emoções difíceis presentes`, s:'Quando várias emoções negativas coexistem, nomear cada uma separadamente ajuda. "Sinto ansiedade E frustração E exaustão" é mais preciso — e menos avassalador — do que "estou mal".'});
+  if (emosPos.length >= 2) insights.push({t:'Recursos emocionais presentes', s:`${emosPos.join(', ')} são sinais de resiliência. Pesquisa de Barbara Fredrickson (UNC) mostra que emoções positivas ampliam o repertório de resposta ao estresse.`});
+  if (!insights.length) insights.push({t:'Ponto de equilíbrio', s:'Seu check-in sugere estabilidade emocional. Manter: sono regular, movimento físico, conexão social. Revisitar semanalmente para monitorar tendências.'});
+  
+  const resultHtml = `
+<div class="resultado-card">
+  <div style="text-align:center">
+    <div style="font-size:.85rem;color:#9CA3AF;margin-bottom:.25rem">Índice de bem-estar</div>
+    <div class="score-big" style="color:${cor}">${bem_estar}<span style="font-size:1.5rem">/100</span></div>
+    <span class="${tag}">${nivel}</span>
+  </div>
+  <div class="prog"><div class="prog-fill" style="width:${bem_estar}%"></div></div>
+  
+  ${insights.map(i=>`
+    <div class="analise-item">
+      <strong>${i.t}</strong>
+      ${i.s}
+    </div>`).join('')}
+  
+  ${texto ? `<div class="analise-item"><strong>O que você escreveu</strong>Registrei. Escrever sobre o que sentimos — mesmo sem resposta — já tem efeito terapêutico documentado (James Pennebaker, UT Austin).</div>` : ''}
+  
+  <div class="cta">
+    <p style="font-size:.85rem;color:#9CA3AF;margin-bottom:.75rem">Quer acompanhamento semanal?</p>
+    <a href="https://anchor.fm" target="_blank">🎧 Podcast gratuito: Mente em Foco</a><br><br>
+    <a href="https://gumroad.com" target="_blank">📓 Template Notion de saúde mental — $9</a>
+  </div>
+</div>
+<button class="btn-primary" onclick="location.reload()" style="max-width:520px;background:#1A1A2E;border:1px solid #2D2D4E;margin-top:.5rem">← Fazer novo check-in</button>
+`;
+  
+  document.getElementById('formulario').style.display='none';
+  const res = document.getElementById('resultado');
+  res.style.display='flex';
+  res.style.flexDirection='column';
+  res.style.alignItems='center';
+  res.style.gap='.5rem';
+  res.style.width='100%';
+  res.style.maxWidth='520px';
+  res.innerHTML = resultHtml;
+  window.scrollTo(0,0);
+}
+</script>
+</body>
+</html>
