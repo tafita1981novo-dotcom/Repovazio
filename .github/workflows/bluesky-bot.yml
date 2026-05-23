@@ -1,0 +1,30 @@
+name: Bluesky Psicologia Bot
+
+on:
+  schedule:
+    - cron: "0 11 * * *"  # 08h BR (11h UTC)
+    - cron: "0 17 * * *"  # 14h BR (17h UTC)
+    - cron: "0 22 * * *"  # 19h BR (22h UTC)
+  workflow_dispatch:
+    inputs:
+      n_posts:
+        description: "Número de posts"
+        default: "3"
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install requests --break-system-packages
+      - name: Post Bluesky
+        env:
+          GROQ_API_KEY:          ${{ secrets.GROQ_API_KEY }}
+          BLUESKY_HANDLE:        ${{ secrets.BLUESKY_HANDLE }}
+          BLUESKY_APP_PASSWORD:  ${{ secrets.BLUESKY_APP_PASSWORD }}
+          N_POSTS:               ${{ github.event.inputs.n_posts || '3' }}
+        run: python3 scripts/bluesky_psicologia_bot.py
