@@ -20,7 +20,7 @@ COMO FUNCIONA:
 
 PADRÃO VISUAL (salvo em memória eterna):
   - Chibi kawaii psych2go style, fundo creme #F5F0E8
-  - Lower third SEM Psicóloga até jan/2027
+  - Lower third SEM Daniela Coelho até jan/2027
   - 20 cenas = 20 imagens Gemini únicas
   - Última cena SEMPRE: "INSCREVA-SE AGORA"
   - crf=25 = ~3-6MB | pt-BR-AntonioNeural | 25fps
@@ -354,7 +354,7 @@ def add_overlay(img_path, caption_pt):
            → "Saude Mental  |  @psidanielacoelho" em lilás
            → barra vermelha embaixo (4px)
     
-    SEM Psicóloga no lower third até jan/2027.
+    SEM Daniela Coelho no lower third até jan/2027.
     """
     img = Image.open(img_path).convert("RGB")
     draw = ImageDraw.Draw(img)
@@ -365,7 +365,7 @@ def add_overlay(img_path, caption_pt):
     draw.rectangle([0, H-lt_h, 5, H], fill=VERM)               # barra vermelha lateral
     draw.text((22, H-lt_h+12), "psi", fill=GOLD)               # logo "psi" dourado
     draw.text((62, H-lt_h+10), "Daniela Coelho", fill=BRAN)    # nome em branco
-    draw.text((62, H-lt_h+40),                                  # subtítulo SEM Psicóloga
+    draw.text((62, H-lt_h+40),                                  # subtítulo SEM Daniela Coelho
               "Saude Mental  |  @psidanielacoelho", fill=LILAS)
     draw.rectangle([0, H-4, W, H], fill=VERM)                  # borda vermelha final
 
