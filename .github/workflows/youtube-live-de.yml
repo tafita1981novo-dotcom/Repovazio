@@ -1,0 +1,33 @@
+name: YouTube Live DE — Psychologie Frequenzen
+
+on:
+  workflow_dispatch:
+    inputs:
+      horas:
+        description: "Horas"
+        default: "6"
+  schedule:
+    # Germany | CPM: $10-25
+    - cron: "0 1,7,13,19 * * *"
+
+jobs:
+  live-de:
+    runs-on: ubuntu-latest
+    timeout-minutes: 375
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: |
+          sudo apt-get install -y ffmpeg > /dev/null 2>&1
+          pip install requests --break-system-packages
+      - name: Live DE 24/7
+        env:
+          LANG_CODE:              DE
+          YOUTUBE_STREAM_KEY_DE: ${{ secrets.YOUTUBE_STREAM_KEY_DE }}
+          YOUTUBE_STREAM_KEY:     ${{ secrets.YOUTUBE_STREAM_KEY }}
+          GROQ_API_KEY:           ${{ secrets.GROQ_API_KEY }}
+        run: |
+          HORAS="${{ inputs.horas }}"
+          timeout $((${HORAS:-6} * 3600)) python3 scripts/live_universal.py || true
+        continue-on-error: true
