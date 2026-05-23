@@ -1,0 +1,74 @@
+name: YouTube Live MAX — 4 Streams Temáticos 24h
+
+on:
+  workflow_dispatch:
+    inputs:
+      horas:
+        description: "Duração em horas (max 6)"
+        default: "6"
+  schedule:
+    # 6 runs/dia cobrindo 24h BR — horários de MÁXIMO CPM:
+    # 03h UTC = 00h BR ← sono profundo (528Hz, alta retenção)
+    # 09h UTC = 06h BR ← manhã cedo (transição)
+    # 12h UTC = 09h BR ← trabalho/estudo (40Hz foco)
+    # 17h UTC = 14h BR ← tarde (432Hz equilíbrio)
+    # 21h UTC = 18h BR ← PRIME TIME BR (963Hz — MAIS ANÚNCIOS)
+    # 01h UTC = 22h BR ← sono BR (528Hz — MAIS WATCH TIME)
+    - cron: "0 3,9,12,17,21 * * *"
+    - cron: "0 1 * * *"
+
+jobs:
+  live-max:
+    runs-on: ubuntu-latest
+    timeout-minutes: 380
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+
+      - name: Instalar FFmpeg + deps
+        run: |
+          sudo apt-get install -y ffmpeg > /dev/null 2>&1
+          pip install requests --break-system-packages
+
+      - name: Verificar YOUTUBE_STREAM_KEY
+        run: |
+          if [ -z "$YOUTUBE_STREAM_KEY" ]; then
+            echo ""
+            echo "╔══════════════════════════════════════════════╗"
+            echo "║   YOUTUBE_STREAM_KEY nao configurado         ║"
+            echo "╠══════════════════════════════════════════════╣"
+            echo "║                                              ║"
+            echo "║  SETUP (5 minutos):                          ║"
+            echo "║  1. studio.youtube.com                       ║"
+            echo "║  2. Criar → Transmissao ao vivo              ║"
+            echo "║  3. Titulo:                                  ║"
+            echo "║     528Hz SONO | Ansiedade | Daniela Coelho  ║"
+            echo "║  4. Copiar Stream Key                        ║"
+            echo "║  5. GitHub → Settings → Secrets             ║"
+            echo "║     YOUTUBE_STREAM_KEY = [key]              ║"
+            echo "║                                              ║"
+            echo "╚══════════════════════════════════════════════╝"
+            exit 1
+          fi
+          echo "✅ Stream key OK"
+          echo "Stream selecionado pelo horario BR automaticamente"
+        env:
+          YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
+
+      - name: Executar Live MAX
+        env:
+          YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
+          GROQ_API_KEY:       ${{ secrets.GROQ_API_KEY }}
+          HORAS:              ${{ inputs.horas }}
+        run: |
+          timeout $((${HORAS:-6} * 3600)) python3 scripts/youtube_live_max.py || true
+        continue-on-error: true
+
+      - name: Status
+        if: always()
+        run: |
+          echo "Run encerrado: $(date -u)"
+          echo "Proximo run: schedule automatico"
