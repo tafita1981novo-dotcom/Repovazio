@@ -10,7 +10,7 @@ Mariana era gerente de projetos, 38 anos, tida como referência da equipe. Até 
 Mariana demorou seis meses para entender que aquilo não era "frescura" — era esgotamento clínico.
 
 [CIÊNCIA]
-Christina Maslach, psicóloga de Berkeley, desenvolveu o modelo mais robusto de burnout: três dimensões. Exaustão emocional — sentir que não tem mais nada para dar. Despersonalização — desenvolver cinismo e distância emocional do trabalho e das pessoas. Redução da realização — a sensação de que o que você faz não importa, não tem valor.
+Christina Maslach, pesquisadora de comportamento humano de Berkeley, desenvolveu o modelo mais robusto de burnout: três dimensões. Exaustão emocional — sentir que não tem mais nada para dar. Despersonalização — desenvolver cinismo e distância emocional do trabalho e das pessoas. Redução da realização — a sensação de que o que você faz não importa, não tem valor.
 
 [pausa]
 
