@@ -34,7 +34,7 @@ def gerar_roteiro(tema, subtitulo, num):
     if not GROQ_KEY:
         return None
     
-    prompt = f"""Você é Daniela Coelho, psicóloga brasileira especialista em relações.
+    prompt = f"""Você é Daniela Coelho, pesquisadora de comportamento humano brasileira especialista em relações.
 Escreva roteiro de podcast Episódio {num}: "{tema.title()} — {subtitulo}"
 8-10 minutos de fala natural (1100-1300 palavras).
 
