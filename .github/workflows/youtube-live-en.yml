@@ -1,4 +1,4 @@
-name: YouTube Live 🇺🇸 EN — USA/UK/AU/CA
+name: YouTube Live EN — Sleep Psychology Lab
 
 on:
   workflow_dispatch:
@@ -7,8 +7,7 @@ on:
         description: "Horas"
         default: "6"
   schedule:
-    # Primetime USA EST: 8pm-midnight = UTC 00-04
-    # Morning USA: 8am-noon = UTC 12-16
+    # USA/UK/AU/CA | CPM: $20-50
     - cron: "0 0,6,12,18 * * *"
 
 jobs:
@@ -22,17 +21,13 @@ jobs:
       - run: |
           sudo apt-get install -y ffmpeg > /dev/null 2>&1
           pip install requests --break-system-packages
-      - name: Check stream key
-        run: |
-          [ -z "$YOUTUBE_STREAM_KEY_EN" ] && [ -z "$YOUTUBE_STREAM_KEY" ] && echo "Need YOUTUBE_STREAM_KEY_EN" && exit 1
-          echo "✅ Stream key EN OK"
-        env:
-          YOUTUBE_STREAM_KEY_EN: ${{ secrets.YOUTUBE_STREAM_KEY_EN }}
-          YOUTUBE_STREAM_KEY:    ${{ secrets.YOUTUBE_STREAM_KEY }}
       - name: Live EN 24/7
         env:
+          LANG_CODE:              EN
           YOUTUBE_STREAM_KEY_EN: ${{ secrets.YOUTUBE_STREAM_KEY_EN }}
-          YOUTUBE_STREAM_KEY:    ${{ secrets.YOUTUBE_STREAM_KEY }}
-          GROQ_API_KEY:          ${{ secrets.GROQ_API_KEY }}
-        run: timeout $((${HORAS:-6} * 3600)) python3 scripts/live_global_en.py || true
+          YOUTUBE_STREAM_KEY:     ${{ secrets.YOUTUBE_STREAM_KEY }}
+          GROQ_API_KEY:           ${{ secrets.GROQ_API_KEY }}
+        run: |
+          HORAS="${{ inputs.horas }}"
+          timeout $((${HORAS:-6} * 3600)) python3 scripts/live_universal.py || true
         continue-on-error: true
