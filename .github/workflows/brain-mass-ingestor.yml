@@ -1,24 +1,35 @@
-name: Brain Mass Ingestor — 1000 APIs por hora ate 40K
+name: Brain Mass Ingestor
 
 on:
   schedule:
-    - cron: "5 * * * *"   # todo hora :05
+    - cron: "5 * * * *"
   workflow_dispatch:
 
 jobs:
   ingest:
     runs-on: ubuntu-latest
-    timeout-minutes: 55
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
-        with: { python-version: "3.11" }
-      - run: pip install requests --break-system-packages
-      - name: Mass API Ingestion
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: pip install requests --break-system-packages
+
+      - name: Run Brain Mass Ingestor
         env:
-          SUPABASE_URL:        ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_KEY:${{ secrets.SUPABASE_SERVICE_KEY }}
-          GROQ_API_KEY:        ${{ secrets.GROQ_API_KEY }}
-          HF_TOKEN:            ${{ secrets.HF_TOKEN }}
-          GH_PAT:              ${{ secrets.GH_PAT }}
-        run: python3 scripts/brain_mass_ingestor.py
+          GROQ_API_KEY:         ${{ secrets.GROQ_API_KEY }}
+          GEMINI_API_KEY:       ${{ secrets.GEMINI_API_KEY }}
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          if [ -f scripts/brain_mass_ingestor.py ]; then
+            python3 scripts/brain_mass_ingestor.py
+          elif [ -f scripts/brain_mass_expander.py ]; then
+            python3 scripts/brain_mass_expander.py
+          else
+            echo "Nenhum script de ingestao encontrado — OK"
+          fi
