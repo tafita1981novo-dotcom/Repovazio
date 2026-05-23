@@ -10,7 +10,7 @@ Isso tem um nome. E não é apenas insegurança.
 
 ## O que Pauline Clance descobriu em 1978
 
-A psicóloga Pauline Clance, da Georgia State University, foi a primeira a documentar sistematicamente o que chamou de *impostor phenomenon*. Estudando mulheres acadêmicas de alto desempenho, ela observou um padrão consistente: apesar de evidências objetivas de competência — diplomas, publicações, promoções — essas mulheres acreditavam que seu sucesso era resultado de sorte, erro de avaliação dos outros, ou timing favorável.
+A pesquisadora de comportamento humano Pauline Clance, da Georgia State University, foi a primeira a documentar sistematicamente o que chamou de *impostor phenomenon*. Estudando mulheres acadêmicas de alto desempenho, ela observou um padrão consistente: apesar de evidências objetivas de competência — diplomas, publicações, promoções — essas mulheres acreditavam que seu sucesso era resultado de sorte, erro de avaliação dos outros, ou timing favorável.
 
 O paradoxo central: quanto mais competente a pessoa, mais elaborado o sistema de desqualificação interna.
 
