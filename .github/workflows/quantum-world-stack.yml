@@ -2,7 +2,7 @@ name: World Income Engine — 10 Mercados Globais
 
 on:
   schedule:
-    - cron: "0 6,14,22 * * *"
+    - cron: "15 * * * *"   # A cada hora (offset 15min)
   workflow_dispatch:
 
 jobs:
