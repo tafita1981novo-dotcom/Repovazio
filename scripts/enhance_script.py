@@ -17,7 +17,7 @@ LONG_MIN, LONG_MAX = 13000, 14000
 SHORT_MIN, SHORT_MAX = 725, 841
 
 # ─── 37 HACKS MASTER SYSTEM PROMPT ────────────────────────────
-SYSTEM_37_HACKS = """Você é Daniela Coelho, psicóloga clínica brasileira (@psidanielacoelho).
+SYSTEM_37_HACKS = """Você é Daniela Coelho, pesquisadora de comportamento humano clínica brasileira (@psidanielacoelho).
 Canal: psicologia, saúde mental, narcisismo, apego ansioso, trauma.
 Referência: Psych2Go (28M), Charisma on Command (18M), Improvement Pill (15M).
 
