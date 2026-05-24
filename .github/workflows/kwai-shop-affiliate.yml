@@ -1,0 +1,23 @@
+name: Kwai Shop Affiliate — Psicologia + Suplementos
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 10,18 * * *"  # 2x/dia
+
+jobs:
+  kwai:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install requests --break-system-packages
+      - name: Kwai Shop Affiliate Pipeline
+        env:
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GROQ_API_KEY:         ${{ secrets.GROQ_API_KEY }}
+        run: python3 scripts/kwai_shop_affiliate.py || true
+        continue-on-error: true
