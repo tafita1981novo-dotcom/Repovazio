@@ -16,17 +16,12 @@ jobs:
           python -m playwright install chromium
           python -m playwright install-deps chromium
 
-      - name: Verify CV exists
+      - name: Verify CV
         run: |
           ls -la .github/assets/rafael_cv.pdf
-          python3 -c "
-          import os
-          size = os.path.getsize('.github/assets/rafael_cv.pdf')
-          print(f'CV OK: {size:,} bytes')
-          assert size > 1000, 'CV muito pequeno'
-          "
+          python3 -c "import os; s=os.path.getsize('.github/assets/rafael_cv.pdf'); print(f'CV: {s:,} bytes'); assert s>1000"
 
-      - name: Run Playwright Form Filler
+      - name: Run Playwright Form Filler v2
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
