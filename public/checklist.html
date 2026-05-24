@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ψ Checklist Produção — psicologia.doc</title>
+<style>
+:root{--bg:#06060F;--card:#0F0F1A;--p:#7C3AED;--r:#E11D48;--g:#22C55E;--y:#F59E0B;--t:#0D9488;--txt:#F1F5F9;--muted:#94A3B8}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:system-ui,sans-serif}
+header{padding:14px 20px;border-bottom:1px solid #1E1E33;display:flex;align-items:center;gap:10px;position:sticky;top:0;background:var(--bg);z-index:10}
+.logo{font-weight:800;background:linear-gradient(135deg,#A78BFA,#E11D48);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+main{max-width:860px;margin:0 auto;padding:16px}
+.section{margin-bottom:28px}
+.section-title{font-size:.8rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid #1E1E33;display:flex;align-items:center;gap:8px}
+.item{background:var(--card);border:1px solid #1E1E33;border-radius:8px;padding:12px 14px;margin-bottom:6px;display:flex;align-items:flex-start;gap:10px;cursor:pointer;transition:border-color .15s}
+.item:hover{border-color:#2E2E4E}
+.item.done{border-left:3px solid var(--g)}
+.item.bloq{border-left:3px solid var(--r)}
+.item.warn{border-left:3px solid var(--y)}
+.item.info{border-left:3px solid var(--p)}
+input[type=checkbox]{width:16px;height:16px;flex-shrink:0;margin-top:2px;cursor:pointer;accent-color:#7C3AED}
+.item-content{flex:1}
+.item-title{font-size:.85rem;font-weight:600;margin-bottom:3px}
+.item-desc{font-size:.76rem;color:var(--muted);line-height:1.4}
+.item-link{font-size:.74rem;color:#A78BFA;margin-top:4px;display:block}
+.badge{display:inline-block;padding:1px 7px;border-radius:99px;font-size:.68rem;margin-left:6px;vertical-align:middle}
+.b-r{background:#E11D4822;color:#E11D48;border:1px solid #E11D4844}
+.b-g{background:#22C55E22;color:#22C55E;border:1px solid #22C55E44}
+.b-y{background:#F59E0B22;color:#F59E0B;border:1px solid #F59E0B44}
+.b-p{background:#7C3AED22;color:#A78BFA;border:1px solid #7C3AED44}
+.progress{background:#1E1E33;border-radius:6px;height:8px;margin-bottom:20px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,#7C3AED,#E11D48);border-radius:6px;transition:width .5s}
+.stats{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.stat{background:var(--card);border:1px solid #1E1E33;border-radius:8px;padding:10px 14px;flex:1;min-width:120px}
+.stat-val{font-size:1.3rem;font-weight:800}
+.stat-lbl{font-size:.7rem;color:var(--muted)}
+footer{text-align:center;padding:14px;color:var(--muted);font-size:.68rem;border-top:1px solid #1E1E33;margin-top:20px}
+</style>
+</head>
+<body>
+<header>
+  <span>ψ</span>
+  <span class="logo">psicologia.doc — Checklist Produção</span>
+  <a href="/dashboard" style="margin-left:auto;font-size:.75rem;color:var(--muted);text-decoration:none">→ Dashboard</a>
+</header>
+<main>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-val" id="total-done">0</div><div class="stat-lbl">itens concluídos</div></div>
+    <div class="stat"><div class="stat-val" id="total-bloq" style="color:#E11D48">0</div><div class="stat-lbl">bloqueantes</div></div>
+    <div class="stat"><div class="stat-val" id="total-pct">0%</div><div class="stat-lbl">progresso</div></div>
+    <div class="stat"><div class="stat-val" style="color:#22C55E">R$0</div><div class="stat-lbl">receita atual</div></div>
+  </div>
+
+  <div class="progress"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+
+  <!-- ───────────────────────── BLOQUEANTES ───────────────────────── -->
+  <div class="section">
+    <div class="section-title">
+      <span style="color:#E11D48">⚡</span>
+      BLOQUEANTES — Sem essas, R$ não entra <span class="badge b-r">FAZER AGORA</span>
+    </div>
+
+    <div class="item bloq" onclick="toggle(this)">
+      <input type="checkbox">
+      <div class="item-content">
+        <div class="item-title">Hotmart — Criar produto R$29,90 (Modo Psicologia App)</div>
+        <div class="item-desc">Tipo: Produto Digital → Arquivo. Acesso: vitalício. Checkout: simples, sem upsell automático aqui.<br>Após criar: copiar link de checkout → atualizar em <code>repovazio.vercel.app/app-vendas</code></div>
+        <a class="item-link" href="https://hotmart.com/products/new" target="_blank">→ hotmart.com/products/new</a>
+      </div>
+    </div>
+
+    <div class="item bloq" onclick="toggle(this)">
+      <input type="checkbox">
+      <div class="item-content">
+        <div class="item-title">Hotmart — Criar produto R$216/ano (Psicologia Para Dormir)</div>
+        <div class="item-desc">Tipo: Assinatura Recorrente Anual → Comunidade. Entrega: acesso ao grupo WhatsApp.<br>Após criar: copiar link de checkout → atualizar em <code>repovazio.vercel.app/psicologia-para-dormir</code></div>
+        <a class="item-link" href="https://hotmart.com/products/new" target="_blank">→ hotmart.com/products/new</a>
+      </div>
+    </div>
+
+    <div class="item bloq" onclick="toggle(this)">
+      <input type="checkbox">
+      <div class="item-content">
+        <div class="item-title">Hotmart — Configurar Webhook para capturar compras</div>
+        <div class="item-desc">Hotmart → Configurações → Webhooks → Novo Webhook<br>URL: <code>https://repovazio.vercel.app/api/hotmart-webhook</code><br>Eventos: PURCHASE_COMPLETE, PURCHASE_APPROVED</div>
+        <a class="item-link" href="https://hotmart.com/settings/webhooks" target="_blank">→ hotmart.com/settings/webhooks</a>
+      </div>
+    </div>
+
+    <div class="item bloq" onclick="toggle(this)">
+      <input type="checkbox">
+      <div class="item-content">
+        <div class="item-title">WhatsApp — Criar grupo exclusivo "Psicologia Para Dormir"</div>
+        <div class="item-desc">Criar grupo → Configurar como privado → Copiar link de convite<br>Supabase: UPDATE produto_whatsapp SET link_grupo = 'SEU_LINK' WHERE id = 1</div>
+        <a class="item-link" href="https://tpjvalzwkqwttvmszvie.supabase.co/studio/project/tpjvalzwkqwttvmszvie/table-editor" target="_blank">→ Supabase Table Editor</a>
+      </div>
+    </div>
+
+    <div class="item bloq" onclick="toggle(this)">
+      <input type="checkbox">
+      <div class="item-content">
+        <div class="item-title">ManyChat — Configurar keyword "SONO" → DM automático</div>
+        <div class="item-desc">manychat.com → Keywords → Adicionar "SONO" → DM automático com link R$29,90<br>Webhook URL: <code>https://repovazio.vercel.app/api/manychat-webhook</code></div>
+        <a class="item-link" href="https://manychat.com" target="_blank">→ manychat.com → Keywords</a>
+      </div>
+    </div>
+
+    <div class="item bloq" onclick="toggle(this)">
+      <input type="checkbox">
+      <div class="item-content">
+        <div class="item-title">Instagram @psidanielacoelho — Ativar DM automático "SONO"</div>
+        <div class="item-desc">Instagram → Configurações → Meta Business Suite → Conectar ManyChat<br>Ou: usar Instagram Automation nativa (Configurações → Criador → Automações)</div>
+        <a class="item-link" href="https://instagram.com/psidanielacoelho" target="_blank">→ @psidanielacoelho</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────────────────── SECRETS GITHUB ───────────────────────── -->
+  <div class="section">
+    <div class="section-title">
+      <span style="color:#F59E0B">🔐</span>
+      GitHub Secrets — 2 faltando
+    </div>
+
+    <div class="item done" onclick="toggle(this)">
+      <input type="checkbox" checked>
+      <div class="item-content">
+        <div class="item-title">GROQ_API_KEY ✅ SUPABASE_URL ✅ SUPABASE_SERVICE_KEY ✅</div>
+        <div class="item-desc">Secrets principais já configurados. 22 de 24 secrets OK.</div>
+      </div>
+    </div>
+
+    <div class="item done" onclick="toggle(this)">
+      <input type="checkbox" checked>
+      <div class="item-content">
+        <div class="item-title">YOUTUBE_REFRESH_TOKEN ✅ YT_REFRESH_TOKEN ✅</div>
+        <div class="item-desc">OAuth YouTube já configurado. Canal: UCyCkIpsVgME9yCj_oXJFheA (@psidanielacoelho)</div>
+      </div>
+    </div>
+
+    <div class="item warn" onclick="toggle(this)">
+      <input type="checkbox">
+      <div class="item-content">
+        <div class="item-title">SUPABASE_ACCESS_TOKEN — Faltando (para cleanup de Edge Functions)</div>
+        <div class="item-desc">app.supabase.com → Account Settings → Access Tokens → Gerar token<br>Adicionar em: GitHub → Settings → Secrets → SUPABASE_ACCESS_TOKEN<br>Depois rodar workflow: supabase-ef-cleanup.yml (deleta 71 EFs órfãs)</div>
+        <a class="item-link" href="https://app.supabase.com/account/tokens" target="_blank">→ app.supabase.com/account/tokens</a>
+      </div>
+    </div>
+
+    <div class="item warn" onclick="toggle(this)">
+      <input type="checkbox">
+      <div class="item-content">
+        <div class="item-title">MANYCHAT_API_KEY — Faltando (para DM automático via API)</div>
+        <div class="item-desc">manychat.com → Settings → API → Gerar API Key<br>Adicionar em: GitHub → Settings → Secrets → MANYCHAT_API_KEY</div>
+        <a class="item-link" href="https://manychat.com/settings/api" target="_blank">→ manychat.com/settings/api</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────────────────── JÁ IMPLEMENTADO ───────────────────────── -->
+  <div class="section">
+    <div class="section-title">
+      <span style="color:#22C55E">✅</span>
+      Já implementado — Conferir rodando
+    </div>
+
+    <div class="item done" onclick="toggle(this)">
+      <input type="checkbox" checked>
+      <div class="item-content">
+        <div class="item-title">LLM Router V5 — Groq → NVIDIA → Gemini (só grátis)</div>
+        <div class="item-desc">scripts/llm_router_v5.py · 14.400 req/dia grátis · sem custo</div>
+      </div>
+    </div>
+
+    <div class="item done" onclick="toggle(this)">
+      <input type="checkbox" checked>
+      <div class="item-content">
+        <div class="item-title">Daniela IRIS — Agente autônomo diário 6h BRT</div>
+        <div class="item-desc">daniela-iris.yml · 9h UTC · briefing + minerador + 5 dias + funil</div>
+      </div>
+    </div>
+
+    <div class="item done" onclick="toggle(this)">
+      <input type="checkbox" checked>
+      <div class="item-content">
+        <div class="item-title">Minerador Viral — Posts gringa >10K likes adaptados PT-BR</div>
+        <div class="item-desc">scripts/minerador_viral.py · 5 templates virais → Groq adapta → Supabase viral_queue</div>
+      </div>
+    </div>
+
+    <div class="item done" onclick="toggle(this)">
+      <input type="checkbox" checked>
+      <div class="item-content">
+        <div class="item-title">Quadrinhos Dark — Carrosséis 3x/dia Instagram</div>
+        <div class="item-desc">quadrinhos-dark.yml · 9h+12h+18h UTC · Pollinations FLUX · 5 tipos de post dark</div>
+      </div>
+    </div>
+
+    <div class="item done" onclick="toggle(this)">
+      <input type="checkbox" checked>
+      <div class="item-content">
+        <div class="item-title">WhatsApp Daily — Áudio 19h30 BRT todo dia</div>
+        <div class="item-desc">whatsapp-daily.yml · 22:30 UTC · Edge TTS FranciscaNeural · binaural 528Hz</div>
+      </div>
+    </div>
+
+    <div class="item done" onclick="toggle(this)">
+      <input type="checkbox" checked>
+      <div class="item-content">
+        <div class="item-title">Funil Integrado — DM sequência → email upsell</div>
+        <div class="item-desc">funil_integrado.py + email_sequence.py · dias 0/3/7/14 · R$29,90 → upsell R$216/ano</div>
+      </div>
+    </div>
+
+    <div class="item done" onclick="toggle(this)">
+      <input type="checkbox" checked>
+      <div class="item-content">
+        <div class="item-title">APIs Vercel — Webhook Hotmart + ManyChat + Receita</div>
+        <div class="item-desc">api/hotmart-webhook.js · api/manychat-webhook.js · api/receita.js · Vercel Edge</div>
+      </div>
+    </div>
+
+    <div class="item done" onclick="toggle(this)">
+      <input type="checkbox" checked>
+      <div class="item-content">
+        <div class="item-title">Weekly Report — Relatório semanal Segunda 8h BRT</div>
+        <div class="item-desc">weekly-report.yml · KPIs + A/B test + projeção R$50K + sugestões IA</div>
+      </div>
+    </div>
+
+    <div class="item done" onclick="toggle(this)">
+      <input type="checkbox" checked>
+      <div class="item-content">
+        <div class="item-title">YouTube SEO — Descrições com timestamps + CTAs</div>
+        <div class="item-desc">youtube_description_gen.py · narcisismo + sono + burnout · CTA app+WA</div>
+      </div>
+    </div>
+
+    <div class="item done" onclick="toggle(this)">
+      <input type="checkbox" checked>
+      <div class="item-content">
+        <div class="item-title">Thumbnails Dark — Pollinations 1280×720 YouTube</div>
+        <div class="item-desc">thumbnail_dark_gen.py · 5 thumbnails dark · Daniela chibi kawaii · seed sequencial</div>
+      </div>
+    </div>
+
+    <div class="item done" onclick="toggle(this)">
+      <input type="checkbox" checked>
+      <div class="item-content">
+        <div class="item-title">KDP Psicologia — Livros Amazon auto-gen</div>
+        <div class="item-desc">kdp-psicologia.yml · Quarta 10h UTC · narcisismo/apego/sono · Groq gera capítulos</div>
+      </div>
+    </div>
+
+    <div class="item done" onclick="toggle(this)">
+      <input type="checkbox" checked>
+      <div class="item-content">
+        <div class="item-title">Receita Monitor — Alertas a cada 30min</div>
+        <div class="item-desc">receita-monitor.yml · vendas + assinantes + meta R$50K · alertas automáticos</div>
+      </div>
+    </div>
+
+    <div class="item done" onclick="toggle(this)">
+      <input type="checkbox" checked>
+      <div class="item-content">
+        <div class="item-title">A/B Test Tracker — viralizar vs vender vs coringa</div>
+        <div class="item-desc">ab_test_tracker.py · analisa qual tipo de post converte mais · decisão automática</div>
+      </div>
+    </div>
+
+    <div class="item done" onclick="toggle(this)">
+      <input type="checkbox" checked>
+      <div class="item-content">
+        <div class="item-title">Estratégia 5 Dias Ramp-up — posts DIA 1 a DIA 5</div>
+        <div class="item-desc">estrategia_5dias.py · 3 posts/dia × 5 dias · math: R$4.485 → R$17.940/mês</div>
+      </div>
+    </div>
+
+    <div class="item done" onclick="toggle(this)">
+      <input type="checkbox" checked>
+      <div class="item-content">
+        <div class="item-title">Supabase — 12 tabelas de monetização criadas</div>
+        <div class="item-desc">vendas · receita_diaria · kdp_queue · dm_sequencia · iris_briefings · viral_queue · plano_5dias · produto_whatsapp · produto_low_ticket · social_posts · video_seo · whatsapp_psicologia_queue</div>
+      </div>
+    </div>
+
+    <div class="item done" onclick="toggle(this)">
+      <input type="checkbox" checked>
+      <div class="item-content">
+        <div class="item-title">SKILL_V28.md — Estado completo consolidado</div>
+        <div class="item-desc">3 transcripts · 7 fontes · 20 pipelines · regras imutáveis · pendências</div>
+      </div>
+    </div>
+
+    <div class="item done" onclick="toggle(this)">
+      <input type="checkbox" checked>
+      <div class="item-content">
+        <div class="item-title">Vercel /dashboard · /qg · /app-vendas · /psicologia-para-dormir</div>
+        <div class="item-desc">Dashboard com API receita tempo real · QG completo · landing pages produtos</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────────────────── PRÓXIMOS PASSOS ───────────────────────── -->
+  <div class="section">
+    <div class="section-title">
+      <span style="color:#7C3AED">🚀</span>
+      Próximos Passos — Após bloqueantes resolvidos
+    </div>
+
+    <div class="item info" onclick="toggle(this)">
+      <input type="checkbox">
+      <div class="item-content">
+        <div class="item-title">Publicar primeiro vídeo #683 Narcisismo</div>
+        <div class="item-desc">Ordem: #683 Narcisismo → #701 Depressão Silenciosa → #682 Celular<br>Canal: UCyCkIpsVgME9yCj_oXJFheA · Horário: 18h-20h BRT</div>
+        <a class="item-link" href="https://studio.youtube.com" target="_blank">→ YouTube Studio</a>
+      </div>
+    </div>
+
+    <div class="item info" onclick="toggle(this)">
+      <input type="checkbox">
+      <div class="item-content">
+        <div class="item-title">Instagram — Publicar primeiro carrossel dark</div>
+        <div class="item-desc">Minerar 1 post → adaptar PT-BR → publicar 9h com CTA "Comenta SONO"<br>Verificar DM automático funcionando</div>
+        <a class="item-link" href="https://instagram.com/psidanielacoelho" target="_blank">→ @psidanielacoelho</a>
+      </div>
+    </div>
+
+    <div class="item info" onclick="toggle(this)">
+      <input type="checkbox">
+      <div class="item-content">
+        <div class="item-title">Supabase EF Cleanup — Deletar 71 Edge Functions órfãs</div>
+        <div class="item-desc">Após adicionar SUPABASE_ACCESS_TOKEN: rodar supabase-ef-cleanup.yml<br>Liberará slot para criar EFs de produção (webhook Hotmart via Supabase)</div>
+      </div>
+    </div>
+
+    <div class="item info" onclick="toggle(this)">
+      <input type="checkbox">
+      <div class="item-content">
+        <div class="item-title">Amazon KDP — Publicar livro "Narcisista Encoberto"</div>
+        <div class="item-desc">kdp_psicologia.py já gera o livro → fazer upload em kdp.amazon.com<br>Preço: R$9,90 Kindle / R$39,90 impresso · Royalty: 70%</div>
+        <a class="item-link" href="https://kdp.amazon.com" target="_blank">→ kdp.amazon.com</a>
+      </div>
+    </div>
+
+    <div class="item info" onclick="toggle(this)">
+      <input type="checkbox">
+      <div class="item-content">
+        <div class="item-title">Kwai + TikTok Shop — Ativar links de afiliado nos áudios WA</div>
+        <div class="item-desc">Produtos: magnésio + ashwagandha + ômega-3 · Comissão: 15-25%<br>kwai_shop_affiliate.yml já roda 2x/dia</div>
+      </div>
+    </div>
+
+    <div class="item info" onclick="toggle(this)">
+      <input type="checkbox">
+      <div class="item-content">
+        <div class="item-title">Paid Ads — Primeiros R$100 para 0→1K seguidores</div>
+        <div class="item-desc">Meta Ads: boost post dark narcisismo · CPM estimado R$8 · 12.500 impressões<br>Objetivo: first 1K orgânico não converte, ads aceleram</div>
+        <a class="item-link" href="https://business.facebook.com" target="_blank">→ Meta Business Suite</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────────────────── MATH FINAL ───────────────────────── -->
+  <div class="section">
+    <div class="section-title"><span>💰</span> Math do Caminho para R$50K/mês</div>
+    <div style="background:var(--card);border-radius:10px;padding:16px;font-size:.82rem;line-height:2">
+      <strong>Hoje (0 setup):</strong> R$0/mês<br>
+      <strong>Semana 1</strong> (Hotmart+WA+ManyChat): 5 vendas/dia × R$29,90 = R$4.485/mês<br>
+      <strong>Mês 1</strong> (1K seguidores): 10 vendas/dia + 50 assinantes WA = R$9.870/mês<br>
+      <strong>Mês 3</strong> (5K seguidores): 20 vendas/dia + 200 assinantes WA = R$17.940 + R$3.600 = R$21.540/mês<br>
+      <strong>Mês 6</strong> (10K+ viral): 50 vendas/dia + 500 assinantes WA + YouTube RPM = R$50K+ ✅
+    </div>
+  </div>
+
+</main>
+<footer>ψ Daniela Coelho · psicologia.doc · Atualizado: <span id="ts"></span></footer>
+<script>
+document.getElementById('ts').textContent = new Date().toLocaleString('pt-BR');
+const KEY = 'psicoCheck';
+const saved = JSON.parse(localStorage.getItem(KEY)||'{}');
+
+document.querySelectorAll('.item').forEach((item,i) => {
+  const cb = item.querySelector('input');
+  if(saved[i]) cb.checked = true;
+  if(cb.checked && !item.classList.contains('done')) item.style.opacity='0.6';
+});
+
+window.toggle = function(item) {
+  const cb = item.querySelector('input');
+  if(event.target === cb) return;
+  cb.checked = !cb.checked;
+  updateStats();
+};
+
+document.querySelectorAll('input[type=checkbox]').forEach(cb => {
+  cb.addEventListener('change', updateStats);
+});
+
+function updateStats(){
+  const items  = document.querySelectorAll('.item');
+  const all    = items.length;
+  const done   = [...items].filter(i => i.querySelector('input').checked).length;
+  const bloq   = [...document.querySelectorAll('.item.bloq')].filter(i => !i.querySelector('input').checked).length;
+  const pct    = Math.round(done/all*100);
+  document.getElementById('total-done').textContent = done;
+  document.getElementById('total-bloq').textContent = bloq;
+  document.getElementById('total-pct').textContent  = pct+'%';
+  document.getElementById('prog-fill').style.width  = pct+'%';
+  // salvar estado
+  const state = {};
+  items.forEach((item,i) => state[i] = item.querySelector('input').checked);
+  localStorage.setItem(KEY, JSON.stringify(state));
+}
+updateStats();
+</script>
+</body>
+</html>
