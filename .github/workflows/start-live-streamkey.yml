@@ -1,0 +1,64 @@
+name: 🔴 START LIVE — Cole a Stream Key aqui
+
+on:
+  workflow_dispatch:
+    inputs:
+      stream_key:
+        description: "Cole aqui a Stream Key do YouTube Studio"
+        required: true
+      horas:
+        description: "Horas de transmissão"
+        default: "6"
+      titulo:
+        description: "Tema do stream"
+        default: "528hz_sono"
+        type: choice
+        options:
+          - 528hz_sono
+          - 963hz_prime
+          - 432hz_equilibrio
+          - 40hz_foco
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 375
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+
+      - name: Instalar FFmpeg
+        run: sudo apt-get install -y ffmpeg > /dev/null 2>&1
+
+      - name: Salvar stream key permanentemente
+        env:
+          STREAM_KEY: ${{ inputs.stream_key }}
+          GH_PAT:     ${{ secrets.GH_PAT }}
+        run: |
+          pip install requests PyNaCl --break-system-packages -q
+          python3 - << 'PYEOF'
+          import os, requests, base64
+          from nacl import encoding, public
+          key = os.environ["STREAM_KEY"]
+          ghp = os.environ.get("GH_PAT","")
+          H   = {"Authorization":f"token {ghp}","Accept":"application/vnd.github.v3+json"}
+          rk  = requests.get("https://api.github.com/repos/tafita81/Repovazio/actions/secrets/public-key",headers=H,timeout=10)
+          pd  = rk.json()
+          pk  = public.PublicKey(pd["key"].encode(), encoding.Base64Encoder())
+          enc = base64.b64encode(public.SealedBox(pk).encrypt(key.encode())).decode()
+          for name in ["YOUTUBE_STREAM_KEY","YOUTUBE_STREAM_KEY_EN","YOUTUBE_STREAM_KEY_ES"]:
+              r = requests.put(f"https://api.github.com/repos/tafita81/Repovazio/actions/secrets/{name}",
+                  headers=H,json={"encrypted_value":enc,"key_id":pd["key_id"]},timeout=30)
+              print(f"Secret {name}: {'OK' if r.status_code in(201,204) else r.status_code}")
+          PYEOF
+
+      - name: Iniciar live 24/7
+        env:
+          YOUTUBE_STREAM_KEY: ${{ inputs.stream_key }}
+          GROQ_API_KEY:       ${{ secrets.GROQ_API_KEY }}
+          TEMA:               ${{ inputs.titulo }}
+          HORAS:              ${{ inputs.horas }}
+        run: |
+          timeout $((${HORAS:-6} * 3600)) python3 scripts/youtube_live_max.py || true
+        continue-on-error: true
