@@ -1,0 +1,53 @@
+name: Gerar Videos — 3 Formatos × 12 Idiomas
+
+on:
+  workflow_dispatch:
+    inputs:
+      formato:
+        description: "sleep8h | psych2go | focus | all"
+        default: "all"
+      idioma:
+        description: "EN ES DE FR IT JA KO PT ZH AR RU HI | all"
+        default: "EN"
+  schedule:
+    # Gerar 1 video de cada formato todo dia
+    - cron: "0 8 * * *"
+
+jobs:
+  gerar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        idioma: [EN, PT, ES, DE, FR, JA, KO]
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+
+      - name: Instalar dependências
+        run: |
+          sudo apt-get install -y ffmpeg > /dev/null 2>&1
+          pip install requests --break-system-packages
+
+      - name: Gerar formato Psych2Go (listicle 5min)
+        env:
+          CANAL_IDIOMA:  ${{ matrix.idioma }}
+          GROQ_API_KEY:  ${{ secrets.GROQ_API_KEY }}
+        run: python3 scripts/gen_psych2go.py || true
+        continue-on-error: true
+
+      - name: Gerar formato Focus Binaural (1h)
+        env:
+          CANAL_IDIOMA:  ${{ matrix.idioma }}
+          GROQ_API_KEY:  ${{ secrets.GROQ_API_KEY }}
+        run: python3 scripts/gen_focus_binaural.py || true
+        continue-on-error: true
+
+      - name: Status
+        if: always()
+        run: |
+          echo "Idioma: ${{ matrix.idioma }}"
+          ls -lh /tmp/ 2>/dev/null || true
