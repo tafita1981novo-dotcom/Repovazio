@@ -1,0 +1,36 @@
+name: TikTok Shop — UGC Anônimo R$5.600/semana
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 8,16 * * *"
+
+jobs:
+  gerar-tiktok-ugc:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: |
+          sudo apt-get install -y ffmpeg > /dev/null 2>&1
+          pip install requests --break-system-packages
+
+      - name: TikTok Shop Engine (PubMed + Ken Burns)
+        env:
+          GROQ_API_KEY:         ${{ secrets.GROQ_API_KEY }}
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          HF_TOKEN:             ${{ secrets.HF_TOKEN }}
+        run: python3 scripts/tiktok_shop_engine.py || true
+        continue-on-error: true
+
+      - name: Robonil Free (LTX-Video + Ken Burns)
+        env:
+          GROQ_API_KEY:         ${{ secrets.GROQ_API_KEY }}
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          HF_TOKEN:             ${{ secrets.HF_TOKEN }}
+        run: python3 scripts/robonil_free.py || true
+        continue-on-error: true
