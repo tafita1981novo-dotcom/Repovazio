@@ -1,0 +1,51 @@
+name: Gemini Mega Pipeline — Veo3 + Imagen3 + 6 Afiliados
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 3,11,19 * * *"  # 3x/dia (3h/11h/19h UTC)
+
+jobs:
+  mega-pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: |
+          sudo apt-get install -y ffmpeg > /dev/null 2>&1
+          pip install requests edge-tts --break-system-packages
+      - name: Step 1 — Gemini Mega (Imagen3 + Veo3 + Afiliados)
+        env:
+          GEMINI_API_KEY:       ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY_NEW:   ${{ secrets.GEMINI_API_KEY_NEW }}
+          GROQ_API_KEY:         ${{ secrets.GROQ_API_KEY }}
+          NVIDIA_API_KEY:       ${{ secrets.NVIDIA_API_KEY }}
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python3 scripts/gemini_mega_pipeline.py || true
+        continue-on-error: true
+      - name: Step 2 — Render V3 (usa Imagen3/Veo3 como fundo)
+        env:
+          GEMINI_API_KEY:       ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY:         ${{ secrets.GROQ_API_KEY }}
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python3 scripts/render_v3_mega.py || true
+        continue-on-error: true
+      - name: Step 3 — Canal Dark (Daniela lateral)
+        env:
+          GROQ_API_KEY:         ${{ secrets.GROQ_API_KEY }}
+          GEMINI_API_KEY:       ${{ secrets.GEMINI_API_KEY }}
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python3 scripts/canal_dark_pipeline.py || true
+        continue-on-error: true
+      - name: Step 4 — Kwai Short Videos
+        env:
+          GROQ_API_KEY:         ${{ secrets.GROQ_API_KEY }}
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python3 scripts/kwai_short_video_renderer.py || true
+        continue-on-error: true
