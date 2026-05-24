@@ -1,0 +1,100 @@
+name: SISTEMA COMPLETO — YouTube + TikTok + Ads + POD
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6,14,22 * * *"
+
+jobs:
+  # CAMADA 1: Coleta de dados (27 APIs gratuitas)
+  knowledge-fusion:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: |
+          sudo apt-get install -y ffmpeg > /dev/null 2>&1
+          pip install requests edge-tts --break-system-packages
+      - env:
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GROQ_API_KEY:         ${{ secrets.GROQ_API_KEY }}
+        run: python3 scripts/knowledge_fusion.py || true
+        continue-on-error: true
+
+  # CAMADA 2: YouTube (estilos virais dos canais de milhões)
+  youtube-viral:
+    runs-on: ubuntu-latest
+    needs: knowledge-fusion
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: |
+          sudo apt-get install -y ffmpeg > /dev/null 2>&1
+          pip install requests edge-tts --break-system-packages
+      - env:
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GROQ_API_KEY:         ${{ secrets.GROQ_API_KEY }}
+        run: python3 scripts/production_pipeline.py || true
+        continue-on-error: true
+
+  # CAMADA 3: TikTok Shop (R$5.600/semana UGC anônimo)
+  tiktok-shop:
+    runs-on: ubuntu-latest
+    needs: knowledge-fusion
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: |
+          sudo apt-get install -y ffmpeg > /dev/null 2>&1
+          pip install requests --break-system-packages
+      - env:
+          GROQ_API_KEY:         ${{ secrets.GROQ_API_KEY }}
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          HF_TOKEN:             ${{ secrets.HF_TOKEN }}
+        run: |
+          python3 scripts/tiktok_shop_engine.py || true
+          python3 scripts/robonil_free.py || true
+        continue-on-error: true
+
+  # CAMADA 4: Meta Ads + POD ($877K/mês modelo anônimo)
+  monetizacao:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install requests --break-system-packages
+      - env:
+          GROQ_API_KEY:         ${{ secrets.GROQ_API_KEY }}
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          python3 scripts/meta_ads_creative.py || true
+          python3 scripts/pod_psychology_engine.py || true
+        continue-on-error: true
+
+  # CAMADA 5: Detector Live YouTube (ativa stream key)
+  detector-live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install requests --break-system-packages
+      - env:
+          YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
+          SUPABASE_URL:       ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python3 scripts/live_global_master.py || true
+        continue-on-error: true
