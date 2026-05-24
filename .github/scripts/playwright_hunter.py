@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-PLAYWRIGHT JOB HUNTER — Preenche formulários reais
+PLAYWRIGHT JOB HUNTER v2 — Corrigido
+Suporta: Greenhouse direto + iframes embedded + React SPAs
 Rafael Rodrigues | +5522992418257
 """
 import os, time, json, datetime, urllib.request, urllib.parse, hashlib, sys
@@ -13,396 +14,371 @@ SUPA_KEY  = os.environ.get("SUPABASE_ANON_KEY","")
 CV_PATH   = ".github/assets/rafael_cv.pdf"
 
 PROFILE = {
-    "first_name":    "Rafael",
-    "last_name":     "Rodrigues",
-    "email":         REPLY_TO,
-    "phone":         PHONE,
-    "linkedin":      "https://linkedin.com/in/rafael-r-a3946a15",
-    "location":      "Brazil",
-    "company":       "Dataex",
-    "title":         "Senior Data Analyst",
-    "years_exp":     "15",
-    "salary":        "120000",
-    "authorized":    "Yes",   # work authorization
-    "sponsorship":   "No",    # visa sponsorship
-    "referrer":      "LinkedIn",
-    "cover": lambda role, co: f"""Dear {co} Hiring Team,
-
-I am applying for the {role} position. Senior Data Analyst and Analytics Engineer with 15+ years of enterprise BI experience. Microsoft PL-300 Power BI Data Analyst and Tableau Desktop Specialist certified.
-
-Key achievements:
-• $9M+ operational savings — TIM/OI Telecommunications
-• 70% report latency reduction via DAX/SQL optimization — Keyrus
-• Analytics platforms for 200+ business users (Financial Services, Retail, Telecom)
-• Multi-cloud: Power BI · BigQuery · Snowflake · Databricks · Azure Synapse
-
-Phone: {PHONE}
-LinkedIn: https://linkedin.com/in/rafael-r-a3946a15
-
-Available immediately for remote engagement.
-Rafael Rodrigues — PL-300 | Tableau Certified | +5522992418257"""
+    "first_name":"Rafael","last_name":"Rodrigues",
+    "email":REPLY_TO,"phone":PHONE,
+    "linkedin":"https://linkedin.com/in/rafael-r-a3946a15",
 }
+COVER = lambda role,co: f"""Dear {co} Hiring Team,
+I am applying for the {role} position. Senior Data Analyst and Analytics Engineer with 15+ years of enterprise BI experience. Microsoft PL-300 Power BI Data Analyst certified. Available immediately.
+Key: $9M+ operational savings · 70% latency reduction · 200+ users · 500M+ records/month
+Phone: {PHONE} | LinkedIn: linkedin.com/in/rafael-r-a3946a15"""
 
-# ─── RESPOSTAS PARA PERGUNTAS CUSTOMIZADAS ────────────────────────────────────
 ANSWER_MAP = {
-    # work authorization
-    "authorized": "Yes",
-    "legally authorized": "Yes",
-    "work in the country": "Yes",
-    "work authorization": "Yes",
-    "eligible to work": "Yes",
-    # sponsorship
-    "sponsorship": "No",
-    "visa sponsorship": "No",
-    "require.*sponsor": "No",
-    "sponsor.*work": "No",
-    # source / referral
-    "how did you hear": "LinkedIn",
-    "how did you find": "LinkedIn",
-    "referred by": "LinkedIn",
-    "source": "LinkedIn",
-    "referr": "LinkedIn",
-    # relocation
-    "relocat": "Yes",
-    "willing to relocat": "Yes",
-    # remote
-    "remote": "Yes",
-    "work remotely": "Yes",
-    # salary
-    "salary": "120000",
-    "compensation": "120000",
-    "expected salary": "120000",
-    # start date
-    "start date": "Immediately",
-    "available to start": "Immediately",
-    "when can you start": "Immediately",
-    # gender / diversity (optional)
-    "gender": "Prefer not to say",
-    "race": "I don't wish to answer",
-    "ethnicity": "I don't wish to answer",
-    "veteran": "I am not a protected veteran",
-    "disability": "I don't wish to answer",
-    # experience
-    "years of experience": "15+",
-    "years.*experience": "15",
+    "authorized":True,"legally authorized":True,"work in the country":True,
+    "sponsorship":False,"require.*sponsor":False,"visa sponsor":False,
+    "how did you hear":"LinkedIn","how did you find":"LinkedIn",
+    "referr":"LinkedIn","source":"LinkedIn","refer":"LinkedIn",
+    "relocat":True,"remote":True,"work remotely":True,
+    "salary":"120000","compensation":"120000","expected salary":"120000",
+    "start":"Immediately","available to start":"Immediately",
+    "gender":"Prefer not to say","race":"I don't wish to answer",
+    "ethnicity":"I don't wish to answer","veteran":"I am not a protected veteran",
+    "disability":"I don't wish to answer","years of experience":"15",
 }
-
-def get_answer(label: str) -> str:
-    label_lower = label.lower()
-    import re
-    for pattern, answer in ANSWER_MAP.items():
-        if re.search(pattern, label_lower):
-            return answer
+import re as _re
+def get_answer(label):
+    lb = label.lower()
+    for pat, ans in ANSWER_MAP.items():
+        if _re.search(str(pat), lb):
+            if isinstance(ans, bool): return "Yes" if ans else "No"
+            return str(ans)
     return ""
 
-# ─── SUPABASE ─────────────────────────────────────────────────────────────────
-def supa_insert(table, data):
-    url = f"{SUPA_URL}/rest/v1/{table}"
-    body = json.dumps(data).encode()
-    req = urllib.request.Request(url, data=body, method="POST", headers={
-        "apikey":SUPA_KEY,"Authorization":f"Bearer {SUPA_KEY}",
-        "Content-Type":"application/json","Prefer":"return=minimal"
-    })
+# ── Supabase ──────────────────────────────────────────────────────────────────
+def supa(method, table, data=None, params=""):
+    url = f"{SUPA_URL}/rest/v1/{table}?{params}"
+    hdrs = {"apikey":SUPA_KEY,"Authorization":f"Bearer {SUPA_KEY}",
+            "Content-Type":"application/json","Prefer":"return=minimal"}
+    body = json.dumps(data).encode() if data else None
+    req  = urllib.request.Request(url,data=body,method=method,headers=hdrs)
     try:
-        with urllib.request.urlopen(req, timeout=10) as r: return r.status
-    except: return 0
+        with urllib.request.urlopen(req,timeout=10) as r:
+            try: return json.loads(r.read()), r.status
+            except: return {}, r.status
+    except urllib.error.HTTPError as e:
+        return {}, e.code
+    except: return {}, 0
 
 def is_applied(eid):
-    url = f"{SUPA_URL}/rest/v1/job_leads?external_id=eq.{urllib.parse.quote(str(eid))}&applied=eq.true&select=id"
-    req = urllib.request.Request(url, headers={"apikey":SUPA_KEY,"Authorization":f"Bearer {SUPA_KEY}"})
-    try:
-        with urllib.request.urlopen(req, timeout=8) as r:
-            return len(json.loads(r.read())) > 0
-    except: return False
+    rows,_ = supa("GET","job_leads",params=f"external_id=eq.{urllib.parse.quote(str(eid))}&applied=eq.true&select=id")
+    return isinstance(rows,list) and len(rows)>0
 
-def mark_applied(eid, company, role, url, platform, method, status="sent"):
+def mark_applied(eid,company,role,url,platform,method,status):
     now = datetime.datetime.now(datetime.timezone.utc).isoformat()
-    supa_insert("job_leads", {"external_id":str(eid),"company":company,"role":role,
+    supa("POST","job_leads",{"external_id":str(eid),"company":company,"role":role,
         "url":url,"platform":platform,"applied":True,"applied_at":now,"ats_type":method})
-    supa_insert("job_applications", {"company":company,"role":role,"url":url,
+    supa("POST","job_applications",{"company":company,"role":role,"url":url,
         "application_method":method,"platform":platform,"status":status})
 
-# ─── GREENHOUSE DISCOVERY ─────────────────────────────────────────────────────
+# ── Job Discovery ─────────────────────────────────────────────────────────────
 GH_COMPANIES = [
-    "braze","twilio","adyen","stripe","elastic","clickhouse",
-    "databricks","datadog","honeycombio","grafana-labs","newrelic-relyance",
-    "amplitude","mixpanel","segment","fullstory","heap","pendo",
-    "thoughtspot","sigmacomputing","mode-analytics","hex","metabase",
-    "dbt-labs","fivetran","airbyte","hightouch","census","monte-carlo-data",
-    "brex","ramp","mercury","affirm","gusto","rippling","lattice",
-    "cultureamp","asana","notion","webflow","figma","miro","loom",
-    "zendesk","intercom","gong","outreach","salesloft","hubspot",
-    "coinbase","kraken","robinhood","plaid","marqeta","payoneer",
-    "openai","cohere","scale-ai","labelbox","weights-biases","arize-ai",
-    "shopify","woocommerce","narvar","bazaarvoice","yotpo",
-    "airbnb","expedia","hopper","tripadvisor",
-    "sorcero","corsearch","lexipol","preply","airalo","moniepoint",
-    "nubank","vtex","rdstation",
-    "gitlab","hashicorp","elastic","cloudflare","fastly",
-    "pagerduty","linear","zapier","sentry","rollbar",
+    "braze","twilio","adyen","stripe","elastic","clickhouse","databricks",
+    "datadog","honeycombio","grafana-labs","amplitude","mixpanel","segment",
+    "fullstory","heap","pendo","thoughtspot","sigmacomputing","mode-analytics",
+    "hex","metabase","dbt-labs","fivetran","airbyte","hightouch","census",
+    "monte-carlo-data","brex","ramp","mercury","affirm","gusto","rippling",
+    "lattice","cultureamp","asana","notion","webflow","figma","miro","loom",
+    "zendesk","intercom","gong","outreach","salesloft","hubspot","coinbase",
+    "kraken","robinhood","plaid","marqeta","payoneer","openai","cohere",
+    "scale-ai","labelbox","weights-biases","arize-ai","shopify","narvar",
+    "airbnb","expedia","hopper","tripadvisor","sorcero","corsearch","lexipol",
+    "preply","airalo","moniepoint","nubank","vtex","rdstation","gitlab",
+    "hashicorp","cloudflare","fastly","pagerduty","linear","zapier","sentry",
+    "freshworks","docusign","twilio","okta","hashicorp","snyk","atlassian",
+    "mongodb","cockroachdb","planetscale","neon","algolia","elastic",
+    "contentful","typeform","hotjar","mixpanel","segment","heap","fullstory",
 ]
-
 KEYWORDS = ["data analyst","power bi","business intelligence","bi developer",
             "analytics engineer","bi analyst","reporting analyst","data visualization"]
 
-def discover_gh_jobs():
-    jobs = []
+def discover_jobs():
+    jobs = []; seen = set()
     for co in GH_COMPANIES:
         try:
             url = f"https://boards-api.greenhouse.io/v1/boards/{co}/jobs"
-            req = urllib.request.Request(url, headers={"User-Agent":"Mozilla/5.0"})
-            with urllib.request.urlopen(req, timeout=6) as r:
+            req = urllib.request.Request(url,headers={"User-Agent":"Mozilla/5.0"})
+            with urllib.request.urlopen(req,timeout=6) as r:
                 data = json.loads(r.read())
                 for j in data.get("jobs",[]):
+                    jid = j["id"]; key = f"{co}_{jid}"
+                    if key in seen: continue
+                    seen.add(key)
                     if any(k in j.get("title","").lower() for k in KEYWORDS):
-                        apply_url = j.get("absolute_url","")
-                        if apply_url:
-                            jobs.append({
-                                "id":f"gh_{co}_{j['id']}",
-                                "company":co.replace("-"," ").title(),
-                                "role":j["title"],
-                                "url":apply_url,
-                                "platform":"Greenhouse",
-                                "ats_type":"greenhouse_playwright"
-                            })
+                        jobs.append({"id":f"gh_{co}_{jid}","company":co.replace("-"," ").title(),
+                            "role":j["title"],"abs_url":j.get("absolute_url",""),
+                            "platform":"Greenhouse","ats_type":"greenhouse_pw",
+                            "co":co,"jid":jid})
         except: pass
-        time.sleep(0.2)
+        time.sleep(0.15)
     return jobs
 
-# ─── PLAYWRIGHT FORM FILLER ───────────────────────────────────────────────────
-def fill_greenhouse_form(page, job, cv_path):
-    """Preenche formulário Greenhouse com Playwright"""
-    role, company = job["role"], job["company"]
-    cover_text = PROFILE["cover"](role, company)
+# ── Form Fill Core ────────────────────────────────────────────────────────────
+def fill_fields(ctx, profile, cv_path, cover):
+    """Preenche campos padrão em qualquer contexto (page ou frame)"""
+    # Nome
+    for sel,val in [("input[name='first_name']",profile["first_name"]),
+                    ("input[name='last_name']",profile["last_name"]),
+                    ("input[name='email']",profile["email"]),
+                    ("input[name='phone']",profile["phone"]),
+                    ("input[name='candidate-location']","Brazil"),]:
+        try:
+            el = ctx.locator(sel).first
+            if el.is_visible(timeout=1500): el.fill(val)
+        except: pass
+    # LinkedIn
+    for sel in ["input[name*='linkedin']","input[placeholder*='LinkedIn']","input[id*='linkedin']"]:
+        try:
+            el = ctx.locator(sel).first
+            if el.is_visible(timeout=800): el.fill(profile["linkedin"]); break
+        except: pass
+    # CV
+    if cv_path and os.path.exists(cv_path):
+        for sel in ["input[type='file'][name='resume']","input[type='file'][name*='resume']","input[type='file']"]:
+            try:
+                el = ctx.locator(sel).first
+                if el.count() > 0: el.set_input_files(cv_path); time.sleep(1.5); break
+            except: pass
+    # Cover letter
+    for sel in ["textarea[name='cover_letter']","textarea[id*='cover']","textarea[placeholder*='cover']"]:
+        try:
+            el = ctx.locator(sel).first
+            if el.is_visible(timeout=800): el.fill(cover[:3000]); break
+        except: pass
+    # Selects
+    for sel_el in ctx.locator("select").all():
+        try:
+            sel_id = sel_el.get_attribute("id") or ""
+            label_txt = ""
+            if sel_id:
+                lbl = ctx.locator(f"label[for='{sel_id}']").first
+                if lbl.count(): label_txt = lbl.inner_text()
+            answer = get_answer(label_txt)
+            if answer:
+                for opt in sel_el.locator("option").all():
+                    otxt = opt.inner_text().strip().lower()
+                    if answer.lower() in otxt or otxt.startswith(answer.lower()[0]):
+                        sel_el.select_option(label=opt.inner_text()); break
+        except: pass
+    # Radios
+    done_names = set()
+    for radio in ctx.locator("input[type='radio']").all():
+        try:
+            name = radio.get_attribute("name") or ""
+            if name in done_names: continue
+            rid = radio.get_attribute("id") or ""
+            label_txt = ""
+            if rid:
+                lbl = ctx.locator(f"label[for='{rid}']").first
+                if lbl.count(): label_txt = lbl.inner_text()
+            answer = get_answer(label_txt) or get_answer(name.lower())
+            if answer:
+                val = radio.get_attribute("value") or ""
+                if answer.lower() in val.lower() or val.lower() in ["yes","1","true"] and answer=="Yes":
+                    radio.check(); done_names.add(name)
+                elif val.lower() in ["no","0","false"] and answer=="No":
+                    radio.check(); done_names.add(name)
+        except: pass
+    # Custom text questions
+    for inp in ctx.locator("input[name^='question_'],textarea[name^='question_']").all():
+        try:
+            iid = inp.get_attribute("id") or ""
+            label_txt = ""
+            if iid:
+                lbl = ctx.locator(f"label[for='{iid}']").first
+                if lbl.count(): label_txt = lbl.inner_text()
+            answer = get_answer(label_txt) or "LinkedIn"
+            tag = inp.evaluate("el=>el.tagName")
+            inp.fill(answer)
+        except: pass
 
+def try_submit(ctx, timeout=6000):
+    """Tenta clicar no botão de submit. Retorna True se clicou."""
+    SELECTORS = [
+        "input[type='submit']",
+        "button[type='submit']",
+        "#submit_app",
+        "button:has-text('Submit application')",
+        "button:has-text('Submit Application')",
+        "button:has-text('Submit')",
+        "button:has-text('Apply for this Job')",
+        "button:has-text('Send Application')",
+        "button:has-text('Complete Application')",
+        "[value='Submit Application']",
+        "[data-qa='btn-submit']",
+        "button.s-btn",
+        "button.btn-apply",
+    ]
+    for sel in SELECTORS:
+        try:
+            el = ctx.locator(sel).first
+            if el.count() > 0 and el.is_visible(timeout=1000):
+                el.scroll_into_view_if_needed()
+                el.click(force=True, timeout=timeout)
+                time.sleep(3)
+                return True
+        except: pass
+    return False
+
+# ── Main form filler ──────────────────────────────────────────────────────────
+def apply_to_job(page, job, cv_path):
+    co   = job["co"]
+    jid  = job["jid"]
+    role = job["role"]
+    company = job["company"]
+    cover = COVER(role, company)
+
+    # Estratégia 1: boards.greenhouse.io direto
+    direct_url = f"https://boards.greenhouse.io/{co}/jobs/{jid}"
     try:
-        # Navegar para o formulário
-        page.goto(job["url"], timeout=25000)
-        page.wait_for_load_state("domcontentloaded", timeout=15000)
-
-        # ── Campos padrão ────────────────────────────────────────────────────
-        for selector, value in [
-            ("input[name='first_name']",  PROFILE["first_name"]),
-            ("input[name='last_name']",   PROFILE["last_name"]),
-            ("input[name='email']",       PROFILE["email"]),
-            ("input[name='phone']",       PROFILE["phone"]),
-            ("input[name='candidate-location']", PROFILE["location"]),
-        ]:
-            try:
-                el = page.locator(selector).first
-                if el.is_visible(timeout=2000):
-                    el.fill(value)
-            except: pass
-
-        # ── LinkedIn ─────────────────────────────────────────────────────────
-        for sel in ["input[name*='linkedin']","input[placeholder*='LinkedIn']","input[id*='linkedin']"]:
-            try:
-                el = page.locator(sel).first
-                if el.is_visible(timeout=1000):
-                    el.fill(PROFILE["linkedin"])
-                    break
-            except: pass
-
-        # ── Upload do CV PDF ──────────────────────────────────────────────────
-        if os.path.exists(cv_path):
-            try:
-                file_input = page.locator("input[type='file'][name='resume']").first
-                if file_input.count() > 0:
-                    file_input.set_input_files(cv_path)
-                    time.sleep(1)
-            except:
-                try:
-                    file_input = page.locator("input[type='file']").first
-                    file_input.set_input_files(cv_path)
-                    time.sleep(1)
-                except: pass
-
-        # ── Cover letter ──────────────────────────────────────────────────────
-        for sel in ["textarea[name='cover_letter']","textarea[id*='cover']","textarea[placeholder*='cover']"]:
-            try:
-                el = page.locator(sel).first
-                if el.is_visible(timeout=1000):
-                    el.fill(cover_text[:4000])
-                    break
-            except: pass
-
-        # ── Perguntas customizadas ────────────────────────────────────────────
-        # Selects (dropdowns)
-        selects = page.locator("select").all()
-        for sel_el in selects:
-            try:
-                label_text = ""
-                # Tentar encontrar o label associado
-                sel_id = sel_el.get_attribute("id") or ""
-                if sel_id:
-                    label = page.locator(f"label[for='{sel_id}']").first
-                    if label.count():
-                        label_text = label.inner_text().lower()
-                
-                answer = get_answer(label_text)
-                if answer:
-                    options = sel_el.locator("option").all()
-                    for opt in options:
-                        opt_text = opt.inner_text().lower()
-                        if answer.lower() in opt_text or opt_text in answer.lower():
-                            sel_el.select_option(value=opt.get_attribute("value") or opt.inner_text())
-                            break
-                    else:
-                        # Tentar Yes/No genérico
-                        if answer in ["Yes","No"]:
-                            for opt in options:
-                                if opt.inner_text().strip().lower() == answer.lower():
-                                    sel_el.select_option(label=opt.inner_text())
-                                    break
-            except: pass
-
-        # Radio buttons (work auth, sponsorship, etc.)
-        radios = page.locator("input[type='radio']").all()
-        processed_names = set()
-        for radio in radios:
-            try:
-                name = radio.get_attribute("name") or ""
-                if name in processed_names: continue
-                
-                label_text = ""
-                radio_id = radio.get_attribute("id") or ""
-                if radio_id:
-                    label = page.locator(f"label[for='{radio_id}']").first
-                    if label.count():
-                        label_text = label.inner_text().lower()
-                
-                answer = get_answer(label_text) or get_answer(name.lower())
-                if answer:
-                    # Selecionar o radio com o valor correspondente
-                    value = radio.get_attribute("value") or ""
-                    if answer.lower() in value.lower() or value.lower() in answer.lower():
-                        radio.check()
-                        processed_names.add(name)
-                    elif answer == "Yes" and value.lower() in ["yes","1","true"]:
-                        radio.check()
-                        processed_names.add(name)
-                    elif answer == "No" and value.lower() in ["no","0","false"]:
-                        radio.check()
-                        processed_names.add(name)
-            except: pass
-
-        # Text inputs customizados (question_XXXXXX)
-        custom_inputs = page.locator("input[name^='question_'], textarea[name^='question_']").all()
-        for inp in custom_inputs:
-            try:
-                name = inp.get_attribute("name") or ""
-                label_text = ""
-                inp_id = inp.get_attribute("id") or ""
-                if inp_id:
-                    label = page.locator(f"label[for='{inp_id}']").first
-                    if label.count():
-                        label_text = label.inner_text()
-                
-                answer = get_answer(label_text)
-                if not answer:
-                    answer = PROFILE["referrer"]  # default: LinkedIn
-                
-                tag = inp.evaluate("el => el.tagName")
-                if tag == "TEXTAREA":
-                    inp.fill(answer)
-                else:
-                    inp.fill(answer)
-            except: pass
-
-        # ── Submeter o formulário ─────────────────────────────────────────────
-        submit = None
-        for sel in [
-            "input[type='submit']",
-            "button[type='submit']",
-            "button:has-text('Submit')",
-            "button:has-text('Apply')",
-            "button:has-text('Send Application')",
-            "[data-testid*='submit']",
-        ]:
-            try:
-                el = page.locator(sel).first
-                if el.is_visible(timeout=1000):
-                    submit = el
-                    break
-            except: pass
-
-        if submit:
-            submit.click(timeout=5000)
-            time.sleep(3)
-            
-            # Verificar se foi enviado
-            current_url = page.url
-            title = page.title().lower()
-            success = any(k in title or k in current_url for k in 
-                         ["thank","confirmation","success","submitted","received"])
-            return "success" if success else "submitted"
-        else:
-            return "no_submit_button"
-
+        page.goto(direct_url, timeout=20000)
+        page.wait_for_load_state("networkidle", timeout=12000)
     except PWTimeout:
-        return "timeout"
-    except Exception as e:
-        return f"error: {str(e)[:60]}"
+        return "timeout_loading"
 
-# ─── MAIN ─────────────────────────────────────────────────────────────────────
+    final_url = page.url
+    on_greenhouse = "greenhouse.io" in final_url
+
+    if on_greenhouse:
+        # Preenchimento direto na página
+        fill_fields(page, PROFILE, cv_path, cover)
+        if try_submit(page):
+            return "success_direct"
+        return "no_submit_direct"
+
+    # Estratégia 2: Empresa tem careers page própria com iframe Greenhouse
+    time.sleep(2)  # aguardar JS carregar iframes
+    page.wait_for_load_state("networkidle", timeout=8000)
+
+    # Procurar iframe do Greenhouse
+    gh_frame = None
+    for frame in page.frames:
+        if "greenhouse.io" in frame.url:
+            gh_frame = frame
+            break
+
+    if not gh_frame:
+        # Estratégia 3: Tentar absolute_url da empresa
+        try:
+            abs_url = job.get("abs_url","")
+            if abs_url and abs_url != direct_url:
+                page.goto(abs_url, timeout=15000)
+                page.wait_for_load_state("networkidle", timeout=10000)
+                time.sleep(2)
+                for frame in page.frames:
+                    if "greenhouse.io" in frame.url:
+                        gh_frame = frame
+                        break
+        except: pass
+
+    if not gh_frame:
+        return "no_gh_iframe"
+
+    # Preenchimento via iframe
+    try:
+        # Clicar "Enter manually" se existir (para formulários com upload first)
+        for sel in ["button:has-text('Enter manually')","a:has-text('Enter manually')",
+                    "button:has-text('manually')","[class*='manual-entry']"]:
+            try:
+                el = gh_frame.locator(sel).first
+                if el.is_visible(timeout=2000):
+                    el.click()
+                    time.sleep(1.5)
+                    break
+            except: pass
+
+        fill_fields(gh_frame, PROFILE, cv_path, cover)
+        time.sleep(1)
+
+        if try_submit(gh_frame):
+            return "success_iframe"
+
+        # Última tentativa: force-click em qualquer botão que pareça submit
+        for btn in gh_frame.locator("button").all():
+            try:
+                txt = btn.inner_text().strip().lower()
+                if any(k in txt for k in ["submit","apply","send","complete"]):
+                    btn.scroll_into_view_if_needed()
+                    btn.click(force=True, timeout=3000)
+                    time.sleep(2)
+                    return "success_iframe_force"
+            except: pass
+
+        return "no_submit_iframe"
+    except Exception as e:
+        return f"iframe_error:{str(e)[:40]}"
+
+# ── Main ──────────────────────────────────────────────────────────────────────
 def main():
-    today = datetime.date.today().strftime("%d/%m/%Y")
-    print(f"\n{'='*65}")
-    print(f"  PLAYWRIGHT JOB HUNTER — {today}")
+    today = datetime.date.today().strftime("%d/%m/%Y %H:%M UTC")
+    print(f"\n{'='*60}")
+    print(f"  PLAYWRIGHT HUNTER v2 — {today}")
     print(f"  Tel: {PHONE}")
-    print(f"{'='*65}\n")
+    print(f"{'='*60}\n")
 
     if not os.path.exists(CV_PATH):
-        print(f"❌ CV não encontrado: {CV_PATH}")
-        return
-
-    print(f"✅ CV PDF: {os.path.getsize(CV_PATH):,} bytes\n")
+        print(f"❌ CV não encontrado: {CV_PATH}"); return
+    print(f"✅ CV: {os.path.getsize(CV_PATH):,} bytes\n")
 
     print("Descobrindo vagas Greenhouse...")
-    jobs = discover_gh_jobs()
-    new_jobs = [j for j in jobs if not is_applied(j["id"])]
-    print(f"Total: {len(jobs)} vagas | Novas: {len(new_jobs)}\n")
+    all_jobs  = discover_jobs()
+    new_jobs  = [j for j in all_jobs if not is_applied(j["id"])]
+    print(f"Total: {len(all_jobs)} | Novas (não aplicadas): {len(new_jobs)}\n")
 
     if not new_jobs:
-        print("✅ Nenhuma vaga nova — tudo já aplicado!")
-        return
+        print("✅ Nenhuma vaga nova — sistema atualizado!"); return
 
-    results = []
+    results = {"success":0,"submitted":0,"failed":0,"skipped":0}
+
     with sync_playwright() as p:
         browser = p.chromium.launch(
             headless=True,
-            args=["--no-sandbox","--disable-dev-shm-usage","--disable-gpu"]
+            args=["--no-sandbox","--disable-dev-shm-usage",
+                  "--disable-gpu","--disable-web-security",
+                  "--allow-running-insecure-content"]
         )
-        context = browser.new_context(
+        ctx = browser.new_context(
             user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             viewport={"width":1280,"height":800},
             locale="en-US",
+            java_script_enabled=True,
         )
+        ctx.set_default_timeout(15000)
 
-        print("── PREENCHENDO FORMULÁRIOS ─────────────────────────────────────")
-        for i, job in enumerate(new_jobs[:30], 1):  # max 30 por run
-            page = context.new_page()
-            print(f"  [{i:2}/{min(len(new_jobs),30)}] {job['company'][:25]:<27} {job['role'][:40]}", end=" ", flush=True)
-            
-            result = fill_greenhouse_form(page, job, CV_PATH)
-            page.close()
-            
-            ok = result in ["success","submitted"]
-            icon = "✅" if result == "success" else "📨" if result == "submitted" else "⚠️"
+        print("── PREENCHENDO FORMULÁRIOS ─────────────────────────────────")
+        for i, job in enumerate(new_jobs[:40], 1):
+            page = ctx.new_page()
+            print(f"  [{i:2}/{min(len(new_jobs),40)}] {job['company']:<25} {job['role'][:38]}", end=" ", flush=True)
+
+            try:
+                result = apply_to_job(page, job, CV_PATH)
+            except Exception as e:
+                result = f"exception:{str(e)[:30]}"
+            finally:
+                try: page.close()
+                except: pass
+
+            ok = "success" in result
+            icon = "✅" if "success" in result else "📨" if "submitted" in result else "⚠️"
             print(f"{icon} {result}")
-            
+
             status = "success" if ok else result
-            mark_applied(job["id"], job["company"], job["role"],
-                        job["url"], job["platform"], "playwright_gh", status)
-            results.append({**job, "result": result})
+            mark_applied(job["id"],job["company"],job["role"],
+                        job["abs_url"],job["platform"],"greenhouse_pw",status)
+
+            if ok: results["success"] += 1
+            elif "submitted" in result: results["submitted"] += 1
+            else: results["failed"] += 1
             time.sleep(2)
 
         browser.close()
 
-    ok_count = sum(1 for r in results if r["result"] in ["success","submitted"])
-    print(f"\n{'='*65}")
-    print(f"  RESULTADO: {ok_count}/{len(results)} formulários preenchidos")
-    print(f"{'='*65}\n")
+    total_ok = results["success"] + results["submitted"]
+    print(f"\n{'='*60}")
+    print(f"  ✅ Sucesso confirmado: {results['success']}")
+    print(f"  📨 Submetidos:         {results['submitted']}")
+    print(f"  ❌ Falhou:             {results['failed']}")
+    print(f"  TOTAL APLICADO:       {total_ok}/{len(new_jobs[:40])}")
+    print(f"{'='*60}\n")
 
 if __name__ == "__main__":
     main()
