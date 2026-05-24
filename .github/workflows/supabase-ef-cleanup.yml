@@ -1,4 +1,4 @@
-name: Supabase EF Cleanup — Deletar Funções Órfãs
+name: Supabase EF Cleanup
 
 on:
   workflow_dispatch:
@@ -6,13 +6,13 @@ on:
 jobs:
   cleanup:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: "3.11"}
       - run: pip install requests --break-system-packages
-      - name: Deletar Edge Functions órfãs
+      - name: Deletar EFs orfas (requer SUPABASE_ACCESS_TOKEN)
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: python3 scripts/ef_cleanup.py
