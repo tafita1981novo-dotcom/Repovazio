@@ -1,0 +1,24 @@
+name: Quote Pod — Frases Psicologia Diárias
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 12 * * *"   # Diário 9h BRT
+
+jobs:
+  quote-pod:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install requests --break-system-packages
+
+      - name: Quote Pod Engine
+        env:
+          GROQ_API_KEY:         ${{ secrets.GROQ_API_KEY }}
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python3 scripts/quote_pod_engine.py || true
+        continue-on-error: true
