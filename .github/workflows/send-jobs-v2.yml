@@ -1,0 +1,12 @@
+name: Job Application Sender v2 — 20 Empresas
+on:
+  workflow_dispatch:
+jobs:
+  send-emails:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Send 20 personalized applications
+        env:
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+        run: python3 .github/scripts/send_jobs_v2.py
