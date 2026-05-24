@@ -70,6 +70,14 @@ def mark_applied(eid,company,role,url,platform,method,status):
     supa("POST","job_applications",{"company":company,"role":role,"url":url,
         "application_method":method,"platform":platform,"status":status})
 
+
+# Empresas que aparecem no Greenhouse mas usam ATS diferente (Workday, etc.)
+BLOCKLIST = {
+    "okta","workday","adp","sap-successfactors","oracle-taleo",
+    "servicenow","salesforce","microsoft","google","amazon","meta",
+    "apple","netflix","uber","lyft-uber",
+}
+
 # ── Job Discovery ─────────────────────────────────────────────────────────────
 GH_COMPANIES = [
     "braze","twilio","adyen","stripe","elastic","clickhouse","databricks",
@@ -93,6 +101,7 @@ KEYWORDS = ["data analyst","power bi","business intelligence","bi developer",
 
 def discover_jobs():
     jobs = []; seen = set()
+    skip_companies = BLOCKLIST
     for co in GH_COMPANIES:
         try:
             url = f"https://boards-api.greenhouse.io/v1/boards/{co}/jobs"
@@ -103,7 +112,8 @@ def discover_jobs():
                     jid = j["id"]; key = f"{co}_{jid}"
                     if key in seen: continue
                     seen.add(key)
-                    if any(k in j.get("title","").lower() for k in KEYWORDS):
+                    if co in skip_companies: continue
+                if any(k in j.get("title","").lower() for k in KEYWORDS):
                         jobs.append({"id":f"gh_{co}_{jid}","company":co.replace("-"," ").title(),
                             "role":j["title"],"abs_url":j.get("absolute_url",""),
                             "platform":"Greenhouse","ats_type":"greenhouse_pw",
