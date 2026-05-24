@@ -1,196 +1,201 @@
 #!/usr/bin/env python3
 """
-llm_router_v5.py — LLM Router com DeepSeek V4 (28x mais barato)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-BASEADO EM: Transcript "DeepSeek V4 + Claude Code — 28x mais barato"
+llm_router_v5.py — Apenas modelos GRATUITOS, melhores primeiro
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CUSTO TOTAL: R$ 0,00
 
-ECONOMIA REAL (transcript):
-  Claude Opus  input: $5.00/M tokens   output: $25.00/M tokens
-  DeepSeek V4  input: $0.435/M tokens  output: $0.87/M tokens
-  ECONOMIA:    input: 11.5×            output: 28.7×
+RANKING (melhor → fallback):
+  #1  Groq LLaMA 3.3 70B       14.400 req/dia  GRÁTIS  ← mais rápido
+  #2  NVIDIA DeepSeek V4 Pro   créditos grátis  GRÁTIS  ← mais inteligente
+  #3  Gemini 2.5 Flash           500 req/dia   GRÁTIS  ← mais capaz
+  #4  Gemini 2.0 Flash          2000 req/dia   GRÁTIS  ← mais rápido Google
+  #5  Open Router DeepSeek      free tier       GRÁTIS  ← backup
 
-  Para 300 tarefas/dia (nossa operação):
-  Opus:      $300-500/mês
-  DeepSeek:  $10-20/mês
-  ECONOMIA:  ~$480/mês → $5.760/ano
-
-CADEIA V5 (do mais barato ao mais caro):
-  1. DeepSeek V4 Pro (api.deepseek.com)    ← DEFAULT principal
-  2. NVIDIA DeepSeek V4 Pro (via nvapi)    ← fallback idêntico
-  3. Gemini 2.0 Flash (2000 req/day FREE)  ← ultra rápido, gratuito
-  4. Groq LLaMA 3.3 70B (14.400/dia FREE) ← fallback 3
-  5. DeepSeek via Open Router              ← fallback com Open Router
-  6. OpenAI gpt-4o-mini                   ← paid último recurso
-
-SECURITY NOTE (do transcript):
-  DeepSeek é empresa chinesa. NÃO enviar:
-  - Chaves API de outras plataformas
-  - Dados pessoais de usuários
-  - Informações sensíveis de negócio
-  Usar apenas para: geração de scripts, títulos, análises genéricas
-
-USO POR TIPO DE TAREFA:
-  BULK (scripts, títulos, análises) → DeepSeek V4 (28x mais barato)
-  CRÍTICO (publicação, decisões)    → Groq LLaMA (grátis, confiável)
-  EMERGÊNCIA                        → OpenAI fallback
+REMOVIDOS (eram pagos):
+  ✗ DeepSeek direct (api.deepseek.com)  — pago + risco segurança (empresa chinesa)
+  ✗ OpenAI gpt-4o-mini                  — pago
 """
 import os, requests, time
 import urllib3; urllib3.disable_warnings()
 
-# Credenciais (do Supabase ia_cache)
-DEEPSEEK_KEY = os.getenv("DEEPSEEK_API_KEY", "sk-071ba769ce3540fb809708ad0274331c")
-NVIDIA_KEY   = os.getenv("NVIDIA_API_KEY", "")
-GEMINI_KEY   = os.getenv("GEMINI_API_KEY", "AIzaSyDzCea_65Al-vy342xslBSVmKPv0qzTuXY")
-GROQ_KEY     = os.getenv("GROQ_API_KEY", "")
-OPENAI_KEY   = os.getenv("OPENAI_API_KEY", "")
-OR_KEY       = os.getenv("OPENROUTER_API_KEY", "")  # Open Router (opcional)
+GROQ    = os.getenv("GROQ_API_KEY", "")
+NVIDIA  = os.getenv("NVIDIA_API_KEY", "")
+GEMINI  = os.getenv("GEMINI_API_KEY", "AIzaSyDzCea_65Al-vy342xslBSVmKPv0qzTuXY")
+GEMINI2 = os.getenv("GEMINI_API_KEY_NEW", "AIzaSyCo-YEPjEw3KaOllUIpJKpVwdDZA-Mr5xg")
+OR      = os.getenv("OPENROUTER_API_KEY", "")
 
-MODELOS = {
-    "deepseek_direct": {
-        "url": "https://api.deepseek.com/chat/completions",
-        "model": "deepseek-chat",
-        "headers_key": DEEPSEEK_KEY,
-        "prefix": "Bearer",
-        "cost_input_per_M": 0.435,
-        "cost_output_per_M": 0.87,
-        "max_tokens": 4000,
-    },
-    "nvidia_deepseek": {
-        "url": "https://integrate.api.nvidia.com/v1/chat/completions",
-        "model": "deepseek-ai/deepseek-v3-0324",
-        "headers_key": NVIDIA_KEY,
-        "prefix": "Bearer",
-        "cost_input_per_M": 0.40,
-        "cost_output_per_M": 0.80,
-        "max_tokens": 4000,
-    },
-    "gemini_flash": {
-        "url": f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_KEY}",
-        "model": "gemini-2.0-flash",
-        "special": "gemini",
-        "cost_input_per_M": 0.0,  # 2000 req/dia grátis
-        "cost_output_per_M": 0.0,
-        "max_tokens": 2048,
-    },
-    "groq_llama": {
+# ── MODELOS GRATUITOS RANKEADOS ────────────────────────────────────────────
+MODELOS = [
+    {
+        "id": "groq_llama33",
+        "nome": "Groq LLaMA 3.3 70B",
         "url": "https://api.groq.com/openai/v1/chat/completions",
         "model": "llama-3.3-70b-versatile",
-        "headers_key": GROQ_KEY,
-        "prefix": "Bearer",
-        "cost_input_per_M": 0.0,  # 14.400 req/dia grátis
-        "cost_output_per_M": 0.0,
-        "max_tokens": 2000,
+        "key_env": GROQ,
+        "tipo": "openai",
+        "max_tokens": 8000,
+        "req_dia": 14400,
+        "custo": 0.0,
+        "nota": "⚡ mais rápido — 14.400 req/dia grátis",
     },
-    "openrouter_deepseek": {
+    {
+        "id": "nvidia_deepseek",
+        "nome": "NVIDIA DeepSeek V4 Pro",
+        "url": "https://integrate.api.nvidia.com/v1/chat/completions",
+        "model": "deepseek-ai/deepseek-v3-0324",
+        "key_env": NVIDIA,
+        "tipo": "openai",
+        "max_tokens": 4000,
+        "req_dia": 1000,   # créditos free tier NVIDIA
+        "custo": 0.0,
+        "nota": "🧠 mais inteligente — créditos grátis NVIDIA",
+    },
+    {
+        "id": "gemini25_flash",
+        "nome": "Gemini 2.5 Flash",
+        "url": None,  # usa key diretamente
+        "model": "gemini-2.5-flash-preview-04-17",
+        "key_env": GEMINI,
+        "tipo": "gemini",
+        "max_tokens": 4096,
+        "req_dia": 500,
+        "custo": 0.0,
+        "nota": "🔮 mais capaz — 500 req/dia grátis",
+    },
+    {
+        "id": "gemini20_flash",
+        "nome": "Gemini 2.0 Flash",
+        "url": None,
+        "model": "gemini-2.0-flash",
+        "key_env": GEMINI,
+        "tipo": "gemini",
+        "max_tokens": 4096,
+        "req_dia": 2000,
+        "custo": 0.0,
+        "nota": "⚡ rápido Google — 2.000 req/dia grátis",
+    },
+    {
+        "id": "gemini20_flash_backup",
+        "nome": "Gemini 2.0 Flash (key2)",
+        "url": None,
+        "model": "gemini-2.0-flash",
+        "key_env": GEMINI2,
+        "tipo": "gemini",
+        "max_tokens": 4096,
+        "req_dia": 2000,
+        "custo": 0.0,
+        "nota": "🔄 backup key2 — +2.000 req/dia",
+    },
+    {
+        "id": "openrouter_free",
+        "nome": "Open Router DeepSeek (free)",
         "url": "https://openrouter.ai/api/v1/chat/completions",
         "model": "deepseek/deepseek-chat-v3-0324:free",
-        "headers_key": OR_KEY,
-        "prefix": "Bearer",
-        "cost_input_per_M": 0.0,  # free tier Open Router
-        "cost_output_per_M": 0.0,
+        "key_env": OR,
+        "tipo": "openai",
         "max_tokens": 2000,
+        "req_dia": 999,
+        "custo": 0.0,
+        "nota": "🌐 Open Router free tier — backup final",
     },
-}
+]
 
-# Rotas por tipo de tarefa
+# Rotas por tipo de tarefa — sempre free, melhor primeiro
 ROTAS = {
-    "script":    ["deepseek_direct", "nvidia_deepseek", "groq_llama", "gemini_flash"],
-    "titulo":    ["deepseek_direct", "nvidia_deepseek", "groq_llama", "gemini_flash"],
-    "analise":   ["deepseek_direct", "gemini_flash", "groq_llama"],
-    "imersivo":  ["deepseek_direct", "groq_llama", "nvidia_deepseek"],
-    "reflexivo": ["groq_llama", "deepseek_direct", "nvidia_deepseek"],
-    "afiliado":  ["deepseek_direct", "groq_llama"],
-    "default":   ["deepseek_direct", "nvidia_deepseek", "gemini_flash", "groq_llama"],
+    "script":    ["groq_llama33", "nvidia_deepseek", "gemini25_flash", "gemini20_flash"],
+    "titulo":    ["groq_llama33", "nvidia_deepseek", "gemini20_flash"],
+    "analise":   ["nvidia_deepseek", "gemini25_flash", "groq_llama33"],
+    "imersivo":  ["groq_llama33", "nvidia_deepseek", "gemini25_flash"],
+    "reflexivo": ["groq_llama33", "nvidia_deepseek", "gemini20_flash"],
+    "afiliado":  ["groq_llama33", "gemini20_flash"],
+    "cientifico":["nvidia_deepseek", "gemini25_flash", "groq_llama33"],
+    "default":   ["groq_llama33", "nvidia_deepseek", "gemini25_flash", "gemini20_flash"],
 }
 
-_tokens_usados = {"input": 0, "output": 0, "custo_usd": 0.0, "chamadas": 0}
+_stats = {"chamadas":0, "successes":0, "por_modelo":{}}
 
-def _chamar_deepseek(cfg, prompt, max_tokens, temperature):
-    r = requests.post(cfg["url"],
-        headers={"Authorization": f"{cfg['prefix']} {cfg['headers_key']}",
-                 "Content-Type": "application/json"},
-        json={"model": cfg["model"],
-              "messages": [{"role": "user", "content": prompt}],
-              "max_tokens": min(max_tokens, cfg["max_tokens"]),
-              "temperature": temperature},
-        timeout=30, verify=False)
+def _modelo_by_id(mid):
+    return next((m for m in MODELOS if m["id"]==mid), None)
+
+def _chamar_openai(m, prompt, max_tokens, temperature):
+    if not m["key_env"]: return None
+    r = requests.post(m["url"],
+        headers={"Authorization":f"Bearer {m['key_env']}",
+                 "Content-Type":"application/json"},
+        json={"model":m["model"],
+              "messages":[{"role":"user","content":prompt}],
+              "max_tokens":min(max_tokens, m["max_tokens"]),
+              "temperature":temperature},
+        timeout=25, verify=False)
     if r.status_code == 200:
-        d = r.json()
-        texto = d["choices"][0]["message"]["content"].strip()
-        uso   = d.get("usage", {})
-        inp   = uso.get("prompt_tokens", 0)
-        out   = uso.get("completion_tokens", 0)
-        custo = (inp/1_000_000)*cfg["cost_input_per_M"] + (out/1_000_000)*cfg["cost_output_per_M"]
-        _tokens_usados["input"]    += inp
-        _tokens_usados["output"]   += out
-        _tokens_usados["custo_usd"]+= custo
-        _tokens_usados["chamadas"] += 1
-        return texto
+        return r.json()["choices"][0]["message"]["content"].strip()
     return None
 
-def _chamar_gemini(cfg, prompt, max_tokens, temperature):
-    r = requests.post(cfg["url"],
-        json={"contents": [{"role": "user", "parts": [{"text": prompt}]}],
-              "generationConfig": {"maxOutputTokens": min(max_tokens, cfg["max_tokens"]),
-                                   "temperature": temperature}},
-        timeout=30, verify=False)
+def _chamar_gemini(m, prompt, max_tokens, temperature):
+    key = m["key_env"]
+    if not key: return None
+    model = m["model"]
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}"
+    r = requests.post(url,
+        json={"contents":[{"role":"user","parts":[{"text":prompt}]}],
+              "generationConfig":{"maxOutputTokens":min(max_tokens, m["max_tokens"]),
+                                  "temperature":temperature}},
+        timeout=25, verify=False)
     if r.status_code == 200:
-        texto = r.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
-        _tokens_usados["chamadas"] += 1
-        return texto
+        return r.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
     return None
 
 def completar(prompt, tarefa="default", max_tokens=300, temperature=0.82):
-    """Chama modelos em cadeia até obter resposta. Retorna texto ou None."""
+    """Chama modelos gratuitos em ordem até obter resposta."""
     cadeia = ROTAS.get(tarefa, ROTAS["default"])
-    for nome in cadeia:
-        cfg = MODELOS.get(nome, {})
-        if not cfg: continue
-        key = cfg.get("headers_key","")
-        # Pula se não tem key configurada
-        if not key and nome not in ("gemini_flash",): continue
+    _stats["chamadas"] += 1
+    for mid in cadeia:
+        m = _modelo_by_id(mid)
+        if not m or not m["key_env"]: continue
         try:
-            if cfg.get("special") == "gemini":
-                texto = _chamar_gemini(cfg, prompt, max_tokens, temperature)
+            if m["tipo"] == "gemini":
+                texto = _chamar_gemini(m, prompt, max_tokens, temperature)
             else:
-                if not key: continue
-                texto = _chamar_deepseek(cfg, prompt, max_tokens, temperature)
+                texto = _chamar_openai(m, prompt, max_tokens, temperature)
             if texto:
+                _stats["successes"] += 1
+                _stats["por_modelo"][m["nome"]] = _stats["por_modelo"].get(m["nome"],0)+1
                 return texto
         except Exception as e:
-            print(f"     [{nome}] erro: {e}")
-        time.sleep(0.5)
+            pass  # tenta próximo
+        time.sleep(0.3)
     return None
+
+def listar_modelos():
+    """Imprime ranking dos modelos gratuitos."""
+    print("\n=== LLM ROUTER V5 — APENAS GRÁTIS ===")
+    for i, m in enumerate(MODELOS, 1):
+        key_ok = "✅" if m["key_env"] else "❌"
+        print(f"  #{i} {key_ok} {m['nome']:30} {m['req_dia']:6} req/dia  {m['nota']}")
+    print(f"\n  Custo total: R$ 0,00")
+    print("="*45)
 
 def stats():
     return {
-        "chamadas":  _tokens_usados["chamadas"],
-        "tokens_in": _tokens_usados["input"],
-        "tokens_out":_tokens_usados["output"],
-        "custo_usd": round(_tokens_usados["custo_usd"], 4),
-        "economia_vs_opus": f"{_tokens_usados['custo_usd'] * 28.7:.2f} USD economizados vs Opus",
+        "chamadas": _stats["chamadas"],
+        "successes": _stats["successes"],
+        "por_modelo": _stats["por_modelo"],
+        "custo_usd": 0.0,
     }
 
-# ── TESTE DO ROUTER ─────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    print("=== LLM Router V5 — Teste ===\n")
-    tarefas = [
-        ("script", "Escreva 2 frases sobre narcisismo em PT-BR, estilo reflexivo, sem hashtags."),
-        ("titulo", "Gere 3 títulos virais sobre burnout psicológico em PT-BR, 10 palavras max."),
-        ("analise","Explique brevemente o que é apego ansioso em 50 palavras em PT-BR."),
+    listar_modelos()
+    print("\n--- Testando cadeia ---")
+    testes = [
+        ("script",    "Escreva 1 frase sobre narcisismo em PT-BR, reflexivo."),
+        ("titulo",    "Dê 2 títulos virais sobre burnout em PT-BR, máx 10 palavras."),
+        ("cientifico","O que é apego ansioso? Responda em 40 palavras PT-BR."),
     ]
-    for tarefa, prompt in tarefas:
-        print(f"  🔄 [{tarefa}] {prompt[:50]}...")
-        resp = completar(prompt, tarefa=tarefa, max_tokens=200, temperature=0.82)
-        if resp:
-            print(f"     ✅ {resp[:80]}...")
-        else:
-            print(f"     ⚠️  Sem resposta")
-        time.sleep(2)
-
+    for tarefa, prompt in testes:
+        print(f"\n  [{tarefa}]")
+        resp = completar(prompt, tarefa=tarefa, max_tokens=150, temperature=0.82)
+        print(f"  → {resp[:100] if resp else 'sem resposta'}...")
+        time.sleep(1)
     s = stats()
-    print(f"\n{'='*50}")
-    print(f"  📊 {s['chamadas']} chamadas | ${s['custo_usd']} custo")
-    print(f"  💰 {s['economia_vs_opus']}")
-    print(f"  🔑 DeepSeek V4 como motor principal (28x mais barato)")
-    print("="*50)
+    print(f"\n  ✅ {s['successes']}/{s['chamadas']} OK | $0,00")
+    print(f"  Uso: {s['por_modelo']}")
