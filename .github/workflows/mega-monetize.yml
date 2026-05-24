@@ -1,0 +1,26 @@
+name: MEGA MONETIZE — Todas APIs Gratuitas
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 7,13,19 * * *"
+
+jobs:
+  mega:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - name: Setup
+        run: |
+          sudo apt-get install -y ffmpeg > /dev/null 2>&1
+          pip install requests edge-tts --break-system-packages
+      - name: MEGA MONETIZE — 6 APIs
+        env:
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GROQ_API_KEY:         ${{ secrets.GROQ_API_KEY }}
+        run: python3 scripts/mega_monetize.py || true
+        continue-on-error: true
