@@ -1,0 +1,244 @@
+name: 🔑 Ativar Live YouTube — Cole o Código Aqui
+
+on:
+  workflow_dispatch:
+    inputs:
+      auth_code:
+        description: |
+          Cole aqui o código do Google OAuth.
+          URL para obter: https://accounts.google.com/o/oauth2/auth?client_id=552651753048-p26lb7afjs5f75nvfrmmf4eb1ps4sc98.apps.googleusercontent.com&redirect_uri=urn:ietf:wg:oauth:2.0:oob&scope=https://www.googleapis.com/auth/youtube&response_type=code&access_type=offline&prompt=consent&login_hint=tafita81@gmail.com
+        required: true
+      horas:
+        description: "Horas de live (default: 6)"
+        default: "6"
+
+jobs:
+  ativar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 380
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+
+      - name: Instalar dependências
+        run: |
+          sudo apt-get install -y ffmpeg > /dev/null 2>&1
+          pip install requests PyNaCl edge-tts --break-system-packages
+
+      - name: Trocar código por token + criar live + transmitir
+        env:
+          AUTH_CODE:       ${{ inputs.auth_code }}
+          YT_CLIENT_ID:    ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET:${{ secrets.YT_CLIENT_SECRET }}
+          GH_PAT:          ${{ secrets.GH_PAT }}
+          GROQ_API_KEY:    ${{ secrets.GROQ_API_KEY }}
+          HORAS:           ${{ inputs.horas }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          python3 - << 'PYEOF'
+          import os, requests, base64, subprocess, pathlib, time
+          from datetime import datetime, timezone, timedelta
+
+          CODE = os.environ["AUTH_CODE"].strip()
+          CID  = os.environ["YT_CLIENT_ID"]
+          CSEC = os.environ["YT_CLIENT_SECRET"]
+          GHPAT= os.environ.get("GH_PAT","")
+          REPO = os.environ.get("GITHUB_REPOSITORY","tafita81/Repovazio")
+          HORAS= int(os.environ.get("HORAS","6"))
+          GHH  = {"Authorization":f"token {GHPAT}","Accept":"application/vnd.github.v3+json"}
+
+          # 1. Trocar código por tokens
+          print("1. Obtendo tokens do Google...")
+          r = requests.post("https://oauth2.googleapis.com/token", data={
+              "code": CODE, "client_id": CID, "client_secret": CSEC,
+              "redirect_uri": "urn:ietf:wg:oauth:2.0:oob",
+              "grant_type": "authorization_code"
+          }, timeout=20)
+          if r.status_code != 200:
+              print(f"Erro: {r.status_code} - {r.text}")
+              exit(1)
+          d = r.json()
+          access_token  = d["access_token"]
+          refresh_token = d.get("refresh_token","")
+          print(f"   Token obtido: {access_token[:20]}...")
+
+          # 2. Salvar refresh token como GitHub Secret
+          def save_secret(name, val):
+              try:
+                  from nacl import encoding, public
+                  rk = requests.get(f"https://api.github.com/repos/{REPO}/actions/secrets/public-key",
+                      headers=GHH, timeout=10)
+                  pd = rk.json()
+                  pk = public.PublicKey(pd["key"].encode(), encoding.Base64Encoder())
+                  enc = base64.b64encode(public.SealedBox(pk).encrypt(val.encode())).decode()
+                  requests.put(f"https://api.github.com/repos/{REPO}/actions/secrets/{name}",
+                      headers=GHH,
+                      json={"encrypted_value":enc,"key_id":pd["key_id"]},
+                      timeout=30)
+                  print(f"   Secret {name} salvo")
+              except Exception as e:
+                  print(f"   Secret err: {e}")
+
+          if refresh_token:
+              save_secret("YOUTUBE_REFRESH_TOKEN", refresh_token)
+              save_secret("YT_REFRESH_TOKEN", refresh_token)
+
+          YTH = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
+
+          # 3. Listar canais disponíveis na conta
+          print("
+2. Listando canais YouTube da conta...")
+          rc = requests.get(
+              "https://www.googleapis.com/youtube/v3/channels?part=snippet,contentDetails&mine=true",
+              headers=YTH, timeout=15)
+          canais = rc.json().get("items", []) if rc.status_code == 200 else []
+          for ch in canais:
+              handle = ch["snippet"].get("customUrl", ch["id"])
+              print(f"   Canal: {ch['snippet']['title']} | {handle} | {ch['id']}")
+
+          # 4. Criar live broadcast
+          print("
+3. Criando live broadcast...")
+          start = (datetime.now(timezone.utc)+timedelta(minutes=2)).strftime("%Y-%m-%dT%H:%M:%S.000Z")
+          rb = requests.post(
+              "https://www.googleapis.com/youtube/v3/liveBroadcasts?part=snippet,status,contentDetails",
+              headers=YTH,
+              json={
+                  "snippet": {
+                      "title": "🔴 528Hz SONO PROFUNDO | Ansiedade e Apego | Psicologia AO VIVO",
+                      "scheduledStartTime": start,
+                      "description": "Daniela Coelho · Pesquisa e Conteúdo em Psicologia
+
+528Hz + binaural 4Hz delta para sono profundo.
+Baseado em van der Kolk, Ainsworth, Sapolsky.
+
+💬 daniela-ia.vercel.app
+⚠️ Conteúdo educacional."
+                  },
+                  "status": {"privacyStatus":"public","selfDeclaredMadeForKids":False},
+                  "contentDetails": {"enableAutoStart":True,"enableDvr":True,"recordFromStart":True}
+              }, timeout=30)
+
+          if rb.status_code not in (200,201):
+              print(f"Broadcast err {rb.status_code}: {rb.text[:300]}")
+              exit(1)
+          broadcast_id = rb.json()["id"]
+          print(f"   Broadcast: {broadcast_id}")
+
+          # 5. Criar stream RTMP
+          print("
+4. Criando stream RTMP...")
+          rs = requests.post(
+              "https://www.googleapis.com/youtube/v3/liveStreams?part=snippet,cdn,contentDetails",
+              headers=YTH,
+              json={
+                  "snippet": {"title": "psicologia-live-24-7"},
+                  "cdn": {"ingestionType":"rtmp","resolution":"720p","frameRate":"30fps"},
+                  "contentDetails": {"isReusable": True}
+              }, timeout=30)
+
+          if rs.status_code not in (200,201):
+              print(f"Stream err {rs.status_code}: {rs.text[:300]}")
+              exit(1)
+
+          sd = rs.json()
+          stream_key  = sd["cdn"]["ingestionInfo"]["streamName"]
+          rtmp_addr   = sd["cdn"]["ingestionInfo"]["ingestionAddress"]
+          rtmp_url    = f"{rtmp_addr}/{stream_key}"
+          print(f"   StreamKey: {stream_key[:8]}...{stream_key[-4:]}")
+
+          # Salvar stream key
+          save_secret("YOUTUBE_STREAM_KEY", stream_key)
+          save_secret("YOUTUBE_STREAM_KEY_EN", stream_key)
+
+          # 6. Vincular broadcast ao stream
+          requests.post(
+              f"https://www.googleapis.com/youtube/v3/liveBroadcasts/bind?id={broadcast_id}&part=id,contentDetails&streamId={sd['id']}",
+              headers=YTH, timeout=30)
+          print("   Broadcast vinculado ao stream")
+
+          # 7. Gerar áudio 528Hz
+          print("
+5. Gerando áudio 528Hz...")
+          TMP = pathlib.Path("/tmp/lv"); TMP.mkdir(exist_ok=True)
+          ao = TMP/"audio_528.aac"
+          subprocess.run([
+              "ffmpeg","-y",
+              "-f","lavfi","-i","sine=frequency=528:duration=3600",
+              "-f","lavfi","-i","sine=frequency=532:duration=3600",
+              "-f","lavfi","-i","sine=frequency=174:duration=3600",
+              "-f","lavfi","-i","anoisesrc=color=pink:duration=3600",
+              "-filter_complex",
+              "[0:a]volume=0.04[l];[1:a]volume=0.04[r];[2:a]volume=0.015[b];[3:a]volume=0.004[p];"
+              "[l][r]amerge=inputs=2[bin];[bin][b][p]amix=inputs=3[out]",
+              "-map","[out]","-c:a","aac","-b:a","192k","-ar","44100",str(ao)
+          ], capture_output=True, timeout=120)
+          print(f"   Áudio: {'OK' if ao.exists() else 'FALHOU'}")
+
+          # 8. Gerar imagem base
+          print("
+6. Gerando imagem...")
+          try:
+              ri = requests.get(
+                  "https://image.pollinations.ai/prompt/dark+purple+night+sky+aurora+particles+calm+no+text?model=flux&width=1280&height=720&seed=9528&nologo=true",
+                  timeout=60)
+              ip = TMP/"bg.jpg"; ip.write_bytes(ri.content)
+              print(f"   Imagem: {ip.stat().st_size//1024}KB")
+          except:
+              subprocess.run(["ffmpeg","-y","-f","lavfi","-i","color=c=0x06060F:s=1280x720","-frames:v","1",str(TMP/"bg.jpg")],capture_output=True)
+              ip = TMP/"bg.jpg"
+
+          # 9. Criar slide com overlay
+          sl = TMP/"sl.mp4"
+          subprocess.run([
+              "ffmpeg","-y","-loop","1","-i",str(ip),
+              "-vf",
+              "scale=1280:720,"
+              "drawbox=y=0:color=black@0.85:width=iw:height=68:t=fill,"
+              "drawbox=y=ih-68:color=black@0.90:width=iw:height=68:t=fill,"
+              "drawbox=x=12:y=17:color=#EF4444:width=11:height=11:t=fill,"
+              "drawtext=text='528Hz SONO PROFUNDO':fontsize=22:fontcolor=#818CF8:x=34:y=13:bold=1:shadowcolor=black:shadowx=1:shadowy=1,"
+              "drawtext=text='AO VIVO':fontsize=13:fontcolor=#EF4444:x=34:y=38:bold=1,"
+              "drawtext=text='O apego ansioso ativa a amigdala mesmo durante o sono.':fontsize=24:fontcolor=white:x=(w-text_w)/2:y=h*0.42:bold=1:shadowcolor=#000:shadowx=2:shadowy=2,"
+              "drawtext=text='Ainsworth, 1969 . Siegel, UCLA':fontsize=16:fontcolor=#818CF8:x=(w-text_w)/2:y=h*0.42+40,"
+              "drawtext=text='Daniela Coelho . Pesquisa e Conteudo em Psicologia':fontsize=13:fontcolor=#94A3B8:x=(w-text_w)/2:y=h-48,"
+              "drawtext=text='daniela-ia.vercel.app':fontsize=12:fontcolor=#818CF8@0.85:x=(w-text_w)/2:y=h-28",
+              "-t","60","-c:v","libx264","-preset","fast","-tune","stillimage",
+              "-pix_fmt","yuv420p","-r","30","-an",str(sl)
+          ], capture_output=True, timeout=120)
+          print(f"   Slide: {'OK' if sl.exists() else 'FALHOU'}")
+
+          pl = TMP/"pl.txt"; pl.write_text(f"file '{sl.resolve()}'
+")
+
+          # 10. TRANSMITIR
+          print(f"
+7. Iniciando transmissão 24/7 ({HORAS}h)...")
+          print(f"   RTMP: {rtmp_addr[:40]}...")
+          print(f"   Key:  {stream_key[:8]}...")
+          print(f"   Monitor: https://studio.youtube.com")
+
+          audio_src = ["-stream_loop","-1","-i",str(ao)] if ao.exists()                       else ["-f","lavfi","-i","sine=frequency=528:duration=999999"]
+
+          proc = subprocess.Popen([
+              "ffmpeg","-y",
+              "-f","concat","-safe","0","-stream_loop","-1","-i",str(pl),
+              *audio_src,
+              "-c:v","libx264","-preset","veryfast","-tune","stillimage",
+              "-b:v","3000k","-maxrate","3000k","-bufsize","6000k",
+              "-g","60","-pix_fmt","yuv420p",
+              "-c:a","aac","-b:a","192k","-ar","44100","-ac","2",
+              "-f","flv", rtmp_url
+          ])
+
+          print(f"
+✅ LIVE ATIVA!")
+          print(f"   Verificar em: https://studio.youtube.com/channel/live")
+
+          try:
+              proc.wait(timeout=HORAS*3600)
+          except:
+              proc.terminate()
+          PYEOF
+        continue-on-error: false
