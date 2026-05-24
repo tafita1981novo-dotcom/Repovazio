@@ -1,0 +1,54 @@
+name: Funil Completo — WhatsApp + Instagram + SEO + Afiliados
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 8 * * *"    # 8h UTC = 5h BRT (gera conteudo do dia)
+    - cron: "30 22 * * *"  # 22:30 UTC = 19:30 BRT (entrega WhatsApp)
+
+jobs:
+  funil-diario:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: |
+          sudo apt-get install -y ffmpeg > /dev/null 2>&1
+          pip install requests edge-tts --break-system-packages
+      - name: "1. Calendário 30 dias (plano editorial)"
+        env:
+          GROQ_API_KEY:         ${{ secrets.GROQ_API_KEY }}
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python3 scripts/calendario_30dias.py || true
+        continue-on-error: true
+      - name: "2. Funil SEO (YouTube + TikTok + A/B)"
+        env:
+          GROQ_API_KEY:         ${{ secrets.GROQ_API_KEY }}
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python3 scripts/funil_completo.py || true
+        continue-on-error: true
+      - name: "3. Reels Instagram (3 por dia)"
+        env:
+          GROQ_API_KEY:         ${{ secrets.GROQ_API_KEY }}
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python3 scripts/instagram_reels_producer.py || true
+        continue-on-error: true
+      - name: "4. Áudio WhatsApp do dia (19:30 BRT)"
+        env:
+          GROQ_API_KEY:         ${{ secrets.GROQ_API_KEY }}
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python3 scripts/whatsapp_produto.py || true
+        continue-on-error: true
+      - name: "5. Afiliados do dia (Kwai + Amazon)"
+        env:
+          GROQ_API_KEY:         ${{ secrets.GROQ_API_KEY }}
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python3 scripts/kwai_shop_affiliate.py || true
+        continue-on-error: true
