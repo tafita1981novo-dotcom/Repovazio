@@ -3,139 +3,196 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>psicologia.doc — Central de Controle</title>
+<title>Daniela Coelho — Dashboard de Receita</title>
 <style>
-  :root{--bg:#06060F;--card:#0F0F1A;--border:#1E1E33;--p:#7C3AED;--a:#5B21B6;--r:#E11D48;--g:#22C55E;--y:#F59E0B;--t:#0D9488;--txt:#E2E8F0;--muted:#94A3B8}
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{background:var(--bg);color:var(--txt);font-family:'DM Sans',system-ui,sans-serif;min-height:100vh;padding:16px}
-  h1{background:linear-gradient(135deg,#7C3AED,#E11D48);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-size:1.5rem;margin-bottom:4px}
-  .sub{color:var(--muted);font-size:.85rem;margin-bottom:20px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-bottom:20px}
-  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}
-  .card h3{font-size:.85rem;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em}
-  .badge{display:inline-block;padding:2px 10px;border-radius:999px;font-size:.75rem;font-weight:600;margin:2px}
-  .live{background:#EF444422;color:#EF4444;border:1px solid #EF4444;animation:pulse 2s infinite}
-  .ok{background:#22C55E22;color:#22C55E;border:1px solid #22C55E}
-  .warn{background:#F59E0B22;color:#F59E0B;border:1px solid #F59E0B}
-  .info{background:#7C3AED22;color:#A78BFA;border:1px solid #7C3AED}
-  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
-  .metric{font-size:2rem;font-weight:700;color:var(--txt);line-height:1}
-  .metric-label{font-size:.75rem;color:var(--muted);margin-top:4px}
-  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px}
-  .dot.green{background:#22C55E}
-  .dot.red{background:#EF4444}
-  table{width:100%;font-size:.82rem;border-collapse:collapse}
-  td,th{padding:6px 8px;border-bottom:1px solid var(--border);text-align:left}
-  th{color:var(--muted);font-weight:500}
-  a{color:#A78BFA;text-decoration:none}
-  .status-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)}
-  .status-row:last-child{border-bottom:none}
-  pre{font-family:monospace;font-size:.78rem;background:#060610;padding:8px;border-radius:6px;overflow:auto;max-height:120px;color:#94A3B8}
-  #log{background:#060610;border-radius:8px;padding:12px;font-family:monospace;font-size:.75rem;color:#94A3B8;max-height:180px;overflow-y:auto;margin-top:8px}
+:root{--bg:#06060F;--card:#0F0F1A;--p:#7C3AED;--a:#5B21B6;--r:#E11D48;--g:#22C55E;--y:#F59E0B;--t:#0D9488;--txt:#F1F5F9;--muted:#94A3B8}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:system-ui,sans-serif;line-height:1.5;min-height:100vh}
+header{padding:20px 24px;border-bottom:1px solid #1E1E33;display:flex;align-items:center;gap:12px}
+header .logo{font-size:1.4rem;font-weight:800;background:linear-gradient(135deg,#A78BFA,#E11D48);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.main{max-width:1100px;margin:0 auto;padding:24px}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:32px}
+.kpi{background:var(--card);border:1px solid #1E1E33;border-radius:12px;padding:20px}
+.kpi .label{font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.kpi .value{font-size:1.8rem;font-weight:700}
+.kpi .sub{font-size:.78rem;color:var(--muted);margin-top:4px}
+.kpi.p{border-top:2px solid var(--p)}
+.kpi.g{border-top:2px solid var(--g)}
+.kpi.y{border-top:2px solid var(--y)}
+.kpi.r{border-top:2px solid var(--r)}
+.kpi.t{border-top:2px solid var(--t)}
+.section{margin-bottom:32px}
+.section h2{font-size:1rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:16px}
+.receita-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.fonte{background:var(--card);border:1px solid #1E1E33;border-radius:12px;padding:20px}
+.fonte .nome{font-weight:700;margin-bottom:4px}
+.fonte .meta{font-size:.85rem;color:var(--muted);margin-bottom:10px}
+.fonte .valor{font-size:1.3rem;font-weight:700;color:var(--g)}
+.fonte .status{display:inline-block;padding:2px 10px;border-radius:99px;font-size:.75rem;margin-top:8px}
+.status.ativo{background:#22C55E22;color:#22C55E;border:1px solid #22C55E44}
+.status.pendente{background:#F59E0B22;color:#F59E0B;border:1px solid #F59E0B44}
+.progresso-bar{height:6px;background:#1E1E33;border-radius:999px;margin-top:10px;overflow:hidden}
+.progresso-fill{height:100%;background:linear-gradient(90deg,var(--p),var(--r));border-radius:999px;transition:width .5s}
+.pipes{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.pipe{background:var(--card);border:1px solid #1E1E33;border-radius:10px;padding:16px;display:flex;align-items:center;gap:12px}
+.pipe .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.dot.ok{background:#22C55E;box-shadow:0 0 6px #22C55E66}
+.dot.pend{background:#F59E0B}
+.pipe .info .title{font-size:.9rem;font-weight:600}
+.pipe .info .sub{font-size:.78rem;color:var(--muted)}
+.badge-link{display:inline-block;background:var(--p);color:white;padding:6px 14px;border-radius:8px;font-size:.8rem;text-decoration:none;margin-top:6px}
+footer{text-align:center;padding:24px;color:var(--muted);font-size:.8rem;border-top:1px solid #1E1E33;margin-top:40px}
 </style>
 </head>
 <body>
-<h1>ψ psicologia.doc</h1>
-<p class="sub">Central de Controle · @psidanielacoelho · YouTube + Kwai Shop + TikTok</p>
+<header>
+  <span style="font-size:1.5rem">ψ</span>
+  <span class="logo">Daniela Coelho — Dashboard</span>
+  <span style="margin-left:auto;font-size:.8rem;color:var(--muted)" id="ts"></span>
+</header>
 
-<div class="grid">
-  <div class="card">
-    <h3>📡 Status dos Sistemas</h3>
-    <div class="status-row"><span class="dot green"></span>Canal PT @psidanielacoelho <span class="badge ok">ATIVO</span></div>
-    <div class="status-row"><span class="dot green"></span>Edge TTS (Microsoft) <span class="badge ok">GRÁTIS</span></div>
-    <div class="status-row"><span class="dot green"></span>Pollinations FLUX <span class="badge ok">GRÁTIS</span></div>
-    <div class="status-row"><span class="dot green"></span>Groq LLaMA 3.3 70B <span class="badge ok">ATIVO</span></div>
-    <div class="status-row"><span class="dot green"></span>Kwai Shop Afiliado <span class="badge ok">NOVO</span></div>
-    <div class="status-row"><span class="dot green"></span>Competitive Radar <span class="badge ok">SEGUNDA 8H</span></div>
-    <div class="status-row"><span class="dot green"></span>Auto-Refresh Loop <span class="badge ok">QUARTA 4H</span></div>
+<div class="main">
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi p">
+      <div class="label">Meta Mensal</div>
+      <div class="value">R$50K</div>
+      <div class="sub">6 fontes de receita ativas</div>
+    </div>
+    <div class="kpi g">
+      <div class="label">WhatsApp Assinantes</div>
+      <div class="value" id="wa-subs">—</div>
+      <div class="sub">Meta: 1.000 → R$18K/mês</div>
+    </div>
+    <div class="kpi y">
+      <div class="label">Áudios Prontos</div>
+      <div class="value" id="audios">—</div>
+      <div class="sub">Fila WhatsApp 19:30</div>
+    </div>
+    <div class="kpi r">
+      <div class="label">Vídeos com SEO</div>
+      <div class="value" id="seo-vids">—</div>
+      <div class="sub">A/B títulos + descrições</div>
+    </div>
+    <div class="kpi t">
+      <div class="label">Posts Pendentes</div>
+      <div class="value" id="posts">—</div>
+      <div class="sub">Instagram Reels fila</div>
+    </div>
   </div>
 
-  <div class="card">
-    <h3>💰 Monetização Multi-Plataforma</h3>
-    <table>
-      <tr><th>Plataforma</th><th>RPM/CPM</th><th>Público</th></tr>
-      <tr><td>YouTube PT</td><td><span style="color:#22C55E">R$7</span></td><td>Brasil</td></tr>
-      <tr><td>YouTube EN</td><td><span style="color:#22C55E">$25</span></td><td>USA/UK</td></tr>
-      <tr><td>YouTube DE</td><td><span style="color:#22C55E">$18</span></td><td>Alemanha</td></tr>
-      <tr><td>YouTube FR</td><td><span style="color:#22C55E">$14</span></td><td>França</td></tr>
-      <tr><td>Kwai Shop</td><td><span style="color:#F59E0B">Comissão</span></td><td>40-50+ BR</td></tr>
-      <tr><td>TikTok Shop</td><td><span style="color:#F59E0B">Comissão</span></td><td>Jovens BR</td></tr>
-    </table>
+  <!-- 6 Fontes de Receita -->
+  <div class="section">
+    <h2>6 Fontes de Receita</h2>
+    <div class="receita-grid">
+      <div class="fonte">
+        <div class="nome">💰 WhatsApp Assinatura</div>
+        <div class="meta">R$216/ano · Hotmart recorrente</div>
+        <div class="valor">R$0 → R$18K/mês</div>
+        <span class="status pendente">Aguarda Hotmart</span>
+        <div class="progresso-bar"><div class="progresso-fill" style="width:10%"></div></div>
+      </div>
+      <div class="fonte">
+        <div class="nome">📺 YouTube AdSense PT-BR</div>
+        <div class="meta">@psidanielacoelho · RPM R$7</div>
+        <div class="valor">Meta: 100K views = R$700</div>
+        <span class="status ativo">Ativo</span>
+        <div class="progresso-bar"><div class="progresso-fill" style="width:25%"></div></div>
+      </div>
+      <div class="fonte">
+        <div class="nome">🇺🇸 YouTube AdSense EN</div>
+        <div class="meta">Canal inglês · RPM $25</div>
+        <div class="valor">Meta: 100K views = $2.500</div>
+        <span class="status pendente">Setup pendente</span>
+        <div class="progresso-bar"><div class="progresso-fill" style="width:5%"></div></div>
+      </div>
+      <div class="fonte">
+        <div class="nome">🛍️ Kwai + TikTok Shop</div>
+        <div class="meta">Magnésio, Ashwagandha, Ômega-3</div>
+        <div class="valor">15–25% comissão/venda</div>
+        <span class="status ativo">Ativo</span>
+        <div class="progresso-bar"><div class="progresso-fill" style="width:30%"></div></div>
+      </div>
+      <div class="fonte">
+        <div class="nome">📚 Amazon Associados</div>
+        <div class="meta">Livros psicologia · 4–10%</div>
+        <div class="valor">R$50–500/mês estimado</div>
+        <span class="status ativo">Ativo</span>
+        <div class="progresso-bar"><div class="progresso-fill" style="width:20%"></div></div>
+      </div>
+      <div class="fonte">
+        <div class="nome">🎓 Hotmart Cursos Afiliado</div>
+        <div class="meta">30–70% comissão</div>
+        <div class="valor">Meta: 5 vendas/dia = R$500</div>
+        <span class="status pendente">Em setup</span>
+        <div class="progresso-bar"><div class="progresso-fill" style="width:15%"></div></div>
+      </div>
+    </div>
   </div>
 
-  <div class="card">
-    <h3>🧠 3 Chains (Claude+NotebookLM style)</h3>
-    <div class="status-row">Chain 1 · Autopilot Brief<span class="badge ok">knowledge_fusion.py</span></div>
-    <div class="status-row">Chain 2 · Auto Refresh Loop<span class="badge ok">auto_refresh_loop.py</span></div>
-    <div class="status-row">Chain 3 · Competitive Radar<span class="badge ok">competitive_radar.py</span></div>
-    <p style="margin-top:8px;font-size:.78rem;color:var(--muted)">
-      Todos rodam automaticamente. Competitive Radar entrega o
-      <strong>Monday Briefing</strong> — briefing dos 6 canais virais
-      toda segunda-feira às 8h UTC.
-    </p>
+  <!-- Pipelines -->
+  <div class="section">
+    <h2>Pipelines Ativos (GitHub Actions)</h2>
+    <div class="pipes">
+      <div class="pipe"><div class="dot ok"></div><div class="info"><div class="title">funil-completo</div><div class="sub">8h + 22:30 UTC · WhatsApp+IG+SEO+Afiliados</div></div></div>
+      <div class="pipe"><div class="dot ok"></div><div class="info"><div class="title">narrativa-engine</div><div class="sub">3x/dia · 5 nichos validados</div></div></div>
+      <div class="pipe"><div class="dot ok"></div><div class="info"><div class="title">gemini-mega-pipeline</div><div class="sub">3x/dia · Imagen3 + Veo3</div></div></div>
+      <div class="pipe"><div class="dot ok"></div><div class="info"><div class="title">canal-dark</div><div class="sub">3x/dia · Daniela reflexiva</div></div></div>
+      <div class="pipe"><div class="dot ok"></div><div class="info"><div class="title">kwai-shop-affiliate</div><div class="sub">2x/dia · 4 produtos × 2 idiomas</div></div></div>
+      <div class="pipe"><div class="dot ok"></div><div class="info"><div class="title">competitive-radar</div><div class="sub">Segunda 8h UTC · 6 canais virais</div></div></div>
+      <div class="pipe"><div class="dot ok"></div><div class="info"><div class="title">brain-mass-ingestor</div><div class="sub">:05 horário · 3.037+ APIs</div></div></div>
+      <div class="pipe"><div class="dot ok"></div><div class="info"><div class="title">master-orchestrator</div><div class="sub">3x/dia · Orquestra tudo</div></div></div>
+    </div>
   </div>
 
-  <div class="card">
-    <h3>📱 Kwai Shop Afiliado</h3>
-    <p style="font-size:.82rem;color:var(--muted);margin-bottom:8px">
-      4 produtos psicologia+saúde · Base científica PubMed · 3 formatos validados
-    </p>
-    <div class="status-row">💊 Magnésio Glicinato <span class="badge info">ansiedade</span></div>
-    <div class="status-row">🐟 Ômega-3 DHA+EPA <span class="badge info">depressão</span></div>
-    <div class="status-row">🌿 Ashwagandha KSM-66 <span class="badge info">burnout</span></div>
-    <div class="status-row">🧠 L-Teanina+Cafeína <span class="badge info">TDAH</span></div>
-    <p style="font-size:.75rem;color:var(--muted);margin-top:8px">
-      Mesmo vídeo → YouTube + Kwai + TikTok = 3× alcance
-    </p>
+  <!-- Links Rápidos -->
+  <div class="section">
+    <h2>Links Rápidos</h2>
+    <div style="display:flex;flex-wrap:wrap;gap:10px">
+      <a href="/psicologia-para-dormir" class="badge-link">📱 Página Produto WhatsApp</a>
+      <a href="https://github.com/tafita81/Repovazio/actions" target="_blank" class="badge-link">⚙️ GitHub Actions</a>
+      <a href="https://tpjvalzwkqwttvmszvie.supabase.co" target="_blank" class="badge-link">🗄️ Supabase</a>
+      <a href="https://www.youtube.com/@psidanielacoelho" target="_blank" class="badge-link">📺 Canal YouTube</a>
+      <a href="/cerebro" class="badge-link">🧠 Quantum Brain</a>
+    </div>
   </div>
 
-  <div class="card">
-    <h3>🎬 6 Canais Virais Monitorados</h3>
-    <table>
-      <tr><th>Canal</th><th>Subs</th><th>CPM</th></tr>
-      <tr><td>Psych2Go</td><td>10.5M</td><td>$20</td></tr>
-      <tr><td>Lofi Girl</td><td>14.0M</td><td>$5</td></tr>
-      <tr><td>Power of Positivity</td><td>9.0M</td><td>$15</td></tr>
-      <tr><td>Meditative Mind</td><td>3.2M</td><td>$12</td></tr>
-      <tr><td>Jason Stephenson</td><td>2.5M</td><td>$8</td></tr>
-      <tr><td>Greenred</td><td>2.0M</td><td>$8</td></tr>
-    </table>
-  </div>
-
-  <div class="card">
-    <h3>🤖 LLM Router V4</h3>
-    <div class="status-row"><span class="badge ok">1</span> NVIDIA DeepSeek V4 Pro</div>
-    <div class="status-row"><span class="badge info">2</span> NVIDIA LLaMA 3.3 70B</div>
-    <div class="status-row"><span class="badge info">3</span> Groq LLaMA 3.3 (14.400/dia)</div>
-    <div class="status-row"><span class="badge warn">4</span> OpenAI gpt-4o-mini (pago)</div>
-    <p style="margin-top:8px;font-size:.78rem;color:var(--muted)">
-      Custo atual: R$0,00/dia nos 3 gratuitos
-    </p>
+  <!-- Próximas Ações Manuais -->
+  <div class="section">
+    <h2>Pendências Manuais Bloqueantes</h2>
+    <div class="pipes" style="grid-template-columns:1fr">
+      <div class="pipe"><div class="dot pend"></div><div class="info"><div class="title">Criar produto "Psicologia Para Dormir" na Hotmart</div><div class="sub">hotmart.com → Produtos → Comunidade → R$216/ano recorrente</div></div></div>
+      <div class="pipe"><div class="dot pend"></div><div class="info"><div class="title">Criar grupo WhatsApp exclusivo + copiar link para Supabase</div><div class="sub">WhatsApp → Novo Grupo → Permissões: só admin → Link → Supabase produto_whatsapp</div></div></div>
+      <div class="pipe"><div class="dot pend"></div><div class="info"><div class="title">YouTube OAuth refresh token para upload automático</div><div class="sub">Usar URL OAuth do histórico → YOUTUBE_REFRESH_TOKEN no GitHub Secrets</div></div></div>
+    </div>
   </div>
 </div>
 
-<div class="card" style="margin-bottom:12px">
-  <h3>🔗 Links Rápidos</h3>
-  <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">
-    <a href="https://repovazio.vercel.app/cerebro.html" class="badge info">🧠 Quantum Brain</a>
-    <a href="https://github.com/tafita81/Repovazio/actions" class="badge info">⚙️ GitHub Actions</a>
-    <a href="https://www.youtube.com/channel/UCyCkIpsVgME9yCj_oXJFheA" class="badge ok">▶️ @psidanielacoelho</a>
-    <a href="https://app.supabase.com/project/tpjvalzwkqwttvmszvie" class="badge info">🗄️ Supabase</a>
-  </div>
-</div>
+<footer>ψ Daniela Coelho · @psidanielacoelho · pipeline autônomo 24h</footer>
 
-<div id="log">⏳ Carregando status ao vivo...</div>
 <script>
-async function fetchStatus(){
-  const log=document.getElementById('log');
-  try{
-    const r=await fetch('/api/status');
-    if(r.ok){const d=await r.json();log.textContent=JSON.stringify(d,null,2);}
-    else{log.textContent='API: '+r.status;}
-  }catch(e){log.textContent='Offline — Dashboard estático ativo
-'+new Date().toISOString();}
+document.getElementById('ts').textContent = new Date().toLocaleString('pt-BR');
+
+// Carrega stats do Supabase
+async function loadStats() {
+  const url = "https://tpjvalzwkqwttvmszvie.supabase.co/rest/v1";
+  const key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwanZhbHp3a3F3dHR2bXN6dmllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ3OTQxNzcsImV4cCI6MjA2MDM3MDE3N30.G1JNPbrdLKCFgfSMGz4d1KF4G5JcLQK7PZpz2Y4DZOM";
+  const h = {"apikey":key,"Authorization":"Bearer "+key};
+  try {
+    const [wa,audio,seo,posts] = await Promise.all([
+      fetch(`${url}/produto_whatsapp?select=assinantes&limit=1`,{headers:h}).then(r=>r.json()),
+      fetch(`${url}/whatsapp_psicologia_queue?select=id&status=eq.ready`,{headers:h}).then(r=>r.json()),
+      fetch(`${url}/video_seo?select=id&status=eq.ready`,{headers:h}).then(r=>r.json()),
+      fetch(`${url}/social_posts?select=id&status=eq.pending`,{headers:h}).then(r=>r.json()),
+    ]);
+    document.getElementById('wa-subs').textContent = (wa[0]?.assinantes ?? 0).toLocaleString();
+    document.getElementById('audios').textContent = (audio?.length ?? 0).toLocaleString();
+    document.getElementById('seo-vids').textContent = (seo?.length ?? 0).toLocaleString();
+    document.getElementById('posts').textContent = (posts?.length ?? 0).toLocaleString();
+  } catch(e) { console.warn(e); }
 }
-fetchStatus();setInterval(fetchStatus,30000);
+loadStats();
 </script>
 </body>
 </html>
