@@ -1,0 +1,76 @@
+import smtplib, time, os
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
+GMAIL_USER = "tafita81@gmail.com"
+REPLY_TO   = "Rafa_roberto2004@yahoo.com.br"
+APP_PASS   = os.environ["GMAIL_APP_PASSWORD"]
+
+SIG = """<br><br><div style="border-top:2px solid #1F3864;padding-top:12px;font-family:Arial,sans-serif;">
+<strong style="color:#1F3864;">Rafael Rodrigues</strong><br>
+<span style="color:#5B21B6;">Senior Data Analyst | Analytics Engineer | Cloud BI Specialist</span><br>
+<span style="font-size:12px;color:#555;">+55 22 99241-8257 | Rafa_roberto2004@yahoo.com.br | linkedin.com/in/rafael-r-a3946a15<br>
+Open to US/EU Remote | Available Immediately</span></div>"""
+
+IMP = """<ul style="color:#374151;font-size:13px;line-height:1.8;">
+<li>$9M+ operational savings - TIM/OI Telecommunications</li>
+<li>70% report latency reduction - Keyrus</li>
+<li>Analytics platforms for 200+ business users</li>
+<li>500M+ subscriber records/month environments</li>
+<li>BigQuery, Snowflake, Databricks SQL, Athena, Azure Synapse</li>
+<li>Microsoft PL-300, Tableau Specialist, MBA IBMEC</li></ul>"""
+
+EMAILS = [
+  {"to":"recruiting@edvantis.com","co":"Edvantis","role":"Senior Analytics Engineer (Power BI)",
+   "sub":"Application: Senior Analytics Engineer (Power BI) - 15+ Years | PL-300 | Available Immediately",
+   "body":"End-to-end Power BI: DAX, Power Query, RLS, Dataflows. Retail industry delivery at Keyrus aligned with your customer profile. Azure Synapse, Salesforce, SAP, Oracle integrations."},
+  {"to":"info@wireit.pt","co":"Wire IT","role":"Power BI Developer",
+   "sub":"Application: Power BI Developer - 15+ Years Enterprise BI | PL-300 | Remote",
+   "body":"Power BI: DAX, Power Query, RLS, Dataflows, incremental refresh, 12+ data sources. Coca-Cola (BigQuery), Keyrus (Financial Services, Insurance), TIM/OI (500M+/month)."},
+  {"to":"info@datameaning.com","co":"Data Meaning","role":"Power BI Developer / BI Consultant",
+   "sub":"Application: Power BI Developer / BI Consultant - 15+ Years | PL-300 + Tableau | Remote US/LATAM",
+   "body":"Your consulting model (BI, Data Warehousing, US and LATAM) aligns with my background at Keyrus and Dataex. Available for remote full-time or contract immediately."},
+  {"to":"talent@proxify.io","co":"Proxify","role":"Senior Power BI Developer",
+   "sub":"Network Application: Senior Power BI Developer - 15+ Years | PL-300 + Tableau | Remote Global",
+   "body":"SQL Server, PostgreSQL, Oracle, Python, Dimensional Modeling, Star Schema. Keyrus (Financial Services, Retail, Insurance), Coca-Cola (BigQuery), TIM/OI ($9M+ savings), Dataex (200+ users)."},
+  {"to":"recruiting@preply.com","co":"Preply","role":"Senior Data Analyst Expansion London",
+   "sub":"Application: Senior Data Analyst (Expansion) - 15+ Years | PL-300 | Available Immediately",
+   "body":"Telecom subscriber analytics: churn prediction, growth modeling, 500M+ records/month. Marketing analytics at Coca-Cola via BigQuery. Self-service BI for 200+ business users."},
+]
+
+def build_html(e):
+  return f"""<html><body style="font-family:Arial,sans-serif;max-width:680px;margin:0 auto;">
+<div style="background:linear-gradient(135deg,#1F3864,#5B21B6);padding:20px 24px;border-radius:8px 8px 0 0;">
+<div style="color:#C4B5FD;font-size:11px;letter-spacing:2px;text-transform:uppercase;">Application</div>
+<div style="color:#fff;font-size:20px;font-weight:800;">{e["role"]}</div>
+<div style="color:#C4B5FD;font-size:13px;">{e["co"]}</div></div>
+<div style="background:#fff;padding:24px;border:1px solid #E5E7EB;border-top:none;border-radius:0 0 8px 8px;">
+<p>Dear {e["co"]} Recruiting Team,</p>
+<p>I am applying for the <strong>{e["role"]}</strong> position. Senior Data Analyst and Analytics Engineer with <strong>15+ years of enterprise BI experience</strong>, Microsoft PL-300 and Tableau Desktop Specialist certified, available immediately.</p>
+<p>{e["body"]}</p>
+<div style="background:#F8FAFC;border-left:4px solid #1F3864;padding:16px;margin:16px 0;">
+<strong style="font-size:12px;color:#1F3864;text-transform:uppercase;letter-spacing:1px;">Selected Impact</strong>
+{IMP}</div>
+<p>Available for interviews immediately. Can start within 2 weeks of an offer.</p>
+{SIG}</div></body></html>"""
+
+print("Connecting Gmail SMTP...")
+s = smtplib.SMTP("smtp.gmail.com", 587)
+s.ehlo()
+s.starttls()
+s.login(GMAIL_USER, APP_PASS)
+print("Authenticated OK")
+
+for i, e in enumerate(EMAILS, 1):
+    msg = MIMEMultipart("alternative")
+    msg["From"]     = f"Rafael Rodrigues <{GMAIL_USER}>"
+    msg["To"]       = e["to"]
+    msg["Subject"]  = e["sub"]
+    msg["Reply-To"] = REPLY_TO
+    msg.attach(MIMEText(build_html(e), "html"))
+    s.sendmail(GMAIL_USER, [e["to"]], msg.as_string())
+    print(f"[{i}/5] SENT -> {e['co']} ({e['to']})")
+    time.sleep(2)
+
+s.quit()
+print("SUCCESS: All 5 emails sent!")
