@@ -1,26 +1,27 @@
-name: Master Orchestrator — Todos os Pipelines
+name: Master Orchestrator
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 6,14,22 * * *"  # 3x/dia
+    - cron: "0 6,14,22 * * *"  # 3x/dia: 6h, 14h, 22h UTC
 
 jobs:
   orchestrate:
     runs-on: ubuntu-latest
-    timeout-minutes: 240
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: "3.11"}
       - run: |
           sudo apt-get install -y ffmpeg > /dev/null 2>&1
-          pip install requests edge-tts --break-system-packages
-      - name: Master Orchestrator
+          pip install requests edge-tts groq --break-system-packages
+      - name: "Orchestrate All Pipelines"
         env:
           GROQ_API_KEY:         ${{ secrets.GROQ_API_KEY }}
           NVIDIA_API_KEY:       ${{ secrets.NVIDIA_API_KEY }}
           GEMINI_API_KEY:       ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY_NEW:   ${{ secrets.GEMINI_API_KEY_NEW }}
           SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: python3 scripts/master_orchestrator.py || true
