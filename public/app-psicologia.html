@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Modo Psicologia — App</title>
+<style>
+:root{--bg:#06060F;--card:#0F0F1A;--p:#7C3AED;--r:#E11D48;--g:#22C55E;--y:#F59E0B;--txt:#F1F5F9;--muted:#94A3B8}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--txt);font-family:system-ui,sans-serif;min-height:100vh;max-width:420px;margin:0 auto;padding:0 0 80px}
+.top{background:var(--card);padding:20px;text-align:center;border-bottom:1px solid #1E1E33;position:sticky;top:0;z-index:10}
+.top .psi{font-size:2rem;margin-bottom:4px}
+.top h1{font-size:1.1rem;font-weight:800;background:linear-gradient(135deg,#A78BFA,#E11D48);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.top .sub{font-size:.75rem;color:var(--muted)}
+.streak{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:10px}
+.streak .num{font-size:1.4rem;font-weight:800;color:#F59E0B}
+.streak .lbl{font-size:.8rem;color:var(--muted)}
+.tab-bar{display:flex;background:var(--card);border-bottom:1px solid #1E1E33;position:sticky;top:80px;z-index:9}
+.tab{flex:1;padding:12px;text-align:center;font-size:.8rem;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;transition:.2s}
+.tab.active{color:#A78BFA;border-bottom-color:#7C3AED;font-weight:700}
+.section{display:none;padding:16px}
+.section.active{display:block}
+/* Rotina */
+.ritual-card{background:var(--card);border:1px solid #1E1E33;border-radius:12px;padding:16px;margin-bottom:12px}
+.ritual-card .icon{font-size:1.5rem;margin-bottom:6px}
+.ritual-card h3{font-size:.95rem;font-weight:700;margin-bottom:4px}
+.ritual-card p{font-size:.8rem;color:var(--muted);margin-bottom:10px}
+.check-btn{background:var(--p);color:white;border:none;border-radius:8px;padding:8px 16px;font-size:.8rem;cursor:pointer;width:100%;font-weight:600;transition:.2s}
+.check-btn.done{background:#22C55E22;color:#22C55E;border:1px solid #22C55E44}
+/* Missão */
+.missao{background:linear-gradient(135deg,#1a0a2e,#0F0F1A);border:1px solid #7C3AED;border-radius:12px;padding:20px;margin-bottom:16px}
+.missao .num{font-size:.7rem;color:var(--p);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px}
+.missao h2{font-size:1.1rem;font-weight:800;margin-bottom:10px}
+.missao .desc{font-size:.85rem;color:var(--muted);margin-bottom:14px}
+.missao-btn{background:var(--p);color:white;border:none;border-radius:8px;padding:10px;font-size:.85rem;cursor:pointer;width:100%;font-weight:700}
+/* Insight */
+.insight{background:var(--card);border-left:3px solid var(--p);padding:16px;border-radius:0 12px 12px 0;margin-bottom:12px}
+.insight .autor{font-size:.75rem;color:var(--muted);margin-top:8px}
+.insight .frase{font-size:.9rem;font-style:italic;line-height:1.6}
+/* Humor */
+.humor-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.humor-btn{background:var(--card);border:1px solid #1E1E33;border-radius:10px;padding:14px 8px;text-align:center;cursor:pointer;transition:.2s}
+.humor-btn:hover{border-color:#7C3AED}
+.humor-btn.sel{background:#7C3AED22;border-color:#7C3AED}
+.humor-btn .emoji{font-size:1.5rem;display:block;margin-bottom:4px}
+.humor-btn .lbl{font-size:.7rem;color:var(--muted)}
+.nota-area{width:100%;background:var(--card);border:1px solid #1E1E33;border-radius:10px;padding:12px;color:var(--txt);font-size:.85rem;resize:none;height:100px;margin-bottom:12px}
+.salvar-btn{background:var(--p);color:white;border:none;border-radius:8px;padding:12px;font-size:.9rem;cursor:pointer;width:100%;font-weight:700}
+.tag{display:inline-block;background:#7C3AED22;color:#A78BFA;padding:3px 10px;border-radius:99px;font-size:.72rem;margin:2px}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="psi">ψ</div>
+  <h1>Modo Psicologia</h1>
+  <div class="sub">com Daniela Coelho</div>
+  <div class="streak">
+    <span class="num" id="streak-num">0</span>
+    <span class="lbl">dias consecutivos 🔥</span>
+  </div>
+</div>
+
+<div class="tab-bar">
+  <div class="tab active" onclick="aba('rotina')">Rotina</div>
+  <div class="tab" onclick="aba('missao')">Missão</div>
+  <div class="tab" onclick="aba('insight')">Insight</div>
+  <div class="tab" onclick="aba('diario')">Diário</div>
+</div>
+
+<div class="section active" id="sec-rotina">
+  <div id="rituais"></div>
+</div>
+
+<div class="section" id="sec-missao">
+  <div class="missao">
+    <div class="num">Missão do Dia</div>
+    <h2 id="missao-titulo">Carregando...</h2>
+    <div class="desc" id="missao-desc">Sua missão psicológica de hoje.</div>
+    <button class="missao-btn" onclick="sortearMissao()">🔀 Sortear Outra Missão</button>
+  </div>
+  <div id="missoes-lista"></div>
+</div>
+
+<div class="section" id="sec-insight">
+  <div id="insights"></div>
+</div>
+
+<div class="section" id="sec-diario">
+  <div style="font-size:.85rem;color:var(--muted);margin-bottom:12px">Como você está hoje?</div>
+  <div class="humor-grid" id="humor-grid"></div>
+  <textarea class="nota-area" id="nota" placeholder="Escreva um pensamento, emoção ou reflexão de hoje..."></textarea>
+  <button class="salvar-btn" onclick="salvar()">💾 Salvar Reflexão</button>
+  <div id="historico" style="margin-top:16px"></div>
+</div>
+
+<script>
+const RITUAIS = [
+  {icon:"🌅",titulo:"Acorde Com Intenção",desc:"Antes de pegar o celular, respire 3x e defina 1 palavra para o dia."},
+  {icon:"🧠",titulo:"Nomeie Sua Emoção",desc:"Pesquisa de Brené Brown: nomear o que sente reduz intensidade em 50%."},
+  {icon:"🚿",titulo:"Banho Consciente",desc:"Sem piloto automático. Sinta a água, o cheiro, a temperatura."},
+  {icon:"📖",titulo:"10 Min de Leitura",desc:"Não redes sociais. Um livro, um artigo científico ou uma reflexão."},
+  {icon:"🌿",titulo:"Momento de Silêncio",desc:"5 minutos sem estímulo externo. Seu sistema nervoso agradece."},
+  {icon:"🌙",titulo:"Reflexão Noturna",desc:"Uma coisa boa do dia. Uma aprendizagem. Uma gratidão."},
+];
+const MISSOES = [
+  {t:"Faça 3 Perguntas Profundas",d:"Converse com alguém olho no olho. Sem celular. Perguntas que conectam."},
+  {t:"Resolva 1 Pendência Antiga",d:"Aquela que tá te incomodando há semanas. Hoje é o dia."},
+  {t:"Estude 45 Min Sem Pausa",d:"Um tema que te desenvolve. Foco total. Modo avião ativado."},
+  {t:"Escreva Sua Maior Preocupação",d:"Coloque no papel. Depois escreva 3 ações possíveis para ela."},
+  {t:"Observe Seus Gatilhos",d:"Quando sentir raiva ou ansiedade hoje, pause e pergunte: o que ativou isso?"},
+  {t:"Pratica Gratidão Específica",d:"Não genérico. Agradeça UMA coisa específica que aconteceu essa semana."},
+  {t:"Confronte Um Medo Pequeno",d:"Algo que você evita por desconforto. Um passo pequeno conta."},
+  {t:"Digital Detox por 2h",d:"Sem redes sociais. Observe o que você sente. Tédio = sinal importante."},
+];
+const INSIGHTS = [
+  {f:"O narcisismo começa onde a empatia termina. Reconhecer isso já é crescimento.",a:"Kernberg (1975)"},
+  {f:"Burnout não começa com cansaço. Começa com o orgulho de nunca parar.",a:"Maslach, C. (1981)"},
+  {f:"Apego ansioso não é fraqueza. É um padrão aprendido que pode ser reescrito.",a:"Ainsworth (1978)"},
+  {f:"O corpo guarda o que a mente não consegue processar. Escute os sinais físicos.",a:"van der Kolk (2014)"},
+  {f:"Relacionamentos saudáveis não exigem que você desapareça para o outro existir.",a:"Gottman (1999)"},
+  {f:"A vulnerabilidade não é fraqueza. É a medida mais precisa de coragem.",a:"Brown, B. (2010)"},
+  {f:"Você não pode controlar o que sente, mas pode escolher o que faz com isso.",a:"Beck (1979)"},
+  {f:"Sono REM não é luxo. É quando o cérebro processa emoções do dia.",a:"Walker (2017)"},
+  {f:"Gaslighting deixa rastros no sistema nervoso antes de deixar na consciência.",a:"Herman (1992)"},
+  {f:"Crescimento não vem do conforto. Vem da capacidade de tolerar desconforto.",a:"Siegel (2010)"},
+];
+const HUMORES = [
+  {e:"😴",l:"Exausto"},{e:"😰",l:"Ansioso"},{e:"😠",l:"Irritado"},
+  {e:"😐",l:"Neutro"},{e:"🙂",l:"Bem"},{e:"✨",l:"Ótimo"},
+];
+
+let estado = JSON.parse(localStorage.getItem("modo_psi") || '{"check":{},"missao_idx":0,"streak":0,"data":"","diario":[]}');
+let humorSel = "";
+
+function aba(id){
+  document.querySelectorAll(".tab").forEach((t,i)=>{t.classList.toggle("active",["rotina","missao","insight","diario"][i]===id)});
+  document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+  document.getElementById("sec-"+id).classList.add("active");
+}
+
+function renderRituais(){
+  const hj = new Date().toDateString();
+  if(estado.data !== hj){estado.check={};estado.data=hj;salvarEstado();}
+  document.getElementById("streak-num").textContent = estado.streak || 0;
+  document.getElementById("rituais").innerHTML = RITUAIS.map((r,i)=>`
+    <div class="ritual-card">
+      <div class="icon">${r.icon}</div>
+      <h3>${r.titulo}</h3>
+      <p>${r.desc}</p>
+      <button class="check-btn ${estado.check[i]?'done':''}" onclick="check(${i})">
+        ${estado.check[i]?'✅ Concluído':'Marcar como feito'}
+      </button>
+    </div>`).join("");
+}
+
+function check(i){
+  estado.check[i] = !estado.check[i];
+  const todos = Object.values(estado.check).filter(Boolean).length;
+  if(todos === RITUAIS.length) estado.streak = (estado.streak||0)+1;
+  salvarEstado(); renderRituais();
+}
+
+function renderMissao(){
+  const m = MISSOES[estado.missao_idx % MISSOES.length];
+  document.getElementById("missao-titulo").textContent = m.t;
+  document.getElementById("missao-desc").textContent = m.d;
+  document.getElementById("missoes-lista").innerHTML = MISSOES.map((m,i)=>`
+    <div class="ritual-card" style="opacity:${i===estado.missao_idx%MISSOES.length?1:.5}">
+      <h3>${m.t}</h3><p>${m.d}</p>
+    </div>`).join("");
+}
+
+function sortearMissao(){
+  estado.missao_idx = (estado.missao_idx+1) % MISSOES.length;
+  salvarEstado(); renderMissao();
+}
+
+function renderInsights(){
+  document.getElementById("insights").innerHTML = INSIGHTS.map(i=>`
+    <div class="insight">
+      <div class="frase">"${i.f}"</div>
+      <div class="autor">— ${i.a}</div>
+    </div>`).join("");
+}
+
+function renderHumor(){
+  document.getElementById("humor-grid").innerHTML = HUMORES.map(h=>`
+    <div class="humor-btn ${h.e===humorSel?'sel':''}" onclick="selecionarHumor('${h.e}','${h.l}')">
+      <span class="emoji">${h.e}</span>
+      <span class="lbl">${h.l}</span>
+    </div>`).join("");
+}
+
+function selecionarHumor(e,l){humorSel=e;renderHumor();}
+
+function salvar(){
+  const nota = document.getElementById("nota").value.trim();
+  if(!nota && !humorSel){alert("Escreva algo ou selecione seu humor.");return;}
+  const entry = {data:new Date().toLocaleString("pt-BR"),humor:humorSel,nota};
+  estado.diario.unshift(entry);
+  if(estado.diario.length > 30) estado.diario.pop();
+  salvarEstado();
+  document.getElementById("nota").value="";
+  humorSel=""; renderHumor();
+  renderHistorico();
+}
+
+function renderHistorico(){
+  document.getElementById("historico").innerHTML = estado.diario.slice(0,5).map(e=>`
+    <div class="insight" style="margin-bottom:8px">
+      <div style="font-size:.75rem;color:var(--muted);margin-bottom:4px">${e.data} ${e.humor}</div>
+      <div class="frase" style="font-style:normal">${e.nota || '—'}</div>
+    </div>`).join("");
+}
+
+function salvarEstado(){localStorage.setItem("modo_psi",JSON.stringify(estado));}
+
+renderRituais(); renderMissao(); renderInsights(); renderHumor(); renderHistorico();
+</script>
+</body>
+</html>
