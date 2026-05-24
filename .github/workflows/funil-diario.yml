@@ -1,0 +1,49 @@
+name: Funil Completo — 3x ao Dia
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 12 * * *"   # 12h UTC = 9h BRT — viralizar
+    - cron: "0 15 * * *"   # 15h UTC = 12h BRT — vender
+    - cron: "0 21 * * *"   # 21h UTC = 18h BRT — coringa
+
+jobs:
+  funil-diario:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install requests --break-system-packages
+
+      - name: "Minerador viral — posts gringa adaptados BR"
+        env:
+          GROQ_API_KEY:         ${{ secrets.GROQ_API_KEY }}
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python3 scripts/minerador_viral.py || true
+        continue-on-error: true
+
+      - name: "Quadrinhos dark — carrossel 5 slides"
+        env:
+          GROQ_API_KEY:         ${{ secrets.GROQ_API_KEY }}
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python3 scripts/quadrinhos_dark.py || true
+        continue-on-error: true
+
+      - name: "Instagram Reels — CTA SONO"
+        env:
+          GROQ_API_KEY:         ${{ secrets.GROQ_API_KEY }}
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python3 scripts/instagram_reels_producer.py || true
+        continue-on-error: true
+
+      - name: "Receita monitor — pós-post"
+        env:
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python3 scripts/receita_monitor.py || true
+        continue-on-error: true
