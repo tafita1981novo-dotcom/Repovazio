@@ -1,0 +1,50 @@
+name: ESTREIA — Live automática após 24h YouTube
+
+on:
+  workflow_dispatch:
+    inputs:
+      horas:
+        description: "Horas de live"
+        default: "6"
+  schedule:
+    # Canal criado 23 Mai 22:07 BR (01:07 UTC 24 Mai)
+    # Libera    24 Mai 22:07 BR (01:07 UTC 25 Mai)
+    # Roda às   01:15 UTC 25 Mai — margem de 8min
+    - cron: "15 1 25 5 *"
+
+jobs:
+  estreia:
+    runs-on: ubuntu-latest
+    timeout-minutes: 375
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+
+      - name: Instalar dependências
+        run: |
+          sudo apt-get install -y ffmpeg > /dev/null 2>&1
+          pip install requests --break-system-packages
+
+      - name: Verificar stream key
+        run: |
+          if [ -z "$SK" ]; then
+            echo "YOUTUBE_STREAM_KEY nao configurado ainda."
+            echo "YouTube Studio > Go Live > Stream Key > copiar"
+            echo "GitHub > Settings > Secrets > YOUTUBE_STREAM_KEY"
+            exit 1
+          fi
+          echo "Stream key OK — iniciando live de estreia!"
+        env:
+          SK: ${{ secrets.YOUTUBE_STREAM_KEY }}
+
+      - name: Live 528Hz — Estreia do Canal
+        env:
+          CANAL_IDIOMA:       "PT"
+          YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
+          GROQ_API_KEY:       ${{ secrets.GROQ_API_KEY }}
+          HORAS:              ${{ inputs.horas || '6' }}
+        run: |
+          HORAS="${HORAS:-6}"
+          timeout $((HORAS * 3600)) python3 scripts/live_global_master.py || true
+        continue-on-error: true
