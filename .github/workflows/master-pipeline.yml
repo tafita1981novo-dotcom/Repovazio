@@ -1,0 +1,32 @@
+name: MASTER PIPELINE — 27 APIs + Estilos Virais
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6,14,22 * * *"
+
+jobs:
+  master:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: |
+          sudo apt-get install -y ffmpeg > /dev/null 2>&1
+          pip install requests edge-tts --break-system-packages
+      - name: Knowledge Fusion (27 APIs paralelas)
+        env:
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GROQ_API_KEY:         ${{ secrets.GROQ_API_KEY }}
+        run: python3 scripts/knowledge_fusion.py || true
+        continue-on-error: true
+      - name: Production Pipeline (estilos virais)
+        env:
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GROQ_API_KEY:         ${{ secrets.GROQ_API_KEY }}
+        run: python3 scripts/production_pipeline.py || true
+        continue-on-error: true
