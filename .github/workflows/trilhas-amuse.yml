@@ -1,0 +1,30 @@
+name: Trilhas Spotify — Binaural Psicologia
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 7 * * 2,5"   # Ter/Sex 4h BRT
+
+jobs:
+  trilhas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install requests edge-tts --break-system-packages
+      - run: sudo apt-get install -y ffmpeg
+
+      - name: Gerar trilhas binaural + ASMR
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: python3 scripts/trilhas_spotify.py || true
+        continue-on-error: true
+
+      - name: Upload MP3s como artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: trilhas-binaural
+          path: output/trilhas/*.mp3
+          retention-days: 14
