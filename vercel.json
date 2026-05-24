@@ -1,27 +1,17 @@
 {
-  "buildCommand": "next build",
-  "installCommand": "npm install",
-  "framework": "nextjs",
-  "regions": [
-    "iad1"
-  ],
-  "redirects": [
-    {
-      "source": "/",
-      "destination": "/hub.html",
-      "permanent": false
-    }
-  ],
-  "crons": [
-    {
-      "path": "/api/cron",
-      "schedule": "0 6 * * *"
-    }
-  ],
+  "version": 2,
   "rewrites": [
+    { "source": "/psicologia-para-dormir", "destination": "/public/psicologia-para-dormir.html" },
+    { "source": "/dashboard",              "destination": "/public/dashboard.html" },
+    { "source": "/cerebro",                "destination": "/public/cerebro.html" }
+  ],
+  "headers": [
     {
-      "source": "/galeria-videos.html",
-      "destination": "/api/galeria-videos"
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Cache-Control", "value": "public, max-age=60" }
+      ]
     }
   ]
 }
