@@ -1,16 +1,35 @@
 {
   "version": 2,
   "rewrites": [
-    { "source": "/psicologia-para-dormir",  "destination": "/public/psicologia-para-dormir.html" },
-    { "source": "/app",                     "destination": "/public/app-psicologia.html" },
-    { "source": "/app-vendas",              "destination": "/public/app-psicologia-vendas.html" },
-    { "source": "/dashboard",               "destination": "/public/dashboard.html" },
-    { "source": "/cerebro",                 "destination": "/public/cerebro.html" }
+    { "source": "/psicologia-para-dormir", "destination": "/public/psicologia-para-dormir.html" },
+    { "source": "/app-vendas",             "destination": "/public/app-psicologia-vendas.html" },
+    { "source": "/app",                    "destination": "/public/app-psicologia.html" },
+    { "source": "/dashboard",              "destination": "/public/dashboard.html" },
+    { "source": "/cerebro",                "destination": "/public/cerebro.html" },
+    { "source": "/qg",                     "destination": "/public/qg.html" },
+    { "source": "/checklist",              "destination": "/public/checklist.html" },
+    { "source": "/monitor",                "destination": "/public/monitor-r50k.html" },
+    { "source": "/galeria",                "destination": "/public/galeria.html" },
+    { "source": "/producao",               "destination": "/public/producao.html" },
+    { "source": "/brand",                  "destination": "/public/brand.html" },
+    { "source": "/lives",                  "destination": "/public/lives.html" },
+    { "source": "/hub",                    "destination": "/public/hub.html" }
   ],
   "headers": [
-    { "source": "/(.*)", "headers": [
-      { "key": "X-Content-Type-Options", "value": "nosniff" },
-      { "key": "Cache-Control",          "value": "public, max-age=60" }
-    ]}
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin",  "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, x-hotmart-hottok" }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Cache-Control",          "value": "public, max-age=60" }
+      ]
+    }
   ]
 }
