@@ -1,0 +1,74 @@
+name: Mega Pipeline V2 — DeepSeek + Context7 + Firecrawl
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 4,12,20 * * *"  # 3x/dia
+
+jobs:
+  mega-v2:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: |
+          sudo apt-get install -y ffmpeg > /dev/null 2>&1
+          pip install requests edge-tts --break-system-packages
+      - name: "1. LLM Router V5 Test (DeepSeek 28x mais barato)"
+        env:
+          DEEPSEEK_API_KEY:     ${{ secrets.DEEPSEEK_API_KEY }}
+          NVIDIA_API_KEY:       ${{ secrets.NVIDIA_API_KEY }}
+          GEMINI_API_KEY:       ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY:         ${{ secrets.GROQ_API_KEY }}
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python3 scripts/llm_router_v5.py || true
+        continue-on-error: true
+      - name: "2. Context7 Psych (contexto cientifico)"
+        env:
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python3 scripts/context7_psych.py || true
+        continue-on-error: true
+      - name: "3. Narrativa Engine (estruturas validadas)"
+        env:
+          DEEPSEEK_API_KEY:     ${{ secrets.DEEPSEEK_API_KEY }}
+          GROQ_API_KEY:         ${{ secrets.GROQ_API_KEY }}
+          GEMINI_API_KEY:       ${{ secrets.GEMINI_API_KEY }}
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python3 scripts/narrativa_engine.py || true
+        continue-on-error: true
+      - name: "4. Gemini Mega (Imagen3+Veo3+Afiliados)"
+        env:
+          GEMINI_API_KEY:       ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY_NEW:   ${{ secrets.GEMINI_API_KEY_NEW }}
+          DEEPSEEK_API_KEY:     ${{ secrets.DEEPSEEK_API_KEY }}
+          GROQ_API_KEY:         ${{ secrets.GROQ_API_KEY }}
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python3 scripts/gemini_mega_pipeline.py || true
+        continue-on-error: true
+      - name: "5. Canal Dark + Render V3"
+        env:
+          DEEPSEEK_API_KEY:     ${{ secrets.DEEPSEEK_API_KEY }}
+          GROQ_API_KEY:         ${{ secrets.GROQ_API_KEY }}
+          GEMINI_API_KEY:       ${{ secrets.GEMINI_API_KEY }}
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          python3 scripts/canal_dark_pipeline.py || true
+          python3 scripts/render_v3_mega.py || true
+        continue-on-error: true
+      - name: "6. Kwai Shorts + Afiliados"
+        env:
+          DEEPSEEK_API_KEY:     ${{ secrets.DEEPSEEK_API_KEY }}
+          GROQ_API_KEY:         ${{ secrets.GROQ_API_KEY }}
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          python3 scripts/kwai_shop_affiliate.py || true
+          python3 scripts/kwai_short_video_renderer.py || true
+        continue-on-error: true
