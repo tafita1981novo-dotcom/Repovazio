@@ -1,0 +1,129 @@
+name: Multi-Stream Global 24h — Todos os Fusos
+
+on:
+  workflow_dispatch:
+    inputs:
+      lang:
+        description: "Idioma: PT / EN / ES / DE / JP / FR / ALL"
+        default: "ALL"
+      horas:
+        description: "Horas de stream (1-5)"
+        default: "5"
+  schedule:
+    # PT-BR — 20h BRT prime time (brasileiros)
+    - cron: "0 23 * * *"
+    # EN — 20h ET (costa leste EUA)
+    - cron: "0 1  * * *"
+    # JP — 20h JST (Japão)
+    - cron: "0 11 * * *"
+    # DE — 20h CET (Europa central)
+    - cron: "0 18 * * *"
+    # AU — 20h AEDT (Austrália)
+    - cron: "0 10 * * *"
+
+jobs:
+  # SEO — gerar metadata ANTES de cada stream
+  seo-pre-stream:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install requests --break-system-packages
+      - name: Gerar SEO metadata (títulos, descrições, tags)
+        env:
+          GROQ_API_KEY:         ${{ secrets.GROQ_API_KEY }}
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python3 scripts/seo_global_stream.py || true
+        continue-on-error: true
+
+  # STREAM PT-BR (canal principal)
+  stream-pt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    needs: seo-pre-stream
+    if: ${{ secrets.YOUTUBE_STREAM_KEY != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install requests --break-system-packages
+      - run: sudo apt-get install -y ffmpeg fonts-dejavu-core
+      - name: Stream PT-BR 24/7 (primary + backup RTMP)
+        env:
+          YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
+          GROQ_API_KEY:       ${{ secrets.GROQ_API_KEY }}
+          LANG_CODE:          "PT"
+        run: |
+          HORAS=${{ github.event.inputs.horas || '5' }}
+          timeout $((HORAS * 3600)) python3 scripts/youtube_live_24_7.py || true
+        continue-on-error: true
+
+  # STREAM EN (canal inglês — RPM $25)
+  stream-en:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    needs: seo-pre-stream
+    if: ${{ secrets.YOUTUBE_STREAM_KEY_EN != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install requests --break-system-packages
+      - run: sudo apt-get install -y ffmpeg fonts-dejavu-core
+      - name: Stream EN 24/7
+        env:
+          YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY_EN }}
+          GROQ_API_KEY:       ${{ secrets.GROQ_API_KEY }}
+          LANG_CODE:          "EN"
+        run: |
+          HORAS=${{ github.event.inputs.horas || '5' }}
+          timeout $((HORAS * 3600)) python3 scripts/live_global_en.py || true
+        continue-on-error: true
+
+  # STREAM ES (espanhol — mercado LATAM)
+  stream-es:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    needs: seo-pre-stream
+    if: ${{ secrets.YOUTUBE_STREAM_KEY_ES != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install requests edge-tts --break-system-packages
+      - run: sudo apt-get install -y ffmpeg
+      - name: Stream ES 24/7
+        env:
+          YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY_ES }}
+          GROQ_API_KEY:       ${{ secrets.GROQ_API_KEY }}
+          LANG_CODE:          "ES"
+        run: |
+          HORAS=${{ github.event.inputs.horas || '5' }}
+          timeout $((HORAS * 3600)) python3 scripts/live_global_es.py || true
+        continue-on-error: true
+
+  # STREAM DE+JP+FR (paralelo)
+  stream-global-rest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    needs: seo-pre-stream
+    if: ${{ secrets.YOUTUBE_STREAM_KEY_DE != '' || secrets.YOUTUBE_STREAM_KEY_JP != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install requests edge-tts --break-system-packages
+      - run: sudo apt-get install -y ffmpeg
+      - name: Multi-Stream Global (DE + JP + FR em threads)
+        env:
+          YOUTUBE_STREAM_KEY_DE: ${{ secrets.YOUTUBE_STREAM_KEY_DE }}
+          YOUTUBE_STREAM_KEY_JP: ${{ secrets.YOUTUBE_STREAM_KEY_JP }}
+          YOUTUBE_STREAM_KEY_FR: ${{ secrets.YOUTUBE_STREAM_KEY_FR }}
+          GROQ_API_KEY:          ${{ secrets.GROQ_API_KEY }}
+        run: |
+          HORAS=${{ github.event.inputs.horas || '5' }}
+          timeout $((HORAS * 3600)) python3 scripts/multi_stream_global.py || true
+        continue-on-error: true
