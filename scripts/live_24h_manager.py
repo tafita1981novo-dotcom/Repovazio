@@ -1,48 +1,47 @@
 #!/usr/bin/env python3
 """
-live_24h_manager.py — Agenda de live 24h baseada em cases reais de crescimento
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-CASES REAIS DE CRESCIMENTO RÁPIDO (referência):
+live_24h_manager.py — CORRIGIDO v2
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+VISUAL CORRETO POR BLOCO:
 
-  Meditative Mind (3.2M subs):
-    → Fórmula: lives 24/7 frequências + título com keyword alta busca
-    → Crescimento: 0→500K em 18 meses apenas com sleep music
-    → RPM: $8-20 (wellness keyword = CPM alto)
+  22h-06h SONO 528Hz:
+    → Natureza noturna (lua, estrelas, floresta escura, mar)
+    → SEM personagem anime — NUNCA à noite
+    → Texto minimalista: "528Hz ✦ Sono Profundo"
+    → Onda binaural animada sutil
+    → Silêncio + 528Hz puro (como Meditative Mind, Jason Stephenson)
 
-  Jason Stephenson Sleep Meditation (3M subs):
-    → Fórmula: vídeos 8h sono + live contínua noturna
-    → Crescimento: 1M em 8 meses com sleep anxiety keyword
-    → Estratégia: título começa com "528hz" para aparecer nas buscas
+  06h-09h FOCO 40Hz:
+    → Natureza diurna (amanhecer, sol, floresta verde)
+    → SEM personagem à noite
+    → Texto: "40Hz ✦ Foco Total"
 
-  Greenred Productions (2M subs):
-    → Fórmula: binaural beats animados + Focus/Study = retenção alta
-    → Estudantes deixam ligado por horas → AdSense por visualização longa
-    → Lives 24/7 aparecem como "AO VIVO" no YouTube Search = prioridade
+  09h-12h PSICOLOGIA (prime tarde):
+    → Daniela Coelho aparece aqui — fundo dark roxo/preto
+    → Tema: narcisismo, apego, gaslighting
 
-  Solfeggio Frequencies (1M em 6 meses):
-    → Frequências 396Hz, 417Hz, 528Hz, 639Hz, 741Hz, 852Hz, 963Hz
-    → Live não precisa de conteúdo novo — algoritmo prioriza lives longas
-    → Watch time acumulado = boost orgânico de canal
+  12h-15h FOCO 40Hz:
+    → Workspace moderno, luz suave, verde
+    → Texto: "40Hz ✦ Produtividade"
 
-ESTRATÉGIA @psidanielacoelho:
-  DIFERENCIAL: combinar frequências + psicologia dark = RPM R$7-14 (2x normal)
-  Keyword: "528hz sono" (74K buscas) + "psicologia do sono" (60K buscas)
-  Lives aparecem em TEMPO REAL no Google quando alguém busca
+  15h-18h ANSIEDADE 432Hz:
+    → Lavanda, natureza calma, azul suave
+    → Texto: "432Hz ✦ Ansiedade Zero"
 
-AGENDA 24H — HORÁRIOS BRT:
+  18h-21h PRIME TIME PSICOLOGIA:
+    → Daniela Coelho com gradiente roxo-vermelho
+    → CTA máximo: "Comenta SONO"
 
-  22h-06h  SONO E FREQUÊNCIAS (8h)   → 528Hz + narração ASMR Daniela
-  06h-09h  DESPERTAR E FOCO (3h)     → 40Hz + motivação matinal
-  09h-12h  PSICOLOGIA DARK (3h)      → narcisismo, apego, gaslighting
-  12h-15h  FOCO E PRODUTIVIDADE (3h) → 40Hz binaural + burnout
-  15h-18h  ANSIEDADE E CURA (3h)     → 432Hz + ansiedade, trauma
-  18h-21h  PRIME TIME DARK (3h)      → CTA SONO + narcisismo + venda
-  21h-22h  RELAXAMENTO (1h)          → 174Hz + emoções + cura
+  21h-22h CURA 174Hz:
+    → Floresta, luz dourada, paz
+    → Texto: "174Hz ✦ Cura Emocional"
 
-RTMP: rtmp://a.rtmp.youtube.com/live2/{KEY}
-BACKUP: rtmp://b.rtmp.youtube.com/live2/{KEY}?backup=1
+REFERÊNCIAS DE VISUAL (canais que deram certo):
+  - Meditative Mind 3.2M: fundo preto + lua + texto branco simples
+  - Jason Stephenson 3M: floresta noturna + ondas suaves
+  - Greenred 2M: background gradiente + onda animada + número Hz grande
 """
-import os, time, subprocess, pathlib, requests, threading
+import os, time, subprocess, pathlib, requests
 from datetime import datetime, timezone, timedelta
 import urllib3; urllib3.disable_warnings()
 
@@ -50,228 +49,236 @@ STREAM_KEY = os.getenv("YOUTUBE_STREAM_KEY","")
 GROQ_KEY   = os.getenv("GROQ_API_KEY","")
 RTMP_PRI   = f"rtmp://a.rtmp.youtube.com/live2/{STREAM_KEY}"
 RTMP_BCK   = f"rtmp://b.rtmp.youtube.com/live2/{STREAM_KEY}?backup=1"
-TMP        = pathlib.Path("/tmp/live24h"); TMP.mkdir(exist_ok=True)
+TMP        = pathlib.Path("/tmp/live_fix"); TMP.mkdir(exist_ok=True)
 
-# ── AGENDA COMPLETA 24H ──────────────────────────────────────────────────
-AGENDA_24H = [
-    # (hora_inicio_brt, hora_fim_brt, tipo, tema, hz, titulo_live)
-    (22, 6,  "frequencia", "sono_profundo",    528,
-     "🌙 Sono Profundo 528Hz — Regeneração Celular | AO VIVO @psidanielacoelho"),
-    (6,  9,  "frequencia", "foco_matinal",     40,
-     "☀️ Despertar Ativo 40Hz — Ondas Gamma para Foco Total | AO VIVO"),
-    (9,  12, "psicologia", "narcisismo",        0,
-     "😶 Narcisismo Encoberto — Os 8 Sinais | LIVE Daniela Coelho"),
-    (12, 15, "frequencia", "foco_trabalho",    40,
-     "🧠 Foco Total 40Hz — Produtividade Científica | AO VIVO"),
-    (15, 18, "frequencia", "ansiedade_cura",   432,
-     "💜 Ansiedade Zero 432Hz — Regulação do Sistema Nervoso | AO VIVO"),
-    (18, 21, "psicologia", "prime_time",        0,
-     "🔥 Psicologia Dark — Narcisismo, Apego, Trauma | AGORA @psidanielacoelho"),
-    (21, 22, "frequencia", "cura_emocional",   174,
-     "🌿 Cura Emocional 174Hz — Alívio do Trauma | AO VIVO"),
-]
-
-# Temas de psicologia dark por horário (prime time = mais vendas)
-TEMAS_PSICO = {
-    "narcisismo": [
-        "Você Está Num Relacionamento com um Narcisista Encoberto?",
-        "Os 8 Sinais de Narcisismo Encoberto Que Harvard Confirmou",
-        "Por Que Você Não Vê o Narcisista — A Ciência Explica",
-        "Gaslighting: Como Eles Fazem Você Duvidar de Tudo",
-    ],
-    "prime_time": [
-        "Narcisismo, Apego e Trauma — Tudo Que Ninguém Te Conta | AO VIVO",
-        "A Psicologia do Porque Você Fica Em Relacionamentos Ruins | LIVE",
-        "Burnout, Ansiedade, Trauma de Apego — Daniela Responde | AO VIVO",
-    ],
-    "sono_profundo": [
-        "Sono Profundo 528Hz + Psicologia — Regeneração Celular | 8H AO VIVO",
-        "528Hz Sono Reparador — Cortisol e Sono Explicados | LIVE NOTURNA",
-        "Dormir Bem Com Psicologia e 528Hz — Matthew Walker Research | AO VIVO",
-    ],
-    "ansiedade_cura": [
-        "432Hz Ansiedade Zero — Sistema Nervoso em Paz | AO VIVO",
-        "Cura da Ansiedade com Frequência e Psicologia | LIVE",
-        "432Hz + Teoria Polivagal — Dr. Porges Explica | AO VIVO",
-    ],
-    "foco_matinal": [
-        "40Hz Foco Matinal — Ondas Gamma para Começar o Dia | AO VIVO",
-        "Despertar Ativo com Neurociência 40Hz | LIVE MATINAL",
-    ],
-    "foco_trabalho": [
-        "40Hz Foco Total — Estudo e Produtividade | 3H AO VIVO",
-        "Gamma 40Hz para Trabalho Profundo | LIVE AFTERNOON",
-    ],
-    "cura_emocional": [
-        "174Hz Cura Emocional — Alívio de Trauma e Estresse | AO VIVO",
-        "Frequência 174Hz + Psicologia do Trauma | LIVE NOTURNA",
-    ],
+# ── PROMPTS VISUAIS CORRETOS ──────────────────────────────────────────────
+VISUAIS = {
+    "sono_528": {
+        # NUNCA anime à noite — natureza escura + lua
+        "prompt": (
+            "serene moonlit forest at night, dark blue sky, stars reflection on calm lake, "
+            "mist over water, sleeping nature, deep peace, cinematic photography, "
+            "8k ultra detailed ### text, watermark, people, anime, cartoon, bright"
+        ),
+        "cor_fundo": "000814",
+        "cor_texto": "88CCFF",
+        "hz_label": "528 Hz",
+        "sublabel": "Sono Profundo ✦ Regeneração Celular",
+        "usa_daniela": False,
+    },
+    "foco_40": {
+        # Amanhecer, natureza vibrante
+        "prompt": (
+            "golden sunrise over mountain valley, morning light rays through forest, "
+            "fresh green nature, crisp morning air, energizing atmosphere, "
+            "cinematic landscape photography, 8k ### text, watermark, anime, night"
+        ),
+        "cor_fundo": "0A1A0A",
+        "cor_texto": "88FF88",
+        "hz_label": "40 Hz",
+        "sublabel": "Foco Total ✦ Ondas Gamma",
+        "usa_daniela": False,
+    },
+    "psicologia": {
+        # Daniela aparece SÓ aqui — fundo dark psicologia
+        "prompt": (
+            "masterpiece, kawaii chibi anime researcher woman, dark psychology, "
+            "dramatic purple red gradient background, spotlight, dramatic shadows, "
+            "no text ### text, watermark, nsfw, bright background"
+        ),
+        "cor_fundo": "0D000D",
+        "cor_texto": "C084FC",
+        "hz_label": "",
+        "sublabel": "Psicologia Dark ✦ Daniela Coelho",
+        "usa_daniela": True,
+    },
+    "foco_trabalho": {
+        # Workspace moderno, produtividade
+        "prompt": (
+            "minimal modern workspace, soft morning light, clean desk, plant, "
+            "productivity atmosphere, calm focus, warm lighting, "
+            "cinematic interior photography ### text, watermark, anime, people"
+        ),
+        "cor_fundo": "0A0A1A",
+        "cor_texto": "88AAFF",
+        "hz_label": "40 Hz",
+        "sublabel": "Produtividade ✦ Deep Work",
+        "usa_daniela": False,
+    },
+    "ansiedade_432": {
+        # Lavanda, natureza calma
+        "prompt": (
+            "peaceful lavender field at golden hour, soft purple tones, "
+            "calm healing atmosphere, gentle breeze, serenity, "
+            "cinematic nature photography ### text, watermark, anime, night, dark"
+        ),
+        "cor_fundo": "0D0D1F",
+        "cor_texto": "A78BFA",
+        "hz_label": "432 Hz",
+        "sublabel": "Ansiedade Zero ✦ Sistema Nervoso",
+        "usa_daniela": False,
+    },
+    "prime_time": {
+        # Daniela no prime time
+        "prompt": (
+            "masterpiece, kawaii chibi anime researcher woman, dark dramatic psychology, "
+            "deep purple crimson gradient, cinematic shadows, intense atmosphere, "
+            "no text ### text, watermark, nsfw"
+        ),
+        "cor_fundo": "0F0005",
+        "cor_texto": "F87171",
+        "hz_label": "",
+        "sublabel": "Psicologia Dark ✦ Prime Time",
+        "usa_daniela": True,
+    },
+    "cura_174": {
+        # Floresta cura, luz dourada
+        "prompt": (
+            "magical healing forest, golden sunlight rays through ancient trees, "
+            "green moss, peace and restoration, ethereal atmosphere, "
+            "cinematic nature photography ### text, watermark, anime, night"
+        ),
+        "cor_fundo": "050F05",
+        "cor_texto": "86EFAC",
+        "hz_label": "174 Hz",
+        "sublabel": "Cura Emocional ✦ Alívio do Trauma",
+        "usa_daniela": False,
+    },
 }
+
+AGENDA_24H = [
+    # (hora_inicio_brt, hora_fim_brt, bloco)
+    (22, 6,  "sono_528"),
+    (6,  9,  "foco_40"),
+    (9,  12, "psicologia"),
+    (12, 15, "foco_trabalho"),
+    (15, 18, "ansiedade_432"),
+    (18, 21, "prime_time"),
+    (21, 22, "cura_174"),
+]
 
 def hora_brt():
     return (datetime.now(timezone.utc) - timedelta(hours=3)).hour
 
 def bloco_atual():
     h = hora_brt()
-    for inicio, fim, tipo, tema, hz, titulo in AGENDA_24H:
-        if inicio > fim:  # atravessa meia-noite
-            if h >= inicio or h < fim:
-                return tipo, tema, hz, titulo
+    for ini, fim, bloco in AGENDA_24H:
+        if ini > fim:
+            if h >= ini or h < fim: return bloco
         else:
-            if inicio <= h < fim:
-                return tipo, tema, hz, titulo
-    return "psicologia", "prime_time", 0, "🔥 Psicologia Dark | AO VIVO @psidanielacoelho"
+            if ini <= h < fim: return bloco
+    return "prime_time"
 
-def groq_narrar(tema, hz):
-    if not GROQ_KEY: return f"Frequência {hz}Hz. Relaxe. Respire."
-    if hz > 0:
-        prompt = (
-            f"Você é Daniela Coelho, pesquisadora de comportamento humano.\n"
-            f"Gere 3 frases ASMR para live 24/7 de frequência {hz}Hz sobre: {tema}\n"
-            f"Tom: muito suave, hipnótico, como uma voz guiada de meditação.\n"
-            f"Base científica: citar 1 pesquisador real (Walker, Porges, van der Kolk).\n"
-            f"PROIBIDO: psicóloga/psicólogo. Max 50 palavras."
-        )
-    else:
-        import random
-        titulo_tema = random.choice(TEMAS_PSICO.get(tema, TEMAS_PSICO["prime_time"]))
-        prompt = (
-            f"Você é Daniela Coelho, pesquisadora de comportamento humano.\n"
-            f"Gere 3 frases impactantes para live de psicologia dark sobre: {titulo_tema}\n"
-            f"Citar pesquisador Harvard/Berkeley/UCLA. Tom: revelador, dark, empático.\n"
-            f"PROIBIDO: psicóloga/psicólogo. Max 50 palavras."
-        )
+def pollinations_frame(bloco, idx):
+    v = VISUAIS[bloco]
+    seed = 7001 + idx * 53
+    url = (f"https://image.pollinations.ai/prompt/{requests.utils.quote(v['prompt'])}"
+           f"?seed={seed}&width=1280&height=720&nologo=true")
     try:
-        r = requests.post("https://api.groq.com/openai/v1/chat/completions",
-            headers={"Authorization":f"Bearer {GROQ_KEY}","Content-Type":"application/json"},
-            json={"model":"llama-3.3-70b-versatile",
-                  "messages":[{"role":"user","content":prompt}],
-                  "max_tokens":80,"temperature":0.85},
-            timeout=12, verify=False)
-        if r.status_code == 200:
-            return r.json()["choices"][0]["message"]["content"].strip()
-    except: pass
-    return f"{tema} — baseado em pesquisa científica."
-
-def gerar_binaural_tone(hz, duracao_seg, output):
-    """Gera tom binaural puro via FFmpeg"""
-    freq_dir = hz + 10  # diferença de 10Hz = efeito binaural
-    cmd = [
-        "ffmpeg","-y","-f","lavfi",
-        "-i",f"sine=frequency={hz}:duration={duracao_seg}",
-        "-f","lavfi",
-        "-i",f"sine=frequency={freq_dir}:duration={duracao_seg}",
-        "-filter_complex","[0:a][1:a]amerge=inputs=2,volume=0.35[out]",
-        "-map","[out]","-ar","44100","-b:a","128k",output
-    ]
-    r = subprocess.run(cmd, capture_output=True, timeout=120)
-    return r.returncode == 0
-
-def pollinations_frame(tema, hz, idx):
-    """Gera frame visual para a live"""
-    estilos = {
-        "sono_profundo":  "dark bedroom, moonlight, peaceful blue atmosphere, stars",
-        "foco_matinal":   "bright morning light, coffee desk, energetic atmosphere",
-        "foco_trabalho":  "modern workspace, purple glow, focus atmosphere",
-        "ansiedade_cura": "lavender fields, calm water, healing teal atmosphere",
-        "narcisismo":     "dark psychology, dramatic shadows, mirror reflection",
-        "prime_time":     "dark psychology, purple red gradient, dramatic lighting",
-        "cura_emocional": "forest healing, golden light, peace and calm",
-    }
-    estilo = estilos.get(tema, "dark psychology peaceful atmosphere")
-    hz_txt = f"{hz}hz frequency visualization" if hz > 0 else ""
-    prompt = (
-        f"masterpiece, kawaii chibi anime researcher woman, {estilo}, "
-        f"{hz_txt}, no text, minimal clean ### text, watermark, nsfw"
-    )
-    seed = 9001 + idx * 77
-    url  = f"https://image.pollinations.ai/prompt/{requests.utils.quote(prompt)}"
-    url += f"?seed={seed}&width=1280&height=720&nologo=true"
-    try:
-        r = requests.get(url, timeout=30, verify=False)
-        if r.status_code == 200 and len(r.content) > 5000:
-            p = TMP / f"frame_{tema}_{idx}.jpg"
+        r = requests.get(url, timeout=35, verify=False)
+        if r.status_code == 200 and len(r.content) > 8000:
+            p = TMP / f"frame_{bloco}_{idx}.jpg"
             p.write_bytes(r.content)
             return str(p)
     except: pass
     return None
 
-def stream_frame_com_audio(frame, rtmp, duracao=60, hz=0):
-    """Stream frame com áudio binaural ou silencioso"""
-    audio_src = "anullsrc=r=44100:cl=stereo"
-    if hz > 0:
-        tone_file = str(TMP / f"tone_{hz}.mp3")
-        if not pathlib.Path(tone_file).exists():
-            gerar_binaural_tone(hz, 300, tone_file)
-        if pathlib.Path(tone_file).exists():
-            cmd = [
-                "ffmpeg","-y","-re",
-                "-loop","1","-i",frame,
-                "-stream_loop","-1","-i",tone_file,
-                "-c:v","libx264","-preset","ultrafast","-tune","zerolatency",
-                "-b:v","2500k","-maxrate","2500k","-bufsize","5000k",
-                "-pix_fmt","yuv420p","-r","30",
-                "-c:a","aac","-b:a","128k","-ar","44100",
-                "-t",str(duracao),"-f","flv",rtmp
-            ]
-            try:
-                subprocess.run(cmd, capture_output=True, timeout=duracao+30)
-                return True
-            except: pass
-    # Fallback silencioso
-    cmd = [
-        "ffmpeg","-y","-re","-loop","1","-i",frame,
-        "-f","lavfi","-i",f"{audio_src}",
-        "-c:v","libx264","-preset","ultrafast","-tune","zerolatency",
-        "-b:v","2500k","-pix_fmt","yuv420p","-r","30",
-        "-c:a","aac","-b:a","128k","-ar","44100",
-        "-t",str(duracao),"-f","flv",rtmp
-    ]
-    try:
-        subprocess.run(cmd, capture_output=True, timeout=duracao+30)
-        return True
-    except: return False
+def criar_frame_ffmpeg(bloco, idx):
+    """Frame via FFmpeg com texto Hz — fallback sempre limpo"""
+    v = VISUAIS[bloco]
+    out = str(TMP / f"ff_{bloco}_{idx}.jpg")
+    bg  = v["cor_fundo"]
+    tc  = v["cor_texto"]
+    hz  = v.get("hz_label","")
+    sub = v.get("sublabel","")
 
-def titulo_atual(titulo_base, tema, hz):
-    """Título com keyword de alta busca por horário"""
-    h = hora_brt()
+    vf_parts = [f"drawbox=w=iw:h=ih:color=0x{bg}:t=fill"]
+
+    if hz:
+        vf_parts.append(
+            f"drawtext=text='{hz}':fontsize=96:fontcolor=0x{tc}:x=(w-text_w)/2:y=240"
+            f":fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+        )
+    if sub:
+        vf_parts.append(
+            f"drawtext=text='{sub}':fontsize=32:fontcolor=0x{tc}AA:x=(w-text_w)/2:y=370"
+            f":fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+        )
+
+    vf = ",".join(vf_parts)
+    cmd = ["ffmpeg","-y","-f","lavfi","-i","color=size=1280x720:rate=1",
+           "-vf",vf,"-frames:v","1","-q:v","2",out]
+    r = subprocess.run(cmd, capture_output=True, timeout=15)
+    return out if r.returncode == 0 else None
+
+def gerar_binaural(hz, out):
+    if hz <= 0 or pathlib.Path(out).exists(): return True
+    freq2 = hz + 10
+    cmd = ["ffmpeg","-y","-f","lavfi",
+           "-i",f"sine=frequency={hz}:duration=600",
+           "-f","lavfi","-i",f"sine=frequency={freq2}:duration=600",
+           "-filter_complex","[0:a][1:a]amerge,volume=0.25[out]",
+           "-map","[out]","-ar","44100","-b:a","128k",out]
+    r = subprocess.run(cmd, capture_output=True, timeout=60)
+    return r.returncode == 0
+
+HZ_MAP = {
+    "sono_528": 528, "foco_40": 40, "foco_trabalho": 40,
+    "ansiedade_432": 432, "cura_174": 174,
+    "psicologia": 0, "prime_time": 0,
+}
+
+def stream_frame(frame, hz, duracao=60):
+    audio_args = []
     if hz > 0:
-        return f"{titulo_base} | 🔴 {datetime.now().strftime('%H:%M')} BRT"
-    return titulo_base
+        tone = str(TMP / f"tone_{hz}.mp3")
+        gerar_binaural(hz, tone)
+        if pathlib.Path(tone).exists():
+            audio_args = ["-stream_loop","-1","-i",tone,
+                          "-c:a","aac","-b:a","128k","-ar","44100"]
+    if not audio_args:
+        audio_args = ["-f","lavfi","-i","anullsrc=r=44100:cl=stereo",
+                      "-c:a","aac","-b:a","128k","-ar","44100"]
+    for rtmp in [RTMP_PRI, RTMP_BCK]:
+        cmd = (["ffmpeg","-y","-re","-loop","1","-i",frame]
+               + audio_args
+               + ["-c:v","libx264","-preset","ultrafast","-tune","zerolatency",
+                  "-b:v","3000k","-maxrate","3000k","-bufsize","6000k",
+                  "-pix_fmt","yuv420p","-r","30",
+                  "-t",str(duracao),"-f","flv",rtmp])
+        try:
+            result = subprocess.run(cmd, capture_output=True, timeout=duracao+30)
+            if result.returncode == 0: return True
+        except: pass
+    return False
 
 def run():
     import sys
     if not STREAM_KEY:
-        print("ERRO: YOUTUBE_STREAM_KEY nao configurado")
+        print("ERRO: YOUTUBE_STREAM_KEY não configurado")
         sys.exit(1)
-
-    print("=== LIVE 24H MANAGER — @psidanielacoelho ===")
-    print("  RTMP Primary: rtmp://a.rtmp.youtube.com/live2/[KEY]")
-    print("  RTMP Backup:  rtmp://b.rtmp.youtube.com/live2/[KEY]?backup=1")
-    print("  Agenda: Sono 528Hz(22-6) | Foco 40Hz(6-9,12-15) | Psico(9-12,18-21)")
+    print("=== LIVE 24H v2 — Visual Correto por Bloco ===")
+    print("  22-06h: NATUREZA NOTURNA (sem anime) + 528Hz sono")
+    print("  06-09h: AMANHECER + 40Hz foco")
+    print("  09-12h: DANIELA dark + psicologia")
+    print("  12-15h: WORKSPACE + 40Hz produtividade")
+    print("  15-18h: LAVANDA + 432Hz ansiedade")
+    print("  18-21h: DANIELA prime time + CTA SONO")
+    print("  21-22h: FLORESTA + 174Hz cura")
     print()
-
     idx = 0
     while True:
-        tipo, tema, hz, titulo = bloco_atual()
+        bloco = bloco_atual()
+        hz    = HZ_MAP.get(bloco, 0)
+        v     = VISUAIS[bloco]
         h_brt = hora_brt()
-        titulo_live = titulo_atual(titulo, tema, hz)
-
-        print(f"  {h_brt:02d}h BRT [{tipo.upper()}] {tema} {f'{hz}Hz' if hz else ''}")
-        print(f"  Título: {titulo_live[:60]}")
-
-        narr = groq_narrar(tema, hz)
-        frame = pollinations_frame(tema, hz, idx)
-
+        print(f"  {h_brt:02d}h BRT [{bloco}] {'Daniela' if v['usa_daniela'] else 'Natureza'} {f'{hz}Hz' if hz else ''}")
+        # Gerar frame via Pollinations primeiro, fallback FFmpeg
+        frame = pollinations_frame(bloco, idx)
+        if not frame:
+            frame = criar_frame_ffmpeg(bloco, idx)
         if frame:
-            # Tenta primary, fallback para backup
-            ok = stream_frame_com_audio(frame, RTMP_PRI, 60, hz)
-            if not ok:
-                print(f"  Primary falhou → backup RTMP")
-                stream_frame_com_audio(frame, RTMP_BCK, 60, hz)
-        else:
-            print(f"  Frame falhou — gerando próximo")
-
+            stream_frame(frame, hz, 60)
         idx += 1
         time.sleep(2)
 
