@@ -1,0 +1,21 @@
+name: Newsletter EN — Semanal Inglês
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 12 * * 5"
+jobs:
+  newsletter-en:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install requests --break-system-packages
+      - name: Newsletter EN Engine
+        env:
+          GROQ_API_KEY:         ${{ secrets.GROQ_API_KEY }}
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python3 scripts/newsletter_engine_en.py || true
+        continue-on-error: true
