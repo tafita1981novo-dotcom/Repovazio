@@ -1,0 +1,26 @@
+name: YouTube Comments Responder — A cada 2h
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 */2 * * *"   # A cada 2h — responde comentários novos
+
+jobs:
+  responder-comentarios:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install requests --break-system-packages
+
+      - name: Responder comentários com Groq (linguagem natural)
+        env:
+          GROQ_API_KEY:        ${{ secrets.GROQ_API_KEY }}
+          YT_ACCESS_TOKEN:     ${{ secrets.YOUTUBE_ACCESS_TOKEN }}
+          YT_REFRESH_TOKEN:    ${{ secrets.YT_REFRESH_TOKEN }}
+          YT_CLIENT_ID:        ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET:    ${{ secrets.YT_CLIENT_SECRET }}
+        run: python3 scripts/youtube_comments_responder.py || true
+        continue-on-error: true
