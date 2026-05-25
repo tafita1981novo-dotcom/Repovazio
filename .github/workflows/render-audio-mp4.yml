@@ -1,0 +1,25 @@
+name: Render Audio→MP4 (audio_ready → mp4_ready)
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 */4 * * *"   # A cada 4h
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: |
+          pip install requests pillow --break-system-packages -q
+          sudo apt-get install -y ffmpeg --quiet
+
+      - name: Renderizar áudios prontos em MP4
+        env:
+          SUPABASE_URL:        ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GROQ_API_KEY:        ${{ secrets.GROQ_API_KEY }}
+        run: python3 scripts/video_gen_v2.py || true
