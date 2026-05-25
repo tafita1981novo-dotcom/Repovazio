@@ -1,218 +1,207 @@
 #!/usr/bin/env python3
 """
-youtube_publisher.py — Publicador automático no YouTube
-Canal: UCyCkIpsVgME9yCj_oXJFheA (@psidanielacoelho)
-Busca mp4_ready do Supabase + faz upload via YouTube Data API v3
+youtube_publisher.py — Publica vídeos do Supabase no @psidanicoelho
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Ordem: #683 → #701 → #682 → #689 → #684 → #688 → sequência
+Horário: 18h-20h BRT (21h-23h UTC)
+Canal: UCSH63tBfY6wEIdkC4u4zKdg / @psidanicoelho / tafita81@gmail.com
 """
-import os, json, requests, time
-from datetime import datetime, timezone
+import os, requests, json, time, sys
+from datetime import datetime, timezone, timedelta
 
-SBU = os.getenv("SBU","https://tpjvalzwkqwttvmszvie.supabase.co")
-SBK = os.getenv("SBK","")
-YT_CLIENT_ID = os.getenv("YT_CLIENT_ID","")
-YT_SECRET    = os.getenv("YT_CLIENT_SECRET","")
-YT_REFRESH   = os.getenv("YT_REFRESH_TOKEN","")
-H_SB = {"apikey":SBK,"Authorization":f"Bearer {SBK}","Content-Type":"application/json"}
+SB_URL  = os.getenv("SUPABASE_URL","https://tpjvalzwkqwttvmszvie.supabase.co")
+SB_KEY  = os.getenv("SUPABASE_SERVICE_KEY","")
+YT_ID   = os.getenv("YT_CLIENT_ID","")
+YT_SEC  = os.getenv("YT_CLIENT_SECRET","")
+YT_REF  = os.getenv("YT_REFRESH_TOKEN","")
+CHANNEL = os.getenv("YOUTUBE_CHANNEL_ID","UCSH63tBfY6wEIdkC4u4zKdg")
+SBH     = {"apikey":SB_KEY,"Authorization":f"Bearer {SB_KEY}","Content-Type":"application/json"}
 
-def log(msg): print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+# Ordem de publicação definida
+ORDEM_IDS = [683, 701, 682, 689, 684, 688]
 
-def sb(method, path, data=None):
-    r = requests.request(method, SBU+"/rest/v1/"+path,
-        headers=H_SB, json=data, timeout=15)
-    try: return r.json()
-    except: return {}
-
-def get_access_token():
-    if not YT_REFRESH:
-        log("❌ Sem YOUTUBE_REFRESH_TOKEN"); return None
+def refresh_token():
+    if not all([YT_ID, YT_SEC, YT_REF]): return None
     r = requests.post("https://oauth2.googleapis.com/token", data={
-        "client_id":YT_CLIENT_ID,"client_secret":YT_SECRET,
-        "refresh_token":YT_REFRESH,"grant_type":"refresh_token"
+        "client_id":YT_ID,"client_secret":YT_SEC,
+        "refresh_token":YT_REF,"grant_type":"refresh_token"
     }, timeout=15)
-    if r.ok: return r.json().get("access_token")
-    log(f"❌ Token error: {r.status_code} {r.text[:100]}"); return None
+    if r.status_code == 200:
+        t = r.json().get("access_token")
+        print(f"  Token OK: {t[:20]}...")
+        return t
+    print(f"  Token ERRO: {r.status_code} {r.text[:100]}")
+    return None
 
-def build_metadata(pipeline):
-    """Monta metadados SEO otimizados para o vídeo"""
-    title = pipeline.get("title","Psicologia com Daniela Coelho")
-    meta  = pipeline.get("metadata") or {}
-    serie = meta.get("serie","")
-    ep    = meta.get("episodio","")
-    topico = meta.get("topico","")
-    viral  = meta.get("viral_pattern","")
+def buscar_video(ep_id):
+    r = requests.get(f"{SB_URL}/rest/v1/content_pipeline",
+        params={"id":f"eq.{ep_id}","select":"*","limit":"1"},
+        headers=SBH, timeout=10)
+    rows = r.json()
+    return rows[0] if rows else None
 
-    # Tags de alto volume
-    base_tags = ["psicologia","saúde mental","autoconhecimento","desenvolvimento pessoal","bem-estar","mente","emoções","terapia"]
-    topic_tags = {
-        "narcisismo":["narcisismo","narcisista","manipulação emocional","gaslighting","relacionamento tóxico"],
-        "apego":["apego ansioso","apego evitativo","estilo de apego","medo de abandono","relacionamento"],
-        "ansiedade":["ansiedade","ansiedade generalizada","ataque de pânico","transtorno de ansiedade"],
-        "trauma":["trauma","C-PTSD","trauma de infância","cura emocional"],
-        "burnout":["burnout","esgotamento","estresse crônico","síndrome de burnout"],
-        "autossabotagem":["autossabotagem","autoestima","crenças limitantes"],
-        "depressao":["depressão","depressão mascarada","tristeza","humor"],
-    }.get(topico or serie, [])
-    if serie: base_tags.append(f"série {serie}")
+def download_mp4(url):
+    print(f"  Baixando MP4: {url[:60]}...")
+    r = requests.get(url, timeout=120, stream=True)
+    path = f"/tmp/video_{int(time.time())}.mp4"
+    with open(path, "wb") as f:
+        for chunk in r.iter_content(8192):
+            f.write(chunk)
+    size = os.path.getsize(path)
+    print(f"  MP4 baixado: {size/1024/1024:.1f}MB → {path}")
+    return path
 
-    # Descrição SEO
-    desc = f"""🧠 {title}
-
-Daniela Coelho | Psicologia Aplicada ao Cotidiano BR
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📌 O QUE VOCÊ VAI APRENDER NESSE VÍDEO:
-{viral or 'Tópicos de psicologia aplicados ao dia a dia'}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-⏱️ TIMESTAMPS
-00:00 - Introdução
-03:00 - O que a ciência diz
-08:00 - Casos reais
-14:00 - Como aplicar na sua vida
-18:00 - Conclusão e próximos passos
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔔 Inscreva-se para conteúdo semanal de psicologia real:
-https://www.youtube.com/@psidanielacoelho
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-#psicologia #saudemental #autoconhecimento #danielacoelho
-"""
-    if serie and ep:
-        desc += f"\n📺 Parte {ep} da Série: {serie.title()}"
-
-    return {
-        "title": title[:100],
-        "description": desc[:5000],
-        "tags": list(set(base_tags + topic_tags))[:30],
-        "categoryId": "26",  # Howto & Style
-        "defaultLanguage": "pt",
-        "defaultAudioLanguage": "pt-BR"
-    }
-
-def upload_video(token, mp4_url, metadata):
-    """Faz upload de um vídeo para o YouTube via URL"""
-    if not mp4_url.startswith("http"):
-        log(f"❌ URL inválida: {mp4_url}"); return None
-
-    log(f"Baixando MP4: {mp4_url[:60]}...")
-    r_mp4 = requests.get(mp4_url, stream=True, timeout=60)
-    if not r_mp4.ok:
-        log(f"❌ Erro download MP4: {r_mp4.status_code}"); return None
-    video_data = r_mp4.content
-    log(f"MP4 baixado: {len(video_data)//1024//1024}MB")
-
-    # Metadata do vídeo
-    body = {
+def upload_youtube(token, video_path, title, description, tags, category="22"):
+    """Upload resumável YouTube Data API v3"""
+    meta = {
         "snippet": {
-            "title": metadata["title"],
-            "description": metadata["description"],
-            "tags": metadata["tags"],
-            "categoryId": metadata["categoryId"],
-            "defaultLanguage": metadata.get("defaultLanguage","pt"),
-            "defaultAudioLanguage": metadata.get("defaultAudioLanguage","pt-BR")
+            "title": title[:100],
+            "description": description[:5000],
+            "tags": tags[:500],
+            "categoryId": category,
+            "defaultLanguage": "pt",
+            "defaultAudioLanguage": "pt",
         },
         "status": {
             "privacyStatus": "public",
+            "madeForKids": False,
             "selfDeclaredMadeForKids": False,
-            "madeForKids": False
         }
     }
 
-    # Upload multipart
-    log("Iniciando upload YouTube...")
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "X-Upload-Content-Type": "video/mp4",
-        "X-Upload-Content-Length": str(len(video_data)),
-        "Content-Type": "application/json"
-    }
-    r_init = requests.post(
-        "https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status",
-        headers=headers, json=body, timeout=15
-    )
-    if not r_init.ok:
-        log(f"❌ Init upload falhou: {r_init.status_code} {r_init.text[:200]}")
+    # Iniciar upload resumável
+    r = requests.post(
+        "https://www.googleapis.com/upload/youtube/v3/videos"
+        "?uploadType=resumable&part=snippet,status",
+        headers={"Authorization":f"Bearer {token}",
+                 "Content-Type":"application/json",
+                 "X-Upload-Content-Type":"video/mp4"},
+        json=meta, timeout=30)
+
+    if r.status_code != 200:
+        print(f"  Upload init ERRO: {r.status_code} {r.text[:200]}")
         return None
 
-    upload_url = r_init.headers.get("Location","")
-    log(f"Upload URL obtida: OK")
+    upload_url = r.headers["Location"]
+    file_size  = os.path.getsize(video_path)
 
-    # Upload do vídeo
-    r_upload = requests.put(
-        upload_url,
-        headers={"Authorization":f"Bearer {token}","Content-Type":"video/mp4"},
-        data=video_data, timeout=300
-    )
-    if r_upload.ok:
-        video_id = r_upload.json().get("id","")
-        log(f"✅ Upload OK: https://youtu.be/{video_id}")
-        return video_id
-    log(f"❌ Upload falhou: {r_upload.status_code} {r_upload.text[:200]}")
+    # Enviar arquivo
+    with open(video_path,"rb") as f:
+        r2 = requests.put(upload_url,
+            headers={"Content-Length":str(file_size),
+                     "Content-Type":"video/mp4"},
+            data=f, timeout=600)
+
+    if r2.status_code in (200,201):
+        vid = r2.json().get("id")
+        print(f"  Upload OK: https://youtu.be/{vid}")
+        return vid
+    print(f"  Upload ERRO: {r2.status_code}")
     return None
 
-def set_thumbnail(token, video_id, thumbnail_url):
-    """Define thumbnail do vídeo"""
-    if not thumbnail_url: return
+def set_thumbnail(token, video_id, thumb_url):
     try:
-        r_thumb = requests.get(thumbnail_url, timeout=15)
-        if not r_thumb.ok: return
-        r = requests.post(
-            f"https://www.googleapis.com/upload/youtube/v3/thumbnails/set?videoId={video_id}&uploadType=media",
+        r = requests.get(thumb_url, timeout=30)
+        r2 = requests.post(
+            f"https://www.googleapis.com/upload/youtube/v3/thumbnails/set"
+            f"?videoId={video_id}&uploadType=media",
             headers={"Authorization":f"Bearer {token}","Content-Type":"image/jpeg"},
-            data=r_thumb.content, timeout=30
-        )
-        if r.ok: log(f"✅ Thumbnail definida")
-    except Exception as e:
-        log(f"Thumbnail erro: {e}")
+            data=r.content, timeout=60)
+        ok = r2.status_code == 200
+        print(f"  Thumbnail: {'✅' if ok else '❌'}")
+        return ok
+    except: return False
 
-def main():
-    log("=== YouTube Publisher V1 ===")
-    token = get_access_token()
+def marcar_publicado(ep_id, youtube_id, youtube_url):
+    now = datetime.now(timezone.utc).isoformat()
+    requests.patch(f"{SB_URL}/rest/v1/content_pipeline",
+        params={"id":f"eq.{ep_id}"},
+        headers={**SBH,"Prefer":"return=minimal"},
+        json={"status":"published","youtube_id":youtube_id,
+              "youtube_url":youtube_url,"published_at":now},
+        timeout=10)
+
+def hora_brt():
+    return (datetime.now(timezone.utc) - timedelta(hours=3)).hour
+
+def run():
+    print("=== PUBLICADOR YOUTUBE — @psidanicoelho ===")
+    print(f"  Canal: {CHANNEL}")
+    print(f"  Ordem: {ORDEM_IDS}")
+    print()
+
+    if not all([YT_ID, YT_SEC, YT_REF]):
+        print("  ERRO: Credenciais YouTube não configuradas")
+        print("  Adicionar GitHub Secrets: YT_CLIENT_ID, YT_CLIENT_SECRET, YT_REFRESH_TOKEN")
+        sys.exit(1)
+
+    token = refresh_token()
     if not token:
-        log("⚠️ Sem token válido — publicação manual necessária")
-        log("Acesse: https://studio.youtube.com")
-        return
+        print("  ERRO: Token YouTube inválido")
+        sys.exit(1)
 
-    # Buscar vídeos mp4_ready
-    videos = sb("GET", "content_pipeline?status=eq.mp4_ready&order=id.asc&limit=3")
-    if not isinstance(videos, list) or not videos:
-        log("Nenhum mp4_ready encontrado"); return
+    h = hora_brt()
+    print(f"  Hora BRT: {h}h")
+    if not (18 <= h <= 23):
+        print("  Fora do horário de publicação (18h-23h BRT)")
+        print("  Verificando: há vídeos prontos para publicar?")
 
-    log(f"Encontrados {len(videos)} vídeos para publicar")
-
-    for v in videos:
-        vid_id = v["id"]
-        title  = v.get("title","?")[:50]
-        mp4_url = v.get("mp4_url","")
-
-        log(f"\nPublicando: {title}")
-        if not mp4_url:
-            log(f"❌ Sem mp4_url — pulando")
+    publicados = 0
+    for ep_id in ORDEM_IDS:
+        video = buscar_video(ep_id)
+        if not video:
+            print(f"  #{ep_id}: não encontrado no Supabase")
             continue
 
-        # Montar metadados
-        meta = build_metadata(v)
+        status = video.get("status","")
+        yt_id  = video.get("youtube_id") or video.get("youtube_video_id")
+
+        if status == "published" and yt_id:
+            print(f"  #{ep_id}: já publicado → https://youtu.be/{yt_id}")
+            continue
+
+        mp4 = video.get("mp4_url") or video.get("video_url")
+        if not mp4:
+            print(f"  #{ep_id}: sem MP4 — status={status}")
+            continue
+
+        title = video.get("youtube_title") or video.get("title","Vídeo Psicologia")
+        desc  = video.get("youtube_description") or video.get("script","")[:2000]
+        tags  = json.loads(video.get("youtube_tags","[]")) if video.get("youtube_tags") else []
+        thumb = video.get("thumbnail_url","")
+
+        print(f"\n  PUBLICANDO #{ep_id}: {title[:60]}")
+
+        # Download
+        try:
+            path = download_mp4(mp4)
+        except Exception as e:
+            print(f"  Download ERRO: {e}")
+            continue
+
+        # Refresh token antes do upload
+        token = refresh_token() or token
 
         # Upload
-        yt_id = upload_video(token, mp4_url, meta)
-        if yt_id:
-            # Definir thumbnail
-            thumb = v.get("thumbnail_url","")
-            if thumb: set_thumbnail(token, yt_id, thumb)
+        vid_id = upload_youtube(token, title, desc, tags)
+        if not vid_id:
+            continue
 
-            # Atualizar no Supabase
-            yt_url = f"https://youtu.be/{yt_id}"
-            sb("PATCH", f"content_pipeline?id=eq.{vid_id}", {
-                "status": "published",
-                "youtube_url": yt_url,
-                "published_at": datetime.now(timezone.utc).isoformat(),
-                "metadata": {**(v.get("metadata") or {}), "youtube_id": yt_id}
-            })
-            log(f"✅ Publicado: {yt_url}")
-            time.sleep(5)  # Rate limiting
-        else:
-            log(f"❌ Falha no upload de: {title}")
+        # Thumbnail
+        if thumb:
+            set_thumbnail(token, vid_id, thumb)
 
-if __name__ == "__main__":
-    main()
+        # Marcar publicado
+        yt_url = f"https://youtu.be/{vid_id}"
+        marcar_publicado(ep_id, vid_id, yt_url)
+        print(f"  ✅ PUBLICADO: {yt_url}")
+        publicados += 1
+
+        # Intervalo entre publicações (evitar ban)
+        if publicados < len(ORDEM_IDS):
+            print(f"  Aguardando 30s antes do próximo...")
+            time.sleep(30)
+
+    print(f"\n  Total publicados: {publicados}")
+
+if __name__=="__main__": run()
