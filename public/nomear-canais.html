@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>📺 Nomear Canais YouTube</title>
+<style>
+:root{--bg:#06060F;--card:#0F0F1A;--p:#7C3AED;--r:#E11D48;--g:#22C55E;--y:#F59E0B;--txt:#F1F5F9;--muted:#94A3B8}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:system-ui,sans-serif}
+header{padding:14px 20px;border-bottom:1px solid #1E1E33;display:flex;align-items:center;gap:8px}
+.logo{font-weight:800;background:linear-gradient(135deg,#A78BFA,#E11D48);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+main{max-width:800px;margin:0 auto;padding:16px}
+.live-badge{background:#E11D4822;border:1px solid #E11D4844;border-radius:8px;padding:10px 16px;margin-bottom:20px;display:flex;align-items:center;gap:10px}
+.dot{width:10px;height:10px;border-radius:50%;background:#E11D48;box-shadow:0 0 8px #E11D48;animation:b 1s infinite}
+@keyframes b{0%,100%{opacity:1}50%{opacity:.3}}
+h2{font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin:20px 0 10px;padding-bottom:4px;border-bottom:1px solid #1E1E33}
+.canal{background:var(--card);border:1px solid #1E1E33;border-radius:12px;padding:16px;margin-bottom:10px}
+.canal-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.flag{font-size:1.4rem}
+.canal-info .name{font-size:.9rem;font-weight:700}
+.canal-info .handle{font-size:.75rem;color:var(--muted)}
+.rpm{font-size:.85rem;font-weight:700;color:var(--g);margin-left:auto}
+.field{background:#06060F;border:1px solid #1E1E33;border-radius:6px;padding:8px 12px;font-size:.78rem;font-family:monospace;color:#A78BFA;margin:4px 0;cursor:pointer;position:relative}
+.field:hover{border-color:#7C3AED}
+.field::after{content:"📋";position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:.7rem}
+.label{font-size:.68rem;color:var(--muted);margin-top:8px;margin-bottom:2px;text-transform:uppercase;letter-spacing:.05em}
+.status{display:inline-block;padding:2px 8px;border-radius:99px;font-size:.68rem;margin-left:8px}
+.ok{background:#22C55E22;color:#22C55E;border:1px solid #22C55E33}
+.criar{background:#F59E0B22;color:#F59E0B;border:1px solid #F59E0B33}
+.btn{display:inline-block;padding:7px 14px;border-radius:8px;font-size:.75rem;font-weight:600;text-decoration:none;color:white;background:#E11D48;margin-top:8px}
+.steps{background:#0d0d1a;border-radius:8px;padding:12px;font-size:.75rem;color:var(--muted);line-height:1.8;margin-top:8px}
+.steps strong{color:var(--txt)}
+footer{text-align:center;padding:14px;color:var(--muted);font-size:.68rem;border-top:1px solid #1E1E33;margin-top:20px}
+</style>
+</head>
+<body>
+<header><span>📺</span><span class="logo">Nomear Canais YouTube</span><a href="/hub" style="margin-left:auto;font-size:.75rem;color:var(--muted);text-decoration:none">← Hub</a></header>
+<main>
+
+<div class="live-badge">
+  <div class="dot"></div>
+  <div>
+    <strong>Stream ativa agora</strong><br>
+    <span style="font-size:.75rem;color:var(--muted)">Live Global Master rodando — canal PT-BR @psidanielacoelho</span>
+  </div>
+  <a href="https://studio.youtube.com" target="_blank" class="btn" style="margin-left:auto">Ver no Studio</a>
+</div>
+
+<h2>📺 Canal Principal — já existe</h2>
+<div class="canal">
+  <div class="canal-header">
+    <span class="flag">🇧🇷</span>
+    <div class="canal-info">
+      <div class="name">Daniela Coelho — Psicologia <span class="status ok">✅ Ativo</span></div>
+      <div class="handle">@psidanielacoelho · UCyCkIpsVgME9yCj_oXJFheA</div>
+    </div>
+    <div class="rpm">~R$7 RPM</div>
+  </div>
+  <div class="label">Nome do canal (studio.youtube.com → Personalização → Informações)</div>
+  <div class="field" onclick="copy(this,'Daniela Coelho — Psicologia')">Daniela Coelho — Psicologia</div>
+  <div class="label">Descrição do canal</div>
+  <div class="field" onclick="copy(this,'Pesquisa de comportamento humano | Narcisismo, Apego Ansioso, Sono, Burnout | Daniela Coelho')">Pesquisa de comportamento humano | Narcisismo, Apego Ansioso, Sono, Burnout | Daniela Coelho</div>
+  <div class="label">Stream key (já salva como Secret)</div>
+  <div class="field" style="color:#22C55E" onclick="copy(this,'YOUTUBE_STREAM_KEY')">✅ Salva no GitHub — YOUTUBE_STREAM_KEY</div>
+</div>
+
+<h2>🌍 Canais Globais — Criar (cada um precisa de conta Google diferente)</h2>
+
+<div class="canal">
+  <div class="canal-header"><span class="flag">🇺🇸</span><div class="canal-info"><div class="name">Psychology Frequencies <span class="status criar">Criar</span></div><div class="handle">@psychologyfrequencies</div></div><div class="rpm">~$28 RPM</div></div>
+  <div class="label">Nome</div><div class="field" onclick="copy(this,'Psychology Frequencies')">Psychology Frequencies</div>
+  <div class="label">Descrição</div><div class="field" onclick="copy(this,'Human behavior research | Narcissism, Anxious Attachment, Sleep Science, Burnout | Research-based')">Human behavior research | Narcissism, Anxious Attachment, Sleep Science, Burnout | Research-based</div>
+  <div class="label">Secret GitHub (após criar canal e pegar stream key)</div>
+  <div class="field" onclick="copy(this,'YOUTUBE_STREAM_KEY_EN')">YOUTUBE_STREAM_KEY_EN</div>
+  <a href="https://studio.youtube.com/channel/new" target="_blank" class="btn">+ Criar Canal EN</a>
+</div>
+
+<div class="canal">
+  <div class="canal-header"><span class="flag">🇪🇸</span><div class="canal-info"><div class="name">Psicología Frecuencias <span class="status criar">Criar</span></div><div class="handle">@psicologiafrecuencias</div></div><div class="rpm">~$12 RPM</div></div>
+  <div class="label">Nome</div><div class="field" onclick="copy(this,'Psicología Frecuencias')">Psicología Frecuencias</div>
+  <div class="label">Secret GitHub</div><div class="field" onclick="copy(this,'YOUTUBE_STREAM_KEY_ES')">YOUTUBE_STREAM_KEY_ES</div>
+  <a href="https://studio.youtube.com/channel/new" target="_blank" class="btn">+ Criar Canal ES</a>
+</div>
+
+<div class="canal">
+  <div class="canal-header"><span class="flag">🇩🇪</span><div class="canal-info"><div class="name">Psychologie Frequenzen <span class="status criar">Criar</span></div><div class="handle">@psychologiefrequenzen</div></div><div class="rpm">~$18 RPM</div></div>
+  <div class="label">Nome</div><div class="field" onclick="copy(this,'Psychologie Frequenzen')">Psychologie Frequenzen</div>
+  <div class="label">Secret GitHub</div><div class="field" onclick="copy(this,'YOUTUBE_STREAM_KEY_DE')">YOUTUBE_STREAM_KEY_DE</div>
+  <a href="https://studio.youtube.com/channel/new" target="_blank" class="btn">+ Criar Canal DE</a>
+</div>
+
+<div class="canal">
+  <div class="canal-header"><span class="flag">🇯🇵</span><div class="canal-info"><div class="name">心理学周波数 <span class="status criar">Criar</span></div><div class="handle">@psychology-frequencies-jp</div></div><div class="rpm">~$15 RPM</div></div>
+  <div class="label">Nome</div><div class="field" onclick="copy(this,'心理学周波数')">心理学周波数</div>
+  <div class="label">Secret GitHub</div><div class="field" onclick="copy(this,'YOUTUBE_STREAM_KEY_JP')">YOUTUBE_STREAM_KEY_JP</div>
+  <a href="https://studio.youtube.com/channel/new" target="_blank" class="btn">+ Criar Canal JP</a>
+</div>
+
+<div class="canal">
+  <div class="canal-header"><span class="flag">🇫🇷</span><div class="canal-info"><div class="name">Psychologie Fréquences <span class="status criar">Criar</span></div><div class="handle">@psychologiefrequences</div></div><div class="rpm">~$14 RPM</div></div>
+  <div class="label">Nome</div><div class="field" onclick="copy(this,'Psychologie Fréquences')">Psychologie Fréquences</div>
+  <div class="label">Secret GitHub</div><div class="field" onclick="copy(this,'YOUTUBE_STREAM_KEY_FR')">YOUTUBE_STREAM_KEY_FR</div>
+  <a href="https://studio.youtube.com/channel/new" target="_blank" class="btn">+ Criar Canal FR</a>
+</div>
+
+<h2>⚡ Como criar cada canal (5 min por canal)</h2>
+<div class="steps">
+  <strong>1.</strong> Conta Google diferente para cada idioma (ou canal no mesmo Google)<br>
+  <strong>2.</strong> youtube.com → foto de perfil → Criar canal<br>
+  <strong>3.</strong> Studio → Personalização → Nome + Descrição (copiar acima)<br>
+  <strong>4.</strong> Studio → Go Live → Stream → Copiar Stream Key<br>
+  <strong>5.</strong> GitHub → Settings → Secrets → Adicionar YOUTUBE_STREAM_KEY_XX<br>
+  <strong>6.</strong> Sistema começa a transmitir automaticamente no horário do país
+</div>
+
+<h2>💰 Potencial com todos os canais ativos</h2>
+<div class="steps">
+  PT-BR 1K views: R$7 · EN 1K views: $28 · ES 1K views: $12<br>
+  DE 1K views: $18 · JP 1K views: $15 · FR 1K views: $14<br>
+  <strong>6 canais × 10K views/dia = $92.000/mês de AdSense</strong><br>
+  Live tem RPM 2-4x maior que vídeo gravado<br>
+  Custo: R$0 (GitHub Actions + Groq + Pollinations = 100% grátis)
+</div>
+
+</main>
+<footer>ψ psicologia.doc · repovazio.vercel.app/nomear-canais</footer>
+<script>
+function copy(el,text){navigator.clipboard.writeText(text).then(()=>{el.style.borderColor='#22C55E';setTimeout(()=>el.style.borderColor='',1500)})}
+</script>
+</body>
+</html>
