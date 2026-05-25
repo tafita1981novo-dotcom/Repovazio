@@ -3,12 +3,8 @@ name: Live 24H — Preto Absoluto
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 1  * * *"   # 22h BRT inicio sono
-    - cron: "0 9  * * *"   # 06h BRT foco
-    - cron: "0 12 * * *"   # 09h BRT psicologia
-    - cron: "0 21 * * *"   # 18h BRT prime time
+    - cron: "0 */4 * * *"   # A cada 4h — reinicia antes do limite GitHub de 6h
 
-# GARANTE que só 1 instância roda por vez
 concurrency:
   group: live-stream-unico
   cancel-in-progress: true
@@ -16,24 +12,33 @@ concurrency:
 jobs:
   live:
     runs-on: ubuntu-latest
-    timeout-minutes: 300
+    timeout-minutes: 350
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with: {python-version: "3.11"}
-      - run: pip install requests --break-system-packages -q
-      - run: sudo apt-get install -y ffmpeg fonts-dejavu-core -q
+
+      - name: Instalar dependências
+        run: |
+          pip install requests --break-system-packages -q
+          sudo apt-get install -y ffmpeg fonts-dejavu-core -q 2>/dev/null
 
       - name: Verificar stream key
+        env:
+          YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
         run: |
-          if [ -z "${{ secrets.YOUTUBE_STREAM_KEY }}" ]; then
-            echo "YOUTUBE_STREAM_KEY nao configurado"
+          if [ -z "$YOUTUBE_STREAM_KEY" ]; then
+            echo "ERRO: YOUTUBE_STREAM_KEY não configurada"
             exit 1
           fi
-          echo "Stream key OK"
+          echo "Stream key: OK (${#YOUTUBE_STREAM_KEY} chars)"
 
       - name: Live 24H — Preto Absoluto Sono + Colorido Outros
         env:
           YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
-        run: timeout 17000 python3 scripts/live_24h_manager.py || true
+          GROQ_API_KEY:       ${{ secrets.GROQ_API_KEY }}
+        run: |
+          timeout 20000 python3 scripts/live_24h_manager.py || echo "Ciclo encerrado — próximo cron em breve"
         continue-on-error: true
