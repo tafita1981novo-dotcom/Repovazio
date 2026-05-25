@@ -8,12 +8,12 @@
     { "source": "/cerebro",                "destination": "/public/cerebro.html" },
     { "source": "/qg",                     "destination": "/public/qg.html" },
     { "source": "/checklist",              "destination": "/public/checklist.html" },
-    { "source": "/monitor",                "destination": "/public/monitor-r50k.html" },
-    { "source": "/galeria",                "destination": "/public/galeria.html" },
-    { "source": "/producao",               "destination": "/public/producao.html" },
-    { "source": "/brand",                  "destination": "/public/brand.html" },
-    { "source": "/lives",                  "destination": "/public/lives.html" },
-    { "source": "/hub",                    "destination": "/public/hub.html" }
+    { "source": "/hub",                    "destination": "/public/hub.html" },
+    { "source": "/ativar-live",            "destination": "/public/ativar-live.html" },
+    { "source": "/monitor",               "destination": "/public/monitor-r50k.html" },
+    { "source": "/galeria",               "destination": "/public/galeria.html" },
+    { "source": "/producao",              "destination": "/public/producao.html" },
+    { "source": "/brand",                 "destination": "/public/brand.html" }
   ],
   "headers": [
     {
@@ -22,13 +22,6 @@
         { "key": "Access-Control-Allow-Origin",  "value": "*" },
         { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS" },
         { "key": "Access-Control-Allow-Headers", "value": "Content-Type, x-hotmart-hottok" }
-      ]
-    },
-    {
-      "source": "/(.*)",
-      "headers": [
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "Cache-Control",          "value": "public, max-age=60" }
       ]
     }
   ]
