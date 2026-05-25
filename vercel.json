@@ -11,13 +11,14 @@
     { "source": "/hub",                    "destination": "/public/hub.html" },
     { "source": "/ativar-live",            "destination": "/public/ativar-live.html" },
     { "source": "/nomear-canais",          "destination": "/public/nomear-canais.html" },
-    { "source": "/agenda-live",            "destination": "/public/agenda-live.html" }
+    { "source": "/agenda-live",            "destination": "/public/agenda-live.html" },
+    { "source": "/thumbnail",             "destination": "/public/thumbnail-528hz.html" }
   ],
   "headers": [
     { "source": "/api/(.*)", "headers": [
       { "key": "Access-Control-Allow-Origin", "value": "*" },
       { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS" },
-      { "key": "Access-Control-Allow-Headers", "value": "Content-Type, x-hotmart-hottok" }
+      { "key": "Access-Control-Allow-Headers", "value": "Content-Type" }
     ]}
   ]
 }
