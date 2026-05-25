@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>🔴 Ativar YouTube Live — psicologia.doc</title>
+<style>
+:root{--bg:#06060F;--card:#0F0F1A;--p:#7C3AED;--r:#E11D48;--g:#22C55E;--y:#F59E0B;--txt:#F1F5F9;--muted:#94A3B8}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:system-ui,sans-serif;padding:0 0 40px}
+header{padding:14px 20px;border-bottom:1px solid #1E1E33;display:flex;align-items:center;gap:8px;background:var(--bg)}
+.logo{font-weight:800;background:linear-gradient(135deg,#A78BFA,#E11D48);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+main{max-width:720px;margin:0 auto;padding:20px}
+.status-bar{background:linear-gradient(135deg,#1a0a0a,#0F0F1A);border:1px solid #E11D4855;border-radius:12px;padding:16px 20px;margin-bottom:24px;display:flex;align-items:center;gap:12px}
+.dot-red{width:12px;height:12px;border-radius:50%;background:#E11D48;box-shadow:0 0 12px #E11D48;animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.status-text{font-size:.9rem}
+.step{background:var(--card);border:1px solid #1E1E33;border-radius:12px;padding:18px 20px;margin-bottom:12px;display:flex;gap:14px;align-items:flex-start}
+.step.done{border-left:3px solid var(--g);opacity:.7}
+.step.active{border-left:3px solid #E11D48;box-shadow:0 0 20px #E11D4820}
+.step.pending{border-left:3px solid #2E2E4E}
+.num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:800;flex-shrink:0;margin-top:2px}
+.num.r{background:#E11D4822;color:#E11D48;border:1px solid #E11D4844}
+.num.g{background:#22C55E22;color:#22C55E;border:1px solid #22C55E44}
+.num.y{background:#F59E0B22;color:#F59E0B;border:1px solid #F59E0B44}
+.num.p{background:#7C3AED22;color:#A78BFA;border:1px solid #7C3AED44}
+.step-content h3{font-size:.88rem;font-weight:700;margin-bottom:4px}
+.step-content p{font-size:.78rem;color:var(--muted);line-height:1.5;margin-bottom:8px}
+.step-content code{background:#1E1E33;padding:2px 8px;border-radius:4px;font-size:.75rem;font-family:monospace;display:inline-block;margin:2px 0}
+.btn{display:inline-block;padding:8px 16px;border-radius:8px;font-size:.78rem;font-weight:600;text-decoration:none;margin-top:8px;cursor:pointer}
+.btn-r{background:#E11D48;color:white}
+.btn-p{background:#7C3AED;color:white}
+.btn-g{background:#22C55E22;color:#22C55E;border:1px solid #22C55E44}
+.copy-box{background:#0A0A14;border:1px solid #2E2E4E;border-radius:8px;padding:10px 14px;font-family:monospace;font-size:.75rem;color:#A78BFA;margin:8px 0;position:relative;cursor:pointer;transition:border-color .15s}
+.copy-box:hover{border-color:#7C3AED}
+.copy-box::after{content:"📋 copiar";position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:.65rem;color:var(--muted);font-family:system-ui}
+.info{background:#0d1117;border:1px solid #1E1E33;border-radius:8px;padding:10px 14px;font-size:.75rem;color:var(--muted);margin:8px 0}
+.badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:.68rem;margin-left:6px}
+.badge-r{background:#E11D4822;color:#E11D48;border:1px solid #E11D4444}
+.badge-g{background:#22C55E22;color:#22C55E;border:1px solid #22C55E44}
+h2{font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin:24px 0 10px}
+.canal-card{background:var(--card);border:1px solid #1E1E33;border-radius:10px;padding:12px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.canal-info .name{font-size:.85rem;font-weight:700}
+.canal-info .desc{font-size:.72rem;color:var(--muted)}
+.canal-cpm{font-size:.85rem;font-weight:700;color:var(--g)}
+</style>
+</head>
+<body>
+<header>
+  <span>🔴</span>
+  <span class="logo">YouTube Live 24/7 — Ativação</span>
+  <a href="/hub" style="margin-left:auto;font-size:.75rem;color:var(--muted);text-decoration:none">← Hub</a>
+</header>
+<main>
+
+  <div class="status-bar">
+    <div class="dot-red"></div>
+    <div class="status-text">
+      <strong>Status: Aguardando YOUTUBE_STREAM_KEY</strong><br>
+      <span style="font-size:.72rem;color:var(--muted)">Script pronto · FFmpeg configurado · Workflow ativo · Só falta a chave de stream</span>
+    </div>
+  </div>
+
+  <h2>📋 4 Passos para Ativar (15 min)</h2>
+
+  <!-- PASSO 1 -->
+  <div class="step active">
+    <div class="num r">1</div>
+    <div class="step-content">
+      <h3>Abrir YouTube Studio e ir em Go Live</h3>
+      <p>Acesse o YouTube Studio com a conta <strong>psidanielacoelho1982@gmail.com</strong> e clique em "Criar" → "Iniciar transmissão ao vivo"</p>
+      <a href="https://studio.youtube.com" target="_blank" class="btn btn-r">→ Abrir YouTube Studio</a>
+      <div class="info">⚠️ Certifique-se de estar logado com <strong>psidanielacoelho1982@gmail.com</strong>, NÃO com tafita81@gmail.com (canal bloqueado)</div>
+    </div>
+  </div>
+
+  <!-- PASSO 2 -->
+  <div class="step active">
+    <div class="num r">2</div>
+    <div class="step-content">
+      <h3>Copiar a Stream Key</h3>
+      <p>No YouTube Studio Go Live → aba <strong>"Stream"</strong> → em "Configurações de stream" → copie a <strong>"Chave de stream"</strong></p>
+      <div class="info">
+        📍 Caminho: YouTube Studio → <strong>Criar (ícone câmera)</strong> → Transmissão ao vivo → Stream → Chave de stream<br><br>
+        A chave tem formato: <code>xxxx-xxxx-xxxx-xxxx-xxxx</code>
+      </div>
+      <p style="margin-top:8px">⚠️ <strong>Nunca compartilhe esta chave</strong> — qualquer pessoa com ela pode transmitir no seu canal</p>
+    </div>
+  </div>
+
+  <!-- PASSO 3 -->
+  <div class="step active">
+    <div class="num r">3</div>
+    <div class="step-content">
+      <h3>Adicionar como GitHub Secret</h3>
+      <p>Adicione a stream key como secret no repositório:</p>
+      <a href="https://github.com/tafita81/Repovazio/settings/secrets/actions/new" target="_blank" class="btn btn-r">→ Adicionar Secret no GitHub</a>
+      <div class="info">
+        <strong>Nome do Secret:</strong><br>
+        <div class="copy-box" onclick="copy(this, 'YOUTUBE_STREAM_KEY')">YOUTUBE_STREAM_KEY</div>
+        <strong>Valor:</strong> cole a chave copiada do YouTube Studio
+      </div>
+    </div>
+  </div>
+
+  <!-- PASSO 4 -->
+  <div class="step active">
+    <div class="num r">4</div>
+    <div class="step-content">
+      <h3>Disparar o Workflow de Live</h3>
+      <p>Com o secret configurado, dispare o workflow manualmente:</p>
+      <a href="https://github.com/tafita81/Repovazio/actions/workflows/youtube-live-24_7.yml" target="_blank" class="btn btn-r">→ Rodar youtube-live-24_7.yml</a>
+      <p style="margin-top:8px">Clique em <strong>"Run workflow"</strong> → <strong>"Run workflow"</strong> (botão verde)</p>
+      <div class="info">
+        ✅ O workflow vai:<br>
+        1. Instalar FFmpeg<br>
+        2. Groq gera texto de psicologia automaticamente<br>
+        3. Pollinations gera imagem dark da Daniela<br>
+        4. FFmpeg transmite via RTMP para o YouTube<br>
+        5. Roda por até 5 horas (limite do GitHub Actions gratuito)
+      </div>
+    </div>
+  </div>
+
+  <h2>🌍 Canais Disponíveis — Escala Global</h2>
+
+  <div class="canal-card"><div class="canal-info"><div class="name">🇧🇷 PT-BR — @psidanielacoelho</div><div class="desc">Canal principal · Secret: YOUTUBE_STREAM_KEY</div></div><div class="canal-cpm">RPM R$7</div></div>
+  <div class="canal-card"><div class="canal-info"><div class="name">🇺🇸 EN — Psychology Frequencies</div><div class="desc">Secret: YOUTUBE_STREAM_KEY_EN</div></div><div class="canal-cpm">RPM $28</div></div>
+  <div class="canal-card"><div class="canal-info"><div class="name">🇩🇪 DE — Psychologie Frequenzen</div><div class="desc">Secret: YOUTUBE_STREAM_KEY_DE</div></div><div class="canal-cpm">RPM $18</div></div>
+  <div class="canal-card"><div class="canal-info"><div class="name">🇯🇵 JP — サイコロジー周波数</div><div class="desc">Secret: YOUTUBE_STREAM_KEY_JP</div></div><div class="canal-cpm">RPM $15</div></div>
+  <div class="canal-card" style="border-color:#2E2E4E;opacity:.5"><div class="canal-info"><div class="name">+ 8 idiomas disponíveis</div><div class="desc">FR, KO, IT, ZH, ES, AR, PT, HI</div></div><div class="canal-cpm">via live_global_master.py</div></div>
+
+  <h2>⚙️ Configurações do Stream</h2>
+  <div class="info" style="font-size:.78rem;line-height:1.8">
+    <strong>Resolução:</strong> 1280×720 (HD)<br>
+    <strong>Bitrate vídeo:</strong> 2500 kbps<br>
+    <strong>Bitrate áudio:</strong> 128 kbps<br>
+    <strong>FPS:</strong> 30<br>
+    <strong>Codec:</strong> H.264 + AAC<br>
+    <strong>RTMP:</strong> rtmp://a.rtmp.youtube.com/live2/{STREAM_KEY}<br>
+    <strong>Latência:</strong> Baixa (recomendado para psicologia)<br>
+    <strong>Conteúdo:</strong> Groq LLaMA 3.3 → insights psicologia → TTS → imagem dark
+  </div>
+
+  <h2>💰 Potencial de Receita — Live 24/7</h2>
+  <div class="info" style="line-height:2">
+    <strong>1.000 espectadores médios PT:</strong> ~R$840/mês AdSense<br>
+    <strong>500 espectadores EN:</strong> ~$2.100/mês AdSense<br>
+    <strong>Vantagem:</strong> Live tem RPM 2-4x maior que vídeo gravado<br>
+    <strong>Conteúdo infinito:</strong> Groq + Pollinations geram 24h/dia, sem parar<br>
+    <strong>Custo:</strong> R$0 (tudo grátis — GitHub Actions + Groq + Pollinations)
+  </div>
+
+</main>
+<script>
+function copy(el, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    el.style.borderColor = '#22C55E';
+    setTimeout(() => el.style.borderColor = '', 1500);
+  });
+}
+</script>
+</body>
+</html>
