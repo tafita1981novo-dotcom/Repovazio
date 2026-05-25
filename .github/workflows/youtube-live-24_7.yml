@@ -1,21 +1,65 @@
 name: YouTube Live 24/7 — Psicologia Stream
+
 on:
   workflow_dispatch:
+    inputs:
+      duracao_horas:
+        description: "Horas de stream (1-5, max GitHub free)"
+        default: "5"
+        required: false
+      canal:
+        description: "Canal: PT / EN / DE / JP / FR"
+        default: "PT"
+        required: false
   schedule:
-    - cron: "0 8,14,20 * * *"
+    - cron: "0 8  * * *"    # 05h BRT
+    - cron: "0 13 * * *"    # 10h BRT
+    - cron: "0 18 * * *"    # 15h BRT
+    - cron: "0 22 * * *"    # 19h BRT
+
 jobs:
   live-stream:
     runs-on: ubuntu-latest
     timeout-minutes: 300
+
     steps:
       - uses: actions/checkout@v4
+
+      - name: Verificar YOUTUBE_STREAM_KEY
+        run: |
+          if [ -z "${{ secrets.YOUTUBE_STREAM_KEY }}" ]; then
+            echo "❌ YOUTUBE_STREAM_KEY não configurado"
+            echo "📌 Configure em: github.com/tafita81/Repovazio/settings/secrets/actions"
+            echo "📌 Obter em: studio.youtube.com → Criar → Transmissão ao vivo → Chave de stream"
+            exit 1
+          fi
+          echo "✅ YOUTUBE_STREAM_KEY configurado"
+
       - uses: actions/setup-python@v5
         with: {python-version: "3.11"}
-      - run: pip install requests --break-system-packages
-      - run: sudo apt-get install -y ffmpeg fonts-dejavu-core
-      - name: YouTube Live 24/7
+
+      - name: Instalar dependências
+        run: |
+          pip install requests --break-system-packages
+          sudo apt-get install -y ffmpeg fonts-dejavu-core
+
+      - name: Testar FFmpeg
+        run: ffmpeg -version | head -2
+
+      - name: Stream YouTube Live
         env:
           YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
-          GROQ_API_KEY:       ${{ secrets.GROQ_API_KEY }}
-        run: timeout 18000 python3 scripts/youtube_live_24_7.py || true
+          GROQ_API_KEY:        ${{ secrets.GROQ_API_KEY }}
+          CANAL:               ${{ github.event.inputs.canal || 'PT' }}
+        run: |
+          HORAS="${{ github.event.inputs.duracao_horas || '5' }}"
+          SEGUNDOS=$((HORAS * 3600))
+          echo "🔴 Iniciando stream: ${HORAS}h (${SEGUNDOS}s) | Canal: $CANAL"
+          timeout $SEGUNDOS python3 scripts/youtube_live_24_7.py || echo "Stream encerrado normalmente"
         continue-on-error: true
+
+      - name: Log final
+        if: always()
+        run: |
+          echo "Stream finalizado: $(date '+%d/%m/%Y %H:%M BRT')"
+          echo "Próximo stream automático em: 5 horas"
