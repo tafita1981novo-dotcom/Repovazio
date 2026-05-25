@@ -10,19 +10,13 @@
     { "source": "/checklist",              "destination": "/public/checklist.html" },
     { "source": "/hub",                    "destination": "/public/hub.html" },
     { "source": "/ativar-live",            "destination": "/public/ativar-live.html" },
-    { "source": "/monitor",               "destination": "/public/monitor-r50k.html" },
-    { "source": "/galeria",               "destination": "/public/galeria.html" },
-    { "source": "/producao",              "destination": "/public/producao.html" },
-    { "source": "/brand",                 "destination": "/public/brand.html" }
+    { "source": "/nomear-canais",          "destination": "/public/nomear-canais.html" }
   ],
   "headers": [
-    {
-      "source": "/api/(.*)",
-      "headers": [
-        { "key": "Access-Control-Allow-Origin",  "value": "*" },
-        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS" },
-        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, x-hotmart-hottok" }
-      ]
-    }
+    { "source": "/api/(.*)", "headers": [
+      { "key": "Access-Control-Allow-Origin", "value": "*" },
+      { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS" },
+      { "key": "Access-Control-Allow-Headers", "value": "Content-Type, x-hotmart-hottok" }
+    ]}
   ]
 }
