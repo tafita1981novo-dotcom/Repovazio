@@ -1,219 +1,145 @@
 #!/usr/bin/env python3
 """
-youtube_live_24_7.py
-Stream contínuo 24/7 de psicologia para YouTube
-Pipeline: Groq gera texto → Pollinations gera imagem → FFmpeg → RTMP YouTube
-
-Identidade: Daniela Coelho · Pesquisa e Conteúdo em Psicologia
-SEM título profissional até jan/2027
+youtube_live_24_7.py — Stream 24/7 Psicologia Dark
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Pipeline: Groq gera insight → Pollinations gera frame → FFmpeg → RTMP YouTube
+Identidade: Daniela Coelho · pesquisadora de comportamento humano
+PROIBIDO: psicóloga/psicólogo até jan/2027
 """
-import os, time, subprocess, pathlib, requests, textwrap, json
+import os, time, subprocess, pathlib, requests, textwrap, sys
 from datetime import datetime
 
-STREAM_KEY  = os.getenv("YOUTUBE_STREAM_KEY", "")
-GROQ_KEY    = os.getenv("GROQ_API_KEY", "")
-RTMP_URL    = f"rtmp://a.rtmp.youtube.com/live2/{STREAM_KEY}"
-TMP         = pathlib.Path("/tmp/live")
-TMP.mkdir(exist_ok=True)
+STREAM_KEY = os.getenv("YOUTUBE_STREAM_KEY","")
+GROQ_KEY   = os.getenv("GROQ_API_KEY","")
+RTMP_URL   = f"rtmp://a.rtmp.youtube.com/live2/{STREAM_KEY}"
+TMP        = pathlib.Path("/tmp/live"); TMP.mkdir(exist_ok=True)
+
+# Validações
+if not STREAM_KEY:
+    print("ERRO: YOUTUBE_STREAM_KEY nao configurado")
+    print("Obter em: studio.youtube.com -> Criar -> Live -> Chave de stream")
+    print("Adicionar em: github.com/tafita81/Repovazio/settings/secrets/actions")
+    sys.exit(1)
 
 TEMAS = [
-    "narcisismo encoberto em relacionamentos",
-    "apego ansioso e como identificar",
-    "neurociência da ansiedade: o que acontece no cérebro",
-    "síndrome do impostor em pessoas competentes",
-    "burnout vs cansaço: diferenças reais",
-    "gaslighting: sinais que você está sendo manipulado",
-    "fronteiras emocionais saudáveis",
-    "vício em validação e aprovação",
-    "perfeccionismo como forma de ansiedade",
-    "depressão silenciosa: quando você funciona mas não está bem",
-    "trauma de desenvolvimento na infância",
-    "solidão epidêmica: por que nos sentimos sozinhos",
-    "autocompaixão baseada em ciência",
-    "raiva: o que fazer com ela",
-    "procrastinação como regulação emocional",
-    "por que é difícil fazer amigos na vida adulta",
-    "amor próprio vs autoindulgência",
-    "críticas e por que doem tanto",
+    ("Narcisismo Encoberto",   "sinais que voce ignora em relacionamentos toxicos"),
+    ("Apego Ansioso",          "por que voce escolhe quem te machuca"),
+    ("Sono e Cortisol",        "por que voce acorda as 3h da manha"),
+    ("Burnout Invisivel",      "esgotamento antes do colapso que ninguem viu chegar"),
+    ("Gaslighting",            "quando fazem voce duvidar da sua propria realidade"),
+    ("Fronteiras Saudaveis",   "como dizer nao sem se sentir culpada"),
+    ("Trauma de Apego",        "como a infancia ainda controla seus relacionamentos"),
+    ("Autocompaixao",          "o que Harvard descobriu sobre se perdoar"),
+    ("Dopamina e Redes Sociais","por que voce nao consegue parar de verificar o celular"),
+    ("Solidao Moderna",        "por que nos sentimos sozinhos mesmo conectados"),
 ]
 
-FRASES_FIXAS = [
-    "O cérebro não distingue rejeição social de ameaça física.",
-    "Padrões aprendidos podem ser desaprendidos.",
-    "Nomeie a emoção antes de agir — reduz a intensidade.",
-    "Autocompaixão não é fraqueza. É neurociência.",
-    "Feito é melhor que perfeito. Sempre.",
-    "Sua história não é seu diagnóstico.",
-    "Regulação emocional é habilidade, não caráter.",
-    "O corpo guarda as marcas. Mas o corpo também cura.",
-]
+CORES = {"bg":"#06060F","texto":"#F1F5F9","roxo":"#7C3AED","vermelho":"#E11D48"}
 
-def gerar_insight(tema):
-    """Gera insight de psicologia via Groq"""
-    if not GROQ_KEY:
-        return f"Psicologia baseada em evidências: {tema}. Daniela Coelho · Pesquisa e Conteúdo em Psicologia"
-    
+def groq_insight(tema, subtema):
+    if not GROQ_KEY: return f"{tema}: {subtema}. Pesquisa: van der Kolk, 2014."
     try:
         r = requests.post("https://api.groq.com/openai/v1/chat/completions",
-            headers={"Authorization": f"Bearer {GROQ_KEY}", "Content-Type": "application/json"},
-            json={"model": "llama-3.3-70b-versatile",
-                  "messages": [{"role": "user", "content":
-                    f"Escreva UMA frase poderosa e baseada em ciência sobre: {tema}.\n"
-                    f"Máximo 120 caracteres. Sem aspas. Sem hashtags.\n"
-                    f"Cite um pesquisador real (ex: van der Kolk, Gross, Neff, Ainsworth).\n"
-                    f"Tom: revelador, não óbvio."}],
-                  "max_tokens": 80, "temperature": 0.8},
-            timeout=15)
+            headers={"Authorization":f"Bearer {GROQ_KEY}","Content-Type":"application/json"},
+            json={"model":"llama-3.3-70b-versatile",
+                  "messages":[{"role":"user","content":
+                    f"Voce e Daniela Coelho, pesquisadora de comportamento humano.\n"
+                    f"Tema: {tema} — {subtema}\n"
+                    f"Gere 3 frases impactantes para live de psicologia dark.\n"
+                    f"Cite 1 pesquisador real (Harvard/PubMed/Berkeley).\n"
+                    f"PROIBIDO: psicologa/psicologo. Max 60 palavras total."}],
+                  "max_tokens":80,"temperature":0.85},
+            timeout=12, verify=False)
         if r.status_code == 200:
             return r.json()["choices"][0]["message"]["content"].strip()
     except: pass
-    return FRASES_FIXAS[hash(tema) % len(FRASES_FIXAS)]
+    return f"{tema}: {subtema}"
 
-def gerar_imagem(tema, seed):
-    """Gera imagem via Pollinations FLUX"""
-    prompt = (f"masterpiece, best quality, kawaii chibi anime illustration, "
-              f"peaceful psychology concept about {tema}, soft purple tones, "
-              f"minimalist background ### lowres, bad anatomy, text, watermark, nsfw, blurry")
-    url = f"https://image.pollinations.ai/prompt/{requests.utils.quote(prompt[:400])}"
-    url += f"?model=flux&width=1280&height=720&seed={seed}&nologo=true"
+def pollinations_frame(tema, idx):
+    seed = 9001 + idx * 77
+    prompt = (
+        f"masterpiece, kawaii chibi anime researcher woman, dark background #{CORES['bg'][1:]}, "
+        f"purple glow, dramatic lighting, psychology theme, minimal, no text "
+        f"### watermark, text, nsfw, blurry"
+    )
+    url = f"https://image.pollinations.ai/prompt/{requests.utils.quote(prompt)}"
+    url += f"?seed={seed}&width=1280&height=720&nologo=true"
     try:
-        r = requests.get(url, timeout=45)
-        if r.status_code == 200 and len(r.content) > 10000:
-            return r.content
+        r = requests.get(url, timeout=30, verify=False)
+        if r.status_code == 200 and len(r.content) > 5000:
+            p = TMP / f"frame_{idx}.jpg"
+            p.write_bytes(r.content)
+            return str(p)
     except: pass
     return None
 
-def criar_slide_ffmpeg(img_path, texto, duracao=30):
-    """Cria clip com texto overlay via FFmpeg"""
-    out = TMP / f"slide_{int(time.time())}.mp4"
-    
-    # Quebrar texto em linhas
-    linhas = textwrap.wrap(texto, width=45)
-    texto_formatado = "\n".join(linhas[:3])
-    
-    # Overlay: texto + marca
-    marca = "Daniela Coelho · Pesquisa e Conteúdo em Psicologia"
-    
-    vf = (
-        f"scale=1280:720,"
-        f"drawbox=y=ih-90:color=black@0.7:width=iw:height=90:t=fill,"
-        f"drawtext=text='{texto_formatado}':fontsize=28:fontcolor=white:"
-        f"x=(w-text_w)/2:y=(h-text_h)/2-20:shadowcolor=black:shadowx=2:shadowy=2,"
-        f"drawtext=text='{marca}':fontsize=16:fontcolor=#C4B5FD:"
-        f"x=(w-text_w)/2:y=h-55"
-    )
-    
+def criar_frame_texto(texto, idx):
+    """Cria frame via FFmpeg com texto sobreposto (fallback)"""
+    output = str(TMP / f"frame_txt_{idx}.jpg")
+    lines  = textwrap.wrap(texto, 40)[:4]
+    y      = 280
+    overlay_parts = []
+    for line in lines:
+        overlay_parts.append(
+            f"drawtext=text='{line}':fontsize=28:fontcolor=white:x=(w-text_w)/2:y={y}"
+        )
+        y += 45
+    vf = ",".join(overlay_parts) if overlay_parts else "null"
     cmd = [
-        "ffmpeg", "-y",
-        "-loop", "1", "-i", str(img_path),
+        "ffmpeg","-y",
+        "-f","lavfi","-i",f"color=c={CORES['bg'][1:]}:size=1280x720:rate=1",
         "-vf", vf,
-        "-t", str(duracao),
-        "-c:v", "libx264", "-preset", "fast",
-        "-pix_fmt", "yuv420p",
-        "-r", "30",
-        "-an",  # sem áudio por enquanto
-        str(out)
+        "-frames:v","1","-q:v","2",output
     ]
-    
-    result = subprocess.run(cmd, capture_output=True, timeout=120)
-    return out if out.exists() and out.stat().st_size > 10000 else None
+    r = subprocess.run(cmd, capture_output=True, timeout=15)
+    return output if r.returncode == 0 else None
 
-def stream_loop():
-    """Loop principal da live"""
-    if not STREAM_KEY:
-        print("YOUTUBE_STREAM_KEY não configurado.")
-        print("YouTube Studio → Go Live → Stream Key")
-        print("GitHub: tafita81/Repovazio → Settings → Secrets → YOUTUBE_STREAM_KEY")
-        return
-    
-    print(f"=== YOUTUBE LIVE 24/7 ===")
-    print(f"Daniela Coelho · Pesquisa e Conteúdo em Psicologia")
-    print(f"Iniciando: {datetime.now():%Y-%m-%d %H:%M}")
-    print()
-    
+def stream_frame(frame_path, duracao_seg=45):
+    """Transmite um frame via RTMP por N segundos"""
+    cmd = [
+        "ffmpeg","-y","-re",
+        "-loop","1","-i", frame_path,          # frame imagem
+        "-f","lavfi","-i","anullsrc=r=44100:cl=stereo",  # áudio silencioso
+        "-c:v","libx264","-preset","ultrafast","-tune","zerolatency",
+        "-b:v","2500k","-maxrate","2500k","-bufsize","5000k",
+        "-pix_fmt","yuv420p","-r","30",
+        "-c:a","aac","-b:a","128k","-ar","44100",
+        "-t", str(duracao_seg),
+        "-f","flv", RTMP_URL
+    ]
+    try:
+        result = subprocess.run(cmd, capture_output=True, timeout=duracao_seg+30)
+        return result.returncode == 0
+    except subprocess.TimeoutExpired:
+        return True  # normal
+
+def run():
+    print(f"=== YOUTUBE LIVE 24/7 — psicologia.doc ===")
+    print(f"Canal: UCyCkIpsVgME9yCj_oXJFheA (@psidanielacoelho)")
+    print(f"RTMP: {RTMP_URL[:50]}...")
+    print(f"Inicio: {datetime.now().strftime('%d/%m/%Y %H:%M')}\n")
+
+    import urllib3; urllib3.disable_warnings()
     idx = 0
-    concat_list = TMP / "playlist.txt"
-    slides = []
-    
-    # Pré-gerar alguns slides
-    print("Gerando slides iniciais...")
-    for i in range(3):
-        tema = TEMAS[i % len(TEMAS)]
-        seed = 9001 + i * 77
-        
-        print(f"  Slide {i+1}/3: {tema[:40]}")
-        insight = gerar_insight(tema)
-        img_data = gerar_imagem(tema, seed)
-        
-        if img_data:
-            img_path = TMP / f"img_{seed}.jpg"
-            img_path.write_bytes(img_data)
-            
-            slide = criar_slide_ffmpeg(img_path, insight, duracao=30)
-            if slide:
-                slides.append(slide)
-                print(f"    ✅ {slide.name}")
-        
-        time.sleep(3)
-    
-    if not slides:
-        print("Nenhum slide gerado. Verifique conexão.")
-        return
-    
-    # Escrever playlist
-    with open(concat_list, "w") as f:
-        for s in slides:
-            f.write(f"file '{s.resolve()}'\n")
-    
-    print(f"\nIniciando stream para YouTube ({len(slides)} slides)...")
-    
-    # FFmpeg → RTMP YouTube
-    cmd_stream = [
-        "ffmpeg", "-y",
-        "-f", "concat", "-safe", "0", "-stream_loop", "-1",
-        "-i", str(concat_list),
-        # Áudio silencioso (necessário para YouTube Live)
-        "-f", "lavfi", "-i", "anullsrc=channel_layout=stereo:sample_rate=44100",
-        "-c:v", "libx264", "-preset", "veryfast",
-        "-b:v", "2500k", "-maxrate", "2500k", "-bufsize", "5000k",
-        "-pix_fmt", "yuv420p", "-g", "60",
-        "-c:a", "aac", "-b:a", "128k", "-ar", "44100",
-        "-shortest",
-        "-f", "flv", RTMP_URL
-    ]
-    
-    print("Stream iniciado! Verificar em YouTube Studio → Go Live")
-    print(f"URL: {RTMP_URL[:50]}...")
-    
-    # Rodar stream e gerar novos slides em paralelo
-    proc = subprocess.Popen(cmd_stream)
-    
-    slide_idx = 3
-    while proc.poll() is None:
-        time.sleep(25)  # Gerar próximo slide antes do atual acabar
-        
-        tema = TEMAS[slide_idx % len(TEMAS)]
-        seed = 9001 + slide_idx * 77
-        
-        insight = gerar_insight(tema)
-        img_data = gerar_imagem(tema, seed)
-        
-        if img_data:
-            img_path = TMP / f"img_{seed}.jpg"
-            img_path.write_bytes(img_data)
-            slide = criar_slide_ffmpeg(img_path, insight, duracao=30)
-            if slide:
-                # Adicionar à playlist
-                with open(concat_list, "a") as f:
-                    f.write(f"file '{slide.resolve()}'\n")
-        
-        slide_idx += 1
-        
-        # Limpar slides antigos (manter últimos 10)
-        slides_dir = list(TMP.glob("slide_*.mp4"))
-        if len(slides_dir) > 10:
-            for old in sorted(slides_dir)[:-10]:
-                old.unlink(missing_ok=True)
+    while True:
+        tema, subtema = TEMAS[idx % len(TEMAS)]
+        print(f"  [{idx+1}] {tema} ({datetime.now().strftime('%H:%M')})")
 
-if __name__ == "__main__":
-    stream_loop()
+        insight = groq_insight(tema, subtema)
+        print(f"     Insight: {insight[:60]}...")
+
+        frame = pollinations_frame(tema, idx)
+        if not frame:
+            print(f"     Pollinations falhou, usando frame texto")
+            frame = criar_frame_texto(insight, idx)
+        if not frame:
+            print(f"     Frame falhou, pulando")
+            idx += 1; time.sleep(5); continue
+
+        print(f"     Transmitindo 45s via RTMP...")
+        ok = stream_frame(frame, 45)
+        print(f"     {'OK' if ok else 'Erro RTMP'}")
+        idx += 1
+        time.sleep(2)
+
+if __name__=="__main__": run()
