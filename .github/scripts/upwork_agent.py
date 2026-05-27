@@ -19,7 +19,8 @@ UPWORK_PASS  = os.environ.get("UPWORK_PASSWORD","")
 SUPA_URL     = os.environ.get("SUPABASE_URL","https://tpjvalzwkqwttvmszvie.supabase.co")
 SUPA_KEY     = os.environ.get("SUPABASE_ANON_KEY","")
 PROFILE_URL  = "https://www.upwork.com/freelancers/~01024e421f4dda8440"
-COOKIES_FILE = ".github/upwork_cookies.json"
+COOKIES_FILE  = ".github/upwork_cookies.json"
+UPWORK_COOKIES_B64 = os.environ.get("UPWORK_COOKIES","")  # cookies base64 como secret
 
 # ─── Perfil completo para geração de propostas ───────────────────────────────
 RAFAEL_BIO = """
@@ -449,6 +450,17 @@ def main():
             Object.defineProperty(navigator, 'languages', {get: () => ['en-US','en','pt-BR']});
             window.chrome = {runtime: {}};
         """)
+
+        # Carregar cookies do GitHub Secret (prioridade)
+        if UPWORK_COOKIES_B64 and not cookies_loaded:
+            try:
+                import base64 as _b64
+                cookies_data = json.loads(_b64.b64decode(UPWORK_COOKIES_B64).decode())
+                ctx.add_cookies(cookies_data)
+                cookies_loaded = True
+                print("✅ Cookies carregados do GitHub Secret\n")
+            except Exception as e:
+                print(f"⚠️ Cookies do secret: {e}")
 
         # Carregar cookies salvos (se existir)
         cookies_loaded = False
