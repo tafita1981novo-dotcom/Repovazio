@@ -1,0 +1,21 @@
+name: "🎤 ElevenLabs Samples (Daniel voice)"
+
+on:
+  workflow_dispatch:
+
+jobs:
+  eleven:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: |
+          sudo apt-get install -y ffmpeg > /dev/null 2>&1
+          pip install requests --break-system-packages -q
+      - name: "ElevenLabs Daniel (British male) — 4 idiomas"
+        env:
+          ELEVENLABS_API_KEY:   ${{ secrets.ELEVENLABS_API_KEY }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python3 scripts/elevenlabs_samples.py
