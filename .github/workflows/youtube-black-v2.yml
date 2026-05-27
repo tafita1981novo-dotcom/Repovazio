@@ -1,0 +1,30 @@
+name: "🖤 Psicologia para Dormir — Tela PRETA TOTAL @psidanicoelho"
+
+# Horário: 22h-08h BRT  (01-08 UTC)
+# INOVAÇÃO: tela 100% preta + psicologia + binaurais
+# Watch time médio: 6-8h por viewer dormindo
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 1,3,5,23 * * *"
+
+jobs:
+  black_live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 375
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: |
+          sudo apt-get install -y ffmpeg > /dev/null 2>&1
+          pip install requests edge-tts --break-system-packages -q
+      - name: "🖤 Tela Preta PT — Sono + Binaurais"
+        env:
+          LANG_CODE:          PT
+          YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
+          GROQ_API_KEY:       ${{ secrets.GROQ_API_KEY }}
+        run: |
+          timeout 21600 python3 scripts/live_black_screen.py || true
+        continue-on-error: true
