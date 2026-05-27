@@ -1,8 +1,10 @@
-name: "🖤 Schlafpsychologie — SCHWARZER Bildschirm @psidanicoelho"
+name: "🖤 Schlafpsychologie — 7 Techniken + Quantenkognition @psidanicoelho"
 
-# Horário: 22h-08h Berlin
-# INOVAÇÃO: tela 100% preta + psicologia + binaurais
-# Watch time médio: 6-8h por viewer dormindo
+# v2: 4 atos hipnóticos + cognição quântica Busemeyer/Pothos + DMN Raichle
+# Diferenciais vs Sleep Cove / Sleep Magic / Smarter While You Sleep:
+#   - única que cita pesquisa quântica real (ninguém faz)
+#   - formato 7 técnicas numeradas (viral) + indução hipnótica progressiva
+#   - 9 idiomas com voz consistente Daniela Coelho
 
 on:
   workflow_dispatch:
@@ -20,11 +22,11 @@ jobs:
       - run: |
           sudo apt-get install -y ffmpeg > /dev/null 2>&1
           pip install requests edge-tts --break-system-packages -q
-      - name: "🖤 Tela Preta DE — Sono + Binaurais"
+      - name: "🖤 DE — 4 atos + quântica"
         env:
           LANG_CODE:          DE
           YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
           GROQ_API_KEY:       ${{ secrets.GROQ_API_KEY }}
         run: |
-          timeout 21600 python3 scripts/live_black_screen.py || true
+          timeout 21600 python3 scripts/live_black_screen_v2.py || true
         continue-on-error: true
