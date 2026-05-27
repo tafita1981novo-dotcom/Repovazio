@@ -1,0 +1,30 @@
+name: "🎚️ Audio Engine v3 (Piper + Presets Emocionais)"
+on:
+  workflow_dispatch:
+    inputs:
+      preset:
+        description: "Preset emocional"
+        required: true
+        default: "live_sleep"
+        type: choice
+        options:
+          - live_sleep
+          - shorts_hook
+          - long_video
+
+jobs:
+  audio:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: |
+          sudo apt-get install -y ffmpeg > /dev/null 2>&1
+          pip install --break-system-packages -q piper-tts requests
+      - name: "Gerar samples com preset"
+        env:
+          PRESET: ${{ inputs.preset }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python3 scripts/audio_engine_v3.py
