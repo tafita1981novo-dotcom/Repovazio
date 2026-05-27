@@ -1,0 +1,21 @@
+name: 🌐 Multi-Source v2 — Glassdoor+Jobright+Simplify+Wellfound (Every 4h)
+on:
+  schedule:
+    - cron: "15 */4 * * *"
+  workflow_dispatch:
+jobs:
+  hunt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install
+        run: |
+          pip install playwright
+          python -m playwright install chromium
+          python -m playwright install-deps chromium
+      - name: Run Multi-Source v2
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: python3 .github/scripts/multi_source_v2.py
