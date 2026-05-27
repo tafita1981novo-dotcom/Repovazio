@@ -1,33 +1,31 @@
-name: YouTube Live AR — Psychology Freq AR
+name: "YouTube Live AR — 24h @psidanicoelho"
 
 on:
   workflow_dispatch:
     inputs:
       horas:
-        description: "Horas"
+        description: "Duracao horas (max 6)"
         default: "6"
   schedule:
-    # Arabic | CPM: $4-12
-    - cron: "0 0,6,12,18 * * *"
+    - cron: "0 6,10,17,19 * * *"
 
 jobs:
-  live-ar:
+  live:
     runs-on: ubuntu-latest
-    timeout-minutes: 375
+    timeout-minutes: 370
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: "3.11"}
       - run: |
           sudo apt-get install -y ffmpeg > /dev/null 2>&1
-          pip install requests --break-system-packages
-      - name: Live AR 24/7
+          pip install requests pillow --break-system-packages -q
+      - name: Live AR 24h
         env:
-          LANG_CODE:              AR
-          YOUTUBE_STREAM_KEY_AR: ${{ secrets.YOUTUBE_STREAM_KEY_AR }}
-          YOUTUBE_STREAM_KEY:     ${{ secrets.YOUTUBE_STREAM_KEY }}
-          GROQ_API_KEY:           ${{ secrets.GROQ_API_KEY }}
+          LANG_CODE:          AR
+          YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
+          GROQ_API_KEY:       ${{ secrets.GROQ_API_KEY }}
         run: |
-          HORAS="${{ inputs.horas }}"
-          timeout $((${HORAS:-6} * 3600)) python3 scripts/live_universal.py || true
+          H="${{ inputs.horas || '6' }}"
+          timeout $((H * 3600)) python3 scripts/live_universal.py || true
         continue-on-error: true
