@@ -1,33 +1,31 @@
-name: YouTube Live IT — Psicologia Frequenze
+name: "YouTube Live IT — Psicologia 24h @psidanicoelho"
 
 on:
   workflow_dispatch:
     inputs:
       horas:
-        description: "Horas"
+        description: "Duracao horas (max 6)"
         default: "6"
   schedule:
-    # Italy | CPM: $7-18
-    - cron: "0 5,11,17,23 * * *"
+    - cron: "0 4,10,16,21 * * *"
 
 jobs:
-  live-it:
+  live:
     runs-on: ubuntu-latest
-    timeout-minutes: 375
+    timeout-minutes: 370
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: "3.11"}
       - run: |
           sudo apt-get install -y ffmpeg > /dev/null 2>&1
-          pip install requests --break-system-packages
-      - name: Live IT 24/7
+          pip install requests pillow --break-system-packages -q
+      - name: Live IT 24h
         env:
-          LANG_CODE:              IT
-          YOUTUBE_STREAM_KEY_IT: ${{ secrets.YOUTUBE_STREAM_KEY_IT }}
-          YOUTUBE_STREAM_KEY:     ${{ secrets.YOUTUBE_STREAM_KEY }}
-          GROQ_API_KEY:           ${{ secrets.GROQ_API_KEY }}
+          LANG_CODE:          IT
+          YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
+          GROQ_API_KEY:       ${{ secrets.GROQ_API_KEY }}
         run: |
-          HORAS="${{ inputs.horas }}"
-          timeout $((${HORAS:-6} * 3600)) python3 scripts/live_universal.py || true
+          H="${{ inputs.horas || '6' }}"
+          timeout $((H * 3600)) python3 scripts/live_universal.py || true
         continue-on-error: true
