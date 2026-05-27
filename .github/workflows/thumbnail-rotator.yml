@@ -1,0 +1,27 @@
+name: "🎨 Thumbnail A/B Rotator"
+
+# Rotaciona thumbnails A→B→C a cada 24h
+# Mede CTR via Analytics e (futuramente) escolhe vencedor
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 12 * * *"  # 12h UTC = 9h BRT diário
+
+jobs:
+  rotate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install requests --break-system-packages -q
+      - name: "Rotate Thumbs"
+        env:
+          YT_REFRESH_TOKEN:     ${{ secrets.YT_REFRESH_TOKEN }}
+          YT_CLIENT_ID:         ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET:     ${{ secrets.YT_CLIENT_SECRET }}
+          YT_CHANNEL_ID:        UCSH63tBfY6wEIdkC4u4zKdg
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python3 scripts/thumbnail_ab_rotator.py
