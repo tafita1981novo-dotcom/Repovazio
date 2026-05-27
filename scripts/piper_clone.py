@@ -58,6 +58,7 @@ for lang, path in VOICES_HF.items():
 # Importar Piper (instalado via pip)
 print("\n🧠 Carregando Piper...")
 from piper import PiperVoice
+from piper.config import SynthesisConfig
 import wave
 
 # Textos para sleep induction
@@ -92,11 +93,17 @@ for lang, text in SAMPLES.items():
     
     voice = PiperVoice.load(str(onnx_file))
     
-    # Gera WAV diretamente
+    # SynthesisConfig com slow-down para sleep (length_scale > 1 = mais lento)
+    syn_config = SynthesisConfig(
+        length_scale=1.4,       # 40% mais lento = hipnótico
+        noise_scale=0.667,      # variação natural
+        noise_w_scale=0.8       # variação cadência
+    )
+    
+    # Gera WAV (synthesize_wav escreve direto no Wave_write object)
     raw_wav = OUT / f"raw_{lang}.wav"
     with wave.open(str(raw_wav), "wb") as wf:
-        # Piper synthesize com length_scale para slow down
-        voice.synthesize(text, wf, length_scale=1.4, noise_scale=0.667, noise_w=0.8)
+        voice.synthesize_wav(text, wf, syn_config=syn_config)
     
     dt = time.time() - t0
     print(f"   ⏱️  Gerado em {dt:.1f}s | {raw_wav.stat().st_size//1024} KB")
