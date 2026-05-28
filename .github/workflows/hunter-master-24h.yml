@@ -1,10 +1,10 @@
-name: 🚀 Job Hunter MASTER — Candidatura Completa (Every 4h)
+name: 🚀 Job Hunter MASTER — Completo 24/7 (Every 4h)
 on:
   schedule:
     - cron: "0 */4 * * *"
   workflow_dispatch:
 jobs:
-  candidaturas:
+  hunt:
     runs-on: ubuntu-latest
     timeout-minutes: 55
     steps:
@@ -12,7 +12,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Setup Python + Playwright
+      - name: Install
         run: |
           pip install playwright reportlab --break-system-packages -q
           python -m playwright install chromium
@@ -20,56 +20,66 @@ jobs:
 
       - name: Gerar CV PDF
         run: |
-          python3 << 'EOF'
-          import os
-          cv = '.github/assets/rafael_cv.pdf'
-          os.makedirs('.github/assets', exist_ok=True)
-          if os.path.exists(cv) and os.path.getsize(cv) > 5000:
-              print(f'CV OK: {os.path.getsize(cv):,} bytes')
-              exit()
+          python3 -c "
+          import os; cv='.github/assets/rafael_cv.pdf'
+          os.makedirs('.github/assets',exist_ok=True)
+          if os.path.exists(cv) and os.path.getsize(cv)>5000: print('CV OK'); exit()
           from reportlab.lib.pagesizes import letter
-          from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, HRFlowable
-          from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+          from reportlab.platypus import SimpleDocTemplate,Paragraph,HRFlowable
+          from reportlab.lib.styles import ParagraphStyle
           from reportlab.lib.colors import HexColor
           from reportlab.lib.enums import TA_CENTER
-          doc = SimpleDocTemplate(cv, pagesize=letter, topMargin=36, bottomMargin=36, leftMargin=50, rightMargin=50)
-          navy = HexColor('#1F3864')
-          story = [
-            Paragraph('OPEN TO REMOTE | AVAILABLE IMMEDIATELY', ParagraphStyle('b',fontSize=9,textColor=HexColor('#ffffff'),backColor=navy,alignment=TA_CENTER,fontName='Helvetica-Bold',spaceAfter=8)),
-            Paragraph('RAFAEL RODRIGUES', ParagraphStyle('t',fontSize=22,textColor=navy,fontName='Helvetica-Bold',alignment=TA_CENTER,spaceAfter=4)),
-            Paragraph('Senior Data Analyst · Power BI Developer · Analytics Engineer', ParagraphStyle('s',fontSize=11,textColor=HexColor('#5B21B6'),fontName='Helvetica',alignment=TA_CENTER,spaceAfter=4)),
-            Paragraph('+55 22 99241-8257 | Rafa_roberto2004@yahoo.com.br | linkedin.com/in/rafael-r-a3946a15', ParagraphStyle('c',fontSize=9,textColor=HexColor('#555'),alignment=TA_CENTER,spaceAfter=8)),
+          doc=SimpleDocTemplate(cv,pagesize=letter,topMargin=36,bottomMargin=36,leftMargin=50,rightMargin=50)
+          navy=HexColor('#1F3864')
+          s=lambda **k: ParagraphStyle('x',**k)
+          story=[
+            Paragraph('OPEN TO REMOTE | AVAILABLE IMMEDIATELY',s(fontSize=9,textColor=HexColor('#fff'),backColor=navy,alignment=TA_CENTER,fontName='Helvetica-Bold',spaceAfter=8)),
+            Paragraph('RAFAEL RODRIGUES',s(fontSize=22,textColor=navy,fontName='Helvetica-Bold',alignment=TA_CENTER,spaceAfter=4)),
+            Paragraph('Senior Data Analyst · Power BI Developer · Analytics Engineer',s(fontSize=11,textColor=HexColor('#5B21B6'),alignment=TA_CENTER,spaceAfter=4)),
+            Paragraph('+55 22 99241-8257 | Rafa_roberto2004@yahoo.com.br | linkedin.com/in/rafael-r-a3946a15',s(fontSize=9,textColor=HexColor('#555'),alignment=TA_CENTER,spaceAfter=8)),
             HRFlowable(width='100%',thickness=2,color=navy,spaceAfter=8),
-            Paragraph('CERTIFICATIONS: Microsoft PL-300 Power BI Data Analyst · Tableau Desktop Specialist · MBA IBMEC', ParagraphStyle('body',fontSize=9.5,textColor=HexColor('#374151'),fontName='Helvetica',leading=14,spaceAfter=6)),
-            Paragraph('15+ years enterprise BI | USD 9M+ savings | 200+ users | 500M+ records/month | 70% latency reduction', ParagraphStyle('body',fontSize=9.5,textColor=HexColor('#374151'),fontName='Helvetica',leading=14,spaceAfter=6)),
-            Paragraph('STACK: Power BI · DAX · Power Query · SQL · Python · Tableau · Looker · BigQuery · Snowflake · Databricks · Azure Synapse · ADF · Dimensional Modeling · Star Schema', ParagraphStyle('body',fontSize=9,textColor=HexColor('#374151'),fontName='Helvetica',leading=14,spaceAfter=6)),
+            Paragraph('Microsoft PL-300 Power BI Data Analyst · Tableau Desktop Specialist · MBA IBMEC',s(fontSize=9.5,fontName='Helvetica-Bold',textColor=navy,spaceAfter=4)),
+            Paragraph('15+ years | USD 9M+ savings | 200+ users | 500M+ records/month | 70% latency reduction',s(fontSize=9,textColor=HexColor('#374151'),leading=14,spaceAfter=4)),
+            Paragraph('Power BI · DAX · Power Query · SQL · Python · Tableau · Looker · BigQuery · Snowflake · Databricks · Azure Synapse · ADF',s(fontSize=9,textColor=HexColor('#374151'),leading=14,spaceAfter=8)),
             HRFlowable(width='100%',thickness=1,color=navy,spaceAfter=6),
-            Paragraph('Dataex (2022–Present) — Senior Data Analyst: Power BI + Tableau + Looker, 200+ users, BigQuery, Snowflake, Databricks', ParagraphStyle('body',fontSize=9,textColor=HexColor('#374151'),fontName='Helvetica',leading=14,spaceAfter=4)),
-            Paragraph('Keyrus (2019–2022) — Senior BI Consultant: Azure Synapse, SAP, Salesforce, Oracle, 10+ enterprise clients', ParagraphStyle('body',fontSize=9,textColor=HexColor('#374151'),fontName='Helvetica',leading=14,spaceAfter=4)),
-            Paragraph('Coca-Cola (2018–2019) — Senior Data Analyst: 30+ KPIs, Google BigQuery, 83% automation efficiency', ParagraphStyle('body',fontSize=9,textColor=HexColor('#374151'),fontName='Helvetica',leading=14,spaceAfter=4)),
-            Paragraph('TIM/OI Telecom (2007–2017) — Senior Data Analyst: 500M+ records/month, USD 9M+ savings, 500+ consumers', ParagraphStyle('body',fontSize=9,textColor=HexColor('#374151'),fontName='Helvetica',leading=14,spaceAfter=4)),
+            Paragraph('Dataex (2022–Present) — Power BI+Tableau+Looker, 200+ users, BigQuery, Snowflake, Databricks',s(fontSize=9,textColor=HexColor('#374151'),leading=14,spaceAfter=3)),
+            Paragraph('Keyrus (2019–2022) — BI Consultant, Azure Synapse, SAP, Salesforce, 10+ enterprise clients',s(fontSize=9,textColor=HexColor('#374151'),leading=14,spaceAfter=3)),
+            Paragraph('Coca-Cola (2018–2019) — 30+ KPIs, BigQuery, 83% automation efficiency gain',s(fontSize=9,textColor=HexColor('#374151'),leading=14,spaceAfter=3)),
+            Paragraph('TIM/OI Telecom (2007–2017) — 500M+ records/month, USD 9M+ savings, 500+ consumers',s(fontSize=9,textColor=HexColor('#374151'),leading=14,spaceAfter=3)),
           ]
           doc.build(story)
-          print(f'CV gerado: {os.path.getsize(cv):,} bytes')
-          EOF
+          print(f'CV OK: {os.path.getsize(cv):,} bytes')
+          "
 
-      - name: Aplicar via Greenhouse (formulários verificados)
+      - name: "1 — Greenhouse (formulários)"
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: python3 .github/scripts/playwright_hunter.py
 
-      - name: Enviar emails (lista verificada sem bounces)
+      - name: "2 — Email direto (sem duplicatas)"
         env:
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: python3 .github/scripts/production_hunter.py
 
-      - name: Commit resultados
+      - name: "3 — Dice + Indeed"
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: python3 .github/scripts/dice_indeed_hunter.py
+
+      - name: "4 — Brasil (Gupy + Catho)"
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: python3 .github/scripts/brasil_hunter.py
+
+      - name: Commit
         run: |
           git config user.name "Job Hunter"
           git config user.email "tafita81@gmail.com"
-          git add -A 2>/dev/null || true
-          git diff --cached --quiet || git commit -m "chore: job run [skip ci]"
-          git push 2>/dev/null || true
+          git add -A 2>/dev/null||true
+          git diff --cached --quiet||git commit -m "chore: run [skip ci]"
+          git push 2>/dev/null||true
