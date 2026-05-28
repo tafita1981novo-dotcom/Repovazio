@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dice Token Capture</title>
+<style>
+  body { font-family: -apple-system, sans-serif; background: #0f0f1a; color: #fff; 
+         display: flex; flex-direction: column; align-items: center; justify-content: center;
+         min-height: 100vh; padding: 20px; text-align: center; margin: 0; }
+  h1 { color: #7C3AED; font-size: 1.4rem; margin-bottom: 8px; }
+  p  { color: #9ca3af; font-size: 0.9rem; margin: 4px 0; }
+  .card { background: #1a1a2e; border: 1px solid #2d2d4e; border-radius: 12px;
+          padding: 24px; max-width: 400px; width: 100%; margin-top: 20px; }
+  .btn { background: #7C3AED; color: white; border: none; border-radius: 8px;
+         padding: 14px 28px; font-size: 1rem; cursor: pointer; width: 100%;
+         margin-top: 16px; font-weight: 600; }
+  .btn:active { background: #5B21B6; }
+  .status { margin-top: 16px; padding: 12px; border-radius: 8px; font-size: 0.9rem; display: none; }
+  .ok  { background: #064e3b; color: #6ee7b7; }
+  .err { background: #450a0a; color: #fca5a5; }
+  code { background: #0f0f1a; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem;
+         word-break: break-all; display: block; margin-top: 8px; color: #7C3AED; }
+  .step { background: #1e1e3a; border-radius: 8px; padding: 12px; margin: 8px 0;
+          text-align: left; font-size: 0.85rem; }
+  .step span { color: #7C3AED; font-weight: bold; }
+</style>
+</head>
+<body>
+<h1>🎯 Dice Auto-Apply Setup</h1>
+<p>Captura seu token de sessão uma vez</p>
+<p>O sistema aplica sozinho depois</p>
+
+<div class="card">
+  <div class="step"><span>1.</span> Abra <strong>dice.com</strong> e faça login</div>
+  <div class="step"><span>2.</span> Volte aqui e toque no botão abaixo</div>
+  <div class="step"><span>3.</span> Pronto — o sistema aplica sozinho por 30 dias</div>
+
+  <button class="btn" onclick="captureToken()">🔑 Capturar Token Dice</button>
+  <div class="status" id="status"></div>
+</div>
+
+<script>
+const SUPA_URL = 'https://tpjvalzwkqwttvmszvie.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwanZhbHp3a3F3dHR2bXN6dmllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMzUyOTMsImV4cCI6MjA5MTYxMTI5M30.UEgUo0Mw15ihQZykLAY5QApRzgTXkfIewZFzIgwao3Q';
+
+async function captureToken() {
+  const status = document.getElementById('status');
+  status.style.display = 'block';
+  status.className = 'status';
+  status.textContent = '🔍 Verificando sessão Dice...';
+
+  try {
+    // Tentar capturar via postMessage com iframe do Dice
+    const iframe = document.createElement('iframe');
+    iframe.src = 'https://www.dice.com/dashboard/profile';
+    iframe.style.cssText = 'position:fixed;top:-9999px;width:1px;height:1px;';
+    document.body.appendChild(iframe);
+
+    await new Promise(r => setTimeout(r, 3000));
+
+    // Tentar acessar cookies/localStorage via iframe
+    let token = null;
+    try {
+      const ls = iframe.contentWindow.localStorage;
+      // Procurar tokens em todas as keys
+      for (let i = 0; i < ls.length; i++) {
+        const key = ls.key(i);
+        if (/token|auth|access|session|jwt/i.test(key)) {
+          token = { key, value: ls.getItem(key) };
+          break;
+        }
+      }
+    } catch(e) {
+      // Cross-origin bloqueio — usar abordagem alternativa
+    }
+
+    document.body.removeChild(iframe);
+
+    if (!token) {
+      // Alternativa: pedir ao usuário para colar o token da URL do Dice
+      status.innerHTML = `
+        <strong>⚠️ Bloqueio cross-origin detectado</strong><br><br>
+        <strong>Faça isso no Safari:</strong><br>
+        1. Abra dice.com (já logado)<br>
+        2. Toque na barra de endereço<br>
+        3. Digite: <code>javascript:alert(localStorage.getItem('access_token')||localStorage.getItem('diceSession')||document.cookie.split(';').find(c=>c.includes('access'))||'nenhum')</code><br>
+        4. Copie o valor e cole abaixo<br><br>
+        <input id="tokenInput" placeholder="Cole o token aqui..." 
+          style="width:100%;padding:10px;border-radius:8px;border:1px solid #444;background:#0f0f1a;color:#fff;font-size:0.8rem;box-sizing:border-box;">
+        <button class="btn" onclick="saveManualToken()" style="margin-top:8px;">Salvar Token</button>
+      `;
+      status.className = 'status err';
+      return;
+    }
+
+    await saveToken(token.value, token.key);
+  } catch(e) {
+    status.className = 'status err';
+    status.textContent = '❌ Erro: ' + e.message;
+  }
+}
+
+async function saveManualToken() {
+  const val = document.getElementById('tokenInput').value.trim();
+  if (!val || val === 'nenhum') {
+    alert('Cole o token antes de salvar');
+    return;
+  }
+  await saveToken(val, 'manual');
+}
+
+async function saveToken(value, key) {
+  const status = document.getElementById('status');
+  if (!value || value.length < 10) {
+    status.className = 'status err';
+    status.textContent = '❌ Token inválido ou não encontrado no Dice.';
+    return;
+  }
+  
+  try {
+    const res = await fetch(`${SUPA_URL}/rest/v1/ia_cache`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPA_KEY,
+        'Authorization': `Bearer ${SUPA_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates'
+      },
+      body: JSON.stringify({
+        cache_key: 'secret:DICE_SESSION_TOKEN',
+        cache_value: value,
+        updated_at: new Date().toISOString()
+      })
+    });
+
+    if (res.status < 300) {
+      status.className = 'status ok';
+      status.innerHTML = `✅ <strong>Token salvo!</strong> O sistema Dice está ativo.<br>
+        <small>Válido por ~30 dias. Repita quando expirar.</small>
+        <code>${value.substring(0,20)}...${value.slice(-8)}</code>`;
+    } else {
+      throw new Error(`HTTP ${res.status}`);
+    }
+  } catch(e) {
+    status.className = 'status err';
+    status.textContent = '❌ Erro ao salvar: ' + e.message;
+  }
+}
+</script>
+</body>
+</html>
