@@ -255,9 +255,9 @@ def main():
                 "total_trades":(st.get("total_trades") or 0)+1,"consec_losses":cl,
                 "daily_pnl":(st.get("daily_pnl") or 0)+pnl,
                 "is_halted":(st.get("daily_pnl") or 0)+pnl<=-50 or cl>=5})
-    order=place_order(sig["token_id"],"BUY" if"YES" in sig["direction"] else"SELL",sig["entry"],10.0)
+    order=place_order(sig["token_id"],"BUY" if"YES" in sig["direction"] else"SELL",sig["entry"],5.0)
     si("gravia_trades",{"direction":sig["direction"],"entry_price":sig["entry"],
-        "size_usdc":10,"edge":sig["edge"],"btc_pct":sig["edge"],"market_id":sig["asset"],"status":"open"})
+        "size_usdc":5,"edge":sig["edge"],"btc_pct":sig["edge"],"market_id":sig["asset"],"status":"open"})
     base.update({"has_open_position":True,"open_direction":sig["direction"],
         "open_entry_price":sig["entry"],"open_entry_ts":now,"open_size_usdc":10,
         "open_fair_prob":sig["fair"],"open_edge":sig["edge"],"market_id":sig["asset"]})
