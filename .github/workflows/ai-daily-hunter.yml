@@ -25,7 +25,7 @@ jobs:
           os.makedirs('.github/assets',exist_ok=True)
           if os.path.exists(cv) and os.path.getsize(cv)>5000: print('CV OK'); exit()
           from reportlab.lib.pagesizes import letter
-          from reportlab.platypus import SimpleDocTemplate,Paragraph,HRFlowable,Spacer
+          from reportlab.platypus import SimpleDocTemplate,Paragraph,HRFlowable
           from reportlab.lib.styles import ParagraphStyle
           from reportlab.lib.colors import HexColor
           from reportlab.lib.enums import TA_CENTER
@@ -40,18 +40,23 @@ jobs:
             Paragraph('+55 22 99241-8257  ·  Rafa_roberto2004@yahoo.com.br  ·  linkedin.com/in/rafael-r-a3946a15',s(fontSize=8.5,textColor=GRAY,alignment=TA_CENTER,spaceAfter=8)),
             HRFlowable(width='100%',thickness=2,color=NAVY,spaceAfter=8),
             Paragraph('<b>Microsoft PL-300</b>  ·  <b>Tableau Desktop Specialist</b>  ·  <b>MBA IBMEC</b>  ·  <b>Six Sigma Green Belt</b>  ·  15+ years',s(fontSize=9,textColor=NAVY,alignment=TA_CENTER,spaceAfter=6)),
-            Paragraph('Power BI (DAX · PQuery · RLS · Tabular Editor)  ·  Tableau  ·  Looker (LookML)  ·  SQL/T-SQL  ·  Python  ·  Azure Synapse  ·  BigQuery  ·  Snowflake  ·  Databricks  ·  dbt  ·  Airflow',s(fontSize=8.5,textColor=GRAY,alignment=TA_CENTER,spaceAfter=4)),
-            Paragraph('USD 9M+ savings  ·  200+ business users  ·  500M+ records/month  ·  70% latency reduction  ·  83% automation efficiency',s(fontSize=8.5,textColor=GRAY,alignment=TA_CENTER,spaceAfter=10)),
-            HRFlowable(width='100%',thickness=1,color=HexColor('#CBD5E1'),spaceAfter=8),
-            Paragraph('<b>Dataex</b> (2022–Present)  ·  Senior Data Analyst — Power BI+Tableau+Looker 200+ users | BigQuery, Snowflake, Databricks',s(fontSize=8.5,textColor=GRAY,spaceAfter=4)),
-            Paragraph('<b>Keyrus</b> (2019–2022)  ·  Senior BI Consultant — Azure Synapse, SAP Analytics Cloud | 70% query optimization | 10+ enterprise clients',s(fontSize=8.5,textColor=GRAY,spaceAfter=4)),
-            Paragraph('<b>Coca-Cola</b> (2018–2019)  ·  Senior Data Analyst — BigQuery, 30+ KPIs, 83% automation efficiency gain',s(fontSize=8.5,textColor=GRAY,spaceAfter=4)),
-            Paragraph('<b>TIM/OI Telecom</b> (2007–2017)  ·  Senior Analyst Strategic BI — 500M+ records/month, USD 9M+ savings, 500+ consumers',s(fontSize=8.5,textColor=GRAY,spaceAfter=3)),
+            Paragraph('Power BI (DAX · PQuery · RLS · Tabular Editor · Deployment Pipelines)  ·  Tableau  ·  Looker (LookML)  ·  SQL/T-SQL  ·  Python  ·  Azure Synapse  ·  BigQuery  ·  Snowflake  ·  Databricks  ·  dbt  ·  Airflow',s(fontSize=8.5,textColor=GRAY,alignment=TA_CENTER,spaceAfter=4)),
+            Paragraph('<b>Dataex</b> (2022–Present)  Senior Data Analyst — Power BI+Tableau+Looker 200+ users | BigQuery, Snowflake, Databricks',s(fontSize=8.5,textColor=GRAY,spaceAfter=4)),
+            Paragraph('<b>Keyrus</b> (2019–2022)  Senior BI Consultant — Azure Synapse, SAP | 70% query opt | 10+ enterprise clients',s(fontSize=8.5,textColor=GRAY,spaceAfter=4)),
+            Paragraph('<b>Coca-Cola</b> (2018–2019)  Senior Data Analyst — 30+ KPIs, BigQuery, 83% automation',s(fontSize=8.5,textColor=GRAY,spaceAfter=4)),
+            Paragraph('<b>TIM/OI Telecom</b> (2007–2017)  Senior Analyst Strategic BI — 500M+ records/month, USD 9M+ savings',s(fontSize=8.5,textColor=GRAY)),
           ])
           print(f'CV: {os.path.getsize(cv):,} bytes')
           "
 
-      - name: "🌍 Canada + Europe Jobs Discovery"
+      - name: "🎥 YouTube Job Scraper (NidhiNagori)"
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python3 .github/scripts/youtube_job_scraper.py
+
+      - name: "🌍 Canada + Europe Discovery"
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
@@ -70,5 +75,5 @@ jobs:
           git config user.name "AI Job Hunter"
           git config user.email "tafita81@gmail.com"
           git add -A 2>/dev/null||true
-          git diff --cached --quiet||git commit -m "chore: daily hunt $(date +%Y-%m-%d) [skip ci]"
+          git diff --cached --quiet||git commit -m "chore: hunt $(date +%Y-%m-%d) [skip ci]"
           git push 2>/dev/null||true
