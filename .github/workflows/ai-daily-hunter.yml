@@ -70,6 +70,13 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: python3 .github/scripts/ai_adaptive_hunter_v7.py
 
+- name: "🎲 Dice API Apply (token sessão)"
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python3 .github/scripts/dice_api_apply.py
+
       - name: Commit
         run: |
           git config user.name "AI Job Hunter"
