@@ -104,7 +104,8 @@ GH_COMPANIES = [
     "robinhood","plaid","marqeta","payoneer","openai","cohere","scale-ai",
     "labelbox","weights-biases","arize-ai","shopify","narvar","airbnb",
     "expedia","hopper","tripadvisor","sorcero","corsearch","lexipol","preply",
-    "airalo","moniepoint","nubank","vtex","rdstation","gitlab","hashicorp",
+    "airalo","moniepoint","elfbeauty","preply","ciklum","lexipol","trilogyfederal",
+    "nubank","vtex","rdstation","gitlab","hashicorp",
     "fastly","linear","zapier","sentry","freshworks","docusign","okta",
     "mongodb","algolia","elastic","contentful","typeform","hotjar",
     # Additional companies
