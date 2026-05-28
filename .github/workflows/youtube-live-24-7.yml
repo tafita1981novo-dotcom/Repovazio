@@ -6,6 +6,8 @@ on:
       duracao_horas:
         description: "Duração da live em horas (default: 6)"
         default: "6"
+  schedule:
+    - cron: "10 4,10,16,22 * * *"   # auto-renova a cada 6h → 24/7 continuo
 
 jobs:
   live:
@@ -27,14 +29,6 @@ jobs:
         run: |
           if [ -z "$YOUTUBE_STREAM_KEY" ]; then
             echo "❌ YOUTUBE_STREAM_KEY não configurado"
-            echo ""
-            echo "COMO CONFIGURAR (5 minutos):"
-            echo "1. YouTube Studio → studio.youtube.com"
-            echo "2. Criar conteúdo → Transmissão ao vivo → Programar"
-            echo "3. Copiar Stream Key"
-            echo "4. GitHub: tafita81/Repovazio → Settings → Secrets"
-            echo "   Nome: YOUTUBE_STREAM_KEY"
-            echo "   Valor: [stream key copiada]"
             exit 1
           fi
           echo "✅ Stream key configurada — iniciando live..."
