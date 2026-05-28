@@ -123,20 +123,21 @@ LIVE=os.environ.get("POLY_TRADING_LIVE","").lower()=="true"
 
 def place_order(token_id,side,price,usdc):
     if not LIVE:
-        return{"PAPER":True,"token":str(token_id)[:12],"side":side,"price":round(price,4)}
+        return{"ok":True,"PAPER":True,"token":str(token_id)[:12],"side":side,"price":round(price,4)}
     try:
         from py_clob_client.client import ClobClient
-        from py_clob_client.clob_types import OrderArgs,ApiCreds
+        from py_clob_client.clob_types import OrderArgs
         from py_clob_client.constants import POLYGON
         pk=os.environ.get("POLY_PRIVATE_KEY","")
         c=ClobClient(host="https://clob.polymarket.com",key=pk,chain_id=POLYGON)
         creds=c.derive_api_key()
         c2=ClobClient(host="https://clob.polymarket.com",key=pk,chain_id=POLYGON,creds=creds)
-        s=c2.create_order(OrderArgs(token_id=token_id,price=price,size=round(usdc/price,2),side=side))
-        resp=c2.post_order(s)
-        return{"LIVE":True,"order_id":resp.get("orderID","?"),"status":resp.get("status","?")}
+        signed=c2.create_order(OrderArgs(token_id=token_id,price=price,size=round(usdc/price,2),side=side))
+        resp=c2.post_order(signed)
+        oid=resp.get("orderID","?")
+        return{"ok":True,"LIVE":True,"order_id":oid,"status":resp.get("status","?")}
     except Exception as e:
-        return{"LIVE":True,"err":str(e)[:120]}
+        return{"ok":False,"LIVE":True,"err":str(e)[:140]}
 
 def main():
     T0,tsrc=ntp()
@@ -255,7 +256,7 @@ def main():
                 "total_wins":(st.get("total_wins") or 0)+(1 if won else 0),
                 "total_trades":(st.get("total_trades") or 0)+1,"consec_losses":cl,
                 "daily_pnl":(st.get("daily_pnl") or 0)+pnl,
-                "is_halted":(st.get("daily_pnl") or 0)+pnl<=-50 or cl>=5})
+                "is_halted":(st.get("daily_pnl") or 0)+pnl<=-30})
     order=place_order(sig["token_id"],"BUY" if"YES" in sig["direction"] else"SELL",sig["entry"],5.0)
     si("gravia_trades",{"direction":sig["direction"],"entry_price":sig["entry"],
         "size_usdc":5,"edge":sig["edge"],"btc_pct":sig["edge"],"market_id":sig["asset"],"status":"open"})
