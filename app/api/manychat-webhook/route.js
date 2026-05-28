@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import { NextResponse } from 'next/server';
 
 const SB_URL = process.env.SUPABASE_URL;
