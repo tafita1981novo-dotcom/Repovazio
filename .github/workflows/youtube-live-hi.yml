@@ -1,0 +1,32 @@
+name: "YouTube Live HI - Psychology 24h @psidanicoelho"
+on:
+  workflow_dispatch:
+    inputs:
+      horas:
+        description: "Duracao horas (max 6)"
+        default: "6"
+  schedule:
+    - cron: "0 2,8,14,20 * * *"
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 370
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Deps
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg fonts-noto-core fonts-noto-cjk > /dev/null 2>&1
+          pip install requests pillow --break-system-packages -q
+      - name: Live HI 24h
+        env:
+          LANG_CODE: HI
+          YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY_HI }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: |
+          H="${{ github.event.inputs.horas || '6' }}"
+          timeout $((H * 3600)) python3 scripts/live_universal.py || true
+        continue-on-error: true
