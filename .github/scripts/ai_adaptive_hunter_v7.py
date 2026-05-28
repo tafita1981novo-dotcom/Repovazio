@@ -317,23 +317,7 @@ def apply_gh(ctx, job, cover):
             pg.goto(url, timeout=25000)
             pg.wait_for_load_state("domcontentloaded", timeout=12000)
             time.sleep(2)
-            if "greenhouse.io" not in pg.url:
-                # Tentar achar link GH na página (ex: Stripe, Databricks redirecionam para site próprio)
-                try:
-                    html_pg = pg.content()
-                    import re as _re
-                    gh_link = _re.search(r'https://boards[.]greenhouse[.]io/[^\s"\'<>]+', html_pg)
-                    if gh_link:
-                        gh_url = gh_link.group(0)
-                        pg.goto(gh_url, timeout=12000)
-                        pg.wait_for_load_state("domcontentloaded", timeout=8000)
-                        time.sleep(1)
-                        if "greenhouse.io" not in pg.url:
-                            pg.close(); continue
-                    else:
-                        pg.close(); continue
-                except:
-                    pg.close(); continue
+            if "greenhouse.io" not in pg.url: pg.close(); continue
 
             filled = 0
             for sel, val in [
@@ -394,9 +378,7 @@ def apply_gh(ctx, job, cover):
                             if any(w in body for w in ["thank","received","submitted","applied","success"]):
                                 pg.close(); return "success"
                             elif any(w in body for w in ["error","required","invalid"]):
-                                pg.close()
-        # Fallback: email direto quando form não carrega
-        return "form_error_email_fallback"
+                                pg.close(); return "form_error"
                             pg.close(); return "submitted"
                     except: pass
             pg.close(); return f"fields_{filled}"
