@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 // @ts-nocheck
 // app/api/criar-daniela/route.js — create daniela-ia Vercel project
 import{NextResponse}from'next/server';
