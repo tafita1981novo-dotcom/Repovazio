@@ -1,4 +1,4 @@
-name: 🚀 Job Hunter MASTER — 24/7 (Every Hour)
+name: 🚀 Job Hunter MASTER — 24/7 CORRIGIDO (Every Hour)
 on:
   schedule:
     - cron: "30 * * * *"
@@ -11,17 +11,68 @@ jobs:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-      - run: pip install -q reportlab
-      - name: Full Hunt — Email + ATS + Report
+
+      - name: Install dependencies
+        run: |
+          pip install playwright reportlab
+          python -m playwright install chromium
+          python -m playwright install-deps chromium
+
+      - name: Generate/Verify CV PDF
+        run: |
+          python3 -c "
+          import os
+          cv = '.github/assets/rafael_cv.pdf'
+          if os.path.exists(cv) and os.path.getsize(cv) > 5000:
+              print(f'CV OK: {os.path.getsize(cv):,} bytes')
+          else:
+              from reportlab.lib.pagesizes import letter
+              from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, HRFlowable
+              from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+              from reportlab.lib.colors import HexColor
+              from reportlab.lib.enums import TA_CENTER
+              os.makedirs('.github/assets', exist_ok=True)
+              doc = SimpleDocTemplate(cv, pagesize=letter, topMargin=36, bottomMargin=36, leftMargin=50, rightMargin=50)
+              styles = getSampleStyleSheet()
+              navy = HexColor('#1F3864')
+              story = [
+                Paragraph('OPEN TO US/EU REMOTE | AVAILABLE IMMEDIATELY', ParagraphStyle('b', fontSize=9, textColor=HexColor('#ffffff'), backColor=navy, alignment=TA_CENTER, fontName='Helvetica-Bold', spaceAfter=8)),
+                Paragraph('RAFAEL RODRIGUES', ParagraphStyle('t', fontSize=22, textColor=navy, fontName='Helvetica-Bold', alignment=TA_CENTER, spaceAfter=4)),
+                Paragraph('Senior Data Analyst  ·  Power BI Developer  ·  Analytics Engineer', ParagraphStyle('s', fontSize=11, textColor=HexColor('#5B21B6'), fontName='Helvetica', alignment=TA_CENTER, spaceAfter=4)),
+                Paragraph('Brazil  |  +55 22 99241-8257  |  Rafa_roberto2004@yahoo.com.br  |  linkedin.com/in/rafael-r-a3946a15', ParagraphStyle('c', fontSize=9, textColor=HexColor('#555'), alignment=TA_CENTER, spaceAfter=8)),
+                HRFlowable(width='100%', thickness=2, color=navy, spaceAfter=8),
+                Paragraph('PROFESSIONAL SUMMARY', ParagraphStyle('h', fontSize=11, textColor=navy, fontName='Helvetica-Bold', spaceAfter=4)),
+                Paragraph('Senior Data Analyst and Analytics Engineer with 15+ years delivering enterprise BI, cloud analytics, and self-service data platforms. Specialized in Power BI (DAX, Power Query, RLS, Dataflows), SQL, Python, dimensional modeling. Generated USD 9M+ operational savings, 70% report latency reduction, served 200+ business users, processed 500M+ records monthly.', ParagraphStyle('body', fontSize=9.5, textColor=HexColor('#374151'), fontName='Helvetica', leading=14, spaceAfter=6)),
+                Paragraph('CERTIFICATIONS: Microsoft PL-300 Power BI Data Analyst Associate · Tableau Desktop Specialist · MBA IBMEC', ParagraphStyle('body', fontSize=9, textColor=HexColor('#374151'), fontName='Helvetica', leading=14, spaceAfter=6)),
+                Paragraph('STACK: Power BI · Tableau · Looker · DAX · Power Query · SQL · Python · BigQuery · Snowflake · Databricks · Azure Synapse · ADF · Dimensional Modeling · Star Schema · ETL/ELT', ParagraphStyle('body', fontSize=9, textColor=HexColor('#374151'), fontName='Helvetica', leading=14, spaceAfter=6)),
+                HRFlowable(width='100%', thickness=1, color=navy, spaceAfter=6),
+                Paragraph('EXPERIENCE', ParagraphStyle('h', fontSize=11, textColor=navy, fontName='Helvetica-Bold', spaceAfter=4)),
+                Paragraph('Dataex (2022–Present) — Senior Data Analyst: Enterprise Power BI, Tableau, Looker for 200+ users. 60% load time reduction. BigQuery, Snowflake, Databricks SQL.', ParagraphStyle('body', fontSize=9, textColor=HexColor('#374151'), fontName='Helvetica', leading=14, spaceAfter=4)),
+                Paragraph('Keyrus (2019–2022) — Senior BI Consultant: 70% query optimization. Azure Synapse, SAP, Salesforce, Oracle. 10+ enterprise clients.', ParagraphStyle('body', fontSize=9, textColor=HexColor('#374151'), fontName='Helvetica', leading=14, spaceAfter=4)),
+                Paragraph('Coca-Cola (2018–2019) — Senior Data Analyst: 30+ KPIs. Google BigQuery. 83% automation efficiency gain.', ParagraphStyle('body', fontSize=9, textColor=HexColor('#374151'), fontName='Helvetica', leading=14, spaceAfter=4)),
+                Paragraph('TIM/OI Telecom (2007–2017) — Senior Data Analyst: 500M+ subscriber records/month. USD 9M+ savings. 500+ report consumers.', ParagraphStyle('body', fontSize=9, textColor=HexColor('#374151'), fontName='Helvetica', leading=14, spaceAfter=4)),
+              ]
+              doc.build(story)
+              print(f'CV gerado: {os.path.getsize(cv):,} bytes')
+          "
+
+      - name: Run Playwright Form Filler (Greenhouse — verificado)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: python3 .github/scripts/playwright_hunter.py
+
+      - name: Run Email Blast (emails verificados — sem bounces)
         env:
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-        run: python3 .github/scripts/production_hunter.py all
+        run: python3 .github/scripts/production_hunter.py email
+
       - name: Commit state
         run: |
           git config user.name "Job Hunter 24/7"
           git config user.email "tafita81@gmail.com"
           git add -A 2>/dev/null || true
-          git diff --cached --quiet || git commit -m "chore: job state update [skip ci]"
+          git diff --cached --quiet || git commit -m "chore: job state [skip ci]"
           git push 2>/dev/null || true
