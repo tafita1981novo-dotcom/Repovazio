@@ -57,7 +57,7 @@ jobs:
           DICE_PASSWORD: ${{ secrets.DICE_PASSWORD }}
         run: python3 .github/scripts/ai_adaptive_hunter_v7.py
 
-      - name: "🔧 Platform Fixer — Dice/ROK/Jobright/Indeed/LinkedIn/Wellfound/ZipRecruiter"
+      - name: "🌍 Universal Apply — Workday+Email+LinkedIn+Dice+ROK+Indeed+Jobright+ZIP"
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
@@ -65,7 +65,7 @@ jobs:
           DICE_PASSWORD: ${{ secrets.DICE_PASSWORD }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: python3 .github/scripts/platform_fixer.py
+        run: python3 .github/scripts/universal_apply.py
 
 
       - name: "🏢 GH Expanded — Stripe/Brex/WPP/Oscar/Discord/Reddit/Roblox..."
