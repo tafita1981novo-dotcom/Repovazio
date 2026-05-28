@@ -1,24 +1,76 @@
 {
   "version": 2,
   "rewrites": [
-    { "source": "/psicologia-para-dormir", "destination": "/public/psicologia-para-dormir.html" },
-    { "source": "/app-vendas",             "destination": "/public/app-psicologia-vendas.html" },
-    { "source": "/app",                    "destination": "/public/app-psicologia.html" },
-    { "source": "/dashboard",              "destination": "/public/dashboard.html" },
-    { "source": "/cerebro",                "destination": "/public/cerebro.html" },
-    { "source": "/qg",                     "destination": "/public/qg.html" },
-    { "source": "/checklist",              "destination": "/public/checklist.html" },
-    { "source": "/hub",                    "destination": "/public/hub.html" },
-    { "source": "/ativar-live",            "destination": "/public/ativar-live.html" },
-    { "source": "/nomear-canais",          "destination": "/public/nomear-canais.html" },
-    { "source": "/agenda-live",            "destination": "/public/agenda-live.html" },
-    { "source": "/thumbnail",             "destination": "/public/thumbnail-528hz.html" }
+    {
+      "source": "/psicologia-para-dormir",
+      "destination": "/public/psicologia-para-dormir.html"
+    },
+    {
+      "source": "/app-vendas",
+      "destination": "/public/app-psicologia-vendas.html"
+    },
+    {
+      "source": "/app",
+      "destination": "/public/app-psicologia.html"
+    },
+    {
+      "source": "/dashboard",
+      "destination": "/public/dashboard.html"
+    },
+    {
+      "source": "/cerebro",
+      "destination": "/public/cerebro.html"
+    },
+    {
+      "source": "/qg",
+      "destination": "/public/qg.html"
+    },
+    {
+      "source": "/checklist",
+      "destination": "/public/checklist.html"
+    },
+    {
+      "source": "/hub",
+      "destination": "/public/hub.html"
+    },
+    {
+      "source": "/ativar-live",
+      "destination": "/public/ativar-live.html"
+    },
+    {
+      "source": "/nomear-canais",
+      "destination": "/public/nomear-canais.html"
+    },
+    {
+      "source": "/agenda-live",
+      "destination": "/public/agenda-live.html"
+    },
+    {
+      "source": "/thumbnail",
+      "destination": "/public/thumbnail-528hz.html"
+    },
+    {
+      "source": "/gravia",
+      "destination": "/public/gravia.html"
+    }
   ],
   "headers": [
-    { "source": "/api/(.*)", "headers": [
-      { "key": "Access-Control-Allow-Origin", "value": "*" },
-      { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS" },
-      { "key": "Access-Control-Allow-Headers", "value": "Content-Type" }
-    ]}
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type"
+        }
+      ]
+    }
   ]
 }
