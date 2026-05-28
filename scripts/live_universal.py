@@ -262,6 +262,22 @@ CONTENT = {
     },
 }
 
+FONT_MAP = {
+    "JA": ["/usr/share/fonts/opentype/noto/NotoSansCJK-JP-Regular.otf",
+            "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc"],
+    "KO": ["/usr/share/fonts/opentype/noto/NotoSansCJK-KR-Regular.otf",
+            "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc"],
+    "ZH": ["/usr/share/fonts/opentype/noto/NotoSansCJK-SC-Regular.otf",
+            "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc"],
+    "HI": ["/usr/share/fonts/truetype/noto/NotoSansDevanagari-Regular.ttf"],
+    "AR": ["/usr/share/fonts/truetype/noto/NotoSansArabic-Regular.ttf"],
+}
+
+def get_fontfile(lang):
+    for p in FONT_MAP.get(lang, []):
+        if pathlib.Path(p).exists(): return p
+    return ""
+
 def select_stream(lang):
     tz = TZ_OFFSETS.get(lang, 0)
     h = (datetime.now(timezone.utc) + timedelta(hours=tz)).hour
@@ -293,7 +309,7 @@ def get_img(topic, color, seed):
     except: pass
     return None
 
-def make_slide(img_p, hz_str, tema, insight, tc, brand, cta, greeting, idx, total, out):
+def make_slide(img_p, hz_str, tema, insight, tc, brand, cta, greeting, idx, total, out, fontfile=""):
     lines = textwrap.wrap(insight, 42)[:2]
     l1 = (lines[0] if lines else "").replace("'", r"\'")
     l2 = (lines[1] if len(lines) > 1 else "").replace("'", r"\'")
@@ -332,6 +348,8 @@ def make_slide(img_p, hz_str, tema, insight, tc, brand, cta, greeting, idx, tota
         f"drawtext=text='{brand_e}':fontsize=11:fontcolor=#64748B:x=(w-text_w)/2:y=ih-28"
     )
 
+    if fontfile:
+        vf = vf.replace("drawtext=", "drawtext=fontfile=%s:" % fontfile)
     cmd = ["ffmpeg","-y","-loop","1","-i",str(img_p),"-vf",vf,
            "-t","60","-c:v","libx264","-preset","fast","-tune","stillimage",
            "-pix_fmt","yuv420p","-r","30","-an", str(out)]
@@ -353,6 +371,7 @@ def run():
     print(f"=== 🌍 LIVE {LANG_CODE} | {hz_str} | {greeting} ===")
 
     audio = gen_audio(hz_num)
+    fontfile = get_fontfile(LANG_CODE)
     slides, concat_f = [], TMP / f"pl_{LANG_CODE.lower()}.txt"
 
     for i in range(3):
@@ -362,7 +381,7 @@ def run():
         if not img_data: continue
         img_p = TMP / f"bg_{seed}.jpg"; img_p.write_bytes(img_data)
         sl = TMP / f"sl_{sk}_{i}.mp4"
-        if make_slide(img_p, hz_str, tema, insight, tc, brand, cta, greeting, i, len(items), sl):
+        if make_slide(img_p, hz_str, tema, insight, tc, brand, cta, greeting, i, len(items), sl, fontfile):
             slides.append(sl)
             print(f"  ✅ [{i+1}] {tema[:40]}")
         time.sleep(2)
@@ -395,7 +414,7 @@ def run():
             if img_data:
                 img_p = TMP/f"bg_{seed}.jpg"; img_p.write_bytes(img_data)
                 sl = TMP/f"sl_{sk}_{idx}.mp4"
-                if make_slide(img_p, hz_str, tema, insight, tc, brand, cta, greet, idx%len(items), len(items), sl):
+                if make_slide(img_p, hz_str, tema, insight, tc, brand, cta, greet, idx%len(items), len(items), sl, fontfile):
                     with open(concat_f,"a") as f: f.write(f"file '{sl.resolve()}'\n")
                     print(f"  + {tema[:35]}")
             for old in sorted(TMP.glob(f"sl_{sk}_*.mp4"))[:-6]: old.unlink(missing_ok=True)
