@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 export const dynamic = 'force-dynamic';
 
 const SU = process.env.NEXT_PUBLIC_SUPABASE_URL!;
