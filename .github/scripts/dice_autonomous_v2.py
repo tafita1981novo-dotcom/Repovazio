@@ -455,7 +455,7 @@ def main():
 
     print(f"\n{'━'*58}")
     print(f"  ✅ {ok} aplicados | ⏭️ {skip} já feitos | ⚠️  {err} outros")
-    print(f"  {'Token pronto: camada 2 ativa' if token else 'Para ativar Easy Apply: repovazio.vercel.app/dice-setup'}")
+    print(f"  {'Token pronto: camada 2 ativa' if token else 'Para ativar Easy Apply: tafita81.github.io/Repovazio/dice-setup.html'}")
     print(f"{'━'*58}\n")
 
 if __name__ == "__main__":
