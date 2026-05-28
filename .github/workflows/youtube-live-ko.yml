@@ -23,7 +23,7 @@ jobs:
       - name: Live KO 24h
         env:
           LANG_CODE:          KO
-          YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
+          YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY_KO }}
           GROQ_API_KEY:       ${{ secrets.GROQ_API_KEY }}
         run: |
           H="${{ inputs.horas || '6' }}"
