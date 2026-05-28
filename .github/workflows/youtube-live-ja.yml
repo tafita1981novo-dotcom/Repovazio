@@ -18,7 +18,7 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: "3.11"}
       - run: |
-          sudo apt-get install -y ffmpeg > /dev/null 2>&1
+          sudo apt-get install -y ffmpeg fonts-noto-cjk fonts-noto-core > /dev/null 2>&1
           pip install requests pillow --break-system-packages -q
       - name: Live JA 24h
         env:
