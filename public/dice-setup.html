@@ -3,182 +3,127 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>Dice Auto-Apply — Setup</title>
+<title>Dice Auto-Apply Setup</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,sans-serif;background:#09090f;color:#fff;
-     min-height:100vh;display:flex;flex-direction:column;align-items:center;
-     justify-content:flex-start;padding:24px 16px}
-h1{font-size:1.5rem;font-weight:700;color:#7C3AED;margin:20px 0 4px}
-.sub{font-size:.85rem;color:#6b7280;margin-bottom:24px}
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#09090f;color:#fff;
+     min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px 16px}
+h1{font-size:1.6rem;font-weight:700;color:#7C3AED;margin:20px 0 4px;text-align:center}
+.sub{font-size:.9rem;color:#6b7280;margin-bottom:28px;text-align:center}
 .card{background:#111827;border:1px solid #1f2937;border-radius:16px;
-      padding:20px;width:100%;max-width:420px;margin-bottom:16px}
-.step{display:flex;gap:12px;align-items:flex-start;margin-bottom:16px}
-.num{background:#7C3AED;color:#fff;border-radius:50%;width:28px;height:28px;
-     display:flex;align-items:center;justify-content:center;font-weight:700;
-     font-size:.85rem;flex-shrink:0}
-.txt{font-size:.9rem;line-height:1.5;color:#d1d5db}
-.txt strong{color:#fff}
-.code{background:#0f172a;border:1px solid #1e293b;border-radius:8px;
-      padding:10px 12px;font-family:monospace;font-size:.75rem;color:#a78bfa;
-      word-break:break-all;margin-top:8px;cursor:pointer;user-select:all;
-      -webkit-user-select:all}
-.btn{width:100%;background:#7C3AED;color:#fff;border:none;border-radius:12px;
-     padding:16px;font-size:1rem;font-weight:600;cursor:pointer;margin-top:8px}
-.btn:active{background:#5B21B6}
-.btn.sec{background:#1f2937;margin-top:8px}
-input{width:100%;background:#0f172a;border:1px solid #374151;border-radius:10px;
-      padding:14px;color:#fff;font-size:.9rem;margin-top:12px;outline:none}
+      padding:22px;width:100%;max-width:440px;margin-bottom:16px}
+.step{display:flex;gap:12px;align-items:flex-start;padding:12px 0;
+      border-bottom:1px solid #1f2937}
+.step:last-child{border-bottom:none}
+.num{background:#7C3AED;color:#fff;border-radius:50%;width:30px;height:30px;min-width:30px;
+     display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem}
+.txt{font-size:.88rem;line-height:1.55;color:#d1d5db;padding-top:4px}
+.txt strong{color:#fff;display:block;margin-bottom:4px}
+.code{background:#0a0a14;border:1px solid #2d2d4e;border-radius:8px;
+      padding:10px;font-family:'Courier New',monospace;font-size:.7rem;
+      color:#a78bfa;word-break:break-all;margin-top:8px;
+      cursor:pointer;-webkit-user-select:all;user-select:all;line-height:1.5}
+.copy-hint{color:#4b5563;font-size:.72rem;margin-top:4px}
+.divider{text-align:center;color:#374151;margin:16px 0;font-size:.8rem}
+input{width:100%;background:#0f172a;border:2px solid #1f2937;border-radius:10px;
+      padding:14px;color:#fff;font-size:.95rem;margin-top:8px;outline:none;
+      transition:border-color .2s}
+input:focus{border-color:#7C3AED}
 input::placeholder{color:#4b5563}
-.status{border-radius:10px;padding:14px;margin-top:12px;font-size:.85rem;
-        line-height:1.6;display:none}
+.btn{width:100%;background:#7C3AED;color:#fff;border:none;border-radius:12px;
+     padding:15px;font-size:1rem;font-weight:600;cursor:pointer;margin-top:12px;
+     letter-spacing:.3px}
+.btn:active{background:#5B21B6;transform:scale(.98)}
+.status{border-radius:10px;padding:14px;margin-top:14px;font-size:.85rem;
+        line-height:1.65;display:none}
 .ok{background:#052e16;border:1px solid #14532d;color:#4ade80}
-.err{background:#2d0c0c;border:1px solid #7f1d1d;color:#fca5a5}
-.warn{background:#1c1400;border:1px solid #713f12;color:#fbbf24}
+.err{background:#2d0808;border:1px solid #7f1d1d;color:#fca5a5}
+.warn{background:#1a1200;border:1px solid #92400e;color:#fbbf24}
 </style>
 </head>
 <body>
+<h1>🎲 Dice Auto-Apply</h1>
+<p class="sub">Configure uma vez — sistema aplica todos os dias sozinho</p>
 
-<h1>🎯 Dice Auto-Apply</h1>
-<p class="sub">Setup único — o sistema aplica sozinho depois</p>
-
-<!-- PASSO A PASSO -->
 <div class="card">
-
   <div class="step">
     <div class="num">1</div>
     <div class="txt">
-      <strong>Abra o Dice.com no Safari</strong> (já logado com tafita81@gmail.com) — não feche esta aba
+      <strong>Abra dice.com no mesmo navegador (já logado)</strong>
+      Não feche esta aba — ela precisa estar aberta
     </div>
   </div>
 
   <div class="step">
     <div class="num">2</div>
     <div class="txt">
-      <strong>Na barra de endereço do Dice</strong>, apague o URL e cole este código abaixo.<br>
-      Toque no código para copiar:
-      <div class="code" onclick="copyCode(this)" id="bookmarklet">
-javascript:(function(){var k=['access_token','id_token','dice_token','token','AUTH','authToken','userToken'];var t='';for(var i=0;i<k.length;i++){t=localStorage.getItem(k[i]);if(t&&t.length>20)break;}if(!t){var c=document.cookie.split(';');for(var j=0;j<c.length;j++){if(/access|token|auth/i.test(c[j])){t=c[j].split('=')[1];if(t&&t.length>20)break;}}}if(t){window.open('https://repovazio.vercel.app/dice-setup?t='+encodeURIComponent(t),'_blank');}else{alert('Cole o token manualmente.
-Keys encontradas: '+Object.keys(localStorage).filter(function(x){return x.length<30}).join(', '));}})();
-      </div>
-      <small style="color:#6b7280;font-size:.75rem">Toque → Copiar → Cole na barra URL do Dice → Enter</small>
+      <strong>No Dice, cole este código na barra de endereço:</strong>
+      <div class="code" id="bm" onclick="copyBM()">javascript:(function(){var ks=['access_token','id_token','token','dice_token','authToken','AUTH_TOKEN','userToken'];var t='';for(var i=0;i<ks.length;i++){try{t=localStorage.getItem(ks[i]);if(t&&t.length>20)break;}catch(e){}}if(!t){var cs=document.cookie.split(';');for(var j=0;j<cs.length;j++){var p=cs[j].trim().split('=');if(/access|token|auth/i.test(p[0])&&p[1]&&p[1].length>20){t=p.slice(1).join('=');break;}}}if(t){location.href='https://repovazio.vercel.app/dice-setup?t='+encodeURIComponent(t);}else{var msg='Chaves localStorage: '+Object.keys(localStorage).join(', ');alert('Token não encontrado automático.\n\n'+msg+'\n\nCopie um valor de token e cole manualmente.');}})();</div>
+      <p class="copy-hint">👆 Toque para copiar · Cole na barra URL do Dice · Pressione Enter</p>
     </div>
   </div>
 
   <div class="step">
     <div class="num">3</div>
     <div class="txt">
-      <strong>Se o código não funcionar</strong>, cole o token manualmente abaixo:
+      <strong>Ou cole o token manualmente abaixo:</strong>
+      Se o código redirecionar aqui, o campo já estará preenchido
     </div>
   </div>
 
-  <input id="tokenInput" placeholder="Cole o token aqui..." 
-         oninput="handleTokenInput(this.value)">
-  <button class="btn" onclick="saveToken()">✅ Salvar Token — Ativar Sistema</button>
-  <button class="btn sec" onclick="testToken()">🔍 Verificar Token</button>
-  <div class="status" id="status"></div>
-
+  <input id="ti" placeholder="Cole o token aqui..." oninput="onInput(this.value)">
+  <button class="btn" onclick="save()">✅ Salvar Token — Ativar Dice Auto-Apply</button>
+  <div class="status" id="st"></div>
 </div>
 
-<!-- TOKEN VIA URL PARAM -->
 <script>
-const SUPA = 'https://tpjvalzwkqwttvmszvie.supabase.co';
-const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwanZhbHp3a3F3dHR2bXN6dmllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMzUyOTMsImV4cCI6MjA5MTYxMTI5M30.UEgUo0Mw15ihQZykLAY5QApRzgTXkfIewZFzIgwao3Q';
+const S='https://tpjvalzwkqwttvmszvie.supabase.co';
+const K='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwanZhbHp3a3F3dHR2bXN6dmllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMzUyOTMsImV4cCI6MjA5MTYxMTI5M30.UEgUo0Mw15ihQZykLAY5QApRzgTXkfIewZFzIgwao3Q';
 
-// Token chegou via URL (redirect do bookmarklet)
-const params = new URLSearchParams(window.location.search);
-const urlToken = params.get('t');
-if (urlToken && urlToken.length > 20) {
-  document.getElementById('tokenInput').value = urlToken;
-  document.querySelector('.status').style.display = 'block';
-  document.querySelector('.status').className = 'status warn';
-  document.querySelector('.status').textContent = '🔑 Token detectado via URL! Toque em "Salvar Token".';
+// Pegar token da URL (redirecionado pelo bookmarklet)
+const p=new URLSearchParams(window.location.search);
+const ut=p.get('t');
+if(ut&&ut.length>10){
+  document.getElementById('ti').value=ut;
+  show('warn','🔑 Token detectado! Toque em "Salvar Token" para ativar.');
 }
 
-function copyCode(el) {
-  const text = el.innerText.trim();
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(text).then(() => {
-      el.style.border = '1px solid #7C3AED';
-      el.textContent = '✅ Copiado! Cole na barra URL do Dice';
-      setTimeout(() => { el.style.border = ''; location.reload(); }, 2500);
+function copyBM(){
+  const txt=document.getElementById('bm').innerText;
+  navigator.clipboard&&navigator.clipboard.writeText(txt).then(()=>{
+    document.getElementById('bm').textContent='✅ Copiado! Cole na barra URL do Dice';
+    setTimeout(()=>location.reload(),2500);
+  });
+}
+
+function onInput(v){
+  if(v.length>30)show('warn',`Token ${v.length} chars detectado. Toque Salvar.`);
+}
+
+function show(cls,msg){
+  const el=document.getElementById('st');
+  el.style.display='block';el.className='status '+cls;el.innerHTML=msg;
+}
+
+async function save(){
+  const t=document.getElementById('ti').value.trim();
+  if(!t||t.length<15){show('err','❌ Token muito curto. Copie o token completo.');return;}
+  show('warn','⏳ Salvando...');
+  try{
+    const r=await fetch(`${S}/rest/v1/ia_cache`,{
+      method:'POST',
+      headers:{'apikey':K,'Authorization':'Bearer '+K,'Content-Type':'application/json',
+               'Prefer':'resolution=merge-duplicates'},
+      body:JSON.stringify({cache_key:'secret:DICE_SESSION_TOKEN',
+                           value:t,
+                           expires_at:new Date(Date.now()+30*24*60*60*1000).toISOString()})
     });
-  } else {
-    const sel = window.getSelection();
-    const range = document.createRange();
-    range.selectNodeContents(el);
-    sel.removeAllRanges();
-    sel.addRange(range);
-  }
-}
-
-function handleTokenInput(val) {
-  const s = document.getElementById('status');
-  if (val.length > 30) {
-    s.style.display = 'block';
-    s.className = 'status warn';
-    s.textContent = `Token com ${val.length} chars detectado. Toque em "Salvar Token".`;
-  }
-}
-
-async function saveToken() {
-  const token = document.getElementById('tokenInput').value.trim();
-  const s = document.getElementById('status');
-  s.style.display = 'block';
-  if (!token || token.length < 20) {
-    s.className = 'status err';
-    s.textContent = '❌ Token muito curto ou vazio.';
-    return;
-  }
-  s.className = 'status warn';
-  s.textContent = '⏳ Salvando...';
-  try {
-    const res = await fetch(`${SUPA}/rest/v1/ia_cache`, {
-      method: 'POST',
-      headers: { 'apikey': SKEY, 'Authorization': `Bearer ${SKEY}`,
-                 'Content-Type': 'application/json',
-                 'Prefer': 'resolution=merge-duplicates' },
-      body: JSON.stringify({ cache_key: 'secret:DICE_SESSION_TOKEN',
-                             cache_value: token,
-                             updated_at: new Date().toISOString() })
-    });
-    if (res.status < 300 || res.status === 409) {
-      s.className = 'status ok';
-      s.innerHTML = `✅ <strong>Token salvo com sucesso!</strong><br>
-O sistema Dice está ativo e aplicará automaticamente todo dia.<br>
-<small>Token: ${token.substring(0,16)}...${token.slice(-6)}</small>`;
-    } else {
-      throw new Error(`HTTP ${res.status}`);
-    }
-  } catch(e) {
-    s.className = 'status err';
-    s.textContent = '❌ Erro: ' + e.message;
-  }
-}
-
-async function testToken() {
-  const token = document.getElementById('tokenInput').value.trim();
-  const s = document.getElementById('status');
-  s.style.display = 'block';
-  s.className = 'status warn';
-  s.textContent = '🔍 Verificando token no Dice...';
-  try {
-    const res = await fetch('https://www.dice.com/dashboard/v1/user/profile', {
-      headers: { 'Authorization': `Bearer ${token}`,
-                 'Accept': 'application/json' }
-    });
-    if (res.ok) {
-      const data = await res.json();
-      s.className = 'status ok';
-      s.textContent = `✅ Token válido! Usuário: ${data.email || data.name || 'autenticado'}`;
-    } else {
-      s.className = 'status err';
-      s.textContent = `⚠️ Token inválido (HTTP ${res.status}). Tente capturar novamente.`;
-    }
-  } catch(e) {
-    s.className = 'status warn';
-    s.textContent = '⚠️ CORS bloqueou verificação — salve o token assim mesmo, o sistema verificará automaticamente.';
-  }
+    if(r.status<300||r.status===409){
+      show('ok',`✅ <strong>Token salvo!</strong> Dice Auto-Apply ativo.<br>
+        O sistema aplica automaticamente todo dia às 9h UTC.<br>
+        <small style="opacity:.7">Renove em ~30 dias | ${t.substring(0,14)}…${t.slice(-5)}</small>`);
+    }else{throw new Error('HTTP '+r.status);}
+  }catch(e){show('err','❌ Erro: '+e.message);}
 }
 </script>
 </body>
