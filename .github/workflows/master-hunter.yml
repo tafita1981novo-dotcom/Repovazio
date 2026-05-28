@@ -1,0 +1,128 @@
+name: 🌍 Master Hunter — All Platforms
+on:
+  schedule:
+    - cron: '0 9 * * *'    # 9h UTC = 6h BRT — varredura diária
+    - cron: '0 14 * * *'   # 14h UTC = 11h BRT — segunda rodada
+    - cron: '0 19 * * *'   # 19h UTC = 16h BRT — terceira rodada
+  workflow_dispatch:
+
+jobs:
+  hunt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Python + Playwright
+        run: |
+          pip install playwright requests reportlab --break-system-packages -q
+          python -m playwright install chromium
+          python -m playwright install-deps chromium
+
+      - name: Build CV PDF
+        run: |
+          python3 -c "
+          import os; cv='.github/assets/rafael_cv.pdf'
+          os.makedirs('.github/assets',exist_ok=True)
+          if os.path.exists(cv) and os.path.getsize(cv)>5000: print('CV OK'); exit()
+          from reportlab.lib.pagesizes import letter
+          from reportlab.platypus import SimpleDocTemplate,Paragraph,Spacer
+          from reportlab.lib.styles import ParagraphStyle
+          from reportlab.lib.colors import HexColor
+          from reportlab.lib.enums import TA_CENTER,TA_LEFT
+          from reportlab.lib.units import inch
+          NAVY=HexColor('#1F3864');GRAY=HexColor('#374151');LIGHT=HexColor('#6B7280')
+          doc=SimpleDocTemplate(cv,pagesize=letter,topMargin=0.4*inch,bottomMargin=0.4*inch,leftMargin=0.55*inch,rightMargin=0.55*inch)
+          H=lambda t,s=16,c=NAVY,b='Helvetica-Bold',a=TA_CENTER:Paragraph(t,ParagraphStyle('x',fontSize=s,textColor=c,fontName=b,alignment=a,spaceAfter=3))
+          P=lambda t,s=9,c=GRAY:Paragraph(t,ParagraphStyle('x',fontSize=s,textColor=c,fontName='Helvetica',spaceAfter=4))
+          doc.build([
+            H('RAFAEL RODRIGUES'),
+            H('Senior Data Analyst · Power BI Developer · Analytics Engineer',10,LIGHT,'Helvetica',TA_CENTER),
+            P('+5522992418257 · Rafa_roberto2004@yahoo.com.br · linkedin.com/in/rafael-r-a3946a15',8,LIGHT),
+            Spacer(1,6),
+            H('CERTIFICATIONS & EDUCATION',10),
+            P('Microsoft PL-300 Power BI Data Analyst · Tableau Desktop Specialist · MBA IBMEC · Six Sigma Green Belt'),
+            Spacer(1,4),
+            H('KEY ACHIEVEMENTS',10),
+            P('• USD 9M+ operational savings at TIM/OI via BI automation'),
+            P('• 70% query latency reduction at Keyrus via Azure Synapse optimization'),
+            P('• 200+ business users served with self-service Power BI at Dataex'),
+            P('• 500M+ records/month processed in production pipelines'),
+            Spacer(1,4),
+            H('TECHNICAL SKILLS',10),
+            P('Power BI (DAX · Power Query · RLS · Tabular Editor · Deployment Pipelines)'),
+            P('Tableau · Looker · SQL · Python (pandas, dbt) · Azure Synapse · BigQuery · Snowflake · Databricks · Airflow'),
+            Spacer(1,4),
+            H('EXPERIENCE',10),
+            P('Dataex — Senior Data Analyst (2022–Present)'),
+            P('Keyrus — BI Consultant (2019–2022) · Coca-Cola — Data Analyst (2018–2019) · TIM/OI — BI Analyst (2007–2017)'),
+          ])
+          print(f'CV: {os.path.getsize(cv):,} bytes')
+          "
+
+      - name: "1️⃣ Greenhouse — 60+ company boards"
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python3 .github/scripts/ai_adaptive_hunter_v7.py
+
+      - name: "2️⃣ Dice — ATS detect + Easy Apply"
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          DICE_EMAIL: ${{ secrets.DICE_EMAIL }}
+          DICE_PASSWORD: ${{ secrets.DICE_PASSWORD }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python3 .github/scripts/dice_autonomous_v2.py
+
+      - name: "3️⃣ LinkedIn — Easy Apply"
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          DICE_EMAIL: ${{ secrets.DICE_EMAIL }}
+          DICE_PASSWORD: ${{ secrets.DICE_PASSWORD }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python3 .github/scripts/linkedin_hunter.py
+
+      - name: "4️⃣ Indeed — 5 países"
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          DICE_EMAIL: ${{ secrets.DICE_EMAIL }}
+          DICE_PASSWORD: ${{ secrets.DICE_PASSWORD }}
+        run: python3 .github/scripts/indeed_apply.py
+
+      - name: "5️⃣ Wellfound — Startups"
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          DICE_EMAIL: ${{ secrets.DICE_EMAIL }}
+          DICE_PASSWORD: ${{ secrets.DICE_PASSWORD }}
+        run: python3 .github/scripts/wellfound_hunter.py
+
+      - name: "6️⃣ Email direto — WWR + RemoteOK + novos"
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python3 .github/scripts/production_hunter.py
+
+      - name: "7️⃣ Gupy Brasil"
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          DICE_EMAIL: ${{ secrets.DICE_EMAIL }}
+          DICE_PASSWORD: ${{ secrets.DICE_PASSWORD }}
+        run: python3 .github/scripts/brasil_hunter.py
+
+      - name: Commit resultados
+        run: |
+          git config user.name "Master Hunter Bot"
+          git config user.email "tafita81@gmail.com"
+          git add -A 2>/dev/null||true
+          git diff --cached --quiet||git commit -m "chore: master hunt $(date +%Y-%m-%d-%H%M) [skip ci]"
+          git push 2>/dev/null||true
