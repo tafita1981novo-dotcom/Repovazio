@@ -322,9 +322,9 @@ def apply_gh(ctx, job, cover):
                 try:
                     html_pg = pg.content()
                     import re as _re
-                    gh_link = _re.search(r'(https://boards\.greenhouse\.io/[^\s"'<>]+)', html_pg)
+                    gh_link = _re.search(r'https://boards[.]greenhouse[.]io/[^\s"\'<>]+', html_pg)
                     if gh_link:
-                        gh_url = gh_link.group(1)
+                        gh_url = gh_link.group(0)
                         pg.goto(gh_url, timeout=12000)
                         pg.wait_for_load_state("domcontentloaded", timeout=8000)
                         time.sleep(1)
