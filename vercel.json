@@ -52,6 +52,14 @@
     {
       "source": "/gravia",
       "destination": "/public/gravia.html"
+    },
+    {
+      "source": "/dice-setup",
+      "destination": "/public/dice-setup.html"
+    },
+    {
+      "source": "/dice-token",
+      "destination": "/public/dice-token.html"
     }
   ],
   "headers": [
