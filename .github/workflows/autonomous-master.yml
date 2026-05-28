@@ -1,0 +1,71 @@
+name: 🌍 Autonomous Master Hunter
+on:
+  schedule:
+    - cron: '0 9 * * *'
+    - cron: '0 14 * * *'
+    - cron: '0 20 * * *'
+  workflow_dispatch:
+
+jobs:
+  hunt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup
+        run: |
+          pip install playwright requests reportlab --break-system-packages -q
+          python -m playwright install chromium
+          python -m playwright install-deps chromium
+
+      - name: Build CV
+        run: |
+          python3 -c "
+          import os; cv='.github/assets/rafael_cv.pdf'
+          os.makedirs('.github/assets',exist_ok=True)
+          if os.path.exists(cv) and os.path.getsize(cv)>5000: print('CV OK'); exit()
+          from reportlab.lib.pagesizes import letter
+          from reportlab.platypus import SimpleDocTemplate,Paragraph,Spacer
+          from reportlab.lib.styles import ParagraphStyle
+          from reportlab.lib.colors import HexColor
+          from reportlab.lib.enums import TA_CENTER
+          from reportlab.lib.units import inch
+          NAVY=HexColor('#1F3864');GRAY=HexColor('#374151')
+          doc=SimpleDocTemplate(cv,pagesize=letter,topMargin=0.4*inch,bottomMargin=0.4*inch,leftMargin=0.55*inch,rightMargin=0.55*inch)
+          s=lambda **k:ParagraphStyle('x',**k)
+          doc.build([
+            Paragraph('RAFAEL RODRIGUES',s(fontSize=22,textColor=NAVY,fontName='Helvetica-Bold',alignment=1,spaceAfter=4)),
+            Paragraph('Senior Data Analyst · Power BI PL-300 · Tableau · Analytics Engineer',s(fontSize=10,textColor=GRAY,alignment=1,spaceAfter=3)),
+            Paragraph('+5522992418257 · Rafa_roberto2004@yahoo.com.br · linkedin.com/in/rafael-r-a3946a15',s(fontSize=8.5,textColor=GRAY,alignment=1,spaceAfter=8)),
+            Paragraph('KEY ACHIEVEMENTS',s(fontSize=10,textColor=NAVY,fontName='Helvetica-Bold',spaceAfter=4)),
+            Paragraph('• USD 9M+ operational savings via BI automation (TIM/OI)',s(fontSize=9,textColor=GRAY,spaceAfter=2)),
+            Paragraph('• 70% query latency reduction — Azure Synapse optimization (Keyrus)',s(fontSize=9,textColor=GRAY,spaceAfter=2)),
+            Paragraph('• 200+ business users served with self-service Power BI (Dataex)',s(fontSize=9,textColor=GRAY,spaceAfter=8)),
+            Paragraph('TECHNICAL SKILLS',s(fontSize=10,textColor=NAVY,fontName='Helvetica-Bold',spaceAfter=4)),
+            Paragraph('Power BI (DAX, PQuery, RLS, Tabular Editor) · Tableau · Looker · SQL · Python · Azure Synapse · BigQuery · Snowflake · Databricks · dbt · Airflow',s(fontSize=9,textColor=GRAY,spaceAfter=8)),
+            Paragraph('EXPERIENCE',s(fontSize=10,textColor=NAVY,fontName='Helvetica-Bold',spaceAfter=4)),
+            Paragraph('Dataex (2022–present) · Keyrus (2019–2022) · Coca-Cola (2018–2019) · TIM/OI (2007–2017)',s(fontSize=9,textColor=GRAY)),
+          ])
+          print(f'CV: {os.path.getsize(cv):,}')
+          "
+
+      - name: "🌍 Autonomous Hunt — All Platforms"
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          DICE_EMAIL: ${{ secrets.DICE_EMAIL }}
+          DICE_PASSWORD: ${{ secrets.DICE_PASSWORD }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python3 .github/scripts/master_hunter_v3.py
+
+      - name: Commit
+        run: |
+          git config user.name "Hunter Bot"
+          git config user.email "tafita81@gmail.com"
+          git add -A 2>/dev/null||true
+          git diff --cached --quiet||git commit -m "chore: hunt $(date +%Y-%m-%d-%H%M) [skip ci]"
+          git push 2>/dev/null||true
