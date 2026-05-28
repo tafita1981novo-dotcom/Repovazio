@@ -1,0 +1,39 @@
+name: "Deploy Homepage Vercel (auto-retry horario)"
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "15 * * * *"
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Deps
+        run: pip install requests --break-system-packages -q
+      - name: Deploy para Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          python3 - <<'PYEOF'
+          import base64, json, os, sys, requests
+          with open("public/index.html", "rb") as f:
+              b64 = base64.b64encode(f.read()).decode()
+          r = requests.post("https://api.vercel.com/v13/deployments",
+              headers={"Authorization": "Bearer " + os.getenv("VERCEL_TOKEN", ""), "Content-Type": "application/json"},
+              data=json.dumps({"name": "psicologia-doc", "target": "production",
+                  "projectSettings": {"framework": None, "devCommand": None, "buildCommand": None, "outputDirectory": None, "installCommand": None},
+                  "files": [{"file": "index.html", "data": b64, "encoding": "base64"}]}),
+              timeout=60)
+          print("Vercel status:", r.status_code)
+          if r.status_code in (200, 201):
+              print("DEPLOYED! URL:", r.json().get("url", ""))
+          elif r.status_code == 402:
+              print("QUOTA 402: retry automatico no proximo cron")
+              sys.exit(0)
+          else:
+              print("ERRO:", r.text[:300]); sys.exit(1)
+          PYEOF
