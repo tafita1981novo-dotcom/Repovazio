@@ -181,8 +181,7 @@ def run():
                "Neurociencia do habito: como mudar comportamentos",
                "Apego evitativo: quando aproximar-se parece perigoso",
                "Burnout: o que acontece no sistema nervoso"]
-    print(f"
-[2/4] Gerando {len(topicos)} scripts com multi-agente...")
+    print(f"\n[2/4] Gerando {len(topicos)} scripts com multi-agente...")
     with ThreadPoolExecutor(max_workers=3) as ex:
         futures = [ex.submit(gerar_script_multiagente, t) for t in topicos]
         for f in as_completed(futures):
@@ -192,8 +191,7 @@ def run():
                 print(f"  Script: {s['topico'][:40]} [{s['agente']}]")
 
     # 3. Gerar 10 combinacoes quânticas
-    print(f"
-[3/4] Gerando 10 combinacoes quanticas...")
+    print(f"\n[3/4] Gerando 10 combinacoes quanticas...")
     with ThreadPoolExecutor(max_workers=3) as ex:
         futures = [ex.submit(gerar_combinacao_quantica) for _ in range(10)]
         for f in as_completed(futures):
@@ -210,13 +208,11 @@ def run():
                      headers={**sbh(),"Prefer":"count=exact"},timeout=5)
     scripts = r3.headers.get("Content-Range","?").split("/")[-1]
 
-    print(f"
-[4/4] STATUS CEREBRO QUANTICO:")
+    print(f"\n[4/4] STATUS CEREBRO QUANTICO:")
     print(f"  APIs totais:        {total}")
     print(f"  Combinacoes salvas: {combos}")
     print(f"  Scripts prontos:    {scripts}")
-    print(f"
-Cerebro funcionando. Proxima rodada: agendada automaticamente.")
+    print(f"\nCerebro funcionando. Proxima rodada: agendada automaticamente.")
 
 if __name__ == "__main__":
     run()
