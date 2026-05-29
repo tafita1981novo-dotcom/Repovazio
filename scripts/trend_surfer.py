@@ -79,8 +79,7 @@ def run():
                               "status": "urgente_publicar",
                               "data_geracao": datetime.now().isoformat()},
                         timeout=10)
-    print("
-  Trend surfer ativo — roda a cada 2h via GitHub Action")
+    print("\n  Trend surfer ativo — roda a cada 2h via GitHub Action")
 
 if __name__ == "__main__":
     run()
