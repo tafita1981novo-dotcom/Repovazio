@@ -39,8 +39,7 @@ def buscar_noticias_trending(keyword: str, idioma: str = "pt") -> list:
 def gerar_video_trending(keyword: str, noticias: list) -> dict:
     if not GROQ_KEY: return {}
     
-    contexto = "
-".join([f"- {n.get('title','')}" for n in noticias[:3]])
+    contexto = "\n".join([f"- {n.get('title','')}" for n in noticias[:3]])
     
     r = requests.post("https://api.groq.com/openai/v1/chat/completions",
         headers={"Authorization": f"Bearer {GROQ_KEY}", "Content-Type": "application/json"},
