@@ -162,8 +162,7 @@ def run():
     # 1. Descoberta paralela de APIs (5 categorias ao mesmo tempo)
     cats = ["Neuroscience","Music Streaming","Podcast Distribution",
             "Content Creator Tools","AI Audio Generation"]
-    print(f"
-[1/4] Descobrindo APIs em {len(cats)} categorias...")
+    print(f"\n[1/4] Descobrindo APIs em {len(cats)} categorias...")
     total_apis = 0
     with ThreadPoolExecutor(max_workers=3) as ex:
         futures = {ex.submit(descobrir_apis_com_ia, c): c for c in cats}
