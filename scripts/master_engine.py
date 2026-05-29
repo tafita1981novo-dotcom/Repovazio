@@ -98,29 +98,25 @@ def run(modo="status"):
     print("="*60)
     
     if modo == "status":
-        print("
-Sistemas configurados:")
+        print("\nSistemas configurados:")
         for script, nome, prio, mercados in sorted(SISTEMAS, key=lambda x: x[2]):
             existe = "✅" if os.path.exists(script) else "⚠️ "
             print(f"  [{prio}] {existe} {nome:30s} → {','.join(mercados)}")
         
         receita = status_receita()
         if receita:
-            print(f"
-Receita registrada:")
+            print(f"\nReceita registrada:")
             for r in receita:
                 print(f"  {r.get('fonte','?'):20s}: ${r.get('receita_usd',0):.2f} USD")
         
-        print(f"
-Dashboard: repovazio.vercel.app/cerebro.html")
+        print(f"\nDashboard: repovazio.vercel.app/cerebro.html")
         print(f"GitHub Actions: 14 workflows ativos")
         print(f"APIs no banco: 1780+ (crescendo para 40K)")
         
     elif modo == "run_all":
         resultados = []
         for script, nome, prio, mercados in SISTEMAS:
-            print(f"
-▶ {nome}...")
+            print(f"\n▶ {nome}...")
             r = run_sistema(script, nome)
             resultados.append(r)
             status = "✅" if r["status"] == "ok" else "⚠️"
