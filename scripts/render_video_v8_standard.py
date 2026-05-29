@@ -67,8 +67,7 @@ def render_video(row):
     script_txt = row.get("script", titulo)
     style = row.get("video_style", "animated_slides")
     
-    print(f"
-  Renderizando: [{vid_id}] {titulo[:50]}")
+    print(f"\n  Renderizando: [{vid_id}] {titulo[:50]}")
     
     # Gerar prompts de imagem via Groq
     prompts = []
