@@ -99,7 +99,7 @@ def expandir_spec(api_name, spec_url, cat, cats, max_endpoints=200):
                 op_tags  = op.get("tags",cats[:2])[:3]
                 endpoint = f"{base_url}{path}" if base_url else spec_url.split("/openapi")[0] + path
                 
-                name = op_id or f"{api_title} {method.upper()} {path.split("/")[-1]}"[:100]
+                name = op_id or f"{api_title} {method.upper()} {path.split('/')[-1]}"[:100]
                 desc = op_desc or f"{method.upper()} {path} — {api_title}"[:250]
                 
                 # Tags combinadas
