@@ -187,7 +187,7 @@ async function callModel(modelStr:string,messages:any[],tools:any,sid:string,uid
   if(modelStr.startsWith('groq:')){
     const m=modelStr.replace('groq:','');
     if(!sec.GROQ_API_KEY)throw new Error('GROQ_API_KEY nao configurado');
-    const cleanMsgs=messages.map((msg:any)=>{if(Array.isArray(msg.content))return{...msg,content:msg.content.filter((c:any)=>c.type==='text').map((c:any)=>c.text).join(' ')||'ok'};return msg;});
+    const _VIS=m.includes('scout')||m.includes('maverick')||m.includes('vision');const cleanMsgs=messages.map((msg:any)=>{if(Array.isArray(msg.content)){if(_VIS)return msg;return{...msg,content:msg.content.filter((c:any)=>c.type==='text').map((c:any)=>c.text).join(' ')||'ok'};}return msg;});
     const ok=GROQ_OK.includes(m);
     const body:any={model:m,messages:cleanMsgs,max_tokens:2000,temperature:0.4};
     if(tools&&ok){body.tools=tools;body.tool_choice='auto';}
