@@ -44,8 +44,7 @@ const CHAIN=[
   'groq:llama-3.3-70b-versatile',
   // 6. Groq Llama 4 Scout (alternative)
   'groq:meta-llama/llama-4-scout-17b-16e-instruct',
-  // 7. OpenAI gpt-4o-mini (LAST RESORT - paid)
-  'gpt-4o-mini',
+  // (OpenAI REMOVIDO -- 100% gratis, zero fallback pago)
 ];
 function chain(pref:string){return[pref,...CHAIN.filter(m=>m!==pref)];}
 let _S:Record<string,string>|null=null;
@@ -286,7 +285,7 @@ Deno.serve(async(req:Request)=>{
       }catch(e:any){return new Response(JSON.stringify({reply:'ERRO OAuth: '+e.message}),{headers});}
     }
     // DEFAULT changed: Nvidia DeepSeek V4 Pro instead of Groq
-    const modelStr=body.model||'nvidia:deepseek-ai/deepseek-v4-pro';
+    const modelStr=body.model||'groq:llama-3.3-70b-versatile';
     const userMsgs=Array.isArray(body.messages)?body.messages:[];
     const modelDisplay=
       modelStr.startsWith('nvidia:')?`Nvidia/${modelStr.replace('nvidia:','')}`:
