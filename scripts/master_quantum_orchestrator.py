@@ -131,7 +131,7 @@ def gerar_combinacao_quantica():
               "Invente 1 produto/sistema UNICO que usa TODAS elas para gerar "
               "renda passiva sem ninguem precisar comprar (AdSense, streaming royalties, "
               "KENP pages, Content ID). "
-              "JSON: {"produto","mecanismo","receita_mes_usd","prazo_dias"}")
+              'JSON: {"produto","mecanismo","receita_mes_usd","prazo_dias"}')
     resultado = call_llm("groq_llama", prompt, 400)
     if not resultado: return
     try:
