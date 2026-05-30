@@ -725,8 +725,7 @@ export default function Chat(){
       return;
     }
     const reader=new FileReader();
-    reader.onload=ev=>setFile({name:f.name,type:f.type,data:ev.target.result,
-      preview:isImg?ev.target.result:null,size:f.size});
+    reader.onload=ev=>{const _res=ev.target.result;if(isImg){const _im=new Image();_im.onload=()=>{const _max=1280;let _w=_im.width,_h=_im.height;if(_w>_max||_h>_max){const _s=Math.min(_max/_w,_max/_h);_w=Math.round(_w*_s);_h=Math.round(_h*_s);}const _cv=document.createElement('canvas');_cv.width=_w;_cv.height=_h;_cv.getContext('2d').drawImage(_im,0,0,_w,_h);const _small=_cv.toDataURL('image/jpeg',0.82);setFile({name:f.name,type:'image/jpeg',data:_small,preview:_small,size:_small.length});};_im.onerror=()=>setFile({name:f.name,type:f.type,data:_res,preview:_res,size:f.size});_im.src=_res;}else{setFile({name:f.name,type:f.type,data:_res,preview:null,size:f.size});}};
     if(isImg)reader.readAsDataURL(f); else reader.readAsText(f).catch(()=>reader.readAsDataURL(f));
   }
 
