@@ -64,7 +64,7 @@ def descobrir_apis_com_ia(categoria):
               "para criacao de conteudo psicologia. "
               "Para cada API: nome, endpoint URL, auth_type (none/apiKey/OAuth), "
               "descricao curta em portugues. "
-              "Formato JSON array: [{"name","endpoint","auth_type","descricao"}]. "
+              'Formato JSON array: [{"name","endpoint","auth_type","descricao"}]. '
               "Apenas JSON, sem explicacao.")
     agente = random.choice(["groq_llama","groq_gemma","nvidia_deep"])
     resultado = call_llm(agente, prompt, 1000)
