@@ -896,7 +896,7 @@ export default function Chat(){
             <textarea ref={taRef} className="it" placeholder={`Mensagem para Daniela...${useQwen?' [Qwen 3]':''}`} value={input} onChange={e=>setInput(e.target.value)} onKeyDown={handleKey} rows={1}/>
             {loading?<button className="sb stop" onClick={stop}>⏹️</button>:<button className={`sb${input.trim()||file?' active':''}`} onClick={send} disabled={!input.trim()&&!file}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>}
           </div>
-          <div className="in">Daniela V14 · Groq{useQwen?' + Qwen3':''} · Giphy · Browser · Skills · MCP · 24/7</div>
+          <div className="in">Daniela V15 ✅ · Groq{useQwen?' + Qwen3':''} · Giphy · Browser · Skills · MCP · 24/7</div>
         </div>
       </main>
 
