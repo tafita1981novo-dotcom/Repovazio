@@ -60,16 +60,20 @@ def upload_to_storage(file_path, vid_id):
         print(f"  Storage erro: {e}")
     return None
 
-def get_image_pollinations(prompt, seed, w=576, h=1024):
-    """Busca imagem via Pollinations FLUX — grátis, ilimitado"""
+def get_image_pollinations(prompt, seed, w=576, h=1024, retries=3):
+    """Busca imagem via Pollinations FLUX — com retry automático"""
     prompt_enc = requests.utils.quote(prompt[:500])
-    url = f"https://image.pollinations.ai/prompt/{prompt_enc}?model=flux&width={w}&height={h}&seed={seed}&nologo=true"
-    try:
-        r = requests.get(url, timeout=60)
-        if r.status_code == 200 and len(r.content) > 10000:
-            return r.content
-    except Exception as e:
-        print(f"  Pollinations erro: {e}")
+    url = f"https://image.pollinations.ai/prompt/{prompt_enc}?model=flux&width={w}&height={h}&seed={seed}&nologo=true&nofeed=true"
+    for attempt in range(retries):
+        try:
+            r = requests.get(url, timeout=90)
+            if r.status_code == 200 and len(r.content) > 10000:
+                return r.content
+            print(f"  Pollinations tentativa {attempt+1}/{retries}: status {r.status_code}")
+        except Exception as e:
+            print(f"  Pollinations tentativa {attempt+1}/{retries}: {e}")
+        if attempt < retries-1:
+            time.sleep(15)
     return None
 
 def ken_burns(img_path, out_path, duration=4, zoom=4):
