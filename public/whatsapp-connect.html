@@ -3,303 +3,101 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="refresh" content="15">
 <title>WhatsApp Connect — repovazio</title>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  font-family: 'Segoe UI', sans-serif;
-  background: #0a0a0f;
-  color: #e0e0e0;
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-}
-.card {
-  background: #111118;
-  border: 1px solid #2a2a3a;
-  border-radius: 16px;
-  padding: 40px;
-  width: 100%;
-  max-width: 460px;
-  text-align: center;
-  box-shadow: 0 8px 40px rgba(0,0,0,0.6);
-}
-.logo { font-size: 40px; margin-bottom: 16px; }
-h1 { font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 6px; }
-.sub { font-size: 13px; color: #666; margin-bottom: 32px; }
-
-.status-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 20px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 700;
-  margin-bottom: 24px;
-}
-.status-badge.connecting { background: rgba(251,191,36,0.12); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }
-.status-badge.connected  { background: rgba(16,185,129,0.12); color: #10b981; border: 1px solid rgba(16,185,129,0.3); }
-.status-badge.error      { background: rgba(239,68,68,0.12);  color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
-.dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: currentColor;
-  animation: pulse 1.5s infinite;
-}
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-
-#qrSection { display: none; }
-#qrSection.active { display: block; }
-#qrImg {
-  width: 240px; height: 240px;
-  border: 3px solid #7c3aed;
-  border-radius: 12px;
-  margin: 0 auto 16px;
-  display: block;
-  background: #1a1a25;
-}
-.qr-hint { font-size: 12px; color: #666; line-height: 1.6; margin-bottom: 20px; }
-.qr-hint strong { color: #aaa; }
-
-#connectedSection { display: none; }
-#connectedSection.active { display: block; }
-.connected-info {
-  background: #0f0f1a;
-  border: 1px solid #1e1e30;
-  border-radius: 10px;
-  padding: 16px;
-  margin-bottom: 20px;
-  font-size: 14px;
-  color: #888;
-}
-.connected-info strong { color: #ddd; }
-
-.btn {
-  padding: 12px 28px;
-  border: none;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: opacity 0.2s;
-}
-.btn-primary { background: linear-gradient(135deg, #7c3aed, #2563eb); color: #fff; }
-.btn-danger  { background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); margin-left: 8px; }
-.btn:hover { opacity: 0.85; }
-
-.log {
-  margin-top: 20px;
-  background: #0a0a0f;
-  border: 1px solid #1a1a25;
-  border-radius: 8px;
-  padding: 12px;
-  font-size: 11px;
-  color: #555;
-  text-align: left;
-  max-height: 140px;
-  overflow-y: auto;
-  font-family: monospace;
-}
-.log-entry { margin-bottom: 3px; }
-.log-entry.ok   { color: #10b981; }
-.log-entry.warn { color: #fbbf24; }
-.log-entry.err  { color: #ef4444; }
-
-.stats {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-top: 20px;
-}
-.stat-box {
-  background: #0f0f1a;
-  border: 1px solid #1e1e30;
-  border-radius: 8px;
-  padding: 14px;
-  text-align: center;
-}
-.stat-num  { font-size: 24px; font-weight: 800; color: #7c3aed; }
-.stat-label { font-size: 11px; color: #666; margin-top: 2px; }
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:'Segoe UI',sans-serif; background:#0a0a0f; color:#e0e0e0;
+  min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+.card { background:#111118; border:1px solid #2a2a3a; border-radius:16px;
+  padding:40px; width:100%; max-width:460px; text-align:center; box-shadow:0 8px 40px rgba(0,0,0,.6); }
+.logo { font-size:40px; margin-bottom:16px; }
+h1 { font-size:22px; font-weight:700; color:#fff; margin-bottom:6px; }
+.sub { font-size:13px; color:#666; margin-bottom:28px; }
+.badge { display:inline-flex; align-items:center; gap:8px; padding:8px 20px;
+  border-radius:999px; font-size:13px; font-weight:700; margin-bottom:24px; }
+.badge.wait { background:rgba(251,191,36,.12); color:#fbbf24; border:1px solid rgba(251,191,36,.3); }
+.badge.ok   { background:rgba(16,185,129,.12); color:#10b981; border:1px solid rgba(16,185,129,.3); }
+.badge.qr   { background:rgba(124,58,237,.12); color:#a78bfa; border:1px solid rgba(124,58,237,.3); }
+.dot { width:8px;height:8px;border-radius:50%;background:currentColor;animation:pulse 1.5s infinite; }
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+#qrImg { width:256px;height:256px;border:3px solid #7c3aed;border-radius:12px;
+  margin:0 auto 12px;display:block;background:#1a1a25; }
+.hint  { font-size:12px;color:#666;line-height:1.6;margin-bottom:16px; }
+.hint strong { color:#aaa; }
+.info  { background:#0f0f1a;border:1px solid #1e1e30;border-radius:10px;
+  padding:14px;margin-bottom:16px;font-size:14px;color:#888; }
+.info strong { color:#ddd; }
+.refresh { font-size:11px; color:#444; margin-top:16px; }
+.actions a { display:inline-block;margin:4px;padding:8px 16px;background:#1a1a25;
+  border:1px solid #2a2a3a;border-radius:8px;color:#888;font-size:12px;text-decoration:none; }
+.actions a:hover { color:#ddd; }
 </style>
 </head>
 <body>
 <div class="card">
   <div class="logo">🤖</div>
-  <h1>WhatsApp → Claude Knowledge</h1>
-  <p class="sub">Conecte seu WhatsApp para capturar mensagens sobre Claude em tempo real</p>
-
-  <div class="status-badge connecting" id="statusBadge">
-    <span class="dot"></span>
-    <span id="statusText">Verificando conexão…</span>
-  </div>
-
-  <!-- QR Code section -->
-  <div id="qrSection">
+  <h1>WhatsApp Claude Knowledge</h1>
+  <p class="sub">Captura mensagens sobre Claude automaticamente via GitHub Actions</p>
+  <div class="badge wait" id="badge"><span class="dot"></span><span id="statusTxt">Carregando…</span></div>
+  <div id="qrSection" style="display:none">
     <img id="qrImg" src="" alt="QR Code">
-    <p class="qr-hint">
-      No WhatsApp: <strong>⋮ → Aparelhos conectados → Conectar aparelho</strong><br>
-      Escaneie o QR code acima
-    </p>
-    <button class="btn btn-primary" onclick="refreshQR()">🔄 Atualizar QR</button>
+    <p class="hint">No WhatsApp: <strong>⋮ → Aparelhos conectados → Conectar aparelho</strong></p>
   </div>
-
-  <!-- Connected section -->
-  <div id="connectedSection">
-    <div class="connected-info">
-      📱 Conectado como <strong id="connectedName">—</strong><br>
-      <span id="connectedNumber" style="font-size:12px;color:#555"></span>
-    </div>
-    <button class="btn btn-primary" onclick="checkStats()">📊 Ver estatísticas</button>
-    <button class="btn btn-danger" onclick="disconnect()">Desconectar</button>
-
-    <div class="stats" id="statsBox" style="display:none">
-      <div class="stat-box">
-        <div class="stat-num" id="statTotal">—</div>
-        <div class="stat-label">Itens capturados</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-num" id="statYT">—</div>
-        <div class="stat-label">Vídeos YT</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-num" id="statIG">—</div>
-        <div class="stat-label">Posts IG</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-num" id="statAvg">—</div>
-        <div class="stat-label">Relevância média</div>
-      </div>
-    </div>
+  <div class="info" id="infoBox" style="display:none">
+    📱 Conectado como <strong id="phoneName"></strong><br>
+    <span id="phoneNum" style="font-size:12px;color:#555"></span>
   </div>
-
-  <div class="log" id="logBox"></div>
+  <div class="actions">
+    <a href="https://github.com/tafita81/Repovazio/actions" target="_blank">🔄 Ver Actions</a>
+    <a href="https://supabase.com/dashboard/project/tpjvalzwkqwttvmszvie/editor" target="_blank">🗄️ Supabase</a>
+  </div>
+  <p class="refresh">Atualiza automaticamente a cada 15s</p>
 </div>
 
 <script>
-// ── Config ──────────────────────────────────────────────────────────────────
-// Substitua pelos seus valores
-const EVOLUTION_URL    = 'https://SEU_APP.up.railway.app';
-const EVOLUTION_APIKEY = 'SUA_API_KEY';
-const INSTANCE_NAME    = 'rafael';
-const SUPABASE_URL     = 'https://tpjvalzwkqwttvmszvie.supabase.co';
-const SUPABASE_ANON    = 'SEU_ANON_KEY';
+const SB_URL  = 'https://tpjvalzwkqwttvmszvie.supabase.co';
+const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwanZhbHp3a3F3dHR2bXN6dmllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMzUyOTMsImV4cCI6MjA5MTYxMTI5M30.UEgUo0Mw15ihQZykLAY5QApRzgTXkfIewZFzIgwao3Q';
 
-const HEADERS = { 'Content-Type': 'application/json', 'apikey': EVOLUTION_APIKEY };
-
-// ── Log helper ───────────────────────────────────────────────────────────────
-function log(msg, type = '') {
-  const box = document.getElementById('logBox');
-  const d = document.createElement('div');
-  d.className = `log-entry ${type}`;
-  d.textContent = `[${new Date().toLocaleTimeString('pt-BR')}] ${msg}`;
-  box.prepend(d);
-}
-
-// ── Status badge ─────────────────────────────────────────────────────────────
-function setStatus(state, text) {
-  const badge = document.getElementById('statusBadge');
-  const label = document.getElementById('statusText');
-  badge.className = `status-badge ${state}`;
-  label.textContent = text;
-}
-
-// ── Check connection status ──────────────────────────────────────────────────
-async function checkStatus() {
+async function load() {
   try {
-    const res = await fetch(`${EVOLUTION_URL}/instance/fetchInstances`, { headers: HEADERS });
-    const data = await res.json();
-    const inst = Array.isArray(data)
-      ? data.find(i => i.name === INSTANCE_NAME || i.instance?.instanceName === INSTANCE_NAME)
-      : data;
+    const r = await fetch(`${SB_URL}/rest/v1/wa_status?id=eq.singleton`, {
+      headers: { apikey: SB_ANON, Authorization: `Bearer ${SB_ANON}` }
+    });
+    const rows = await r.json();
+    const s = rows[0];
+    if (!s) return;
 
-    const state = inst?.instance?.state || inst?.state || 'unknown';
-    log(`Estado: ${state}`);
+    const badge = document.getElementById('badge');
+    const txt   = document.getElementById('statusTxt');
+    const qrSec = document.getElementById('qrSection');
+    const qrImg = document.getElementById('qrImg');
+    const info  = document.getElementById('infoBox');
 
-    if (state === 'open' || state === 'connected') {
-      const name   = inst?.instance?.profileName  || inst?.profileName  || '';
-      const number = inst?.instance?.wuid         || inst?.wuid         || '';
-      setStatus('connected', '✅ Conectado — capturando mensagens');
-      document.getElementById('qrSection').classList.remove('active');
-      document.getElementById('connectedSection').classList.add('active');
-      document.getElementById('connectedName').textContent   = name;
-      document.getElementById('connectedNumber').textContent = number;
-      log(`Conectado como ${name}`, 'ok');
+    if (s.connected) {
+      badge.className = 'badge ok';
+      txt.textContent = '✅ Conectado — capturando mensagens';
+      qrSec.style.display = 'none';
+      info.style.display  = 'block';
+      document.getElementById('phoneName').textContent = s.phone_name || '';
+      document.getElementById('phoneNum').textContent  = s.phone_num  || '';
+    } else if (s.qr_base64) {
+      badge.className = 'badge qr';
+      txt.textContent = '📱 Escaneie o QR Code';
+      qrSec.style.display = 'block';
+      info.style.display  = 'none';
+      qrImg.src = s.qr_base64;
     } else {
-      setStatus('connecting', '⏳ Aguardando conexão — escaneie o QR');
-      document.getElementById('qrSection').classList.add('active');
-      document.getElementById('connectedSection').classList.remove('active');
-      await fetchQR();
+      badge.className = 'badge wait';
+      txt.textContent = '⏳ Aguardando GitHub Actions iniciar…';
+      qrSec.style.display = 'none';
+      info.style.display  = 'none';
     }
-  } catch (e) {
-    setStatus('error', '❌ Erro ao conectar no Evolution API');
-    log(`Erro: ${e.message}`, 'err');
+  } catch(e) {
+    document.getElementById('statusTxt').textContent = 'Erro ao carregar status';
   }
 }
-
-// ── Fetch QR Code ────────────────────────────────────────────────────────────
-async function fetchQR() {
-  try {
-    const res  = await fetch(`${EVOLUTION_URL}/instance/connect/${INSTANCE_NAME}`, { headers: HEADERS });
-    const data = await res.json();
-    const b64  = data?.base64 || data?.qrcode?.base64 || data?.code;
-    if (b64) {
-      document.getElementById('qrImg').src = b64.startsWith('data:') ? b64 : `data:image/png;base64,${b64}`;
-      log('QR Code atualizado', 'ok');
-    } else {
-      log('Sem QR Code disponível ainda', 'warn');
-    }
-  } catch (e) {
-    log(`Erro QR: ${e.message}`, 'err');
-  }
-}
-
-function refreshQR() { fetchQR(); }
-
-// ── Stats do Supabase ─────────────────────────────────────────────────────────
-async function checkStats() {
-  try {
-    const headers = { apikey: SUPABASE_ANON, Authorization: `Bearer ${SUPABASE_ANON}` };
-    const [total, yt, ig, avg] = await Promise.all([
-      fetch(`${SUPABASE_URL}/rest/v1/claude_knowledge?select=count`, { headers }).then(r => r.json()),
-      fetch(`${SUPABASE_URL}/rest/v1/claude_knowledge?fonte=eq.youtube&select=count`, { headers }).then(r => r.json()),
-      fetch(`${SUPABASE_URL}/rest/v1/claude_knowledge?fonte=eq.instagram&select=count`, { headers }).then(r => r.json()),
-      fetch(`${SUPABASE_URL}/rest/v1/claude_knowledge?select=relevancia`, { headers }).then(r => r.json()),
-    ]);
-
-    document.getElementById('statTotal').textContent = total[0]?.count ?? '—';
-    document.getElementById('statYT').textContent    = yt[0]?.count   ?? '—';
-    document.getElementById('statIG').textContent    = ig[0]?.count   ?? '—';
-
-    if (Array.isArray(avg) && avg.length > 0) {
-      const mean = (avg.reduce((s, r) => s + (r.relevancia || 0), 0) / avg.length).toFixed(1);
-      document.getElementById('statAvg').textContent = mean;
-    }
-
-    document.getElementById('statsBox').style.display = 'grid';
-    log('Stats atualizadas', 'ok');
-  } catch (e) {
-    log(`Erro stats: ${e.message}`, 'err');
-  }
-}
-
-// ── Disconnect ────────────────────────────────────────────────────────────────
-async function disconnect() {
-  if (!confirm('Desconectar WhatsApp?')) return;
-  try {
-    await fetch(`${EVOLUTION_URL}/instance/logout/${INSTANCE_NAME}`, { method: 'DELETE', headers: HEADERS });
-    log('Desconectado', 'warn');
-    checkStatus();
-  } catch (e) {
-    log(`Erro ao desconectar: ${e.message}`, 'err');
-  }
-}
-
-// ── Init: verifica status e polling ─────────────────────────────────────────
-checkStatus();
-setInterval(checkStatus, 30000); // verifica a cada 30s
+load();
 </script>
 </body>
 </html>
