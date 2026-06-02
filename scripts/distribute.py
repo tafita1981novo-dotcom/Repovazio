@@ -22,17 +22,6 @@ SBK = os.environ["SUPABASE_SERVICE_KEY"]
 H_SB = {"apikey": SBK, "Authorization": f"Bearer {SBK}"}
 H_SB_J = {**H_SB, "Content-Type": "application/json"}
 
-# Optional platform credentials
-YT_CLIENT_ID     = os.environ.get("YT_CLIENT_ID", "")
-YT_CLIENT_SECRET = os.environ.get("YT_CLIENT_SECRET", "")
-YT_REFRESH_TOKEN = os.environ.get("YT_REFRESH_TOKEN", "")
-IG_USER_ID       = os.environ.get("IG_USER_ID", "")
-IG_ACCESS_TOKEN  = os.environ.get("IG_ACCESS_TOKEN", "")
-TT_CLIENT_KEY    = os.environ.get("TT_CLIENT_KEY", "")
-TT_ACCESS_TOKEN  = os.environ.get("TT_ACCESS_TOKEN", "")
-PIN_ACCESS_TOKEN = os.environ.get("PIN_ACCESS_TOKEN", "")
-PIN_BOARD_ID     = os.environ.get("PIN_BOARD_ID", "")
-
 def log(*a): print(f"[{time.strftime('%H:%M:%S')}]", *a, flush=True)
 
 def http_json(url, method="GET", body=None, headers=None, timeout=180, raw_body=False):
@@ -62,13 +51,58 @@ def sb_patch(table, q, payload):
                        body=payload, headers=H_SB_J)
     if s not in (200, 204): raise RuntimeError(f"patch {table} {s}: {b[:200]}")
 
-# ─── YouTube ─────────────────────────────────────────────────────────────
+# ─── Ler credenciais do Supabase ia_cache (prioridade sobre env vars) ────────
+def _load_yt_creds_from_supabase():
+    """
+    Lê YT_CLIENT_ID, YT_CLIENT_SECRET e YT_REFRESH_TOKEN do Supabase ia_cache.
+    Prioridade sobre as env vars para permitir renovação via yt-oauth Edge Function.
+    """
+    try:
+        keys = ("secret:YT_CLIENT_ID", "secret:YT_CLIENT_SECRET", "secret:YT_REFRESH_TOKEN",
+                "secret:YT_CLIENT_ID", "secret:YT_CLIENT_SECRET", "secret:YT_REFRESH_TOKEN")
+        q = "cache_key=in.(secret:YT_CLIENT_ID,secret:YT_CLIENT_SECRET,secret:YT_REFRESH_TOKEN)&select=cache_key,value"
+        s, b, _ = http_json(f"{SBU}/rest/v1/ia_cache?{q}", headers=H_SB)
+        if s == 200:
+            creds = {}
+            for row in json.loads(b):
+                k = row["cache_key"].replace("secret:", "")
+                v = (row.get("value") or "").strip()
+                if v:
+                    creds[k] = v
+            if creds:
+                log(f"  [yt_creds] loaded from Supabase: {list(creds.keys())}")
+            return creds
+    except Exception as e:
+        log(f"  [yt_creds] Supabase read failed (using env vars): {e}")
+    return {}
+
+# ─── Optional platform credentials (env vars como fallback) ─────────────────
+_yt_creds_cache = {}
+def _get_yt(key: str) -> str:
+    global _yt_creds_cache
+    if not _yt_creds_cache:
+        _yt_creds_cache = _load_yt_creds_from_supabase()
+    return _yt_creds_cache.get(key) or os.environ.get(key, "")
+
+IG_USER_ID       = os.environ.get("IG_USER_ID", "")
+IG_ACCESS_TOKEN  = os.environ.get("IG_ACCESS_TOKEN", "")
+TT_CLIENT_KEY    = os.environ.get("TT_CLIENT_KEY", "")
+TT_ACCESS_TOKEN  = os.environ.get("TT_ACCESS_TOKEN", "")
+PIN_ACCESS_TOKEN = os.environ.get("PIN_ACCESS_TOKEN", "")
+PIN_BOARD_ID     = os.environ.get("PIN_BOARD_ID", "")
+
+# ─── YouTube ─────────────────────────────────────────────────────────────────
 def yt_get_access_token():
-    if not (YT_CLIENT_ID and YT_CLIENT_SECRET and YT_REFRESH_TOKEN):
+    client_id     = _get_yt("YT_CLIENT_ID")
+    client_secret = _get_yt("YT_CLIENT_SECRET")
+    refresh_token = _get_yt("YT_REFRESH_TOKEN")
+
+    if not (client_id and client_secret and refresh_token):
+        log(f"  [yt] missing creds: id={bool(client_id)} secret={bool(client_secret)} refresh={bool(refresh_token)}")
         return None
     body = urllib.parse.urlencode({
-        "client_id": YT_CLIENT_ID, "client_secret": YT_CLIENT_SECRET,
-        "refresh_token": YT_REFRESH_TOKEN, "grant_type": "refresh_token",
+        "client_id": client_id, "client_secret": client_secret,
+        "refresh_token": refresh_token, "grant_type": "refresh_token",
     }).encode()
     s, raw, _ = http_json("https://oauth2.googleapis.com/token", method="POST",
         body=body, raw_body=True,
@@ -118,11 +152,10 @@ def yt_publish(mp4_url, title, description, tags, is_shorts=False):
     vid = rj.get("id")
     return f"https://youtu.be/{vid}", None
 
-# ─── Instagram Reels ─────────────────────────────────────────────────────
+# ─── Instagram Reels ──────────────────────────────────────────────────────────
 def ig_publish(mp4_url, caption):
     if not (IG_USER_ID and IG_ACCESS_TOKEN):
         return None, "IG_CREDENTIALS_MISSING"
-    # Step 1: create container
     body = urllib.parse.urlencode({
         "media_type": "REELS",
         "video_url": mp4_url,
@@ -135,7 +168,6 @@ def ig_publish(mp4_url, caption):
         headers={"Content-Type": "application/x-www-form-urlencoded"})
     if s1 != 200: return None, f"IG_CONTAINER_FAIL_{s1}_{raw1[:200].decode(errors='ignore')}"
     cid = json.loads(raw1)["id"]
-    # Step 2: poll until FINISHED
     for _ in range(30):
         time.sleep(10)
         s, raw, _ = http_json(
@@ -143,7 +175,6 @@ def ig_publish(mp4_url, caption):
             headers={})
         if s == 200 and json.loads(raw).get("status_code") == "FINISHED":
             break
-    # Step 3: publish
     body = urllib.parse.urlencode({"creation_id": cid, "access_token": IG_ACCESS_TOKEN}).encode()
     s3, raw3, _ = http_json(f"https://graph.facebook.com/v21.0/{IG_USER_ID}/media_publish",
         method="POST", body=body, raw_body=True,
@@ -152,7 +183,7 @@ def ig_publish(mp4_url, caption):
     pub = json.loads(raw3)
     return f"https://instagram.com/reel/{pub.get('id')}", None
 
-# ─── TikTok ──────────────────────────────────────────────────────────────
+# ─── TikTok ───────────────────────────────────────────────────────────────────
 def tt_publish(mp4_url, title):
     if not TT_ACCESS_TOKEN:
         return None, "TT_CREDENTIALS_MISSING"
@@ -172,23 +203,13 @@ def tt_publish(mp4_url, title):
     pid = json.loads(raw)["data"]["publish_id"]
     return f"tiktok://publish/{pid}", None
 
-# ─── Pinterest ───────────────────────────────────────────────────────────
+# ─── Pinterest ────────────────────────────────────────────────────────────────
 def pin_publish(mp4_url, title, description, board_id):
     if not (PIN_ACCESS_TOKEN and (board_id or PIN_BOARD_ID)):
         return None, "PIN_CREDENTIALS_MISSING"
-    bid = board_id or PIN_BOARD_ID
-    body = {
-        "board_id": bid,
-        "title": title[:100],
-        "description": description[:500],
-        "media_source": {"source_type": "video_id", "media_id": ""},
-        "link": "https://repovazio.vercel.app",
-    }
-    # NOTE: Pinterest video pins require uploading first; this is simplified.
-    # Real flow: POST /v5/media → upload → poll → POST /v5/pins with media_id
     return None, "PIN_VIDEO_UPLOAD_FLOW_PENDING"
 
-# ─── Main ────────────────────────────────────────────────────────────────
+# ─── Main ─────────────────────────────────────────────────────────────────────
 PUBLISHERS = {
     "youtube_long":    lambda r: yt_publish(r["mp4_url"], r["youtube_title"] or r["title"], r["youtube_description"], r["youtube_tags"], is_shorts=False),
     "youtube_shorts":  lambda r: yt_publish(r["mp4_url"], r["youtube_title"] or r["title"], r["youtube_description"], r["youtube_tags"], is_shorts=True),
