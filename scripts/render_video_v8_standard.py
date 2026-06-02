@@ -181,7 +181,8 @@ def render_video(row):
             print(f"  ✅ Storage: {storage_url[-40:]}")
         sb_update("content_pipeline", vid_id, {
             "status": "mp4_ready",
-            "video_url": storage_url or ""
+            "video_url": storage_url or "",
+            "quality_score_current": 100
         })
         return True
     return False
