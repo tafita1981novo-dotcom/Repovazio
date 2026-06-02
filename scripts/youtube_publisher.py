@@ -18,7 +18,7 @@ CHANNEL = os.getenv("YOUTUBE_CHANNEL_ID","UCSH63tBfY6wEIdkC4u4zKdg")
 SBH     = {"apikey":SB_KEY,"Authorization":f"Bearer {SB_KEY}","Content-Type":"application/json"}
 
 # Ordem de publicação definida
-ORDEM_IDS = [683, 701, 682, 689, 684, 688]
+ORDEM_IDS = [683, 701, 682, 689, 684, 688, 685, 686, 687, 690, 691, 692, 693, 694, 695, 696, 700]
 
 def refresh_token():
     if not all([YT_ID, YT_SEC, YT_REF]): return None
@@ -160,7 +160,7 @@ def run():
             print(f"  #{ep_id}: já publicado → https://youtu.be/{yt_id}")
             continue
 
-        mp4 = video.get("mp4_url") or video.get("video_url")
+        mp4 = video.get("video_url") or video.get("mp4_url")
         if not mp4:
             print(f"  #{ep_id}: sem MP4 — status={status}")
             continue
@@ -183,7 +183,7 @@ def run():
         token = refresh_token() or token
 
         # Upload
-        vid_id = upload_youtube(token, title, desc, tags)
+        vid_id = upload_youtube(token, path, title, desc, tags)
         if not vid_id:
             continue
 
