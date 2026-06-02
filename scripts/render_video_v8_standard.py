@@ -38,6 +38,28 @@ def sb_update(table, id_, data):
     if r.status_code >= 400:
         print(f"  ⚠️ sb_update falhou {r.status_code}: {r.text[:120]}")
 
+def upload_to_storage(file_path, vid_id):
+    """Upload mp4 ao Supabase Storage, retorna URL pública"""
+    storage_path = f"renders/v{vid_id}.mp4"
+    url = f"{SB_URL}/storage/v1/object/videos/{storage_path}"
+    try:
+        with open(file_path, "rb") as f:
+            data = f.read()
+        r = requests.post(url,
+            headers={**SB_H, "Content-Type": "video/mp4", "x-upsert": "true"},
+            data=data, timeout=180)
+        if r.status_code in (200, 201):
+            return f"{SB_URL}/storage/v1/object/public/videos/{storage_path}"
+        r2 = requests.put(url,
+            headers={**SB_H, "Content-Type": "video/mp4"},
+            data=data, timeout=180)
+        if r2.status_code in (200, 201, 204):
+            return f"{SB_URL}/storage/v1/object/public/videos/{storage_path}"
+        print(f"  ⚠️ Storage falhou POST={r.status_code} PUT={r2.status_code}")
+    except Exception as e:
+        print(f"  Storage erro: {e}")
+    return None
+
 def get_image_pollinations(prompt, seed, w=576, h=1024):
     """Busca imagem via Pollinations FLUX — grátis, ilimitado"""
     prompt_enc = requests.utils.quote(prompt[:500])
@@ -154,7 +176,13 @@ def render_video(row):
     
     if final.exists() and final.stat().st_size > 10000:
         print(f"  ✅ {final.name} ({final.stat().st_size//1024}KB)")
-        sb_update("content_pipeline", vid_id, {"status": "mp4_ready", "video_url": str(final)})
+        storage_url = upload_to_storage(final, vid_id)
+        if storage_url:
+            print(f"  ✅ Storage: {storage_url[-40:]}")
+        sb_update("content_pipeline", vid_id, {
+            "status": "mp4_ready",
+            "video_url": storage_url or ""
+        })
         return True
     return False
 
