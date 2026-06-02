@@ -23,8 +23,20 @@ jobs:
       - name: Install Python deps
         run: pip install requests Pillow
 
-      - name: Check ffmpeg
-        run: ffmpeg -version | head -1
+      - name: Diagnose Supabase connection
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          echo "KEY length: ${#SUPABASE_SERVICE_KEY}"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "apikey: $SUPABASE_SERVICE_KEY" -H "Authorization: Bearer $SUPABASE_SERVICE_KEY" \
+            "$SUPABASE_URL/rest/v1/content_pipeline?status=eq.audio_ready&select=id&limit=1")
+          echo "Supabase status: $STATUS"
+          COUNT=$(curl -s -H "apikey: $SUPABASE_SERVICE_KEY" -H "Authorization: Bearer $SUPABASE_SERVICE_KEY" \
+            "$SUPABASE_URL/rest/v1/content_pipeline?status=eq.audio_ready&select=id" | python3 -c "import json,sys; d=json.load(sys.stdin); print(len(d) if isinstance(d,list) else d)")
+          echo "audio_ready rows: $COUNT"
+          ffmpeg -version | head -1
 
       - name: Render vídeos audio_ready
         env:
