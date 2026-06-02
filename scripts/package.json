@@ -1,7 +1,6 @@
 {
   "name": "wa-server",
   "version": "1.0.0",
-  "description": "WhatsApp Baileys server for GitHub Actions",
   "main": "wa-server.js",
   "dependencies": {
     "@whiskeysockets/baileys": "^6.7.18",
@@ -9,6 +8,7 @@
     "@supabase/supabase-js": "^2.45.0",
     "node-fetch": "^2.7.0",
     "qrcode": "^1.5.3",
-    "pino": "^9.0.0"
+    "pino": "^9.0.0",
+    "ws": "^8.18.0"
   }
 }
