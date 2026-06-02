@@ -147,7 +147,17 @@ def run():
         print("  Verificando: há vídeos prontos para publicar?")
 
     publicados = 0
-    for ep_id in ORDEM_IDS:
+
+    # Combina prioridade + todos mp4_ready não publicados
+    r_mp4 = requests.get(f"{SB_URL}/rest/v1/content_pipeline",
+        params={"status":"eq.mp4_ready","select":"id","limit":"20","order":"id.asc"},
+        headers=SBH, timeout=10)
+    extra_ids = [row["id"] for row in (r_mp4.json() if r_mp4.status_code==200 else [])
+                 if row["id"] not in ORDEM_IDS]
+    todos_ids = ORDEM_IDS + extra_ids
+    print(f"  Fila: {len(todos_ids)} vídeos ({len(ORDEM_IDS)} prioridade + {len(extra_ids)} extra)")
+
+    for ep_id in todos_ids:
         video = buscar_video(ep_id)
         if not video:
             print(f"  #{ep_id}: não encontrado no Supabase")
