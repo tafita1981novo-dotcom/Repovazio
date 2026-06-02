@@ -167,3 +167,51 @@ ESTRUTURA:
 □ Título usa fórmula viral comprovada?
 □ Tem dado específico que choca ("4 anos sem perceber")?
 ```
+
+
+---
+
+## 🤖 REGRA ANTI-IA — DETECTOR DE ABERTURA GENÉRICA
+*(adicionado 2026-06-02 — baseado em análise de retenção YouTube)*
+
+Qualquer script com abertura abaixo = **REJEITAR e reescrever automaticamente:**
+
+| Abertura proibida | Por que mata o vídeo |
+|-------------------|---------------------|
+| "No mundo acelerado de hoje..." | Soa 100% IA. Abandono em 2s. |
+| "Você já parou pra pensar..." | Todo apresentador ruim usa isso. |
+| "Vivemos em uma época em que..." | Genérico. Zero urgência. |
+| "Se você se identificou com..." | Prematuro — ainda não disse nada. |
+| "A saúde mental nunca foi tão importante..." | Manchete de folheto. |
+| "Hoje vamos falar sobre um tema muito importante..." | Aviso de sono iminente. |
+
+**📏 REGRA DAS 50 PALAVRAS:** Se as primeiras 50 palavras não contiverem PELO MENOS UMA:
+- Dado numérico específico chocante com fonte (`"83% das pessoas com apego ansioso — Ainsworth, 1978"`)
+- Comportamento identificável + mecanismo surpreendente nunca dito antes
+- Frase que o espectador nunca ouviu mas reconhece como verdade imediata
+
+→ **REESCREVER. Sem exceção.**
+
+---
+
+## 📈 MECÂNICA DE ALGORITMO (YouTube = Google)
+
+**O YouTube quer watch time.** Conteúdo que prende = distribuição maior. Abandono em 5s = punição.
+
+**Regra de micro-tensão (para os 20 frases do short 58s):**
+```
+Frase N:   resolve tensão anterior + cria nova micro-tensão
+Frase N+1: resolve tensão anterior + cria nova micro-tensão
+...
+Frase 20:  resolve TUDO + cria gancho pro próximo vídeo
+```
+
+**Cluster de tópicos — um short ranqueia para VÁRIOS termos:**
+> Um short sobre narcisismo pode aparecer para: "sinais de narcisismo", "manipulação emocional", 
+> "apego ansioso", "gaslighting", "como sair de relacionamento tóxico"
+> → Mencionar esses subtópicos naturalmente no script = algoritmo distribui para múltiplas audiências
+
+**Cadência > volume:**
+> 1 short/dia consistente > 10 numa semana + silêncio depois.
+> O algoritmo pune interrupções e recompensa previsibilidade.
+
