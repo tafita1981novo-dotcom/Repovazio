@@ -1,6 +1,6 @@
 /**
- * scripts/wa-server.js
- * GitHub Actions persistent server — Baileys + Supabase + Vercel webhook
+ * wa-server.js v2 — GitHub Actions persistent server
+ * Baileys latest + configurações atualizadas para compatibilidade 2025
  */
 const {
   default: makeWASocket,
@@ -8,6 +8,8 @@ const {
   useMultiFileAuthState,
   fetchLatestBaileysVersion,
   makeCacheableSignalKeyStore,
+  PHONENUMBER_MCC,
+  Browsers
 } = require("@whiskeysockets/baileys");
 const { Boom }    = require("@hapi/boom");
 const { createClient } = require("@supabase/supabase-js");
@@ -17,112 +19,117 @@ const path        = require("path");
 const pino        = require("pino");
 const ws          = require("ws");
 
-const SUPABASE_URL   = process.env.SUPABASE_URL;
-const SUPABASE_KEY   = process.env.SUPABASE_SERVICE_KEY;
-const WEBHOOK_URL    = process.env.WEBHOOK_URL    || "https://repovazio.vercel.app/api/wa-webhook";
-const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET || "";
-const SESSION_DIR    = "/tmp/wa-session";
-const BUCKET         = "wa-session";
+const SB_URL     = process.env.SUPABASE_URL;
+const SB_KEY     = process.env.SUPABASE_SERVICE_KEY;
+const WEBHOOK    = process.env.WEBHOOK_URL || "https://repovazio.vercel.app/api/wa-webhook";
+const WH_SECRET  = process.env.WEBHOOK_SECRET || "";
+const SESSION    = "/tmp/wa-session";
+const BUCKET     = "wa-session";
 
-// Supabase com ws explícito (Node 20 fix)
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
-  realtime: { transport: ws }
-});
-const logger = pino({ level: "silent" });
+const sb = createClient(SB_URL, SB_KEY, { realtime: { transport: ws } });
+const logger = pino({ level: "warn" });
 
-// ── Sessão: download do Supabase Storage ────────────────────────────────────
-async function downloadSession() {
-  console.log("📥 Carregando sessão...");
-  fs.mkdirSync(SESSION_DIR, { recursive: true });
+// ── Estado global ─────────────────────────────────────────────────────────────
+let reconnectCount = 0;
+let isConnected = false;
+
+// ── Supabase: carregar sessão ─────────────────────────────────────────────────
+async function loadSession() {
+  console.log("📥 Carregando sessão do Supabase...");
+  fs.mkdirSync(SESSION, { recursive: true });
   try {
-    const { data: files, error } = await supabase.storage.from(BUCKET).list("session");
-    if (error || !files || files.length === 0) {
-      console.log("   Sem sessão salva — QR code necessário");
+    const { data: files } = await sb.storage.from(BUCKET).list("creds");
+    if (!files || files.length === 0) {
+      console.log("   Sem sessão salva — vai gerar QR");
       return;
     }
     for (const f of files) {
-      const { data } = await supabase.storage.from(BUCKET).download(`session/${f.name}`);
+      const { data } = await sb.storage.from(BUCKET).download(`creds/${f.name}`);
       if (data) {
         const buf = Buffer.from(await data.arrayBuffer());
-        fs.writeFileSync(path.join(SESSION_DIR, f.name), buf);
+        fs.writeFileSync(path.join(SESSION, f.name), buf);
       }
     }
-    console.log(`   ✅ ${files.length} arquivo(s) carregados`);
+    console.log(`   ✅ ${files.length} arquivo(s) de sessão carregados`);
   } catch (e) {
-    console.log("   ⚠️  Erro sessão:", e.message);
+    console.log("   ⚠️  Erro ao carregar sessão:", e.message);
   }
 }
 
-// ── Sessão: upload para Supabase Storage ────────────────────────────────────
-async function uploadSession() {
-  if (!fs.existsSync(SESSION_DIR)) return;
-  const files = fs.readdirSync(SESSION_DIR);
+// ── Supabase: salvar sessão ───────────────────────────────────────────────────
+async function saveSession() {
+  if (!fs.existsSync(SESSION)) return;
+  const files = fs.readdirSync(SESSION);
   for (const f of files) {
-    const content = fs.readFileSync(path.join(SESSION_DIR, f));
-    await supabase.storage.from(BUCKET).upload(`session/${f}`, content, {
-      contentType: "application/octet-stream",
-      upsert: true
-    });
+    try {
+      const content = fs.readFileSync(path.join(SESSION, f));
+      await sb.storage.from(BUCKET).upload(`creds/${f}`, content, {
+        contentType: "application/octet-stream",
+        upsert: true
+      });
+    } catch (e) {}
   }
-  console.log(`   💾 Sessão salva (${files.length} arqs)`);
+  console.log(`💾 Sessão salva`);
 }
 
-// ── Publicar QR code na tabela wa_status ────────────────────────────────────
+// ── Supabase: publicar QR ─────────────────────────────────────────────────────
 async function publishQR(qr) {
   try {
     const QRCode = require("qrcode");
-    const dataUrl = await QRCode.toDataURL(qr, { scale: 8 });
-    await supabase.from("wa_status").update({
-      qr_base64: dataUrl,
-      connected: false,
+    // Gerar QR de alta resolução
+    const dataUrl = await QRCode.toDataURL(qr, {
+      scale: 10,
+      margin: 2,
+      color: { dark: "#000000", light: "#FFFFFF" }
+    });
+    await sb.from("wa_status").update({
+      qr_base64:  dataUrl,
+      connected:  false,
       updated_at: new Date().toISOString()
     }).eq("id", "singleton");
-    console.log("   📱 QR publicado → repovazio.vercel.app/whatsapp-connect");
+    console.log(`📱 QR publicado (${new Date().toLocaleTimeString('pt-BR')} BRT)`);
   } catch (e) {
-    console.log("   ⚠️  QR error:", e.message);
-    console.log("   Copie este QR string no https://qr.io :", qr.slice(0,60));
+    console.log("⚠️  Erro ao publicar QR:", e.message);
   }
 }
 
-// ── Marcar conectado ─────────────────────────────────────────────────────────
+// ── Supabase: marcar conectado ────────────────────────────────────────────────
 async function markConnected(name, num) {
-  await supabase.from("wa_status").update({
-    qr_base64: null,
-    connected: true,
+  isConnected = true;
+  await sb.from("wa_status").update({
+    qr_base64:  null,
+    connected:  true,
     phone_name: name || "",
-    phone_num: num   || "",
+    phone_num:  num  || "",
     updated_at: new Date().toISOString()
   }).eq("id", "singleton");
-  console.log(`   ✅ Conectado: ${name} (${num})`);
+  console.log(`✅ CONECTADO: ${name} (${num})`);
 }
 
-// ── Disparar webhook Vercel ──────────────────────────────────────────────────
-async function dispatchWebhook(msgData) {
+// ── Webhook ───────────────────────────────────────────────────────────────────
+async function sendWebhook(data) {
   try {
-    const resp = await fetch(WEBHOOK_URL, {
+    const r = await fetch(WEBHOOK, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "apikey": WEBHOOK_SECRET
-      },
-      body: JSON.stringify({ event: "messages.upsert", data: msgData }),
+      headers: { "Content-Type": "application/json", "apikey": WH_SECRET },
+      body: JSON.stringify({ event: "messages.upsert", data }),
       timeout: 30000
     });
-    const body = await resp.json().catch(() => ({}));
-    if (body.saved?.length > 0) {
-      console.log(`   🔔 Salvo: ${body.saved.join(", ")}`);
-    }
+    const b = await r.json().catch(() => ({}));
+    if (b.saved?.length) console.log(`🔔 Salvo: ${b.saved.join(", ")}`);
   } catch (e) {
-    console.log("   ⚠️  Webhook:", e.message);
+    console.log("⚠️  Webhook:", e.message);
   }
 }
 
-// ── Main ─────────────────────────────────────────────────────────────────────
+// ── Main ──────────────────────────────────────────────────────────────────────
 async function start() {
-  await downloadSession();
+  await loadSession();
 
-  const { version } = await fetchLatestBaileysVersion();
-  const { state, saveCreds } = await useMultiFileAuthState(SESSION_DIR);
+  const { version, isLatest } = await fetchLatestBaileysVersion();
+  console.log(`🚀 Baileys v${version.join(".")} (latest: ${isLatest})`);
+
+  const { state, saveCreds } = await useMultiFileAuthState(SESSION);
 
   const sock = makeWASocket({
     version,
@@ -131,37 +138,81 @@ async function start() {
       creds: state.creds,
       keys:  makeCacheableSignalKeyStore(state.keys, logger)
     },
-    printQRInTerminal: false,
-    browser: ["Claude Knowledge Bot", "Chrome", "1.0.0"]
+    printQRInTerminal: true,       // mostra no log do Actions também
+    syncFullHistory: false,
+    markOnlineOnConnect: false,
+    generateHighQualityLinkPreview: false,
+    browser: Browsers.ubuntu("Chrome"),
+    connectTimeoutMs: 60_000,
+    keepAliveIntervalMs: 25_000,
+    retryRequestDelayMs: 2000,
+    maxMsgRetryCount: 3,
+    getMessage: async () => undefined
   });
 
+  // ── Conexão ──────────────────────────────────────────────────────────────────
   sock.ev.on("connection.update", async ({ connection, lastDisconnect, qr }) => {
+
     if (qr) {
-      console.log("📱 QR Code disponível...");
+      console.log(`📱 Novo QR gerado [tentativa ${reconnectCount + 1}]`);
       await publishQR(qr);
     }
+
+    if (connection === "open") {
+      reconnectCount = 0;
+      const me = sock.user;
+      await markConnected(me?.name || me?.notify || "Desconhecido", me?.id || "");
+      await saveSession();
+    }
+
     if (connection === "close") {
-      const code = (lastDisconnect?.error instanceof Boom)
+      isConnected = false;
+      const statusCode = (lastDisconnect?.error instanceof Boom)
         ? lastDisconnect.error.output.statusCode : 0;
-      console.log(`🔌 Conexão fechada (${code})`);
-      if (code !== DisconnectReason.loggedOut) {
-        setTimeout(start, 5000);
+      const reason = DisconnectReason;
+
+      console.log(`🔌 Conexão fechada — código: ${statusCode}`);
+
+      // Marcar desconectado
+      await sb.from("wa_status").update({
+        connected:  false,
+        updated_at: new Date().toISOString()
+      }).eq("id", "singleton");
+
+      if (statusCode === reason.loggedOut) {
+        console.log("❌ Deslogado — limpando sessão");
+        try {
+          if (fs.existsSync(SESSION)) {
+            fs.readdirSync(SESSION).forEach(f => fs.unlinkSync(path.join(SESSION, f)));
+          }
+          await sb.storage.from(BUCKET).remove(
+            (await sb.storage.from(BUCKET).list("creds")).data?.map(f => `creds/${f.name}`) || []
+          );
+        } catch(e) {}
+        reconnectCount = 0;
+        setTimeout(start, 3000);
+
+      } else if (reconnectCount < 10) {
+        reconnectCount++;
+        const delay = Math.min(reconnectCount * 3000, 15000);
+        console.log(`🔄 Reconectando em ${delay/1000}s (tentativa ${reconnectCount}/10)...`);
+        setTimeout(start, delay);
+
       } else {
-        process.exit(1);
+        console.log("❌ Muitas tentativas. Aguardando 60s...");
+        reconnectCount = 0;
+        setTimeout(start, 60000);
       }
     }
-    if (connection === "open") {
-      const me = sock.user;
-      await markConnected(me?.name || me?.notify || "", me?.id || "");
-      await uploadSession();
-    }
   });
 
+  // ── Credentials ──────────────────────────────────────────────────────────────
   sock.ev.on("creds.update", async () => {
     await saveCreds();
-    await uploadSession();
+    await saveSession();
   });
 
+  // ── Mensagens ─────────────────────────────────────────────────────────────────
   sock.ev.on("messages.upsert", async ({ messages, type }) => {
     if (type !== "notify") return;
     for (const msg of messages) {
@@ -172,8 +223,8 @@ async function start() {
         msg.message?.imageMessage?.caption ||
         msg.message?.videoMessage?.caption || "";
       if (!text) continue;
-      console.log(`📨 ${msg.pushName || "?"}: ${text.slice(0, 70)}`);
-      await dispatchWebhook({
+      console.log(`📨 ${msg.pushName||"?"}: ${text.slice(0,80)}`);
+      await sendWebhook({
         message: msg.message,
         pushName: msg.pushName || "",
         key: msg.key,
@@ -182,14 +233,11 @@ async function start() {
     }
   });
 
-  // Salva sessão a cada 30min
-  setInterval(uploadSession, 30 * 60 * 1000);
-
-  console.log("🚀 Servidor ativo — aguardando mensagens...");
-  console.log(`   Status: repovazio.vercel.app/whatsapp-connect`);
+  // Keep alive
+  setInterval(saveSession, 30 * 60 * 1000);
 }
 
-start().catch(err => {
-  console.error("❌ Fatal:", err.message);
+start().catch(e => {
+  console.error("❌ Fatal:", e.message);
   process.exit(1);
 });
