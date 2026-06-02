@@ -33,8 +33,10 @@ def sb_get(table, query="", limit=5):
 
 def sb_update(table, id_, data):
     url = f"{SB_URL}/rest/v1/{table}?id=eq.{id_}"
-    requests.patch(url, headers={**SB_H, "Prefer": "return=minimal"},
+    r = requests.patch(url, headers={**SB_H, "Prefer": "return=minimal"},
         json=data, timeout=15)
+    if r.status_code >= 400:
+        print(f"  ⚠️ sb_update falhou {r.status_code}: {r.text[:120]}")
 
 def get_image_pollinations(prompt, seed, w=576, h=1024):
     """Busca imagem via Pollinations FLUX — grátis, ilimitado"""
@@ -152,7 +154,7 @@ def render_video(row):
     
     if final.exists() and final.stat().st_size > 10000:
         print(f"  ✅ {final.name} ({final.stat().st_size//1024}KB)")
-        sb_update("content_pipeline", vid_id, {"status": "mp4_ready", "updated_at": "now()"})
+        sb_update("content_pipeline", vid_id, {"status": "mp4_ready", "video_url": str(final)})
         return True
     return False
 
