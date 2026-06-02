@@ -2,40 +2,39 @@ name: 📱 WhatsApp Persistent Server
 
 on:
   schedule:
-    - cron: '0 */5 * * *'   # reinicia a cada 5h (Actions tem limite de 6h)
-  workflow_dispatch:          # permite iniciar manualmente
+    - cron: '0 */5 * * *'
+  workflow_dispatch:
 
 jobs:
   whatsapp-server:
     name: WhatsApp Baileys Server
     runs-on: ubuntu-latest
-    timeout-minutes: 340      # ~5h40min — para antes do limite de 6h
+    timeout-minutes: 340
 
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
 
-      - name: 🟢 Setup Node.js 20
+      - name: 🟢 Setup Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: 📦 Install dependencies
-        run: |
-          cd scripts
-          npm install --legacy-peer-deps
+        working-directory: scripts
+        run: npm install --legacy-peer-deps
 
       - name: 📱 Start WhatsApp Server
+        working-directory: scripts
         env:
           SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           WEBHOOK_URL:          https://repovazio.vercel.app/api/wa-webhook
           WEBHOOK_SECRET:       ${{ secrets.WEBHOOK_SECRET }}
-        run: node scripts/wa-server.js
+        run: node wa-server.js
 
       - name: 📊 Summary
         if: always()
         run: |
           echo "## WhatsApp Server" >> $GITHUB_STEP_SUMMARY
-          echo "Sessão encerrada: $(date '+%Y-%m-%d %H:%M UTC')" >> $GITHUB_STEP_SUMMARY
-          echo "Próximo ciclo: automático via cron" >> $GITHUB_STEP_SUMMARY
+          echo "Encerrado: $(date '+%Y-%m-%d %H:%M UTC')" >> $GITHUB_STEP_SUMMARY
