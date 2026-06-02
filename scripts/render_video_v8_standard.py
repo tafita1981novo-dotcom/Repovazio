@@ -65,7 +65,7 @@ def ken_burns(img_path, out_path, duration=4, zoom=4):
 def render_video(row):
     vid_id = row["id"]
     titulo = row.get("title", f"video_{vid_id}")
-    audio_url = row.get("audio_url") or row.get("audio_path", "")
+    audio_url = row.get("audio_url") or row.get("audio_path", "") or (row.get("metadata") or {}).get("audio_url", "")
     script_txt = row.get("script", titulo)
     style = row.get("video_style", "animated_slides")
     
