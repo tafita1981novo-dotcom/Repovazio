@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WhatsApp Connect — repovazio</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: #0a0a0f;
+  color: #e0e0e0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.card {
+  background: #111118;
+  border: 1px solid #2a2a3a;
+  border-radius: 16px;
+  padding: 40px;
+  width: 100%;
+  max-width: 460px;
+  text-align: center;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+}
+.logo { font-size: 40px; margin-bottom: 16px; }
+h1 { font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+.sub { font-size: 13px; color: #666; margin-bottom: 32px; }
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 20px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+.status-badge.connecting { background: rgba(251,191,36,0.12); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }
+.status-badge.connected  { background: rgba(16,185,129,0.12); color: #10b981; border: 1px solid rgba(16,185,129,0.3); }
+.status-badge.error      { background: rgba(239,68,68,0.12);  color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+.dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: pulse 1.5s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+#qrSection { display: none; }
+#qrSection.active { display: block; }
+#qrImg {
+  width: 240px; height: 240px;
+  border: 3px solid #7c3aed;
+  border-radius: 12px;
+  margin: 0 auto 16px;
+  display: block;
+  background: #1a1a25;
+}
+.qr-hint { font-size: 12px; color: #666; line-height: 1.6; margin-bottom: 20px; }
+.qr-hint strong { color: #aaa; }
+
+#connectedSection { display: none; }
+#connectedSection.active { display: block; }
+.connected-info {
+  background: #0f0f1a;
+  border: 1px solid #1e1e30;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: #888;
+}
+.connected-info strong { color: #ddd; }
+
+.btn {
+  padding: 12px 28px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.btn-primary { background: linear-gradient(135deg, #7c3aed, #2563eb); color: #fff; }
+.btn-danger  { background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); margin-left: 8px; }
+.btn:hover { opacity: 0.85; }
+
+.log {
+  margin-top: 20px;
+  background: #0a0a0f;
+  border: 1px solid #1a1a25;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 11px;
+  color: #555;
+  text-align: left;
+  max-height: 140px;
+  overflow-y: auto;
+  font-family: monospace;
+}
+.log-entry { margin-bottom: 3px; }
+.log-entry.ok   { color: #10b981; }
+.log-entry.warn { color: #fbbf24; }
+.log-entry.err  { color: #ef4444; }
+
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 20px;
+}
+.stat-box {
+  background: #0f0f1a;
+  border: 1px solid #1e1e30;
+  border-radius: 8px;
+  padding: 14px;
+  text-align: center;
+}
+.stat-num  { font-size: 24px; font-weight: 800; color: #7c3aed; }
+.stat-label { font-size: 11px; color: #666; margin-top: 2px; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">🤖</div>
+  <h1>WhatsApp → Claude Knowledge</h1>
+  <p class="sub">Conecte seu WhatsApp para capturar mensagens sobre Claude em tempo real</p>
+
+  <div class="status-badge connecting" id="statusBadge">
+    <span class="dot"></span>
+    <span id="statusText">Verificando conexão…</span>
+  </div>
+
+  <!-- QR Code section -->
+  <div id="qrSection">
+    <img id="qrImg" src="" alt="QR Code">
+    <p class="qr-hint">
+      No WhatsApp: <strong>⋮ → Aparelhos conectados → Conectar aparelho</strong><br>
+      Escaneie o QR code acima
+    </p>
+    <button class="btn btn-primary" onclick="refreshQR()">🔄 Atualizar QR</button>
+  </div>
+
+  <!-- Connected section -->
+  <div id="connectedSection">
+    <div class="connected-info">
+      📱 Conectado como <strong id="connectedName">—</strong><br>
+      <span id="connectedNumber" style="font-size:12px;color:#555"></span>
+    </div>
+    <button class="btn btn-primary" onclick="checkStats()">📊 Ver estatísticas</button>
+    <button class="btn btn-danger" onclick="disconnect()">Desconectar</button>
+
+    <div class="stats" id="statsBox" style="display:none">
+      <div class="stat-box">
+        <div class="stat-num" id="statTotal">—</div>
+        <div class="stat-label">Itens capturados</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="statYT">—</div>
+        <div class="stat-label">Vídeos YT</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="statIG">—</div>
+        <div class="stat-label">Posts IG</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="statAvg">—</div>
+        <div class="stat-label">Relevância média</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="log" id="logBox"></div>
+</div>
+
+<script>
+// ── Config ──────────────────────────────────────────────────────────────────
+// Substitua pelos seus valores
+const EVOLUTION_URL    = 'https://SEU_APP.up.railway.app';
+const EVOLUTION_APIKEY = 'SUA_API_KEY';
+const INSTANCE_NAME    = 'rafael';
+const SUPABASE_URL     = 'https://tpjvalzwkqwttvmszvie.supabase.co';
+const SUPABASE_ANON    = 'SEU_ANON_KEY';
+
+const HEADERS = { 'Content-Type': 'application/json', 'apikey': EVOLUTION_APIKEY };
+
+// ── Log helper ───────────────────────────────────────────────────────────────
+function log(msg, type = '') {
+  const box = document.getElementById('logBox');
+  const d = document.createElement('div');
+  d.className = `log-entry ${type}`;
+  d.textContent = `[${new Date().toLocaleTimeString('pt-BR')}] ${msg}`;
+  box.prepend(d);
+}
+
+// ── Status badge ─────────────────────────────────────────────────────────────
+function setStatus(state, text) {
+  const badge = document.getElementById('statusBadge');
+  const label = document.getElementById('statusText');
+  badge.className = `status-badge ${state}`;
+  label.textContent = text;
+}
+
+// ── Check connection status ──────────────────────────────────────────────────
+async function checkStatus() {
+  try {
+    const res = await fetch(`${EVOLUTION_URL}/instance/fetchInstances`, { headers: HEADERS });
+    const data = await res.json();
+    const inst = Array.isArray(data)
+      ? data.find(i => i.name === INSTANCE_NAME || i.instance?.instanceName === INSTANCE_NAME)
+      : data;
+
+    const state = inst?.instance?.state || inst?.state || 'unknown';
+    log(`Estado: ${state}`);
+
+    if (state === 'open' || state === 'connected') {
+      const name   = inst?.instance?.profileName  || inst?.profileName  || '';
+      const number = inst?.instance?.wuid         || inst?.wuid         || '';
+      setStatus('connected', '✅ Conectado — capturando mensagens');
+      document.getElementById('qrSection').classList.remove('active');
+      document.getElementById('connectedSection').classList.add('active');
+      document.getElementById('connectedName').textContent   = name;
+      document.getElementById('connectedNumber').textContent = number;
+      log(`Conectado como ${name}`, 'ok');
+    } else {
+      setStatus('connecting', '⏳ Aguardando conexão — escaneie o QR');
+      document.getElementById('qrSection').classList.add('active');
+      document.getElementById('connectedSection').classList.remove('active');
+      await fetchQR();
+    }
+  } catch (e) {
+    setStatus('error', '❌ Erro ao conectar no Evolution API');
+    log(`Erro: ${e.message}`, 'err');
+  }
+}
+
+// ── Fetch QR Code ────────────────────────────────────────────────────────────
+async function fetchQR() {
+  try {
+    const res  = await fetch(`${EVOLUTION_URL}/instance/connect/${INSTANCE_NAME}`, { headers: HEADERS });
+    const data = await res.json();
+    const b64  = data?.base64 || data?.qrcode?.base64 || data?.code;
+    if (b64) {
+      document.getElementById('qrImg').src = b64.startsWith('data:') ? b64 : `data:image/png;base64,${b64}`;
+      log('QR Code atualizado', 'ok');
+    } else {
+      log('Sem QR Code disponível ainda', 'warn');
+    }
+  } catch (e) {
+    log(`Erro QR: ${e.message}`, 'err');
+  }
+}
+
+function refreshQR() { fetchQR(); }
+
+// ── Stats do Supabase ─────────────────────────────────────────────────────────
+async function checkStats() {
+  try {
+    const headers = { apikey: SUPABASE_ANON, Authorization: `Bearer ${SUPABASE_ANON}` };
+    const [total, yt, ig, avg] = await Promise.all([
+      fetch(`${SUPABASE_URL}/rest/v1/claude_knowledge?select=count`, { headers }).then(r => r.json()),
+      fetch(`${SUPABASE_URL}/rest/v1/claude_knowledge?fonte=eq.youtube&select=count`, { headers }).then(r => r.json()),
+      fetch(`${SUPABASE_URL}/rest/v1/claude_knowledge?fonte=eq.instagram&select=count`, { headers }).then(r => r.json()),
+      fetch(`${SUPABASE_URL}/rest/v1/claude_knowledge?select=relevancia`, { headers }).then(r => r.json()),
+    ]);
+
+    document.getElementById('statTotal').textContent = total[0]?.count ?? '—';
+    document.getElementById('statYT').textContent    = yt[0]?.count   ?? '—';
+    document.getElementById('statIG').textContent    = ig[0]?.count   ?? '—';
+
+    if (Array.isArray(avg) && avg.length > 0) {
+      const mean = (avg.reduce((s, r) => s + (r.relevancia || 0), 0) / avg.length).toFixed(1);
+      document.getElementById('statAvg').textContent = mean;
+    }
+
+    document.getElementById('statsBox').style.display = 'grid';
+    log('Stats atualizadas', 'ok');
+  } catch (e) {
+    log(`Erro stats: ${e.message}`, 'err');
+  }
+}
+
+// ── Disconnect ────────────────────────────────────────────────────────────────
+async function disconnect() {
+  if (!confirm('Desconectar WhatsApp?')) return;
+  try {
+    await fetch(`${EVOLUTION_URL}/instance/logout/${INSTANCE_NAME}`, { method: 'DELETE', headers: HEADERS });
+    log('Desconectado', 'warn');
+    checkStatus();
+  } catch (e) {
+    log(`Erro ao desconectar: ${e.message}`, 'err');
+  }
+}
+
+// ── Init: verifica status e polling ─────────────────────────────────────────
+checkStatus();
+setInterval(checkStatus, 30000); // verifica a cada 30s
+</script>
+</body>
+</html>
