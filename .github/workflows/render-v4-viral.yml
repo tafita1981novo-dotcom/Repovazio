@@ -21,13 +21,8 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
 
-      - name: Instalar FFmpeg snap
-        run: |
-          sudo snap install ffmpeg 2>/dev/null || true
-          echo "/snap/bin" >> $GITHUB_PATH
-
-      - name: Instalar deps Python (gratis)
-        run: pip install edge-tts Pillow mutagen --break-system-packages -q
+      - name: Instalar deps (imageio-ffmpeg baixa ffmpeg portátil automaticamente)
+        run: pip install edge-tts Pillow mutagen imageio-ffmpeg --break-system-packages -q
 
       - name: 🎬 Render V4 — edge-tts + HF FLUX
         env:
@@ -44,3 +39,4 @@ jobs:
           echo "## Render V4 Gratis" >> $GITHUB_STEP_SUMMARY
           echo "- TTS: edge-tts Microsoft (gratis)" >> $GITHUB_STEP_SUMMARY
           echo "- Imagens: HF FLUX.1-schnell (gratis)" >> $GITHUB_STEP_SUMMARY
+          echo "- FFmpeg: imageio-ffmpeg portátil (gratis)" >> $GITHUB_STEP_SUMMARY
