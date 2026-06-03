@@ -1,0 +1,55 @@
+name: 🌙 Sleep & Study Live 24/7 — Binaural Beats + Nature
+
+on:
+  schedule:
+    - cron: '0 3 * * *'    # 00:00 BR (prime sleep time)
+    - cron: '0 9 * * *'    # 06:00 BR (study morning)
+    - cron: '0 15 * * *'   # 12:00 BR (study afternoon)
+    - cron: '0 21 * * *'   # 18:00 BR (relax evening)
+  workflow_dispatch:
+    inputs:
+      live_type:
+        description: 'Tipo (sleep|study|meditation|anxiety)'
+        default: 'sleep'
+      duration_hours:
+        description: 'Duração em horas'
+        default: '5'
+      lang:
+        description: 'Idioma (pt-BR|en-US|es-ES)'
+        default: 'pt-BR'
+
+jobs:
+  live:
+    name: 🌙 ${{ inputs.live_type || 'sleep' }} Live — ${{ inputs.lang || 'pt-BR' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: |
+          sudo apt-get install -y ffmpeg -q 2>/dev/null || true
+          pip install requests --break-system-packages -q
+
+      - name: 🌙 Iniciar live de ${{ inputs.live_type || 'sleep' }}
+        env:
+          YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          LIVE_TYPE: ${{ inputs.live_type || 'sleep' }}
+          DURATION_HOURS: ${{ inputs.duration_hours || '5' }}
+          LIVE_LANG: ${{ inputs.lang || 'pt-BR' }}
+        run: python3 scripts/sleep_live_24_7.py
+
+      - name: 📊 Relatório
+        if: always()
+        run: |
+          echo "## 🌙 Live Report" >> $GITHUB_STEP_SUMMARY
+          echo "| | |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| Tipo | ${{ inputs.live_type || 'sleep' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Duração | ${{ inputs.duration_hours || '5' }}h |" >> $GITHUB_STEP_SUMMARY
+          echo "| Idioma | ${{ inputs.lang || 'pt-BR' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| StreamKey | uaqu-*** (Default) |" >> $GITHUB_STEP_SUMMARY
+          echo "| Binaural | Delta/Theta/Alpha conforme tipo |" >> $GITHUB_STEP_SUMMARY
