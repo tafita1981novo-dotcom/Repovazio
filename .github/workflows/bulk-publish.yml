@@ -1,0 +1,26 @@
+name: Bulk Publish (massa)
+on:
+  workflow_dispatch:
+    inputs:
+      max_videos:
+        description: 'Máximo de vídeos por run'
+        required: false
+        default: '20'
+  schedule:
+    - cron: '*/15 * * * *'   # a cada 15 min = 96 runs/dia = 1920 vídeos/dia potencial
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Publish videos
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          YT_CLIENT_ID:     ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+          MAX_VIDEOS: ${{ github.event.inputs.max_videos || '20' }}
+        run: python3 scripts/distribute.py
