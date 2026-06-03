@@ -18,6 +18,11 @@ W, H = (1080, 1920) if FMT=="short" else (1920, 1080)
 def log(msg): print(f"[{datetime.now():%H:%M:%S}] {msg}", flush=True)
 
 def ffm():
+    """`imageio-ffmpeg` portátil — nunca falha"""
+    try:
+        import imageio_ffmpeg
+        return imageio_ffmpeg.get_ffmpeg_exe()
+    except ImportError: pass
     import shutil
     b=shutil.which("ffmpeg")
     if b: return b
@@ -238,8 +243,10 @@ def render(vid):
                   "-vf",f"scale={W}:{H}",
                   "-c:v","libx264","-crf","20","-preset","ultrafast",
                   "-pix_fmt","yuv420p","-r","25",clip],60)
-        if r.returncode==0 and pathlib.Path(clip).stat().st_size>500:
+        if r.returncode==0 and pathlib.Path(clip).exists() and pathlib.Path(clip).stat().st_size>500:
             clips.append(clip)
+        else:
+            log(f"   clip err rc={r.returncode}: {r.stderr.decode()[-100:]}")
     if not clips: log("   ERRO: Nenhum clip!"); return False
     vid_only=str(work/"v.mp4"); cat=str(work/"c.txt")
     open(cat,"w").write("\n".join(f"file '{c}'" for c in clips))
