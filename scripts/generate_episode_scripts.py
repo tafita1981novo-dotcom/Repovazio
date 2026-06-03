@@ -140,7 +140,7 @@ def gerar_script(ep, serie):
     for c in ep_chars:
         stage_label = ["🔴iniciando","🟠percebendo","🟡lutando","🟢crescendo","✅transformado"][
             min(c["stage"]-1, 4)]
-        char_lines.append(f"• {c['name']} ({stage_label}): {c["visual_desc"]}")
+        char_lines.append(f"• {c['name']} ({stage_label}): {c['visual_desc']}")
     char_guide = "\n".join(char_lines)
     
     system = f"""Você é o roteirista chefe de @psidanielacoelho, canal de psicologia no YouTube.
