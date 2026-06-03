@@ -1,0 +1,51 @@
+name: 🌙 Live 24/7 Tela Preta — Sono Estudo Meditacao (GRATIS)
+
+on:
+  schedule:
+    - cron: '0 3 * * *'    # 00:00 BR — sono noturno
+    - cron: '0 9 * * *'    # 06:00 BR — estudo manha
+    - cron: '0 15 * * *'   # 12:00 BR — estudo tarde
+    - cron: '0 21 * * *'   # 18:00 BR — relaxamento noite
+  workflow_dispatch:
+    inputs:
+      live_type:
+        description: 'Tipo: sleep | study | meditation | anxiety'
+        default: 'sleep'
+      duration_hours:
+        description: 'Duracao em horas'
+        default: '6'
+      lang:
+        description: 'Idioma: pt-BR | en-US | es-ES'
+        default: 'pt-BR'
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 450
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+
+      - name: Instalar FFmpeg
+        run: |
+          sudo snap install ffmpeg 2>/dev/null || true
+          echo "/snap/bin" >> $GITHUB_PATH
+          which ffmpeg && ffmpeg -version 2>&1 | head -1 || true
+
+      - name: 🌙 Live Tela Preta — Audio Binaural
+        env:
+          YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
+          LIVE_TYPE:          ${{ inputs.live_type || 'sleep' }}
+          DURATION_HOURS:     ${{ inputs.duration_hours || '6' }}
+          LIVE_LANG:          ${{ inputs.lang || 'pt-BR' }}
+        run: python3 scripts/gen_sleep_live.py
+
+      - name: Relatorio
+        if: always()
+        run: |
+          echo "## Live Tela Preta" >> $GITHUB_STEP_SUMMARY
+          echo "- Tipo: ${{ inputs.live_type || 'sleep' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Duracao: ${{ inputs.duration_hours || '6' }}h" >> $GITHUB_STEP_SUMMARY
+          echo "- Gratuito: SIM (binaural Python puro)" >> $GITHUB_STEP_SUMMARY
