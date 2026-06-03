@@ -105,11 +105,21 @@ def tts_elevenlabs(text, out_path, emotion="empathy"):
 
 def tts_edge(text, out_path, emotion="empathy"):
     rates = {"hook":"+18%","reveal":"+12%","science":"+6%","empathy":"+8%","cta":"+15%"}
-    cmd = ["edge-tts", "--voice=pt-BR-ThalitaMultilingualNeural",
+    voice = "pt-BR-ThalitaMultilingualNeural"
+    cmd = ["edge-tts", f"--voice={voice}",
            f"--rate={rates.get(emotion,'+10%')}", "--volume=+15%",
-           "--text", text[:600], "--write-media", out_path]
-    r = subprocess.run(cmd, capture_output=True, timeout=60)
-    return r.returncode == 0 and pathlib.Path(out_path).stat().st_size > 1000
+           "--text", text[:500], "--write-media", out_path]
+    try:
+        r = subprocess.run(cmd, capture_output=True, timeout=90)
+        p = pathlib.Path(out_path)
+        size = p.stat().st_size if p.exists() else 0
+        log(f"    edge-tts: rc={r.returncode} size={size}B")
+        if r.returncode != 0:
+            log(f"    edge-tts stderr: {r.stderr.decode()[:100]}")
+        return r.returncode == 0 and size > 100
+    except Exception as e:
+        log(f"    edge-tts exception: {e}")
+        return False
 
 def make_audio(text, out_path, emotion):
     """Gera áudio: ElevenLabs → edge-tts → silêncio"""
@@ -132,19 +142,29 @@ def make_audio(text, out_path, emotion):
                 import shutil; shutil.copy(mp3, out_path)
                 return "elevenlabs-mp3"
     
-    # 2. edge-tts (funciona no GitHub Actions, sem SSL proxy)
+    # 2. edge-tts CLI
     if tts_edge(text, mp3, emotion):
         p = pathlib.Path(mp3)
-        if p.exists() and p.stat().st_size > 500:
-            ffmpeg_bin = find_ffmpeg()
-            if ffmpeg_bin:
-                r = subprocess.run([ffmpeg_bin,"-y","-i",mp3,"-acodec","pcm_s16le",
+        if p.exists() and p.stat().st_size > 100:
+            ff = find_ffmpeg()
+            if ff:
+                r = subprocess.run([ff,"-y","-i",mp3,"-acodec","pcm_s16le",
                                     "-ar","44100","-ac","2",out_path], capture_output=True, timeout=30)
-                if r.returncode == 0:
-                    return "edge-tts"
-            else:
-                import shutil; shutil.copy(mp3, out_path)
-                return "edge-tts-mp3"
+                if r.returncode == 0: return "edge-tts"
+            import shutil; shutil.copy(mp3, out_path)
+            return "edge-tts-mp3"
+    
+    # 3. edge-tts async (segunda chance)
+    if tts_edge_async(text, mp3, emotion):
+        p = pathlib.Path(mp3)
+        if p.exists() and p.stat().st_size > 100:
+            ff = find_ffmpeg()
+            if ff:
+                r = subprocess.run([ff,"-y","-i",mp3,"-acodec","pcm_s16le",
+                                    "-ar","44100","-ac","2",out_path], capture_output=True, timeout=30)
+                if r.returncode == 0: return "edge-tts-async"
+            import shutil; shutil.copy(mp3, out_path)
+            return "edge-tts-async-mp3"
     
     # 3. Silêncio (emergência)
     dur = max(3, len(text.split()) / 2.5)
@@ -156,12 +176,22 @@ def make_audio(text, out_path, emotion):
 def find_ffmpeg():
     """Encontra o binário do ffmpeg em vários locais"""
     import shutil as sh
-    bin = sh.which("ffmpeg")
-    if bin: return bin
-    for p in ["/usr/bin/ffmpeg","/usr/local/bin/ffmpeg","/opt/ffmpeg/ffmpeg",
-              "/tmp/ffmpeg/ffmpeg","/home/runner/ffmpeg"]:
+    b = sh.which("ffmpeg")
+    if b: return b
+    for p in ["/snap/bin/ffmpeg","/usr/bin/ffmpeg","/usr/local/bin/ffmpeg",
+              "/opt/ffmpeg/ffmpeg","/tmp/ffmpeg/ffmpeg","/home/runner/ffmpeg"]:
         if pathlib.Path(p).exists(): return p
     return None
+
+def find_ffprobe():
+    import shutil as sh
+    b = sh.which("ffprobe")
+    if b: return b
+    ff = find_ffmpeg()
+    if ff: return ff.replace("ffmpeg","ffprobe")
+    for p in ["/snap/bin/ffprobe","/usr/bin/ffprobe","/usr/local/bin/ffprobe"]:
+        if pathlib.Path(p).exists(): return p
+    return "ffprobe"
 
 # ── Personagens via HF FLUX.1-schnell ───────────────────────────
 CHARS = {
@@ -186,6 +216,24 @@ SERIES_CHARS = {
     "depressao":  ["sara","lucas","dra_ana"],
     "default":    ["daniela","dra_ana","sara"],
 }
+
+def tts_edge_async(text, out_path, emotion="empathy"):
+    """edge-tts via Python async (mais confiável que CLI)"""
+    try:
+        import asyncio, edge_tts
+        rates = {"hook":"+18%","reveal":"+12%","science":"+6%","empathy":"+8%","cta":"+15%"}
+        async def _gen():
+            c = edge_tts.Communicate(text[:500], voice="pt-BR-ThalitaMultilingualNeural",
+                                      rate=rates.get(emotion,"+10%"), volume="+15%")
+            await c.save(out_path)
+        asyncio.run(_gen())
+        p = pathlib.Path(out_path)
+        size = p.stat().st_size if p.exists() else 0
+        log(f"    edge-tts async: size={size}B")
+        return size > 100
+    except Exception as e:
+        log(f"    edge-tts async: {e}")
+        return False
 
 def gen_char_hf(char_key, emotion_adj, out_path, seed):
     if not HFT: return False
@@ -455,8 +503,7 @@ def render(vid):
     log(f"   ✅ {sz//1024//1024}MB | {dur:.0f}s | {W}x{H}")
 
     # 7. Verificar qualidade
-    ffprobe_bin = (find_ffmpeg() or "ffmpeg").replace("ffmpeg","ffprobe")
-    probe = json.loads(subprocess.run([ffprobe_bin,"-v","quiet","-print_format","json",
+    probe = json.loads(subprocess.run([find_ffprobe(),"-v","quiet","-print_format","json",
                                         "-show_streams",final], capture_output=True).stdout)
     has_video = any(s["codec_type"]=="video" for s in probe.get("streams",[]))
     has_audio = any(s["codec_type"]=="audio" for s in probe.get("streams",[]))
