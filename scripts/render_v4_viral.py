@@ -46,12 +46,26 @@ def ffp():
 def ffrun(args, timeout=120):
     return subprocess.run([ffm()]+args, capture_output=True, timeout=timeout)
 
-def probe(path, show="format"):
-    """ffprobe com path automático"""
-    r = subprocess.run([ffp(),"-v","quiet","-print_format","json",f"-show_{show}",str(path)],
-                       capture_output=True, timeout=15)
-    try: return json.loads(r.stdout)
-    except: return {}
+def mp3_duration(path):
+    """Duração do MP3 sem ffprobe"""
+    size = pathlib.Path(path).stat().st_size
+    # Estimativa: 128kbps = 16000 bytes/s (conservador)
+    est = size / 16000
+    # Tentar mutagen se disponível
+    try:
+        from mutagen.mp3 import MP3
+        return MP3(path).info.length
+    except ImportError:
+        pass
+    # Tentar ffprobe do snap
+    fp = ffp()
+    try:
+        r = subprocess.run([fp,"-v","quiet","-print_format","json","-show_format",str(path)],
+                           capture_output=True, timeout=15)
+        d = json.loads(r.stdout).get("format",{}).get("duration")
+        if d: return float(d)
+    except: pass
+    return est
 
 # ── Supabase ─────────────────────────────────────────────────────
 def sb(ep, params="", method="GET", data=None):
@@ -321,7 +335,7 @@ def render(vid):
     log(f"   🎙 Fonte: {aud_src} | {pathlib.Path(aud_mp3).stat().st_size//1024}KB")
     
     # Duração do áudio
-    dur=float(probe(aud_mp3).get("format",{}).get("duration",n*7.0) or n*7.0)
+    dur = mp3_duration(aud_mp3) if aud_mp3 and pathlib.Path(aud_mp3).exists() else n*7.0
     if dur<=0: dur=n*7.0
     log(f"   🎙 Duração: {dur:.1f}s")
     
@@ -378,9 +392,10 @@ def render(vid):
     log(f"   ✅ {sz//1024//1024}MB | {dur:.0f}s | {W}x{H} | vídeo+áudio+personagens")
     
     # Verificar streams
-    pdata=probe(final,"streams")
     try:
-        streams=pdata.get("streams",[])
+        fp = ffp()
+        pr = subprocess.run([fp,"-v","quiet","-print_format","json","-show_streams",final],capture_output=True,timeout=15)
+        streams=json.loads(pr.stdout).get("streams",[])
         has_v=any(s["codec_type"]=="video" for s in streams)
         has_a=any(s["codec_type"]=="audio" for s in streams)
         log(f"   📊 Video:{has_v} Audio:{has_a} | Streams:{len(streams)}")
