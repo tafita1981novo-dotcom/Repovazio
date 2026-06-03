@@ -1,0 +1,29 @@
+name: 🔍 Quality Control — Análise Automática de Qualidade
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'   # A cada 30min — verifica todos mp4_ready
+  workflow_dispatch:
+
+jobs:
+  qc:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: |
+          sudo apt-get install -y ffmpeg > /dev/null 2>&1
+          pip install requests --break-system-packages -q
+      - name: 🔍 Analisar qualidade dos vídeos
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python3 scripts/quality_check.py
+      - name: Report
+        if: always()
+        run: |
+          echo "## 🔍 Quality Control" >> $GITHUB_STEP_SUMMARY
+          echo "Análise automática de bitrate, áudio, resolução e duração" >> $GITHUB_STEP_SUMMARY
+          echo "Vídeos com score < 50 são automaticamente re-renderizados" >> $GITHUB_STEP_SUMMARY
