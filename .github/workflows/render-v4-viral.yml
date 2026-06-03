@@ -1,4 +1,4 @@
-name: 🎬 Render V4 Viral — ElevenLabs + Personagens + Historia
+name: 🎬 Render V4 — Edge-TTS + HF FLUX (100% GRATIS)
 
 on:
   schedule:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       max_videos:
-        description: 'Quantos videos renderizar'
+        description: 'Quantos videos'
         default: '3'
       format:
         description: 'short ou long'
@@ -21,27 +21,26 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
 
-      - name: Instalar FFmpeg e mutagen
+      - name: Instalar FFmpeg snap
         run: |
           sudo snap install ffmpeg 2>/dev/null || true
           echo "/snap/bin" >> $GITHUB_PATH
-          pip install edge-tts Pillow mutagen --break-system-packages -q
 
-      - name: Verificar setup
-        run: |
-          which ffmpeg && ffmpeg -version 2>&1 | head -1 || echo "ffmpeg via snap"
-          python3 -c "import edge_tts, PIL, mutagen; print('deps OK')"
+      - name: Instalar deps Python (gratis)
+        run: pip install edge-tts Pillow mutagen --break-system-packages -q
 
-      - name: 🎬 Render V4 Viral — ElevenLabs + HF + Historia
+      - name: 🎬 Render V4 — edge-tts + HF FLUX
         env:
-          SUPABASE_URL:          ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_KEY:  ${{ secrets.SUPABASE_SERVICE_KEY }}
-          ELEVENLABS_API_KEY:    ${{ secrets.ELEVENLABS_API_KEY }}
-          HF_TOKEN:              ${{ secrets.HF_TOKEN }}
-          MAX_VIDEOS:            ${{ inputs.max_videos || '3' }}
-          VIDEO_FORMAT:          ${{ inputs.format || 'short' }}
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          HF_TOKEN:             ${{ secrets.HF_TOKEN }}
+          MAX_VIDEOS:           ${{ inputs.max_videos || '3' }}
+          VIDEO_FORMAT:         ${{ inputs.format || 'short' }}
         run: python3 scripts/render_v4_viral.py
 
       - name: Resultado
         if: always()
-        run: echo "Render concluido" >> $GITHUB_STEP_SUMMARY
+        run: |
+          echo "## Render V4 Gratis" >> $GITHUB_STEP_SUMMARY
+          echo "- TTS: edge-tts Microsoft (gratis)" >> $GITHUB_STEP_SUMMARY
+          echo "- Imagens: HF FLUX.1-schnell (gratis)" >> $GITHUB_STEP_SUMMARY
