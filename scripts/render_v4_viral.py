@@ -30,8 +30,28 @@ def ffm():
         if pathlib.Path(p).exists(): return p
     return "ffmpeg"
 
+def ffp():
+    """Retorna path do ffprobe"""
+    import shutil
+    b = shutil.which("ffprobe")
+    if b: return b
+    for p in ["/snap/bin/ffprobe","/usr/bin/ffprobe","/usr/local/bin/ffprobe"]:
+        if pathlib.Path(p).exists(): return p
+    # Tentar derivar do ffmpeg
+    fm = ffm()
+    fp = fm.replace("ffmpeg","ffprobe")
+    if pathlib.Path(fp).exists(): return fp
+    return "ffprobe"
+
 def ffrun(args, timeout=120):
     return subprocess.run([ffm()]+args, capture_output=True, timeout=timeout)
+
+def probe(path, show="format"):
+    """ffprobe com path automático"""
+    r = subprocess.run([ffp(),"-v","quiet","-print_format","json",f"-show_{show}",str(path)],
+                       capture_output=True, timeout=15)
+    try: return json.loads(r.stdout)
+    except: return {}
 
 # ── Supabase ─────────────────────────────────────────────────────
 def sb(ep, params="", method="GET", data=None):
@@ -301,10 +321,7 @@ def render(vid):
     log(f"   🎙 Fonte: {aud_src} | {pathlib.Path(aud_mp3).stat().st_size//1024}KB")
     
     # Duração do áudio
-    r=subprocess.run(["ffprobe","-v","quiet","-print_format","json","-show_format",aud_mp3],
-                      capture_output=True,timeout=10)
-    try: dur=float(json.loads(r.stdout).get("format",{}).get("duration",n*7.0))
-    except: dur=n*7.0
+    dur=float(probe(aud_mp3).get("format",{}).get("duration",n*7.0) or n*7.0)
     if dur<=0: dur=n*7.0
     log(f"   🎙 Duração: {dur:.1f}s")
     
@@ -361,9 +378,9 @@ def render(vid):
     log(f"   ✅ {sz//1024//1024}MB | {dur:.0f}s | {W}x{H} | vídeo+áudio+personagens")
     
     # Verificar streams
-    probe=subprocess.run(["ffprobe","-v","quiet","-print_format","json","-show_streams",final],capture_output=True)
+    pdata=probe(final,"streams")
     try:
-        streams=json.loads(probe.stdout).get("streams",[])
+        streams=pdata.get("streams",[])
         has_v=any(s["codec_type"]=="video" for s in streams)
         has_a=any(s["codec_type"]=="audio" for s in streams)
         log(f"   📊 Video:{has_v} Audio:{has_a} | Streams:{len(streams)}")
