@@ -1,0 +1,23 @@
+name: Quota Reset Publisher (00:01 UTC diário)
+on:
+  schedule:
+    - cron: '1 0 * * *'   # 00:01 UTC = 21:01 BRT todos os dias
+  workflow_dispatch:
+
+jobs:
+  publish_burst:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Publish burst (nova quota do dia)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          YT_CLIENT_ID:     ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+          MAX_VIDEOS: '6'
+        run: |
+          echo "Quota resetou! Publicando 6 vídeos..."
+          python3 scripts/distribute.py
