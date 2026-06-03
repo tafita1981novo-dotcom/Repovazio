@@ -112,26 +112,56 @@ def tts_edge(text, out_path, emotion="empathy"):
     return r.returncode == 0 and pathlib.Path(out_path).stat().st_size > 1000
 
 def make_audio(text, out_path, emotion):
+    """Gera áudio: ElevenLabs → edge-tts → silêncio"""
+    # Paths
     mp3 = out_path.replace(".wav", ".mp3")
-    # 1. ElevenLabs (humano perfeito)
+    
+    # 1. ElevenLabs (humano perfeito, 401 → fallback)
     if tts_elevenlabs(text, mp3, emotion):
-        # Converter para WAV
-        r = subprocess.run(["ffmpeg","-y","-i",mp3,"-acodec","pcm_s16le",
-                            "-ar","44100","-ac","2",out_path], capture_output=True, timeout=20)
-        if r.returncode == 0 and pathlib.Path(out_path).stat().st_size > 500:
-            return "elevenlabs"
-    # 2. edge-tts
+        p = pathlib.Path(mp3)
+        if p.exists() and p.stat().st_size > 500:
+            # Converter mp3→wav com ffmpeg
+            ffmpeg_bin = find_ffmpeg()
+            if ffmpeg_bin:
+                r = subprocess.run([ffmpeg_bin,"-y","-i",mp3,"-acodec","pcm_s16le",
+                                    "-ar","44100","-ac","2",out_path], capture_output=True, timeout=30)
+                if r.returncode == 0:
+                    return "elevenlabs"
+            else:
+                # Sem ffmpeg: salvar mp3 direto como "wav" (edge-tts vai sobrescrever)
+                import shutil; shutil.copy(mp3, out_path)
+                return "elevenlabs-mp3"
+    
+    # 2. edge-tts (funciona no GitHub Actions, sem SSL proxy)
     if tts_edge(text, mp3, emotion):
-        r = subprocess.run(["ffmpeg","-y","-i",mp3,"-acodec","pcm_s16le",
-                            "-ar","44100","-ac","2",out_path], capture_output=True, timeout=20)
-        if r.returncode == 0 and pathlib.Path(out_path).stat().st_size > 500:
-            return "edge-tts"
+        p = pathlib.Path(mp3)
+        if p.exists() and p.stat().st_size > 500:
+            ffmpeg_bin = find_ffmpeg()
+            if ffmpeg_bin:
+                r = subprocess.run([ffmpeg_bin,"-y","-i",mp3,"-acodec","pcm_s16le",
+                                    "-ar","44100","-ac","2",out_path], capture_output=True, timeout=30)
+                if r.returncode == 0:
+                    return "edge-tts"
+            else:
+                import shutil; shutil.copy(mp3, out_path)
+                return "edge-tts-mp3"
+    
     # 3. Silêncio (emergência)
     dur = max(3, len(text.split()) / 2.5)
     with wave.open(out_path,"w") as wf:
         wf.setnchannels(2); wf.setsampwidth(2); wf.setframerate(44100)
         wf.writeframes(b"\x00\x00" * int(dur * 44100) * 2)
     return "silence"
+
+def find_ffmpeg():
+    """Encontra o binário do ffmpeg em vários locais"""
+    import shutil as sh
+    bin = sh.which("ffmpeg")
+    if bin: return bin
+    for p in ["/usr/bin/ffmpeg","/usr/local/bin/ffmpeg","/opt/ffmpeg/ffmpeg",
+              "/tmp/ffmpeg/ffmpeg","/home/runner/ffmpeg"]:
+        if pathlib.Path(p).exists(): return p
+    return None
 
 # ── Personagens via HF FLUX.1-schnell ───────────────────────────
 CHARS = {
@@ -347,7 +377,8 @@ def render(vid):
     else:
         cat_f = str(work/"ac.txt")
         open(cat_f,"w").write("\n".join(f"file \'{w}\'" for w in aud_wavs))
-        subprocess.run(["ffmpeg","-y","-f","concat","-safe","0","-i",cat_f,
+        ff=find_ffmpeg() or "ffmpeg"
+    subprocess.run([ff,"-y","-f","concat","-safe","0","-i",cat_f,
                         "-acodec","pcm_s16le","-ar","44100","-ac","2",narr],
                        capture_output=True, timeout=60)
 
@@ -378,8 +409,9 @@ def render(vid):
         d = int(spc * 30)
         zs = [0.0007,0.0009,0.0006,0.0008,0.0007,0.0009,0.0006,0.0008][i%8]
         zm = [1.04,1.05,1.06,1.04,1.05,1.04,1.06,1.05][i%8]
+        ff = find_ffmpeg() or "ffmpeg"
         r = subprocess.run([
-            "ffmpeg","-y","-loop","1","-t",str(spc+0.5),"-i",img,
+            ff,"-y","-loop","1","-t",str(spc+0.5),"-i",img,
             "-vf",f"scale={W}:{H},fps=30,zoompan=z=\'min(zoom+{zs},{zm})\':d={d}:s={W}x{H}:fps=30",
             "-c:v","libx264","-crf","18","-preset","fast",
             "-b:v","5000k","-r","30","-pix_fmt","yuv420p","-t",str(spc),clip
@@ -393,7 +425,8 @@ def render(vid):
     vid_only = str(work/"v.mp4")
     cat_v = str(work/"vc.txt")
     open(cat_v,"w").write("\n".join(f"file \'{c}\'" for c in clips))
-    subprocess.run(["ffmpeg","-y","-f","concat","-safe","0","-i",cat_v,
+    ff=find_ffmpeg() or "ffmpeg"
+    subprocess.run([ff,"-y","-f","concat","-safe","0","-i",cat_v,
                     "-c:v","copy",vid_only], capture_output=True, timeout=60)
 
     # 5. Música
@@ -402,8 +435,9 @@ def render(vid):
 
     # 6. Mix final
     final = str(work/"FINAL.mp4")
+    ff = find_ffmpeg() or "ffmpeg"
     r = subprocess.run([
-        "ffmpeg","-y",
+        ff,"-y",
         "-i",vid_only,"-i",narr,"-i",music,
         "-filter_complex",
         "[1:a]volume=1.0[v];"
@@ -421,7 +455,8 @@ def render(vid):
     log(f"   ✅ {sz//1024//1024}MB | {dur:.0f}s | {W}x{H}")
 
     # 7. Verificar qualidade
-    probe = json.loads(subprocess.run(["ffprobe","-v","quiet","-print_format","json",
+    ffprobe_bin = (find_ffmpeg() or "ffmpeg").replace("ffmpeg","ffprobe")
+    probe = json.loads(subprocess.run([ffprobe_bin,"-v","quiet","-print_format","json",
                                         "-show_streams",final], capture_output=True).stdout)
     has_video = any(s["codec_type"]=="video" for s in probe.get("streams",[]))
     has_audio = any(s["codec_type"]=="audio" for s in probe.get("streams",[]))
