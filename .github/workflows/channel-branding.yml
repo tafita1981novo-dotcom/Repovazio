@@ -1,0 +1,63 @@
+name: 🎨 Channel Branding Auto (Banner + Perfil + SEO)
+
+on:
+  schedule:
+    - cron: '0 3 * * 0'   # Todo domingo às 03:00 UTC (atualiza semanalmente)
+  workflow_dispatch:
+
+jobs:
+  branding:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install requests pillow --break-system-packages -q
+      - name: Gerar assets de branding
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python3 scripts/channel_branding.py
+      - name: Upload assets ao Supabase Storage
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          python3 << 'PYEOF'
+          import os, pathlib, urllib.request, json
+          SBU = os.environ.get("SUPABASE_URL","")
+          SBK = os.environ.get("SUPABASE_SERVICE_KEY","")
+          if not SBU or not SBK:
+              print("Supabase não configurado")
+              exit(0)
+          
+          assets = [
+              ("/tmp/branding/channel_banner.jpg", "branding/banner.jpg"),
+              ("/tmp/branding/profile_picture.jpg", "branding/profile.jpg"),
+              ("/tmp/branding/thumbnail_template.jpg", "branding/thumbnail_template.jpg"),
+          ]
+          for local, remote in assets:
+              if not pathlib.Path(local).exists():
+                  print(f"  ⚠️  {local} não encontrado")
+                  continue
+              data = open(local, "rb").read()
+              url = f"{SBU}/storage/v1/object/videos/{remote}"
+              req = urllib.request.Request(url, data=data, method="POST",
+                  headers={"apikey": SBK, "Authorization": f"Bearer {SBK}",
+                           "Content-Type": "image/jpeg", "x-upsert": "true"})
+              try:
+                  with urllib.request.urlopen(req) as r:
+                      print(f"  ✅ {remote}: {r.status}")
+              except Exception as e:
+                  print(f"  ❌ {remote}: {e}")
+          PYEOF
+      - name: Report
+        if: always()
+        run: |
+          echo "## 🎨 Channel Branding" >> $GITHUB_STEP_SUMMARY
+          echo "- Banner: 2560x1440 (padrão YouTube)" >> $GITHUB_STEP_SUMMARY
+          echo "- Perfil: 800x800 (Daniela kawaii)" >> $GITHUB_STEP_SUMMARY
+          echo "- Thumbnail: 1280x720 (template viral)" >> $GITHUB_STEP_SUMMARY
+          echo "- Descrição SEO: gerada via Groq AI" >> $GITHUB_STEP_SUMMARY
