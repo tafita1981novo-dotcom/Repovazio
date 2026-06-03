@@ -4,6 +4,13 @@
 Colunas reais: pub_order, series_slug, ep_number, youtube_title, youtube_description
 """
 import os, json, time, urllib.request, urllib.parse, tempfile, pathlib
+import sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+try:
+    from yt_credentials import get_access_token as _get_access_token
+    HAS_YT_CREDS = True
+except ImportError:
+    HAS_YT_CREDS = False
 from datetime import datetime, timezone
 
 SBU = os.getenv("SUPABASE_URL", "")
@@ -27,6 +34,14 @@ MAX_PER_RUN = int(os.getenv("MAX_PER_RUN", "2"))
 def log(msg): print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}", flush=True)
 
 def get_token():
+    if HAS_YT_CREDS:
+        try:
+            return _get_access_token(1)
+        except Exception as e:
+            log(f"yt_credentials falhou: {e} — tentando variáveis de ambiente")
+    # Fallback: variáveis de ambiente
+    if not REFRESH_TOKEN or not CLIENT_ID or not CLIENT_SECRET:
+        return ""
     body = urllib.parse.urlencode({
         "client_id": CLIENT_ID, "client_secret": CLIENT_SECRET,
         "refresh_token": REFRESH_TOKEN, "grant_type": "refresh_token"
