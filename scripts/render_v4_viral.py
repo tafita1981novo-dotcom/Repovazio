@@ -351,26 +351,20 @@ def render(vid):
         log(f"   👤 Cena {i+1}/{n}: {ck} ({em}) → {src or '❌'}")
         if not src: continue
         
-        # Ken Burns (sintaxe compatível ffmpeg 4.x e 7.x)
-        clip=str(work/f"kb{i:03d}.mp4"); d=int(spc*30)
-        zs=[0.0007,0.0009,0.0006,0.0008][i%4]; zm=[1.04,1.05,1.06,1.04][i%4]
-        # Tentar com zoompan
-        r2=ffrun(["-y","-loop","1","-t",str(spc+1),"-i",img,
-                  "-vf",f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},fps=30,"
-                        f"zoompan=z='min(zoom+{zs},{zm})':d={d}:s={W}x{H}",
-                  "-c:v","libx264","-crf","18","-preset","ultrafast",
-                  "-r","30","-pix_fmt","yuv420p","-t",str(spc),clip],120)
-        if r2.returncode==0 and pathlib.Path(clip).exists():
-            clips.append(clip); log(f"   ✅ Cena {i+1} KB ok")
+        # Gerar clip simples (scale puro — compatível com ffmpeg 4.x e 7.x)
+        clip = str(work/f"kb{i:03d}.mp4")
+        r2 = ffrun(["-y",
+                    "-loop","1","-t",str(spc),
+                    "-i", img,
+                    "-vf", f"scale={W}:{H}",
+                    "-c:v","libx264","-crf","20","-preset","ultrafast",
+                    "-pix_fmt","yuv420p","-r","25",
+                    clip], 60)
+        if r2.returncode == 0 and pathlib.Path(clip).exists() and pathlib.Path(clip).stat().st_size > 1000:
+            clips.append(clip)
+            log(f"   ✅ Cena {i+1}/{n} ok ({pathlib.Path(clip).stat().st_size//1024}KB)")
         else:
-            log(f"   ⚠️ zoompan falhou ({r2.returncode}), usando scale simples")
-            # Fallback: apenas scale + loop (sem Ken Burns)
-            r3=ffrun(["-y","-loop","1","-t",str(spc),"-i",img,
-                      "-vf",f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},fps=30",
-                      "-c:v","libx264","-crf","20","-preset","ultrafast",
-                      "-r","30","-pix_fmt","yuv420p",clip],60)
-            if r3.returncode==0: clips.append(clip); log(f"   ✅ Cena {i+1} scale ok")
-            else: log(f"   ❌ Cena {i+1}: {r3.stderr.decode()[-80:]}")
+            log(f"   ❌ Cena {i+1} falhou: rc={r2.returncode} | {r2.stderr.decode()[-120:]}")
     
     if not clips: log("   ❌ Nenhum clip gerado!"); return False
     
