@@ -1,32 +1,46 @@
-name: Smart Publisher — Horários de Pico BR
+name: 📺 Smart Publisher — Publica em Horários de Pico BR
 
 on:
   schedule:
-    # 6 publicações por dia nos horários de pico (BRT = UTC-3)
-    # 18:00 BRT = 21:00 UTC, 19:00 BRT = 22:00 UTC, 20:00 BRT = 23:00 UTC
-    # 07:00 BRT = 10:00 UTC, 12:00 BRT = 15:00 UTC, 15:00 BRT = 18:00 UTC
-    - cron: '1 0 * * *'    # 21:01 BRT (reset quota)
-    - cron: '0 10 * * *'   # 07:00 BRT (manhã)
-    - cron: '0 15 * * *'   # 12:00 BRT (almoço)
-    - cron: '0 18 * * *'   # 15:00 BRT (tarde)
-    - cron: '0 21 * * *'   # 18:00 BRT (prime time)
-    - cron: '0 22 * * *'   # 19:00 BRT (prime time)
+    - cron: '0 12 * * *'   # 09:00 BR
+    - cron: '0 15 * * *'   # 12:00 BR
+    - cron: '0 19 * * *'   # 16:00 BR
+    - cron: '0 21 * * *'   # 18:00 BR (pico máximo)
+    - cron: '0 23 * * *'   # 20:00 BR (noturno)
+    - cron: '30 0  * * *'  # 21:30 BR
   workflow_dispatch:
     inputs:
       max_videos:
-        description: 'Quantos vídeos publicar (default: 2)'
+        description: 'Máximo de vídeos (default: 2)'
         default: '2'
-        required: false
 
 jobs:
   publish:
+    name: 📺 Publicar Vídeos
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-      - name: Publish (horário de pico)
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+
+      - name: 📺 Publicar vídeos
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-          MAX_VIDEOS: ${{ github.event.inputs.max_videos || '2' }}
-        run: python3 scripts/distribute.py
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          MAX_PER_RUN: ${{ inputs.max_videos || '2' }}
+        run: python3 scripts/series_publisher.py
+
+      - name: 📊 Relatório
+        if: always()
+        run: |
+          echo "## 📺 Publicação @psidanicoelho" >> $GITHUB_STEP_SUMMARY
+          echo "| | |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| Canal | @psidanicoelho |" >> $GITHUB_STEP_SUMMARY
+          echo "| Ordem | pub_order ASC |" >> $GITHUB_STEP_SUMMARY
+          echo "| Quota | 1600 units/vídeo |" >> $GITHUB_STEP_SUMMARY
+          echo "| Playlists | Auto por series_slug |" >> $GITHUB_STEP_SUMMARY
