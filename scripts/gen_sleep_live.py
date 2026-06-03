@@ -22,6 +22,10 @@ TMP = pathlib.Path("/tmp/sleep_live"); TMP.mkdir(exist_ok=True)
 def log(msg): print(f"[{datetime.now():%H:%M:%S}] {msg}", flush=True)
 
 def ffm():
+    try:
+        import imageio_ffmpeg
+        return imageio_ffmpeg.get_ffmpeg_exe()
+    except ImportError: pass
     import shutil
     b=shutil.which("ffmpeg")
     if b: return b
