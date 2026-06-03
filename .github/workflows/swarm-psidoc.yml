@@ -1,0 +1,184 @@
+name: "🐝 Swarm psicologia.doc — 10 Agentes Paralelos (Ruflo-style)"
+# Inspirado no Ruflo/claude-flow — orquestração multi-agente
+# LLM: Groq API (GRÁTIS) | Memória: Supabase | Custo: R$0
+
+on:
+  workflow_dispatch:
+    inputs:
+      swarm_id:
+        description: "ID do swarm (deixar vazio = auto)"
+        default: ""
+      objetivo:
+        description: "Objetivo do swarm"
+        default: "pipeline_completo"
+  schedule:
+    - cron: "0 */4 * * *"  # A cada 4 horas
+
+env:
+  SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+  SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+  GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+  NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+  SWARM_ID: ${{ inputs.swarm_id || format('swarm-{0}', github.run_id) }}
+
+jobs:
+  # ── FASE 1: Coordenador do Swarm ─────────────────────────────────────────
+  swarm-coordinator:
+    name: "🧠 Coordenador"
+    runs-on: ubuntu-latest
+    outputs:
+      swarm_id: ${{ steps.init.outputs.swarm_id }}
+      needs_scripts: ${{ steps.status.outputs.needs_scripts }}
+      needs_seo: ${{ steps.status.outputs.needs_seo }}
+      needs_trends: ${{ steps.status.outputs.needs_trends }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: Init swarm e checar status
+        id: init
+        run: |
+          SWARM_ID="${{ env.SWARM_ID }}"
+          echo "swarm_id=${SWARM_ID}" >> $GITHUB_OUTPUT
+          echo "🐝 Swarm ID: ${SWARM_ID}"
+      - name: Analisar pipeline
+        id: status
+        env:
+          AGENT_ID: "coordinator"
+          AGENT_TYPE: "coordinator"
+        run: |
+          python3 -c "
+          import os, urllib.request, urllib.parse, json
+          SBU = os.environ['SUPABASE_URL']
+          SBK = os.environ['SUPABASE_SERVICE_KEY']
+          headers = {'apikey': SBK, 'Authorization': f'Bearer {SBK}'}
+          def fetch(path):
+              req = urllib.request.Request(f'{SBU}/rest/v1/{path}', headers=headers)
+              with urllib.request.urlopen(req) as r: return json.loads(r.read())
+          pending = len(fetch('content_pipeline?status=eq.pending_generation&select=id'))
+          mp4_no_seo = len(fetch('content_pipeline?status=in.(mp4_ready,pending_credentials)&youtube_title=eq.&select=id'))
+          print(f'pending_gen={pending}, mp4_sem_seo={mp4_no_seo}')
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              f.write(f'needs_scripts={\"true\" if pending < 10 else \"false\"}\n')
+              f.write(f'needs_seo={\"true\" if mp4_no_seo > 0 else \"false\"}\n')
+              f.write(f'needs_trends={\"true\" if pending < 5 else \"false\"}\n')
+          "
+
+  # ── FASE 2: Agentes em PARALELO (swarm) ──────────────────────────────────
+  script-writers:
+    name: "✍️ Script-Writer ${{ matrix.instance }}"
+    needs: swarm-coordinator
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        instance: [1, 2, 3, 4, 5]  # 5 writers em paralelo
+      max-parallel: 5
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: Rodar script-writer
+        env:
+          AGENT_ID: "script-writer-${{ matrix.instance }}"
+          AGENT_TYPE: "script-writer"
+          SWARM_ID: ${{ needs.swarm-coordinator.outputs.swarm_id }}
+        run: python3 scripts/agents/script_writer.py
+
+  seo-optimizers:
+    name: "🎯 SEO-Optimizer ${{ matrix.instance }}"
+    needs: swarm-coordinator
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        instance: [1, 2, 3]  # 3 SEO agents em paralelo
+      max-parallel: 3
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: Rodar seo-optimizer
+        env:
+          AGENT_ID: "seo-optimizer-${{ matrix.instance }}"
+          AGENT_TYPE: "seo-optimizer"
+          SWARM_ID: ${{ needs.swarm-coordinator.outputs.swarm_id }}
+        run: python3 scripts/agents/seo_optimizer.py
+
+  trend-researcher:
+    name: "🔍 Trend-Researcher"
+    needs: swarm-coordinator
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: Pesquisar tendências
+        env:
+          AGENT_ID: "trend-researcher-1"
+          AGENT_TYPE: "trend-researcher"
+          SWARM_ID: ${{ needs.swarm-coordinator.outputs.swarm_id }}
+        run: python3 scripts/agents/trend_researcher.py
+
+  quality-reviewer:
+    name: "✅ Quality-Reviewer"
+    needs: [script-writers]  # Roda depois dos writers
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: Revisar qualidade dos scripts
+        env:
+          AGENT_ID: "quality-reviewer-1"
+          AGENT_TYPE: "quality-reviewer"
+          SWARM_ID: ${{ needs.swarm-coordinator.outputs.swarm_id }}
+        run: python3 scripts/agents/quality_reviewer.py
+
+  # ── FASE 3: Reportar resultados do swarm ─────────────────────────────────
+  swarm-reporter:
+    name: "📊 Swarm Report"
+    needs: [script-writers, seo-optimizers, trend-researcher, quality-reviewer]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: Gerar relatório final do swarm
+        env:
+          AGENT_ID: "swarm-reporter"
+          AGENT_TYPE: "reporter"
+          SWARM_ID: ${{ needs.swarm-coordinator.outputs.swarm_id }}
+        run: |
+          python3 -c "
+          import os, urllib.request, json, time
+          SBU = os.environ['SUPABASE_URL']
+          SBK = os.environ['SUPABASE_SERVICE_KEY']
+          H = {'apikey': SBK, 'Authorization': f'Bearer {SBK}'}
+          SWARM = os.environ.get('SWARM_ID','?')
+          
+          def fetch(path):
+              req = urllib.request.Request(f'{SBU}/rest/v1/{path}', headers=H)
+              with urllib.request.urlopen(req) as r: return json.loads(r.read())
+          
+          stats = {
+            'mp4_ready': len(fetch('content_pipeline?status=eq.mp4_ready&select=id')),
+            'pending_cred': len(fetch('content_pipeline?status=eq.pending_credentials&select=id')),
+            'audio_ready': len(fetch('content_pipeline?status=eq.audio_ready&select=id')),
+            'ready_tts': len(fetch('content_pipeline?status=eq.ready_tts&select=id')),
+            'pending_gen': len(fetch('content_pipeline?status=eq.pending_generation&select=id')),
+          }
+          
+          print(f'=== SWARM {SWARM} CONCLUÍDO ===')
+          print(f'mp4_ready: {stats[\"mp4_ready\"]} | pending_credentials: {stats[\"pending_cred\"]}')
+          print(f'audio_ready: {stats[\"audio_ready\"]} | ready_tts: {stats[\"ready_tts\"]}')
+          print(f'pending_generation: {stats[\"pending_gen\"]}')
+          print(f'TOTAL publicável: {stats[\"mp4_ready\"] + stats[\"pending_cred\"]}')
+          
+          # Finalizar run do swarm
+          data = json.dumps({'status': 'completed', 'finished_at': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), 'results': stats}).encode()
+          req = urllib.request.Request(f'{SBU}/rest/v1/swarm_runs?swarm_id=eq.{SWARM}',
+            data=data, method='PATCH', headers={**H, 'Content-Type': 'application/json'})
+          urllib.request.urlopen(req)
+          "
