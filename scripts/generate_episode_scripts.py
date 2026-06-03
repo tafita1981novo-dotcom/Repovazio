@@ -53,7 +53,7 @@ def sb_patch(table, where, data):
 
 # Carregar personagens do universo
 chars = sb_get("character_universe",
-    "select=slug,name,role,visual,personality&order=id.asc")
+    "select=slug,name,role,visual_desc,personality&order=id.asc")
 CHARS = {c["slug"]: c for c in chars}
 
 # Carregar memória do universo
@@ -115,7 +115,7 @@ def get_char_context(series_theme):
             m = MEM.get(slug, {})
             result.append({
                 "name": c["name"],
-                "visual": m.get("visual_evolution", c["visual"]),
+                "visual": m.get("visual_evolution", c["visual_desc"]),
                 "personality": c["personality"],
                 "stage": m.get("current_stage", 1),
                 "arc": m.get("cumulative_arc", ""),
@@ -140,7 +140,7 @@ def gerar_script(ep, serie):
     for c in ep_chars:
         stage_label = ["🔴iniciando","🟠percebendo","🟡lutando","🟢crescendo","✅transformado"][
             min(c["stage"]-1, 4)]
-        char_lines.append(f"• {c['name']} ({stage_label}): {c['visual']}")
+        char_lines.append(f"• {c['name']} ({stage_label}): {c["visual_desc"]}")
     char_guide = "\n".join(char_lines)
     
     system = f"""Você é o roteirista chefe de @psidanielacoelho, canal de psicologia no YouTube.
@@ -317,3 +317,4 @@ for ep in pending:
 print(f"\n{'═'*60}")
 print(f"  ✅ {generated}/{len(pending)} episódios gerados com sucesso")
 print(f"{'═'*60}\n")
+
