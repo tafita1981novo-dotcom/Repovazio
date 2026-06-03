@@ -1,0 +1,46 @@
+name: 🎬 Render V4 Viral — ElevenLabs + Personagens + Historia
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+    inputs:
+      max_videos:
+        description: 'Quantos videos renderizar'
+        default: '3'
+      format:
+        description: 'short ou long'
+        default: 'short'
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+
+      - name: Instalar dependencias
+        run: |
+          sudo apt-get install -y ffmpeg -q 2>/dev/null
+          pip install edge-tts Pillow --break-system-packages -q
+
+      - name: 🎬 Render V4 Viral
+        env:
+          SUPABASE_URL:          ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY:  ${{ secrets.SUPABASE_SERVICE_KEY }}
+          ELEVENLABS_API_KEY:    ${{ secrets.ELEVENLABS_API_KEY }}
+          HF_TOKEN:              ${{ secrets.HF_TOKEN }}
+          MAX_VIDEOS:            ${{ inputs.max_videos || '3' }}
+          VIDEO_FORMAT:          ${{ inputs.format || 'short' }}
+        run: python3 scripts/render_v4_viral.py
+
+      - name: Resultado
+        if: always()
+        run: |
+          echo "## 🎬 Render V4 Viral" >> $GITHUB_STEP_SUMMARY
+          echo "- ElevenLabs Sarah: voz humana indetectável" >> $GITHUB_STEP_SUMMARY
+          echo "- HF FLUX.1-schnell: personagens fotorrealistas" >> $GITHUB_STEP_SUMMARY
+          echo "- Arco narrativo: Hook→Revelação→Ciência→Empatia→CTA" >> $GITHUB_STEP_SUMMARY
+          echo "- Ken Burns expressivo por cena" >> $GITHUB_STEP_SUMMARY
