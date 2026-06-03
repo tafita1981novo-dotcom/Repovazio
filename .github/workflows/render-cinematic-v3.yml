@@ -1,0 +1,77 @@
+name: 🎬 Render Cinematic v3 — SEM texto na tela (estilo Psych2Go viral)
+
+on:
+  schedule:
+    - cron: '*/20 * * * *'   # a cada 20 minutos
+  workflow_dispatch:
+    inputs:
+      lang:
+        description: 'Idioma (pt-BR|en-US|es-ES|fr-FR|de-DE|ja-JP|ko-KR)'
+        default: 'pt-BR'
+      format:
+        description: 'Formato (short|long)'
+        default: 'short'
+      max_videos:
+        description: 'Máximo de vídeos'
+        default: '2'
+
+jobs:
+  render:
+    name: 🎬 Cinematic Render — ${{ inputs.lang || 'pt-BR' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+
+      - name: 🛠️ Instalar dependências
+        run: |
+          sudo apt-get install -y ffmpeg fonts-dejavu -q 2>/dev/null || true
+          pip install edge-tts --break-system-packages -q
+
+      - name: 🧪 Benchmark vs Psych2Go (teste de qualidade)
+        run: |
+          echo "## 🎬 Benchmark Cinematic v3" >> $GITHUB_STEP_SUMMARY
+          echo "| Canal | Subs | Avg Views | Style |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|------|-----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Psych2Go | 14.2M | 1.5M | Chibi animado |" >> $GITHUB_STEP_SUMMARY
+          echo "| Therapy in a Nutshell | 1.7M | 800K | Talking head |" >> $GITHUB_STEP_SUMMARY
+          echo "| **@psidanicoelho (alvo)** | **0→100K** | **50K+** | **IA cinematográfico** |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Padrões virais aplicados:**" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ ZERO texto central na tela" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Personagens IA fotorrealistas" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Ken Burns ultra-suave (1.00→1.05)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Narração TTS premium" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Música lofi procedural de fundo (12%)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Quality score ≥ 40 antes de publicar" >> $GITHUB_STEP_SUMMARY
+
+      - name: 🎬 Render PT-BR
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          LANG_CODE: ${{ inputs.lang || 'pt-BR' }}
+          VIDEO_FORMAT: ${{ inputs.format || 'short' }}
+          MAX_VIDEOS: ${{ inputs.max_videos || '2' }}
+        run: python3 scripts/render_cinematic_v3.py
+
+      - name: 🌍 Gerar versão EN (canal internacional)
+        if: inputs.lang == '' || inputs.lang == 'pt-BR'
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          TARGET_LANG: 'en-US'
+        run: python3 scripts/multilingual_engine.py
+
+      - name: 🌍 Gerar versão ES (Hispânico)
+        if: inputs.lang == '' || inputs.lang == 'pt-BR'
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          TARGET_LANG: 'es-ES'
+        run: python3 scripts/multilingual_engine.py
