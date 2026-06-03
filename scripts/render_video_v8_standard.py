@@ -83,8 +83,13 @@ def ken_burns(img_path, out_path, duration=4, zoom=4):
     cmd = [
         "ffmpeg", "-y", "-loop", "1", "-i", str(img_path),
         "-vf", f"scale=1080:1920,zoompan=z='{z}+0*on':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={duration*25}:s=1080x1920",
-        "-t", str(duration), "-c:v", "libx264", "-pix_fmt", "yuv420p",
-        "-r", "25", str(out_path)
+        "-t", str(duration), "-pix_fmt", "yuv420p",
+        "-r", "25",
+        "-c:v", "libx264", "-crf", "20",
+        "-preset", "fast",
+        "-profile:v", "high", "-level", "4.1",
+        "-b:v", "3500k", "-maxrate", "4500k", "-bufsize", "9000k",
+        str(out_path)
     ]
     subprocess.run(cmd, capture_output=True, timeout=60)
 
@@ -168,8 +173,14 @@ def render_video(row):
             audio_data = requests.get(audio_url, timeout=30).content
             audio_path = TMP / f"{vid_id}_audio.mp3"
             audio_path.write_bytes(audio_data)
-            subprocess.run(["ffmpeg", "-y", "-i", str(video_sem_audio), "-i", str(audio_path),
-                "-c:v", "copy", "-c:a", "aac", "-shortest", str(final)], capture_output=True, timeout=120)
+            subprocess.run(["ffmpeg", "-y",
+                "-i", str(video_sem_audio), "-i", str(audio_path),
+                "-c:v", "libx264", "-crf", "20", "-preset", "fast",
+                "-profile:v", "high", "-level", "4.1",
+                "-b:v", "3500k", "-maxrate", "4500k", "-bufsize", "9000k",
+                "-c:a", "aac", "-b:a", "192k", "-ac", "2", "-ar", "48000",
+                "-shortest", "-movflags", "+faststart",
+                str(final)], capture_output=True, timeout=300)
         except Exception as e:
             print(f"  Audio erro: {e}")
             if video_sem_audio.exists():
