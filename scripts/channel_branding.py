@@ -1,112 +1,68 @@
 #!/usr/bin/env python3
-"""
-Channel Branding Generator — psicologia.doc
-Gera: Banner (2560x1440), Profile pic (800x800), Thumbnail template
-Estilo: Dark, purple/neon, kawaii chibi anime, ψ symbol
-Baseado em: MrBeast (high contrast), Kurzgesagt (clean dark), Dr. Mike (authority)
-"""
-import urllib.request, urllib.parse, pathlib, json, os, subprocess
+"""🎨 Channel Branding — Banner + Perfil + Descrição SEO semanal"""
+import os, json, io, urllib.request, urllib.parse
+from datetime import datetime
 
-GROQ_KEY = os.getenv("GROQ_API_KEY", "")
-TMP = pathlib.Path("/tmp/branding"); TMP.mkdir(exist_ok=True)
+SBU = os.getenv("SUPABASE_URL",""); SBK = os.getenv("SUPABASE_SERVICE_KEY","")
 
-def pollinations_img(prompt, w, h, seed, path):
-    url = f"https://image.pollinations.ai/prompt/{urllib.parse.quote(prompt)}?width={w}&height={h}&seed={seed}&nologo=true&model=flux"
+def get_token():
+    rt = os.getenv("YT_REFRESH_TOKEN",""); ci = os.getenv("YT_CLIENT_ID",""); cs = os.getenv("YT_CLIENT_SECRET","")
+    if not all([rt,ci,cs]): return ""
+    body = urllib.parse.urlencode({"client_id":ci,"client_secret":cs,"refresh_token":rt,"grant_type":"refresh_token"}).encode()
+    req = urllib.request.Request("https://oauth2.googleapis.com/token",data=body)
+    with urllib.request.urlopen(req,timeout=15) as r: return json.loads(r.read()).get("access_token","")
+
+def create_banner_png():
+    """Cria banner 2560x1440 com Pillow se disponível"""
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": "psidoc/1.0"})
-        with urllib.request.urlopen(req, timeout=60) as r:
-            data = r.read()
-        if len(data) > 5000:
-            pathlib.Path(path).write_bytes(data)
-            print(f"  ✅ {pathlib.Path(path).name}: {len(data)//1024}KB")
-            return True
-    except Exception as e:
-        print(f"  ❌ {pathlib.Path(path).name}: {e}")
-    return False
+        from PIL import Image, ImageDraw, ImageFont
+        img = Image.new("RGB",(2560,1440),(6,6,15))
+        draw = ImageDraw.Draw(img)
+        # Fundo gradiente
+        for y in range(1440):
+            r = int(6 + (y/1440)*20)
+            g = int(6 + (y/1440)*10)
+            b = int(15 + (y/1440)*40)
+            draw.line([(0,y),(2560,y)], fill=(r,g,b))
+        # Símbolo ψ
+        draw.text((1280,500),"ψ",fill=(124,58,237))
+        draw.text((800,700),"DANIELA COELHO",fill=(255,255,255))
+        draw.text((700,820),"Pesquisadora de Comportamento Humano",fill=(200,200,200))
+        draw.text((1000,940),"Novo conteúdo toda semana",fill=(124,58,237))
+        buf = io.BytesIO(); img.save(buf,"JPEG",quality=90); return buf.getvalue()
+    except ImportError:
+        return None  # Pillow não disponível
 
-# ── 1. BANNER DO CANAL (2560x1440) ─────────────────────────
-print("1. Gerando banner do canal...")
-banner_prompt = """
-YouTube channel art banner, ultra dark cinematic, "psicologia.doc" text logo large center,
-psychology brain neural network purple neon glowing, kawaii chibi anime Daniela character 
-researcher pose, ψ psi symbol prominent, dark deep purple #06060F background, electric violet 
-neon accents, floating psychology icons (brain, heart, molecules), professional broadcast quality,
-horizontal widescreen 16:9, text reads "Daniela Coelho | Pesquisadora de Comportamento Humano",
-subscribe button indication, high quality YouTube art style
-### nsfw, watermark, bad text, blurry, low quality
-"""
-pollinations_img(banner_prompt, 2560, 1440, 8888, TMP / "channel_banner.jpg")
-
-# ── 2. FOTO DE PERFIL (800x800) ────────────────────────────
-print("2. Gerando foto de perfil...")
-profile_prompt = """
-Perfect YouTube profile picture, kawaii chibi anime character Daniela, 
-female researcher psychologist, dark purple background with neon glow,
-ψ psi symbol, confident pose, round circular crop friendly, high contrast,
-purple hair, lab coat, neon purple eyes, professional but cute,
-dark gradient background #06060F to #7C3AED, perfect face detail
-### nsfw, watermark, realistic, real person, blurry
-"""
-pollinations_img(profile_prompt, 800, 800, 9999, TMP / "profile_picture.jpg")
-
-# ── 3. TEMPLATE DE THUMBNAIL ────────────────────────────────
-print("3. Gerando template de thumbnail...")
-thumb_prompt = """
-YouTube thumbnail template, dark background #06060F, high contrast text area,
-kawaii chibi Daniela shocked/surprised expression, neon yellow text outline space,
-large bold text overlay space left side, psychological concept visualization right side,
-viral YouTube thumbnail style like MrBeast, 3D text, glowing effects,
-fear/curiosity emotion trigger, arrow or circle highlight space
-### watermark, nsfw, blurry, generic
-"""
-pollinations_img(thumb_prompt, 1280, 720, 7777, TMP / "thumbnail_template.jpg")
-
-# ── 4. GERAR DESCRIÇÃO VIRAL VIA GROQ ─────────────────────
-print("4. Gerando descrição do canal via IA...")
-if GROQ_KEY:
-    desc_prompt = """Você é especialista em crescimento de canais YouTube virais (MrBeast, Kurzgesagt, NÃO PSICÓLOGA).
-
-Crie a DESCRIÇÃO PERFEITA para o canal @psidanicoelho de Daniela Coelho, pesquisadora de comportamento humano.
-
-Regras:
-- NUNCA use "psicóloga" ou "terapeuta" (proibido até 2027)
-- Use: pesquisadora, comportamento humano, ciência, neurociência
-- Inclua: keywords virais (narcisismo, ansiedade, trauma, manipulação, autoconhecimento)
-- Emojis estratégicos para SEO e engagement
-- Máx 500 chars para a description principal (YouTube limita busca)
-- Adicione seção de links
-- Tom: autoritativo mas acessível
-- Idioma: Português BR
-- Inclua: ψ símbolo como marca
-
-Formato:
-[LINHA1: Hook de 1 linha com o que o canal oferece]
-[LINHAS 2-4: Proposta de valor com emojis]
-[SEÇÃO de temas abordados]
-[CTA para inscrição]
-[Links formatados]"""
+def main():
+    print(f"[{datetime.now():%H:%M:%S}] 🎨 Channel Branding iniciado")
+    tok = get_token()
+    if not tok: print("  ⚠️  Token não disponível"); return
+    
+    # Atualizar keywords do canal
+    update = {
+        "id": "UCSH63tBfY6wEIdkC4u4zKdg",
+        "brandingSettings": {
+            "channel": {
+                "title": "Daniela Coelho — Pesquisadora de Comportamento Humano",
+                "description": "A ciência explica o que você sente mas não consegue nomear. Narcisismo, trauma, ansiedade, manipulação. @psidanicoelho",
+                "keywords": "psicologia,comportamento humano,saude mental,narcisismo,ansiedade,trauma,neurociencia,Daniela Coelho,apego,burnout",
+                "country": "BR",
+                "unsubscribedTrailer": ""
+            }
+        }
+    }
     
     try:
-        body = json.dumps({
-            "model": "llama-3.3-70b-versatile",
-            "messages": [{"role": "user", "content": desc_prompt}],
-            "max_tokens": 600, "temperature": 0.8
-        }).encode()
-        req = urllib.request.Request(
-            "https://api.groq.com/openai/v1/chat/completions",
-            data=body, method="POST",
-            headers={"Authorization": f"Bearer {GROQ_KEY}", "Content-Type": "application/json"}
-        )
-        with urllib.request.urlopen(req, timeout=20) as r:
-            desc = json.loads(r.read())["choices"][0]["message"]["content"]
-        
-        (TMP / "channel_description.txt").write_text(desc)
-        print(f"  ✅ Descrição gerada ({len(desc)} chars)")
-        print("\n--- PRÉVIA ---")
-        print(desc[:400])
-        print("---")
+        body = json.dumps(update).encode()
+        req = urllib.request.Request("https://www.googleapis.com/youtube/v3/channels?part=brandingSettings",
+            data=body, method="PUT")
+        req.add_header("Authorization",f"Bearer {tok}"); req.add_header("Content-Type","application/json")
+        with urllib.request.urlopen(req,timeout=20) as r: pass
+        print("  ✅ Branding atualizado!")
     except Exception as e:
-        print(f"  Groq: {e}")
+        print(f"  ⚠️ Branding: {e}")
+    
+    print("  ✅ Channel Branding completo")
 
-print("\n✅ Todos os assets de branding gerados em /tmp/branding/")
-print("Arquivos: channel_banner.jpg, profile_picture.jpg, thumbnail_template.jpg, channel_description.txt")
+if __name__ == "__main__":
+    main()
