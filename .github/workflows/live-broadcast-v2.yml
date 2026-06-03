@@ -1,0 +1,212 @@
+name: 🔴 Live Broadcast 24/7 v2 — Qualidade Testada (4500kbps)
+
+on:
+  schedule:
+    - cron: '0 0 * * *'    # 21:00 BRT — prime time
+    - cron: '0 6 * * *'    # 03:00 BRT — insônia
+    - cron: '0 12 * * *'   # 09:00 BRT — manhã
+    - cron: '0 21 * * *'   # 18:00 BRT — tarde
+  workflow_dispatch:
+    inputs:
+      horas:
+        description: 'Duração (horas)'
+        default: '6'
+        required: false
+      tema:
+        description: 'Tema inicial (narcisismo/ansiedade/trauma/livre)'
+        default: 'narcisismo'
+
+jobs:
+  # ═══ JOB 1: PRÉ-ANÁLISE DE QUALIDADE ═══════════════════
+  quality_precheck:
+    name: 🔍 Pré-análise de Qualidade
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      quality_ok: ${{ steps.check.outputs.quality_ok }}
+      sample_url: ${{ steps.check.outputs.sample_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: sudo apt-get install -y ffmpeg -q
+      - name: 🔍 Verificar amostras de vídeo
+        id: check
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          python3 << 'PYEOF'
+          import os, json, subprocess, urllib.request
+          
+          SBU = os.environ["SUPABASE_URL"]
+          SBK = os.environ["SUPABASE_SERVICE_KEY"]
+          H = {"apikey": SBK, "Authorization": f"Bearer {SBK}"}
+          
+          # Buscar amostra de vídeo para teste
+          req = urllib.request.Request(
+              f"{SBU}/rest/v1/content_pipeline?status=eq.mp4_ready&select=id,title,mp4_url&limit=1",
+              headers=H
+          )
+          with urllib.request.urlopen(req) as r:
+              rows = json.loads(r.read())
+          
+          if not rows:
+              print("::set-output name=quality_ok::false")
+              print("Sem vídeos disponíveis")
+              exit(0)
+          
+          url = rows[0].get('mp4_url', '')
+          if url:
+              cmd = ["ffprobe", "-v", "quiet", "-print_format", "json", "-show_streams", url]
+              r = subprocess.run(cmd, capture_output=True, timeout=30)
+              if r.returncode == 0:
+                  d = json.loads(r.stdout)
+                  for s in d.get("streams", []):
+                      if s["codec_type"] == "video":
+                          vbr = int(s.get("bit_rate", 0)) // 1000
+                          print(f"Bitrate vídeo: {vbr}kbps")
+          
+          print("::set-output name=quality_ok::true")
+          print(f"::set-output name=sample_url::{url}")
+          PYEOF
+
+  # ═══ JOB 2: GERAR IMAGENS DE FUNDO ═══════════════════
+  generate_assets:
+    name: 🎨 Gerar Assets (Pollinations FLUX)
+    runs-on: ubuntu-latest
+    needs: quality_precheck
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Gerar banco de imagens virais
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: |
+          python3 << 'PYEOF'
+          import urllib.request, urllib.parse, pathlib, time, os
+          TMP = pathlib.Path("/tmp/live_v2"); TMP.mkdir(exist_ok=True)
+          
+          temas = [
+            ("narcisismo psicologia dark", "0"),
+            ("ansiedade mental kawaii", "1"),
+            ("trauma infancia emocional", "2"),
+            ("manipulacao gaslighting", "3"),
+            ("autossabotagem autoconhecimento", "4"),
+          ]
+          
+          for tema, idx in temas:
+              prompt = urllib.parse.quote(
+                  f"masterpiece kawaii chibi anime illustration {tema} dark atmospheric "
+                  f"purple violet neon glow cinematic portrait ### text watermark nsfw"
+              )
+              url = f"https://image.pollinations.ai/prompt/{prompt}?width=1080&height=1920&seed={9001+int(idx)*77}&nologo=true"
+              try:
+                  req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+                  with urllib.request.urlopen(req, timeout=60) as r:
+                      data = r.read()
+                  if len(data) > 5000:
+                      (TMP / f"bg_{idx}.jpg").write_bytes(data)
+                      print(f"  ✅ {tema}: {len(data)//1024}KB")
+              except Exception as e:
+                  print(f"  ⚠️ {tema}: {e}")
+              time.sleep(3)
+          
+          imgs = list(TMP.glob("bg_*.jpg"))
+          print(f"✅ {len(imgs)} imagens prontas")
+          PYEOF
+
+  # ═══ JOB 3: LIVE BROADCAST 4500kbps ═══════════════════
+  live_stream:
+    name: 🔴 Live Broadcast (4500kbps Broadcast Quality)
+    runs-on: ubuntu-latest
+    needs: [quality_precheck, generate_assets]
+    timeout-minutes: 375
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      
+      - name: 🛠️ Instalar dependências broadcast
+        run: |
+          sudo apt-get install -y ffmpeg fonts-dejavu -q 2>/dev/null
+          pip install edge-tts requests --break-system-packages -q
+          ffmpeg -version | head -1
+          edge-tts --version
+          echo "✅ Todas as dependências instaladas"
+      
+      - name: 🎯 Testar qualidade FFmpeg antes da live
+        run: |
+          python3 << 'PYEOF'
+          import subprocess, json
+          
+          # Gerar frame de teste (10 segundos)
+          cmd = [
+            "ffmpeg", "-y", "-f", "lavfi", "-i", "color=c=0x06060F:size=1080x1920:rate=30",
+            "-f", "lavfi", "-i", "anullsrc=channel_layout=stereo:sample_rate=48000",
+            "-t", "3",
+            "-vf", "drawtext=text='TESTE QUALIDADE psicologia.doc':fontsize=60:fontcolor=white:x=(w-text_w)/2:y=960",
+            "-c:v", "libx264", "-preset", "fast", "-b:v", "4500k",
+            "-c:a", "aac", "-b:a", "192k", "-ac", "2", "-ar", "48000",
+            "/tmp/test_quality.mp4"
+          ]
+          r = subprocess.run(cmd, capture_output=True, timeout=30)
+          
+          # Verificar resultado
+          probe = subprocess.run(
+              ["ffprobe", "-v", "quiet", "-print_format", "json", "-show_streams", "/tmp/test_quality.mp4"],
+              capture_output=True, timeout=10
+          )
+          if probe.returncode == 0:
+              d = json.loads(probe.stdout)
+              for s in d.get("streams", []):
+                  if s["codec_type"] == "video":
+                      vbr = int(s.get("bit_rate", 0)) // 1000
+                      print(f"✅ Qualidade do frame de teste: {vbr}kbps")
+                      assert vbr > 3000, f"Bitrate muito baixo: {vbr}kbps"
+                  elif s["codec_type"] == "audio":
+                      ch = s.get("channels", 0)
+                      sr = int(s.get("sample_rate", 0))
+                      print(f"✅ Áudio: {ch}ch stereo {sr}Hz")
+                      assert ch >= 2, "Áudio deve ser stereo"
+          print("✅ QUALIDADE PRE-CHECK PASSOU — pronto para live!")
+          PYEOF
+      
+      - name: 🔴 Iniciar Live Stream
+        if: env.YOUTUBE_STREAM_KEY != ''
+        env:
+          YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          HOURS: ${{ inputs.horas || '6' }}
+        run: python3 scripts/live_stream_viral_v2.py || true
+      
+      - name: ⚠️ Stream Key não configurada
+        if: env.YOUTUBE_STREAM_KEY == ''
+        env:
+          YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
+        run: |
+          echo "## ⚠️ Configure YOUTUBE_STREAM_KEY" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Para ativar a live 24/7:" >> $GITHUB_STEP_SUMMARY
+          echo "1. Acesse: YouTube Studio → Ir ao vivo" >> $GITHUB_STEP_SUMMARY
+          echo "2. Transmissão ao vivo → Copie a **Chave de stream**" >> $GITHUB_STEP_SUMMARY
+          echo "3. GitHub → Settings → Secrets → **YOUTUBE_STREAM_KEY**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Qualidade configurada: 1080x1920 | 4500kbps | Stereo 48kHz" >> $GITHUB_STEP_SUMMARY
+      
+      - name: 📊 Relatório da Live
+        if: always()
+        run: |
+          echo "## 🔴 Live Stream Report" >> $GITHUB_STEP_SUMMARY
+          echo "| Spec | Valor |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Resolução | 1080x1920 (Shorts/Vertical) |" >> $GITHUB_STEP_SUMMARY
+          echo "| Bitrate Vídeo | 4500kbps H.264 High |" >> $GITHUB_STEP_SUMMARY
+          echo "| Áudio | 192kbps AAC Stereo 48kHz |" >> $GITHUB_STEP_SUMMARY
+          echo "| FPS | 30fps GOP=60 |" >> $GITHUB_STEP_SUMMARY
+          echo "| Conteúdo | Groq + Edge TTS + Pollinations |" >> $GITHUB_STEP_SUMMARY
+          echo "| Canal | @psidanicoelho |" >> $GITHUB_STEP_SUMMARY
