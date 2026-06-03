@@ -1,0 +1,69 @@
+name: Live Stream 24/7 (psicologia.doc)
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 */6 * * *'   # reinicia a cada 6h para garantir continuidade
+
+jobs:
+  stream:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350   # máximo GitHub Actions = 6h
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup ffmpeg
+        run: sudo apt-get install -y ffmpeg python3-pip && pip3 install requests --break-system-packages -q
+      - name: Stream loop
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
+        run: |
+          python3 << 'EOF'
+          import os, json, time, subprocess, urllib.request, random, tempfile
+
+          SBU = os.environ["SUPABASE_URL"].rstrip("/")
+          SBK = os.environ["SUPABASE_SERVICE_KEY"]
+          STREAM_KEY = os.environ.get("YOUTUBE_STREAM_KEY", "")
+          RTMP_URL = f"rtmp://a.rtmp.youtube.com/live2/{STREAM_KEY}"
+
+          def get_videos():
+              H = {"apikey": SBK, "Authorization": f"Bearer {SBK}"}
+              r = urllib.request.urlopen(urllib.request.Request(
+                  f"{SBU}/rest/v1/content_pipeline?status=eq.published&select=mp4_url,title,youtube_url&order=id.asc&limit=100",
+                  headers=H), timeout=30)
+              data = json.loads(r.read())
+              return [v for v in data if v.get("mp4_url")]
+
+          if not STREAM_KEY:
+              print("YOUTUBE_STREAM_KEY não configurado — pulando live")
+              exit(0)
+
+          videos = get_videos()
+          if not videos:
+              print("Sem vídeos publicados para stream")
+              exit(0)
+
+          print(f"[live] {len(videos)} vídeos disponíveis para stream")
+          random.shuffle(videos)
+
+          # Criar playlist de vídeos (loop infinito)
+          with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as f:
+              for v in videos * 10:  # repetir 10x para ter ~320+ min de conteúdo
+                  url = v["mp4_url"]
+                  f.write(f"file '{url}'\n")
+              playlist = f.name
+
+          # Iniciar stream via ffmpeg
+          cmd = [
+              "ffmpeg", "-re", "-f", "concat", "-safe", "0",
+              "-protocol_whitelist", "file,http,https,tcp,tls,crypto",
+              "-i", playlist,
+              "-c:v", "libx264", "-preset", "veryfast", "-b:v", "1500k",
+              "-maxrate", "1500k", "-bufsize", "3000k",
+              "-c:a", "aac", "-b:a", "128k", "-ar", "44100",
+              "-f", "flv", RTMP_URL
+          ]
+          print(f"[live] Iniciando stream → YouTube RTMP")
+          proc = subprocess.run(cmd, timeout=340*60)
+          print(f"[live] Stream encerrado: {proc.returncode}")
+          EOF
