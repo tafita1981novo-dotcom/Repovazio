@@ -1,184 +1,216 @@
-name: "🐝 Swarm psicologia.doc — 10 Agentes Paralelos (Ruflo-style)"
-# Inspirado no Ruflo/claude-flow — orquestração multi-agente
-# LLM: Groq API (GRÁTIS) | Memória: Supabase | Custo: R$0
-
+name: Ruflo Swarm (10 agentes paralelos)
 on:
   workflow_dispatch:
-    inputs:
-      swarm_id:
-        description: "ID do swarm (deixar vazio = auto)"
-        default: ""
-      objetivo:
-        description: "Objetivo do swarm"
-        default: "pipeline_completo"
   schedule:
-    - cron: "0 */4 * * *"  # A cada 4 horas
-
-env:
-  SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-  SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-  GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-  NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
-  SWARM_ID: ${{ inputs.swarm_id || format('swarm-{0}', github.run_id) }}
+    - cron: '0 */4 * * *'   # a cada 4h — 6 runs/dia
 
 jobs:
-  # ── FASE 1: Coordenador do Swarm ─────────────────────────────────────────
-  swarm-coordinator:
-    name: "🧠 Coordenador"
+  swarm:
     runs-on: ubuntu-latest
-    outputs:
-      swarm_id: ${{ steps.init.outputs.swarm_id }}
-      needs_scripts: ${{ steps.status.outputs.needs_scripts }}
-      needs_seo: ${{ steps.status.outputs.needs_seo }}
-      needs_trends: ${{ steps.status.outputs.needs_trends }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with: { python-version: "3.11" }
-      - name: Init swarm e checar status
-        id: init
-        run: |
-          SWARM_ID="${{ env.SWARM_ID }}"
-          echo "swarm_id=${SWARM_ID}" >> $GITHUB_OUTPUT
-          echo "🐝 Swarm ID: ${SWARM_ID}"
-      - name: Analisar pipeline
-        id: status
-        env:
-          AGENT_ID: "coordinator"
-          AGENT_TYPE: "coordinator"
-        run: |
-          python3 -c "
-          import os, urllib.request, urllib.parse, json
-          SBU = os.environ['SUPABASE_URL']
-          SBK = os.environ['SUPABASE_SERVICE_KEY']
-          headers = {'apikey': SBK, 'Authorization': f'Bearer {SBK}'}
-          def fetch(path):
-              req = urllib.request.Request(f'{SBU}/rest/v1/{path}', headers=headers)
-              with urllib.request.urlopen(req) as r: return json.loads(r.read())
-          pending = len(fetch('content_pipeline?status=eq.pending_generation&select=id'))
-          mp4_no_seo = len(fetch('content_pipeline?status=in.(mp4_ready,pending_credentials)&youtube_title=eq.&select=id'))
-          print(f'pending_gen={pending}, mp4_sem_seo={mp4_no_seo}')
-          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
-              f.write(f'needs_scripts={\"true\" if pending < 10 else \"false\"}\n')
-              f.write(f'needs_seo={\"true\" if mp4_no_seo > 0 else \"false\"}\n')
-              f.write(f'needs_trends={\"true\" if pending < 5 else \"false\"}\n')
-          "
-
-  # ── FASE 2: Agentes em PARALELO (swarm) ──────────────────────────────────
-  script-writers:
-    name: "✍️ Script-Writer ${{ matrix.instance }}"
-    needs: swarm-coordinator
-    runs-on: ubuntu-latest
+    timeout-minutes: 50
     strategy:
       matrix:
-        instance: [1, 2, 3, 4, 5]  # 5 writers em paralelo
-      max-parallel: 5
+        agent: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
       fail-fast: false
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with: { python-version: "3.11" }
-      - name: Rodar script-writer
+      - name: "Agente ${{ matrix.agent }}"
         env:
-          AGENT_ID: "script-writer-${{ matrix.instance }}"
-          AGENT_TYPE: "script-writer"
-          SWARM_ID: ${{ needs.swarm-coordinator.outputs.swarm_id }}
-        run: python3 scripts/agents/script_writer.py
-
-  seo-optimizers:
-    name: "🎯 SEO-Optimizer ${{ matrix.instance }}"
-    needs: swarm-coordinator
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        instance: [1, 2, 3]  # 3 SEO agents em paralelo
-      max-parallel: 3
-      fail-fast: false
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with: { python-version: "3.11" }
-      - name: Rodar seo-optimizer
-        env:
-          AGENT_ID: "seo-optimizer-${{ matrix.instance }}"
-          AGENT_TYPE: "seo-optimizer"
-          SWARM_ID: ${{ needs.swarm-coordinator.outputs.swarm_id }}
-        run: python3 scripts/agents/seo_optimizer.py
-
-  trend-researcher:
-    name: "🔍 Trend-Researcher"
-    needs: swarm-coordinator
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with: { python-version: "3.11" }
-      - name: Pesquisar tendências
-        env:
-          AGENT_ID: "trend-researcher-1"
-          AGENT_TYPE: "trend-researcher"
-          SWARM_ID: ${{ needs.swarm-coordinator.outputs.swarm_id }}
-        run: python3 scripts/agents/trend_researcher.py
-
-  quality-reviewer:
-    name: "✅ Quality-Reviewer"
-    needs: [script-writers]  # Roda depois dos writers
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with: { python-version: "3.11" }
-      - name: Revisar qualidade dos scripts
-        env:
-          AGENT_ID: "quality-reviewer-1"
-          AGENT_TYPE: "quality-reviewer"
-          SWARM_ID: ${{ needs.swarm-coordinator.outputs.swarm_id }}
-        run: python3 scripts/agents/quality_reviewer.py
-
-  # ── FASE 3: Reportar resultados do swarm ─────────────────────────────────
-  swarm-reporter:
-    name: "📊 Swarm Report"
-    needs: [script-writers, seo-optimizers, trend-researcher, quality-reviewer]
-    runs-on: ubuntu-latest
-    if: always()
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with: { python-version: "3.11" }
-      - name: Gerar relatório final do swarm
-        env:
-          AGENT_ID: "swarm-reporter"
-          AGENT_TYPE: "reporter"
-          SWARM_ID: ${{ needs.swarm-coordinator.outputs.swarm_id }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+          AGENT_ID: ${{ matrix.agent }}
         run: |
           python3 -c "
-          import os, urllib.request, json, time
-          SBU = os.environ['SUPABASE_URL']
+          import os, json, time, urllib.request, urllib.parse, random
+
+          SBU = os.environ['SUPABASE_URL'].rstrip('/')
           SBK = os.environ['SUPABASE_SERVICE_KEY']
-          H = {'apikey': SBK, 'Authorization': f'Bearer {SBK}'}
-          SWARM = os.environ.get('SWARM_ID','?')
-          
-          def fetch(path):
-              req = urllib.request.Request(f'{SBU}/rest/v1/{path}', headers=H)
-              with urllib.request.urlopen(req) as r: return json.loads(r.read())
-          
-          stats = {
-            'mp4_ready': len(fetch('content_pipeline?status=eq.mp4_ready&select=id')),
-            'pending_cred': len(fetch('content_pipeline?status=eq.pending_credentials&select=id')),
-            'audio_ready': len(fetch('content_pipeline?status=eq.audio_ready&select=id')),
-            'ready_tts': len(fetch('content_pipeline?status=eq.ready_tts&select=id')),
-            'pending_gen': len(fetch('content_pipeline?status=eq.pending_generation&select=id')),
+          GROQ_KEY = os.environ.get('GROQ_API_KEY','')
+          AGENT_ID = int(os.environ.get('AGENT_ID','0'))
+          H_SB = {'apikey': SBK, 'Authorization': f'Bearer {SBK}'}
+
+          def log(*a): print(f'[{time.strftime(\"%H:%M:%S\")}][agent-{AGENT_ID}]', *a, flush=True)
+
+          def groq(prompt, system='', model='llama-3.1-8b-instant', max_tok=1200):
+              if not GROQ_KEY: return ''
+              body = json.dumps({'model': model, 'max_tokens': max_tok, 'temperature': 0.8,
+                  'messages': [{'role': 'system', 'content': system}, {'role': 'user', 'content': prompt}]}).encode()
+              req = urllib.request.Request('https://api.groq.com/openai/v1/chat/completions',
+                  data=body, method='POST',
+                  headers={'Authorization': f'Bearer {GROQ_KEY}', 'Content-Type': 'application/json'})
+              try:
+                  with urllib.request.urlopen(req, timeout=30) as r:
+                      return json.loads(r.read())['choices'][0]['message']['content'].strip()
+              except: return ''
+
+          def sb_post(table, payload, prefer=''):
+              h = {**H_SB, 'Content-Type': 'application/json'}
+              if prefer: h['Prefer'] = prefer
+              req = urllib.request.Request(f'{SBU}/rest/v1/{table}', data=json.dumps(payload).encode(),
+                  method='POST', headers=h)
+              try:
+                  with urllib.request.urlopen(req, timeout=15) as r: return r.status
+              except: return 500
+
+          # TAREFAS DO AGENTE baseadas no AGENT_ID
+          tasks_per_agent = {
+              0: 'gerar_scripts',    # 3 scripts por run
+              1: 'gerar_scripts',
+              2: 'gerar_scripts',
+              3: 'pesquisar_tendencias',  # buscar tópicos virais
+              4: 'pesquisar_tendencias',
+              5: 'otimizar_seo',     # SEO dos prontos
+              6: 'otimizar_seo',
+              7: 'gerar_thumbnails', # prompts de thumbnail
+              8: 'analisar_concorrentes',  # analisar canais similares
+              9: 'expansao_topicos', # expandir tópicos existentes
           }
-          
-          print(f'=== SWARM {SWARM} CONCLUÍDO ===')
-          print(f'mp4_ready: {stats[\"mp4_ready\"]} | pending_credentials: {stats[\"pending_cred\"]}')
-          print(f'audio_ready: {stats[\"audio_ready\"]} | ready_tts: {stats[\"ready_tts\"]}')
-          print(f'pending_generation: {stats[\"pending_gen\"]}')
-          print(f'TOTAL publicável: {stats[\"mp4_ready\"] + stats[\"pending_cred\"]}')
-          
-          # Finalizar run do swarm
-          data = json.dumps({'status': 'completed', 'finished_at': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), 'results': stats}).encode()
-          req = urllib.request.Request(f'{SBU}/rest/v1/swarm_runs?swarm_id=eq.{SWARM}',
-            data=data, method='PATCH', headers={**H, 'Content-Type': 'application/json'})
-          urllib.request.urlopen(req)
+
+          task = tasks_per_agent.get(AGENT_ID, 'gerar_scripts')
+          log(f'Tarefa: {task}')
+
+          if task == 'gerar_scripts':
+              # Gerar até 3 scripts para pending_generation
+              for _ in range(3):
+                  req = urllib.request.Request(
+                      f'{SBU}/rest/v1/content_pipeline?status=eq.pending_generation&script=is.null&select=id,title,topic,format&order=id.asc&limit=1',
+                      headers=H_SB)
+                  try:
+                      with urllib.request.urlopen(req, timeout=10) as r:
+                          rows = json.loads(r.read())
+                  except: rows = []
+                  if not rows: break
+                  row = rows[0]
+                  fmt = row.get('format','short')
+                  script = groq(
+                      f'Script psicologia.doc: \"{row.get(\"topic\") or row[\"title\"]}\". {\"700-900 palavras\" if fmt==\"short\" else \"3000-4000 palavras\"}. Direto ao roteiro.',
+                      'Daniela Coelho, pesquisadora comportamento humano. NUNCA psicóloga. Hook=perigo que parece seguro. Pesquisador real+universidade. Mecanismo neural. Final restaura agência.',
+                      'llama-3.3-70b-versatile',
+                      1400 if fmt=='short' else 4500
+                  )
+                  if len(script) > 100:
+                      req2 = urllib.request.Request(
+                          f'{SBU}/rest/v1/content_pipeline?id=eq.{row[\"id\"]}',
+                          data=json.dumps({'script': script, 'status': 'ready_tts', 'model_used': 'groq/llama-3.3-70b'}).encode(),
+                          method='PATCH', headers={**H_SB, 'Content-Type': 'application/json'})
+                      try:
+                          with urllib.request.urlopen(req2, timeout=10): pass
+                          log(f'Script gerado: #{row[\"id\"]} {row[\"title\"][:40]}')
+                      except: pass
+                  time.sleep(2)
+
+          elif task == 'pesquisar_tendencias':
+              # Pesquisar tópicos virais e inserir na fila
+              req = urllib.request.Request(
+                  f'{SBU}/rest/v1/content_pipeline?status=eq.pending_generation&select=id&limit=1',
+                  headers=H_SB)
+              try:
+                  count = len(json.loads(urllib.request.urlopen(req, timeout=10).read()))
+              except: count = 20
+              if count >= 20: log('Fila cheia, pulando'); exit()
+              topics_raw = groq(
+                  f'Sugira 5 temas VIRAIS psicologia comportamento humano YouTube PT-BR 2026. Tendências: saúde mental, neurociência, relacionamentos, trauma. JSON: {{\"topics\":[{{\"title\":\"título impactante\",\"topic\":\"tema\",\"hook\":\"frase 3s\"}}]}}',
+                  'Especialista YouTube PT-BR psicologia. Alta busca e retenção.',
+                  'llama-3.1-8b-instant', 600
+              )
+              try:
+                  import re
+                  topics = json.loads(re.search(r'\\{.*\\}', topics_raw, re.S).group())['topics']
+                  inserted = 0
+                  for t in topics[:5]:
+                      if not t.get('title'): continue
+                      sb_post('content_pipeline', {
+                          'title': t['title'], 'topic': t.get('topic',''),
+                          'status': 'pending_generation', 'format': 'short',
+                          'metadata': {'hook': t.get('hook',''), 'source': f'swarm-agent-{AGENT_ID}'}
+                      }, 'return=minimal')
+                      inserted += 1
+                      time.sleep(0.3)
+                  log(f'{inserted} tópicos inseridos')
+              except Exception as e: log(f'Err topics: {e}')
+
+          elif task == 'otimizar_seo':
+              # SEO para vídeos sem youtube_title
+              req = urllib.request.Request(
+                  f'{SBU}/rest/v1/content_pipeline?status=in.(mp4_ready,pending_credentials,audio_ready)&youtube_title=is.null&select=id,title,script&limit=3',
+                  headers=H_SB)
+              try:
+                  rows = json.loads(urllib.request.urlopen(req, timeout=10).read())
+              except: rows = []
+              for row in rows:
+                  seo_raw = groq(
+                      f'SEO YouTube PT-BR: \"{row[\"title\"]}\". Script: {(row.get(\"script\") or \"\")[:200]}. JSON: {{\"youtube_title\":\"60-70 chars\",\"youtube_description\":\"150 palavras\",\"youtube_tags\":[\"t1\",\"t2\",\"t3\",\"t4\",\"t5\",\"t6\",\"t7\",\"t8\",\"t9\",\"t10\"]}}',
+                      'SEO YouTube PT-BR psicologia. Títulos concretos alta CTR.',
+                      'llama-3.1-8b-instant', 600
+                  )
+                  try:
+                      import re
+                      seo = json.loads(re.search(r'\\{.*\\}', seo_raw, re.S).group())
+                      tags = [re.sub(r'[#@&<>\"\\''\\/|!]','',t).strip() for t in seo.get('youtube_tags',[]) if t]
+                      tags = [t for t in tags if 2<=len(t)<=30][:10]
+                      req2 = urllib.request.Request(
+                          f'{SBU}/rest/v1/content_pipeline?id=eq.{row[\"id\"]}',
+                          data=json.dumps({'youtube_title': seo.get('youtube_title','')[:100],
+                              'youtube_description': seo.get('youtube_description',''),
+                              'youtube_tags': tags}).encode(),
+                          method='PATCH', headers={**H_SB, 'Content-Type': 'application/json'})
+                      with urllib.request.urlopen(req2, timeout=10): pass
+                      log(f'SEO: #{row[\"id\"]} {seo.get(\"youtube_title\",\"\")[:40]}')
+                  except Exception as e: log(f'SEO err: {e}')
+                  time.sleep(2)
+
+          elif task == 'gerar_thumbnails':
+              # Gerar prompts de thumbnail para vídeos publicados sem thumbnail customizado
+              req = urllib.request.Request(
+                  f'{SBU}/rest/v1/content_pipeline?status=eq.published&select=id,title,youtube_title&limit=5',
+                  headers=H_SB)
+              try: rows = json.loads(urllib.request.urlopen(req, timeout=10).read())
+              except: rows = []
+              for row in rows:
+                  prompt = groq(
+                      f'Crie prompt Midjourney/DALL-E para thumbnail YouTube de psicologia: \"{row.get(\"youtube_title\") or row[\"title\"]}\". Mulher asiática jovem expressiva, cores vibrantes roxo #7C3AED e vermelho. Texto grande e legível. Fundo gradiente escuro. Alta conversão CTR.',
+                      'Designer YouTube CTR especialista.',
+                      'llama-3.1-8b-instant', 200
+                  )
+                  if prompt:
+                      req2 = urllib.request.Request(
+                          f'{SBU}/rest/v1/content_pipeline?id=eq.{row[\"id\"]}',
+                          data=json.dumps({'metadata': {'thumbnail_prompt': prompt[:500]}}).encode(),
+                          method='PATCH', headers={**H_SB, 'Content-Type': 'application/json'})
+                      try:
+                          with urllib.request.urlopen(req2, timeout=10): pass
+                          log(f'Thumbnail prompt: #{row[\"id\"]}')
+                      except: pass
+                  time.sleep(1)
+
+          elif task == 'expansao_topicos':
+              # Expandir um tópico existente em série de vídeos
+              req = urllib.request.Request(
+                  f'{SBU}/rest/v1/content_pipeline?status=eq.published&select=title,topic&order=id.desc&limit=5',
+                  headers=H_SB)
+              try: rows = json.loads(urllib.request.urlopen(req, timeout=10).read())
+              except: rows = []
+              if not rows: exit()
+              ref = random.choice(rows)
+              expansion = groq(
+                  f'O vídeo \"{ref[\"title\"]}\" foi publicado. Crie 3 vídeos COMPLEMENTARES que aprofundam subtemas relacionados. JSON: {{\"videos\":[{{\"title\":\"título\",\"topic\":\"tema específico\",\"angle\":\"ângulo único\"}}]}}',
+                  'Estrategista conteúdo YouTube PT-BR psicologia. Maximizar série e retenção.',
+                  'llama-3.1-8b-instant', 400
+              )
+              try:
+                  import re
+                  new_vids = json.loads(re.search(r'\\{.*\\}', expansion, re.S).group())['videos']
+                  for v in new_vids[:3]:
+                      if not v.get('title'): continue
+                      sb_post('content_pipeline', {
+                          'title': v['title'], 'topic': v.get('topic',''),
+                          'status': 'pending_generation', 'format': 'short',
+                          'metadata': {'angle': v.get('angle',''), 'source': 'swarm-expansion', 'parent': ref['title']}
+                      }, 'return=minimal')
+                  log(f'Expansão: {len(new_vids)} novos de \"{ref[\"title\"][:30]}\"')
+              except Exception as e: log(f'Expansão err: {e}')
+
+          log('Done')
           "
