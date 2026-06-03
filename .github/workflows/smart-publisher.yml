@@ -1,0 +1,32 @@
+name: Smart Publisher — Horários de Pico BR
+
+on:
+  schedule:
+    # 6 publicações por dia nos horários de pico (BRT = UTC-3)
+    # 18:00 BRT = 21:00 UTC, 19:00 BRT = 22:00 UTC, 20:00 BRT = 23:00 UTC
+    # 07:00 BRT = 10:00 UTC, 12:00 BRT = 15:00 UTC, 15:00 BRT = 18:00 UTC
+    - cron: '1 0 * * *'    # 21:01 BRT (reset quota)
+    - cron: '0 10 * * *'   # 07:00 BRT (manhã)
+    - cron: '0 15 * * *'   # 12:00 BRT (almoço)
+    - cron: '0 18 * * *'   # 15:00 BRT (tarde)
+    - cron: '0 21 * * *'   # 18:00 BRT (prime time)
+    - cron: '0 22 * * *'   # 19:00 BRT (prime time)
+  workflow_dispatch:
+    inputs:
+      max_videos:
+        description: 'Quantos vídeos publicar (default: 2)'
+        default: '2'
+        required: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Publish (horário de pico)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          MAX_VIDEOS: ${{ github.event.inputs.max_videos || '2' }}
+        run: python3 scripts/distribute.py
