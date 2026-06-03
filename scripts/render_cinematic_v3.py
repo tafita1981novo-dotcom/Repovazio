@@ -85,6 +85,14 @@ VISUAL_STYLES = {
     ]
 }
 
+import sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+try:
+    from image_generator import generate_image as _gen_image
+    HAS_IMG_GEN = True
+except ImportError:
+    HAS_IMG_GEN = False
+
 def log(msg, level="INFO"):
     icons = {"INFO":"ℹ️","OK":"✅","WARN":"⚠️","ERR":"❌","VIRAL":"🔥"}
     print(f"[{datetime.now():%H:%M:%S}] {icons.get(level,'•')} {msg}", flush=True)
@@ -150,28 +158,37 @@ Just one word, no explanation."""}], 5)
     return f"masterpiece, best quality, {base}, 4k resolution, highly detailed, photorealistic, film grain, anamorphic lens"
 
 def generate_image(prompt, output_path, width=576, height=1024, seed=None):
-    """Gera imagem via Pollinations FLUX — TOTALMENTE GRATUITO"""
-    if seed is None:
-        seed = random.randint(1000, 99999)
+    """Gera imagem via HF FLUX.1-schnell ou procedural (sempre funciona)"""
+    if HAS_IMG_GEN:
+        source = _gen_image(prompt, output_path, width, height, seed, style="dark")
+        if source:
+            log(f"    Imagem: {source} ✅")
+            return True
     
-    clean = urllib.parse.quote(prompt[:400])
-    urls = [
-        f"https://image.pollinations.ai/prompt/{clean}?width={width}&height={height}&seed={seed}&model=flux&nologo=true&enhance=true",
-        f"https://image.pollinations.ai/prompt/{clean}?width={width}&height={height}&seed={seed}&nologo=true",
-    ]
-    
-    for url in urls:
-        try:
-            req = urllib.request.Request(url, headers={"User-Agent": "psicologia.doc/3.0"})
-            with urllib.request.urlopen(req, timeout=60) as r:
-                data = r.read()
-                if len(data) > 5000:
-                    open(output_path, "wb").write(data)
-                    return True
-        except Exception as e:
-            log(f"Pollinations fallback: {e}", "WARN")
-            time.sleep(2)
-    return False
+    # Fallback: procedural cinematográfico (sempre funciona)
+    try:
+        from PIL import Image, ImageDraw, ImageFilter
+        if seed: random.seed(seed)
+        bg = (6,6,15); c1=(124,58,237); c2=(225,29,72)
+        img = Image.new("RGB",(width,height),bg)
+        draw = ImageDraw.Draw(img)
+        for y in range(height):
+            t=(y/height)**0.7
+            c=tuple(min(255,int(bg[j]+(c1[j]-bg[j])*t*0.5)) for j in range(3))
+            draw.line([(0,y),(width,y)],fill=c)
+        centers = [(random.randint(50,width-50),random.randint(50,height-50)) for _ in range(12)]
+        for j,(x1,y1) in enumerate(centers):
+            for x2,y2 in centers[j+1:]:
+                if ((x2-x1)**2+(y2-y1)**2)**0.5<min(width,height)*0.4:
+                    draw.line([(x1,y1),(x2,y2)],fill=(*c1,40),width=2)
+        for cx,cy in centers:
+            r=random.randint(8,40); cl=c1 if random.random()>0.4 else c2
+            draw.ellipse([(cx-r,cy-r),(cx+r,cy+r)],fill=(*cl,random.randint(100,200)))
+        img.filter(ImageFilter.GaussianBlur(1.5)).save(output_path,"JPEG",quality=92)
+        return True
+    except ImportError:
+        cmd=["ffmpeg","-y","-f","lavfi","-i",f"color=c=0x06060F:size={width}x{height}:r=1","-frames:v","1",output_path]
+        return subprocess.run(cmd,capture_output=True,timeout=15).returncode==0
 
 def tts_generate(text, audio_path, lang="pt-BR", rate="+10%", style="calm"):
     """Edge TTS — gratuito, ilimitado, qualidade premium"""
@@ -375,10 +392,11 @@ def render_cinematic(video_data, work_dir):
         in_w, in_h = (576, 1024) if FMT == "short" else (1024, 576)
         
         # Scale + Ken Burns
+        zoom_speed = (zoom_end - zoom_start) / (sec_per_img * 30)
         filter_parts.append(
-            f"[{i}:v]scale={in_w*2}:{in_h*2},fps=30,"
-            f"zoompan=z='zoom+{(zoom_end-zoom_start)/30/sec_per_img:.6f}':x='iw/2-(iw/zoom/2)+{pan_x*in_w*2}*t/{sec_per_img}':y='ih/2-(ih/zoom/2)+{pan_y*in_h*2}*t/{sec_per_img}':s={out_w}x{out_h}:d={int(sec_per_img*30)}:fps=30,"
-            f"setsar=1[v{i}]"
+            f"[{i}:v]scale={out_w}:{out_h},fps=30,"
+            f"zoompan=z='min(zoom+{zoom_speed:.6f},{zoom_end})':d={int(sec_per_img*30)}:s={out_w}x{out_h}:fps=30"
+            f"[v{i}]"
         )
     
     # Concatenar todos os vídeos
