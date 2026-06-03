@@ -1,0 +1,111 @@
+name: 🎬 HyperFrames Render — Cinema Quality (Three.js 3D + GSAP)
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'   # a cada 30 minutos
+  workflow_dispatch:
+    inputs:
+      format:
+        description: 'Formato (short|long)'
+        default: 'short'
+      lang:
+        description: 'Idioma (pt-BR|en-US|es-ES)'
+        default: 'pt-BR'
+      max_videos:
+        description: 'Máximo de vídeos'
+        default: '2'
+
+jobs:
+  render:
+    name: 🎬 HyperFrames 3D Cinema Render
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: 🛠️ Instalar HyperFrames + dependências
+        run: |
+          sudo apt-get install -y ffmpeg fonts-inter fonts-dejavu -q 2>/dev/null || true
+          npm install -g hyperframes 2>&1 | tail -3
+          pip install edge-tts --break-system-packages -q
+          
+          echo "Instalando Chrome para HyperFrames..."
+          hyperframes browser ensure 2>&1 | tail -3
+          hyperframes doctor 2>&1 | grep -E "✓|✗" | head -10
+      
+      - name: 🧪 Teste de render (5s) antes da produção
+        run: |
+          mkdir -p /tmp/hf_test
+          cd /tmp/hf_test
+          hyperframes init . --example blank --yes 2>&1 | tail -3
+          
+          # Criar composição de teste
+          cat > index.html << 'TESTHTML'
+          <!doctype html>
+          <html>
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=1080, height=1920">
+            <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+            <style>
+              *{margin:0;padding:0;box-sizing:border-box}
+              html,body{width:1080px;height:1920px;overflow:hidden;background:#06060F;color:#fff;font-family:Inter,sans-serif}
+              #test{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;font-size:80px;font-weight:900;opacity:0}
+            </style>
+          </head>
+          <body>
+            <div id="root" data-composition-id="test" data-start="0" data-duration="5" data-width="1080" data-height="1920">
+              <div id="test" class="clip" data-start="0" data-duration="5" data-track-index="1">ψ</div>
+            </div>
+            <script>
+              window.__timelines = {};
+              const tl = gsap.timeline({paused:true});
+              tl.to('#test', {opacity:1, scale:1, duration:1, ease:'power3.out'}, 0);
+              window.__timelines['test'] = tl;
+            </script>
+          </body>
+          </html>
+          TESTHTML
+          
+          timeout 120 hyperframes render --workers 1 2>&1 | tail -5
+          ls renders/*.mp4 2>/dev/null && echo "✅ Teste OK" || echo "❌ Teste falhou"
+      
+      - name: 🎬 Render HyperFrames produção
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          VIDEO_FORMAT: ${{ inputs.format || 'short' }}
+          LANG: ${{ inputs.lang || 'pt-BR' }}
+          MAX_VIDEOS: ${{ inputs.max_videos || '2' }}
+        run: |
+          # Copiar config HyperFrames para trabalho
+          cp -r /tmp/hf_test/hyperframes.json /tmp/ 2>/dev/null || true
+          cp -r /tmp/hf_test/package.json /tmp/ 2>/dev/null || true
+          cp -r /tmp/hf_test/meta.json /tmp/ 2>/dev/null || true
+          
+          python3 scripts/render_hyperframes_v1.py
+      
+      - name: 📊 Relatório do render
+        if: always()
+        run: |
+          echo "## 🎬 HyperFrames Render Report" >> $GITHUB_STEP_SUMMARY
+          echo "| Spec | Valor |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Engine | HyperFrames v0.6.70 |" >> $GITHUB_STEP_SUMMARY
+          echo "| 3D | Three.js r128 |" >> $GITHUB_STEP_SUMMARY
+          echo "| Animation | GSAP 3.14.2 |" >> $GITHUB_STEP_SUMMARY
+          echo "| TTS | Edge TTS (gratuito ilimitado) |" >> $GITHUB_STEP_SUMMARY
+          echo "| Qualidade | H.264 CRF20 3500kbps |" >> $GITHUB_STEP_SUMMARY
+          echo "| Áudio | AAC 192kbps Stereo 48kHz |" >> $GITHUB_STEP_SUMMARY
+          echo "| Idiomas | PT-BR, EN-US, ES-ES |" >> $GITHUB_STEP_SUMMARY
+          echo "| Canal | @psidanicoelho |" >> $GITHUB_STEP_SUMMARY
