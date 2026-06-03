@@ -1,30 +1,30 @@
 #!/usr/bin/env python3
 """
-📺 Series Publisher — Publicação na ordem correta de séries
-════════════════════════════════════════════════════════════
-Lê as séries do Supabase e publica vídeos em ordem crescente de episódio.
-Auto-adiciona às playlists corretas por série.
+📺 Series Publisher v2 — Publica na ordem correta de pub_order
+Colunas reais: pub_order, series_slug, ep_number, youtube_title, youtube_description
 """
-import os, json, time, urllib.request, urllib.parse
+import os, json, time, urllib.request, urllib.parse, tempfile, pathlib
 from datetime import datetime, timezone
 
-# Config
 SBU = os.getenv("SUPABASE_URL", "")
 SBK = os.getenv("SUPABASE_SERVICE_KEY", "")
 
-# IDs das playlists criadas
-PLAYLIST_MAP = {
-    "narcisismo":   os.getenv("PL_NARCISISMO", "PLi1KkHerdzM3nGVg5hoJW8hguE0RLTe8Z"),
-    "apego":        os.getenv("PL_APEGO",      "PLi1KkHerdzM3vi_u4XWHeDjMw777_QrTv"),
-    "ansiedade":    os.getenv("PL_ANSIEDADE",  "PLi1KkHerdzM1yiy5qHUYVPALpCWCDmnmg"),
-    "burnout":      os.getenv("PL_BURNOUT",    "PLi1KkHerdzM2IoxqPNTqGVH-Ax4ldgGzA"),
-    "lives":        os.getenv("PL_LIVES",      "PLi1KkHerdzM0G0nXoN7gUvtJMM4WgXoFO"),
-}
-
-# OAuth
 REFRESH_TOKEN = os.getenv("YT_REFRESH_TOKEN", "")
 CLIENT_ID     = os.getenv("YT_CLIENT_ID", "")
 CLIENT_SECRET = os.getenv("YT_CLIENT_SECRET", "")
+
+# Playlists por series_slug
+PLAYLIST_MAP = {
+    "narcisismo":    "PLi1KkHerdzM3nGVg5hoJW8hguE0RLTe8Z",
+    "vicoemocional": "PLi1KkHerdzM3vi_u4XWHeDjMw777_QrTv",
+    "ansiedade":     "PLi1KkHerdzM1yiy5qHUYVPALpCWCDmnmg",
+    "depressao":     "PLi1KkHerdzM2IoxqPNTqGVH-Ax4ldgGzA",
+    "cerebro":       "PLi1KkHerdzM3vi_u4XWHeDjMw777_QrTv",
+}
+
+MAX_PER_RUN = int(os.getenv("MAX_PER_RUN", "2"))
+
+def log(msg): print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}", flush=True)
 
 def get_token():
     body = urllib.parse.urlencode({
@@ -41,217 +41,209 @@ def sb_get(endpoint, params=""):
     with urllib.request.urlopen(req, timeout=20) as r:
         return json.loads(r.read())
 
-def sb_update(table, data, match):
-    q = "&".join(f"{k}=eq.{v}" for k,v in match.items())
+def sb_patch(table, data, vid_id):
     body = json.dumps(data).encode()
-    req = urllib.request.Request(f"{SBU}/rest/v1/{table}?{q}", data=body, method="PATCH",
+    req = urllib.request.Request(f"{SBU}/rest/v1/{table}?id=eq.{vid_id}", data=body, method="PATCH",
         headers={"apikey": SBK, "Authorization": f"Bearer {SBK}",
                  "Content-Type": "application/json", "Prefer": "return=minimal"})
     with urllib.request.urlopen(req, timeout=15): pass
 
-def yt_api(endpoint, data=None, method="GET", params="", token=""):
+def yt(endpoint, data=None, method="GET", params="", token=""):
     url = f"https://www.googleapis.com/youtube/v3/{endpoint}"
     if params: url += f"?{params}"
     body = json.dumps(data).encode() if data else None
     req = urllib.request.Request(url, data=body, method=method)
     req.add_header("Authorization", f"Bearer {token}")
     if data: req.add_header("Content-Type", "application/json")
-    with urllib.request.urlopen(req, timeout=30) as r:
+    with urllib.request.urlopen(req, timeout=60) as r:
         return json.loads(r.read())
 
-def detect_playlist(title, serie=""):
-    """Detecta playlist baseado no título/série"""
-    t = (title + " " + serie).lower()
-    if any(w in t for w in ["narcis", "narc"]):             return "narcisismo"
-    if any(w in t for w in ["apego", "relacionamento"]):    return "apego"
-    if any(w in t for w in ["ansied", "ansioso", "panico"]): return "ansiedade"
-    if any(w in t for w in ["burnout", "esgot", "fadiga"]): return "burnout"
-    if any(w in t for w in ["live", "ao vivo", "debate"]):  return "lives"
-    return None
-
-def upload_youtube(video, token):
-    """Upload de vídeo para YouTube com metadata de série"""
+def publish_video(video, token):
+    vid_id  = video["id"]
     mp4_url = video.get("mp4_url", "")
+    title   = (video.get("youtube_title") or video.get("title", ""))[:100]
+    desc    = video.get("youtube_description", "")
+    tags    = video.get("youtube_tags") or []
+    slug    = video.get("series_slug", "")
+    ep_num  = video.get("ep_number", 0)
+    pub_ord = video.get("pub_order", 999)
+    pinned  = video.get("pinned_comment", "")
+
     if not mp4_url:
-        print(f"  Sem mp4_url para ID {video['id']}")
+        log(f"  ❌ ID {vid_id}: sem mp4_url")
         return None
-    
-    title       = video.get("title", "")
-    description = video.get("description", "")
-    tags        = video.get("tags", "").split(",") if video.get("tags") else []
-    serie       = video.get("serie", "")
-    ep_num      = video.get("episode_number", 0)
-    
-    # Montar título com série se houver
-    full_title = title
-    if serie and ep_num:
-        full_title = f"S{ep_num:02d} | {title}"[:100]
-    
-    # Descrição completa
-    full_desc = f"""{description}
+
+    # Descrição completa com CTAs
+    full_desc = f"""{desc}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🧠 Daniela Coelho — Pesquisadora de Comportamento Humano
-📺 @psidanicoelho
+📺 Novo vídeo toda semana @psidanicoelho
 
-Este conteúdo é baseado em pesquisas científicas.
-Fontes: Harvard Medical School, van der Kolk, Gottman Institute, UCLA
+📚 Baseado em pesquisas reais:
+Harvard Medical School · van der Kolk · Gottman Institute
 
 #psicologia #comportamentohumano #saudemental"""
 
-    if serie:
-        full_desc = f"📚 Série: {serie}\n" + (f"🎯 Episódio {ep_num}\n\n" if ep_num else "\n") + full_desc
-    
-    # Verificar cota antes de upload
-    quota_ok = True  # simplificado
-    
-    # RESUMABLE UPLOAD
-    print(f"  Upload: {full_title[:50]}...")
-    
-    # 1. Iniciar upload resumable
+    if slug:
+        full_desc = f"📚 Série: {slug.title()}" + (f" · Ep. {ep_num}\n\n" if ep_num else "\n\n") + full_desc
+
     metadata = {
         "snippet": {
-            "title": full_title,
-            "description": full_desc,
-            "tags": tags[:20],
-            "categoryId": "26",  # How-to & Style → mais amplo para psicologia
+            "title": title,
+            "description": full_desc[:4900],
+            "tags": (tags if isinstance(tags, list) else [])[:20],
+            "categoryId": "26",
             "defaultLanguage": "pt",
         },
-        "status": {
-            "privacyStatus": "public",
-            "selfDeclaredMadeForKids": False
-        }
+        "status": {"privacyStatus": "public", "selfDeclaredMadeForKids": False}
     }
-    
-    # Download do vídeo do Supabase Storage para upload ao YT
-    import tempfile, pathlib
+
+    # Download do MP4
+    log(f"  ⬇ Baixando {mp4_url[-50:]}")
     with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as tmp:
         tmp_path = tmp.name
-    
-    print(f"    Baixando vídeo ({mp4_url[-40:]})...")
+
     req_dl = urllib.request.Request(mp4_url, headers={"User-Agent": "Mozilla/5.0"})
     with urllib.request.urlopen(req_dl, timeout=120) as r:
         open(tmp_path, "wb").write(r.read())
-    
+
     size = pathlib.Path(tmp_path).stat().st_size
-    print(f"    {size//1024//1024}MB baixados")
-    
+    log(f"  📦 {size//1024//1024}MB — iniciando upload resumable")
+
     # Iniciar upload resumable
     meta_body = json.dumps(metadata).encode()
     init_req = urllib.request.Request(
         "https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status",
-        data=meta_body, method="POST"
-    )
+        data=meta_body, method="POST")
     init_req.add_header("Authorization", f"Bearer {token}")
     init_req.add_header("Content-Type", "application/json")
     init_req.add_header("X-Upload-Content-Type", "video/mp4")
     init_req.add_header("X-Upload-Content-Length", str(size))
-    
+
     with urllib.request.urlopen(init_req, timeout=30) as r:
         upload_url = r.headers.get("Location", "")
-    
+
     if not upload_url:
-        print("    Sem URL de upload!")
+        log("  ❌ Sem URL de upload")
         return None
-    
+
     # Upload do arquivo
-    print(f"    Enviando {size//1024//1024}MB para YouTube...")
+    log(f"  ⬆ Enviando para YouTube...")
     video_data = open(tmp_path, "rb").read()
     up_req = urllib.request.Request(upload_url, data=video_data, method="PUT")
     up_req.add_header("Content-Type", "video/mp4")
     up_req.add_header("Content-Length", str(size))
-    
+
     with urllib.request.urlopen(up_req, timeout=300) as r:
         result = json.loads(r.read())
-    
+
     pathlib.Path(tmp_path).unlink(missing_ok=True)
-    video_id = result.get("id", "")
-    
-    if video_id:
-        yt_url = f"https://www.youtube.com/watch?v={video_id}"
-        print(f"    ✅ Publicado: {yt_url}")
-        
-        # Adicionar à playlist correta
-        pl_key = detect_playlist(title, serie)
-        if pl_key and pl_key in PLAYLIST_MAP:
+    yt_id  = result.get("id", "")
+    yt_url = f"https://www.youtube.com/watch?v={yt_id}" if yt_id else ""
+
+    if yt_url:
+        log(f"  ✅ Publicado: {yt_url}")
+
+        # Comentar pinado
+        if pinned:
             try:
-                yt_api("playlistItems", data={
+                yt("commentThreads", data={
                     "snippet": {
-                        "playlistId": PLAYLIST_MAP[pl_key],
-                        "resourceId": {"kind": "youtube#video", "videoId": video_id}
+                        "videoId": yt_id,
+                        "topLevelComment": {"snippet": {"textOriginal": pinned[:2000]}}
                     }
                 }, method="POST", params="part=snippet", token=token)
-                print(f"    + Adicionado à playlist: {pl_key}")
+                log("  📌 Comentário pinado adicionado")
             except: pass
-        
-        return yt_url
-    
-    return None
+
+        # Adicionar à playlist
+        if slug in PLAYLIST_MAP:
+            try:
+                yt("playlistItems", data={
+                    "snippet": {"playlistId": PLAYLIST_MAP[slug],
+                                "resourceId": {"kind": "youtube#video", "videoId": yt_id}}
+                }, method="POST", params="part=snippet", token=token)
+                log(f"  📂 Adicionado à playlist: {slug}")
+            except: pass
+
+        # Atualizar Supabase
+        sb_patch("content_pipeline", {
+            "status": "published",
+            "youtube_url": yt_url,
+            "youtube_id": yt_id,
+            "published_at": datetime.now(timezone.utc).isoformat()
+        }, vid_id)
+
+    return yt_url
+
+def check_quota():
+    """Retorna quota usada hoje"""
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    rows = sb_get("ia_cache", f"cache_key=eq.quota:yt:{today}&select=value")
+    return int(rows[0]["value"]) if rows else 0
+
+def add_quota(units):
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    current = check_quota()
+    body = json.dumps({"cache_key": f"quota:yt:{today}", "value": str(current + units),
+                       "expires_at": "2030-01-01T00:00:00Z"}).encode()
+    req = urllib.request.Request(f"{SBU}/rest/v1/ia_cache", data=body, method="POST",
+        headers={"apikey": SBK, "Authorization": f"Bearer {SBK}",
+                 "Content-Type": "application/json", "Prefer": "resolution=merge-duplicates"})
+    with urllib.request.urlopen(req, timeout=10): pass
 
 def main():
-    print("=" * 60)
-    print("📺 Series Publisher — psicologia.doc")
-    print("=" * 60)
-    
+    log("=" * 50)
+    log("📺 Series Publisher v2 — @psidanicoelho")
+    log("=" * 50)
+
     if not all([SBU, SBK, REFRESH_TOKEN, CLIENT_ID, CLIENT_SECRET]):
-        print("⚠️ Credenciais não configuradas")
+        log("⚠️  Configurar variáveis de ambiente primeiro")
         return
-    
-    # Obter token
+
+    quota = check_quota()
+    log(f"Quota hoje: {quota}/9500 units")
+
+    if quota >= 9000:
+        log("⚠️  Quota esgotada — aguardando reset às 00h UTC")
+        return
+
     token = get_token()
     if not token:
-        print("❌ Token inválido")
+        log("❌ Falha ao obter token OAuth")
         return
-    
-    # Verificar cota
-    import datetime as dt
-    today = dt.date.today().isoformat()
-    quota_data = sb_get("ia_cache", f"cache_key=eq.quota:yt:{today}&select=value")
-    quota = int(quota_data[0]["value"]) if quota_data else 0
-    print(f"Quota hoje: {quota}/9500 units")
-    
-    if quota >= 9400:
-        print("⚠️ Quota quase esgotada — aguardando reset")
-        return
-    
-    # Buscar vídeos prontos, ordenados por série e episódio
+
+    # Buscar próximos vídeos por pub_order
     videos = sb_get("content_pipeline",
-        "status=eq.mp4_ready&select=id,title,description,tags,serie,episode_number,format,mp4_url"
-        "&order=serie.asc,episode_number.asc,id.asc&limit=2")
-    
-    print(f"{len(videos)} vídeos prontos para publicar")
-    
+        "status=eq.mp4_ready&format=eq.short"
+        "&select=id,pub_order,title,youtube_title,youtube_description,youtube_tags,"
+        "series_slug,ep_number,mp4_url,pinned_comment,viral_score"
+        "&order=pub_order.asc.nullslast,id.asc"
+        f"&limit={MAX_PER_RUN}")
+
+    if not videos:
+        log("Nenhum vídeo pronto para publicar")
+        return
+
+    log(f"{len(videos)} vídeos na fila")
     success = 0
-    for video in videos:
-        vid_id = video["id"]
-        print(f"\n[{vid_id}] {video['title'][:55]}")
-        print(f"  Série: {video.get('serie','?')} Ep:{video.get('episode_number','?')} Formato:{video.get('format','?')}")
-        
-        # Custo: 1600 units por upload
+
+    for v in videos:
         if quota + 1600 > 9500:
-            print("  ⚠️ Cota insuficiente para este vídeo")
+            log("⚠️  Cota insuficiente para mais uploads")
             break
-        
-        yt_url = upload_youtube(video, token)
-        if yt_url:
-            sb_update("content_pipeline", {
-                "status": "published",
-                "youtube_url": yt_url,
-                "published_at": datetime.now(timezone.utc).isoformat()
-            }, {"id": vid_id})
+        log(f"\n[#{v['pub_order'] or '?'}] {v['title'][:55]}")
+        log(f"  Série: {v.get('series_slug','?')} | Ep:{v.get('ep_number','?')} | Score:{v.get('viral_score','?')}")
+
+        url = publish_video(v, token)
+        if url:
+            add_quota(1600)
             quota += 1600
             success += 1
-            # Salvar quota atualizada
-            body = json.dumps({"cache_key": f"quota:yt:{today}", "value": str(quota),
-                              "expires_at": "2030-01-01T00:00:00Z"}).encode()
-            req = urllib.request.Request(f"{SBU}/rest/v1/ia_cache", data=body, method="POST",
-                headers={"apikey": SBK, "Authorization": f"Bearer {SBK}",
-                         "Content-Type": "application/json", "Prefer": "resolution=merge-duplicates"})
-            with urllib.request.urlopen(req, timeout=10): pass
-        
-        time.sleep(5)  # Respeitar rate limits
-    
-    print(f"\n✅ {success} vídeos publicados em ordem de série")
+        time.sleep(10)
+
+    log(f"\n✅ {success}/{len(videos)} publicados | quota restante: {9500-quota}")
 
 if __name__ == "__main__":
     main()
