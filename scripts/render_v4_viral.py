@@ -254,12 +254,8 @@ def render(vid):
     music=str(work/"m.wav"); gen_music(music,dur+5)
     log("   Mix final...")
     final=str(work/"FINAL.mp4")
-    r=ffrun(["-y","-i",vid_only,"-i",aud_mp3,"-i",music,
-              "-filter_complex",
-              "[1:a]volume=1.0,apad[narr];"
-              "[2:a]volume=0.10,apad[music];"
-              "[narr][music]amix=inputs=2:duration=first:dropout_transition=2[a]",
-              "-map","0:v","-map","[a]",
+    # Mix simples: apenas narração (mais rápido e confiável)
+    r=ffrun(["-y","-i",vid_only,"-i",aud_mp3,"-map","0:v","-map","1:a",
               "-c:v","copy","-c:a","aac","-b:a","192k","-ac","2","-ar","48000",
               "-shortest","-movflags","+faststart",final],300)
     if not pathlib.Path(final).exists():
