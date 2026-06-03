@@ -195,7 +195,7 @@ def gen_img(ck,em,out,seed):
     return "proc" if gen_proc(ck,em,out,seed) else None
 
 def gen_music(out, dur):
-    sr=44100; n=int(dur*sr)
+    sr=22050; n=int(dur*sr)
     chords=[[220,261.63,329.63],[174.61,220,261.63],[261.63,329.63,392],[196,246.94,293.66]]
     step=dur/len(chords); L,R=[],[]
     for i in range(n):
@@ -261,7 +261,7 @@ def render(vid):
               "[narr][music]amix=inputs=2:duration=first:dropout_transition=2[a]",
               "-map","0:v","-map","[a]",
               "-c:v","copy","-c:a","aac","-b:a","192k","-ac","2","-ar","48000",
-              "-shortest","-movflags","+faststart",final],120)
+              "-shortest","-movflags","+faststart",final],300)
     if not pathlib.Path(final).exists():
         log(f"   ERRO mix: {r.stderr.decode()[-100:]}"); return False
     sz=pathlib.Path(final).stat().st_size
