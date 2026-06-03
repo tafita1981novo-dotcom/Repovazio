@@ -30,12 +30,12 @@ jobs:
         run: |
           python3 scripts/tts_pipeline.py
 
-      - name: Trigger Render V2
+      - name: Trigger Render V3
         if: success()
         run: |
           curl -s -X POST \
             -H "Authorization: Bearer ${{ secrets.GH_PAT }}" \
             -H "Accept: application/vnd.github+json" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
-            "https://api.github.com/repos/${{ github.repository }}/actions/workflows/render-mp4-v2.yml/dispatches" \
-            -d '{"ref":"main"}' || echo "Render dispatch ok"
+            "https://api.github.com/repos/${{ github.repository }}/actions/workflows/render-mp4-v3.yml/dispatches" \
+            -d '{"ref":"main","inputs":{"max_videos":"5"}}' || echo "Render dispatch ok"
