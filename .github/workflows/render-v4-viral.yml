@@ -21,12 +21,13 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
 
-      - name: Instalar dependencias
-        run: |
-          sudo apt-get install -y ffmpeg -q 2>/dev/null
-          pip install edge-tts Pillow --break-system-packages -q
+      - name: Instalar ffmpeg
+        run: sudo apt-get install -y ffmpeg 2>/dev/null || sudo apt-get install -y --fix-missing ffmpeg
 
-      - name: 🎬 Render V4 Viral
+      - name: Instalar Python deps
+        run: pip install edge-tts Pillow requests --break-system-packages -q
+
+      - name: 🎬 Render V4 Viral — ElevenLabs + HF + Historia
         env:
           SUPABASE_URL:          ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY:  ${{ secrets.SUPABASE_SERVICE_KEY }}
@@ -39,8 +40,7 @@ jobs:
       - name: Resultado
         if: always()
         run: |
-          echo "## 🎬 Render V4 Viral" >> $GITHUB_STEP_SUMMARY
-          echo "- ElevenLabs Sarah: voz humana indetectável" >> $GITHUB_STEP_SUMMARY
-          echo "- HF FLUX.1-schnell: personagens fotorrealistas" >> $GITHUB_STEP_SUMMARY
-          echo "- Arco narrativo: Hook→Revelação→Ciência→Empatia→CTA" >> $GITHUB_STEP_SUMMARY
-          echo "- Ken Burns expressivo por cena" >> $GITHUB_STEP_SUMMARY
+          echo "## Render V4 Viral" >> $GITHUB_STEP_SUMMARY
+          echo "- ElevenLabs Sarah: voz humana indetectavel" >> $GITHUB_STEP_SUMMARY
+          echo "- HF FLUX personagens reais" >> $GITHUB_STEP_SUMMARY
+          echo "- Arco narrativo visual" >> $GITHUB_STEP_SUMMARY
