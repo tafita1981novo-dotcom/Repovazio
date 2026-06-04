@@ -5,10 +5,10 @@ on:
     inputs:
       max_per_lang: {default: '1', description: 'Shorts por idioma'}
   schedule:
-    - cron: '30 3 * * *'   # 03h30 UTC — logo após reset quota
-    - cron: '30 9 * * *'   # 09h30 UTC = 06h30 BR
-    - cron: '30 15 * * *'  # 15h30 UTC = 12h30 BR
-    - cron: '30 21 * * *'  # 21h30 UTC = 18h30 BR (horário pico BR)
+    - cron: '30 3 * * *'
+    - cron: '30 9 * * *'
+    - cron: '30 15 * * *'
+    - cron: '30 21 * * *'
 
 concurrency:
   group: multilingual-engine
@@ -25,9 +25,7 @@ jobs:
         with: { python-version: '3.11' }
 
       - name: Instalar dependências
-        run: |
-          pip install imageio-ffmpeg Pillow edge-tts --quiet
-          sudo apt-get install -y ffmpeg --quiet 2>/dev/null || true
+        run: pip install imageio-ffmpeg Pillow edge-tts --quiet && python3 -c "import imageio_ffmpeg; print('FFmpeg OK')"
 
       - name: Gerar e publicar em 8 idiomas
         env:
