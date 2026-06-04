@@ -5,15 +5,15 @@ on:
     inputs:
       lang:
         default: 'pt'
-        description: 'Idioma (pt/en/es/de/fr)'
+        description: 'Idioma'
       duration_h:
         default: '6'
-        description: 'Duração em horas'
+        description: 'Horas'
   schedule:
-    - cron: '0 0 * * *'   # Slot 0 — 00h UTC = 21h BR
-    - cron: '0 6 * * *'   # Slot 1 — 06h UTC = 03h BR
-    - cron: '0 12 * * *'  # Slot 2 — 12h UTC = 09h BR
-    - cron: '0 18 * * *'  # Slot 3 — 18h UTC = 15h BR
+    - cron: '0 0 * * *'
+    - cron: '0 6 * * *'
+    - cron: '0 12 * * *'
+    - cron: '0 18 * * *'
 
 concurrency:
   group: live-24h
@@ -26,14 +26,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with: { python-version: '3.11' }
 
       - name: Instalar dependências
-        run: pip install imageio-ffmpeg --quiet && python3 -c "import imageio_ffmpeg; print('FFmpeg OK:', imageio_ffmpeg.get_ffmpeg_exe())"
+        run: pip install imageio-ffmpeg --quiet && python3 -c "import imageio_ffmpeg; f=imageio_ffmpeg.get_ffmpeg_exe(); print('FFmpeg OK:', f)"
 
-      - name: Live 24/7 — Transmissão
+      - name: Live 24/7
         timeout-minutes: 400
         env:
           YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
@@ -44,4 +43,4 @@ jobs:
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           DURATION_H: ${{ inputs.duration_h || '6' }}
           LANG_CODE: ${{ inputs.lang || 'pt' }}
-        run: python3 scripts/live_loop_v1.py
+        run: python3 scripts/live_loop_v2.py
