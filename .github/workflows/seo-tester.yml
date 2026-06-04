@@ -1,0 +1,49 @@
+name: 🧪 Tester SEO Global — Valida Pacotes Antes de Publicar
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 * * * *'   # A cada hora: testa + valida SEO de próximos vídeos
+
+jobs:
+  test_seo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+
+      - name: 🧪 Testar Motor SEO Global
+        run: |
+          cd scripts
+          python3 -c "
+from datetime import datetime, timezone
+from seo_global_v1 import get_live_seo, get_seo_package, score_seo_package, get_paises_ativos
+
+hour = datetime.now(timezone.utc).hour
+print(f'=== SEO GLOBAL TEST | {hour}h UTC ===')
+
+# Teste 1: Live SEO
+live = get_live_seo(hour)
+s1 = score_seo_package(live)
+print(f'Live title: {live["title"][:70]}')
+print(f'Live score: {s1}/100 | Countries: {live["countries_watching"]}')
+
+# Teste 2: Video SEO
+for topic in ['narcisismo encoberto','trauma de infancia','ansiedade social']:
+    pkg = get_seo_package(topic, 'pt', hour)
+    s = score_seo_package(pkg)
+    print(f'{topic[:25]:25}: score={s}/100 | CPM={pkg["est_cpm"]}')
+
+# Teste 3: Países ativos agora
+ativos = get_paises_ativos(hour)[:10]
+print(f'TOP 10 PAISES AGORA:')
+for cpm,code,nome,lang,local_h in ativos:
+    print(f'  {code} {nome:20} {local_h:02d}h local CPM=\${cpm:.1f}')
+
+total_cpm = sum(cpm for cpm,*_ in ativos)
+print(f'CPM combinado top 10: \${total_cpm:.1f}')
+print('✅ SEO Engine funcionando!' if s1>=70 else '⚠️  Score baixo — verificar')
+"
