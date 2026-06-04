@@ -1,31 +1,40 @@
-name: LIVE 24/7 — Psicologia Doc
+name: LIVE 24/7 — Tela Preta + Binaural 432Hz + SEO Global
 
 on:
   workflow_dispatch:
     inputs:
-      lang: {default: 'pt', description: 'Idioma'}
-      duration_h: {default: '6', description: 'Horas'}
+      lang:
+        default: 'pt'
+        description: 'Idioma do SEO'
+      duration_h:
+        default: '6'
+        description: 'Duração em horas (máx 6 no GH Actions free)'
   schedule:
-    - cron: '0 0 * * *'
-    - cron: '0 6 * * *'
-    - cron: '0 12 * * *'
-    - cron: '0 18 * * *'
+    - cron: '0 0 * * *'   # 21h BR — máximo audiência noturna
+    - cron: '0 6 * * *'   # 03h BR — audiência mundial (EUA tarde, AU manhã)
+    - cron: '0 12 * * *'  # 09h BR — EUA/EU acordando (máximo CPM)
+    - cron: '0 18 * * *'  # 15h BR — pico BR + EUA trabalho
 
 concurrency:
-  group: live-24h
+  group: live-24h-black
   cancel-in-progress: false
 
 jobs:
-  live:
+  live_black:
     runs-on: ubuntu-latest
     timeout-minutes: 410
+
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: '3.11' }
-      - name: Instalar
-        run: pip install imageio-ffmpeg Pillow --quiet && python3 -c "import imageio_ffmpeg,PIL; print('OK:', imageio_ffmpeg.get_ffmpeg_exe())"
-      - name: Live 24/7
+
+      - name: Instalar dependências
+        run: |
+          pip install imageio-ffmpeg Pillow --quiet
+          python3 -c "import imageio_ffmpeg, PIL; print('FFmpeg OK:', imageio_ffmpeg.get_ffmpeg_exe())"
+
+      - name: 🔴 LIVE Tela Preta + Binaural 432Hz
         timeout-minutes: 400
         env:
           YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
@@ -36,4 +45,4 @@ jobs:
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           DURATION_H: ${{ inputs.duration_h || '6' }}
           LANG_CODE: ${{ inputs.lang || 'pt' }}
-        run: python3 scripts/live_loop_v4.py
+        run: python3 scripts/live_black_v1.py
