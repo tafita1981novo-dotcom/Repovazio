@@ -1,0 +1,36 @@
+name: 🎬 Render Short V6 — Script Completo + Sinc Perfeita + 50-58s
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '*/20 * * * *'   # A cada 20 minutos
+
+concurrency:
+  group: render-short-v6
+  cancel-in-progress: false
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+
+      - name: Instalar dependências
+        run: |
+          pip install edge-tts imageio-ffmpeg Pillow mutagen --quiet
+
+      - name: Render Shorts V6
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          MAX_VIDEOS: "2"
+        run: |
+          echo "=== RENDER SHORT V6 ==="
+          echo "Script completo | Sinc por cena | 50-58s | Viral ≥95%"
+          python3 scripts/render_short_v6.py
