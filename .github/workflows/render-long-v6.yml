@@ -1,0 +1,36 @@
+name: 🎬 Render Long V6 — 8-15min com Episódios e Mid-rolls
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 * * * *'   # A cada hora
+
+concurrency:
+  group: render-long-v6
+  cancel-in-progress: false
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+
+      - name: Instalar dependências
+        run: |
+          pip install edge-tts imageio-ffmpeg Pillow mutagen --quiet
+
+      - name: Render Long V6
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          MAX_VIDEOS: "1"
+        run: |
+          echo "=== RENDER LONG V6 ==="
+          echo "Script completo | Sinc por parágrafo | 8-15min | 5 atos | Mid-rolls"
+          python3 scripts/render_long_v6.py
