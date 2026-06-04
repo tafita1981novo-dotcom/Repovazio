@@ -1,0 +1,26 @@
+name: 🖼️ Thumbnail SEO — Gerar e Upload no YouTube
+
+on:
+  workflow_dispatch:
+    inputs:
+      video_id: {description: 'YouTube Video ID para aplicar thumbnail'}
+      lang: {default: 'pt', description: 'Idioma'}
+
+jobs:
+  thumbnail:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - run: pip install Pillow --quiet
+
+      - name: Gerar e Upload Thumbnail
+        env:
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+          VIDEO_ID: ${{ inputs.video_id || '' }}
+          LANG: ${{ inputs.lang || 'pt' }}
+        run: python3 scripts/thumbnail_seo_v1.py
