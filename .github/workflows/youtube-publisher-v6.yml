@@ -1,14 +1,12 @@
-name: Publicar Videos Virais no YouTube (>=95%)
+name: Publicar Videos Virais no YouTube
 
 on:
   workflow_dispatch:
     inputs:
       max_videos:
-        description: Numero de videos para publicar por run
-        default: '3'
-        required: false
+        default: '5'
   schedule:
-    - cron: '0 18 * * *'   # Diariamente 15h BR (18h UTC) — horario de pico
+    - cron: '0 18 * * *'
 
 concurrency:
   group: youtube-publisher-v6
@@ -17,16 +15,12 @@ concurrency:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
 
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with: { python-version: '3.11' }
-
-      - name: Instalar dependencias
-        run: pip install requests --quiet
 
       - name: Publicar no YouTube
         env:
@@ -35,7 +29,5 @@ jobs:
           YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
           YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
           YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
-          MAX_VIDEOS: ${{ inputs.max_videos || '3' }}
-        run: |
-          echo "Publicando videos com viral score >= 95%..."
-          python3 scripts/youtube_publisher_v6.py
+          MAX_VIDEOS: ${{ inputs.max_videos || '5' }}
+        run: python3 scripts/youtube_publisher_v6b.py
