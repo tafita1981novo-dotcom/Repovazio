@@ -30,7 +30,7 @@ jobs:
           YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
           YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
           YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
-          YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
+          YOUTUBE_STREAM_KEY: ewme-91sq-yae7-yj1q-5skw
           DURATION_H: ${{ inputs.duration_h || '6' }}
           LANG_CODE: ${{ inputs.lang || 'pt' }}
-        run: python3 scripts/live_v3.py
+        run: python3 scripts/live_v4.py
