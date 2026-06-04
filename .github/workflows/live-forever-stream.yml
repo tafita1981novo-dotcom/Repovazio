@@ -11,19 +11,16 @@ jobs:
     steps:
       - name: Instalar dependencias
         run: |
-          sudo apt-get update -q
           sudo apt-get install -y --no-install-recommends --fix-missing ffmpeg
-          pip3 install numpy pillow requests --break-system-packages -q
+          pip3 install numpy pillow --break-system-packages -q
           ffmpeg -version | head -1
-          echo "Dependencias OK"
+          echo "OK"
 
       - name: Gerar audio + cerebro
         run: |
           python3 - << 'EOF'
           import numpy as np, wave, urllib.request, io
           from PIL import Image
-
-          # Audio binaural 432Hz 5min loop
           SR=44100; DUR=300
           t=np.linspace(0,DUR,int(SR*DUR),endpoint=False)
           L=(np.sin(2*np.pi*432*t)*0.3*32767).astype(np.int16)
@@ -33,27 +30,25 @@ jobs:
           d=np.empty(len(t)*2,dtype=np.int16); d[0::2]=L; d[1::2]=R
           with wave.open('binaural.wav','w') as f:
             f.setnchannels(2); f.setsampwidth(2); f.setframerate(SR); f.writeframes(d.tobytes())
-          print('Audio WAV OK')
-
-          # Cerebro 20x20px do canal
           with urllib.request.urlopen('https://yt3.googleusercontent.com/4NDK-JaBRi0uMyCCeOz-imtfhs6zHuQ2sxUn3d2gCjY_NyS_Z50OCENLFZrS_RjY5wOwKXch=s900-c-k-c0x00ffffff-no-rj') as r:
-            data = r.read()
-          img = Image.open(io.BytesIO(data)).convert('RGBA')
-          img = img.resize((20, 20), Image.LANCZOS)
+            img=Image.open(io.BytesIO(r.read())).convert('RGBA').resize((20,20))
           img.save('brain.png')
-          print(f'Cerebro OK: {img.size}')
+          print('Audio e cerebro OK')
           EOF
           ffmpeg -i binaural.wav -c:a libmp3lame -b:a 192k binaural.mp3 -y -loglevel quiet
           rm binaural.wav
           ls -lh binaural.mp3 brain.png
 
-      - name: Stream 24/7 (5h50min, auto-relay)
+      - name: Testar conexao RTMP
         env:
           STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
-          GH_PAT: ${{ secrets.GH_PAT }}
-          REPO: tafita81/Repovazio
         run: |
-          echo "Iniciando stream psicologia.doc LIVE 24/7"
+          echo "Testando conexao RTMPS com YouTube..."
+          # Testar TCP para a.rtmps.youtube.com porta 443
+          timeout 5 bash -c "echo > /dev/tcp/a.rtmps.youtube.com/443" && echo "RTMPS 443: OK" || echo "RTMPS 443: BLOQUEADO"
+          timeout 5 bash -c "echo > /dev/tcp/a.rtmp.youtube.com/1935" && echo "RTMP 1935: OK" || echo "RTMP 1935: BLOQUEADO"
+          timeout 5 bash -c "echo > /dev/tcp/a.rtmp.youtube.com/80" && echo "RTMP 80: OK" || echo "RTMP 80: BLOQUEADO"
+          echo "Iniciando stream via RTMPS (porta 443)..."
           
           ffmpeg -loglevel warning \
             -f lavfi -i "color=c=0x06060F:s=1280x720:r=25" \
@@ -64,19 +59,41 @@ jobs:
             -c:v libx264 -preset ultrafast -tune stillimage -crf 28 -pix_fmt yuv420p \
             -b:v 500k -maxrate 1000k -bufsize 2000k \
             -c:a aac -b:a 192k -ar 44100 -ac 2 \
-            -f flv "rtmp://a.rtmp.youtube.com/live2/${STREAM_KEY}" &
+            -f flv "rtmps://a.rtmps.youtube.com/live2/${STREAM_KEY}" &
           FFPID=$!
-          echo "Streaming PID $FFPID - vai rodar por 5h50m..."
+          echo "ffmpeg PID $FFPID via RTMPS"
+          sleep 30
+          # Verificar se ainda esta vivo (conexao estabelecida = sucesso)
+          if kill -0 $FFPID 2>/dev/null; then
+            echo "CONECTADO! Stream rodando."
+          else
+            echo "ffmpeg encerrou - tentando porta 80 RTMP..."
+            ffmpeg -loglevel warning \
+              -f lavfi -i "color=c=0x06060F:s=1280x720:r=25" \
+              -stream_loop -1 -i binaural.mp3 \
+              -i brain.png \
+              -filter_complex "[2:v]format=rgba,colorchannelmixer=aa=0.02[br];[0:v][br]overlay=x=(W-w)/2:y=(H-h)/2:enable='between(mod(t,5),0,0.3)'[vout]" \
+              -map "[vout]" -map "1:a" \
+              -c:v libx264 -preset ultrafast -tune stillimage -crf 28 -pix_fmt yuv420p \
+              -b:v 500k -maxrate 1000k -bufsize 2000k \
+              -c:a aac -b:a 192k -ar 44100 -ac 2 \
+              -f flv "rtmp://a.rtmp.youtube.com:80/live2/${STREAM_KEY}" &
+            FFPID2=$!
+            sleep 30
+            if kill -0 $FFPID2 2>/dev/null; then
+              echo "CONECTADO via porta 80!"
+              FFPID=$FFPID2
+            fi
+          fi
           
-          sleep 21000
+          # Continuar por 5h50m total menos tempo ja gasto
+          sleep 20880
           
-          echo "Disparando proximo ciclo (relay permanente)..."
+          echo "Relay..."
           curl -s -X POST \
-            -H "Authorization: Bearer ${GH_PAT}" \
+            -H "Authorization: Bearer ${{ secrets.GH_PAT }}" \
             -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/${REPO}/actions/workflows/live-forever-stream.yml/dispatches" \
-            -d '{"ref":"main"}' && echo "Relay OK" || echo "Falha relay"
-          
+            "https://api.github.com/repos/tafita81/Repovazio/actions/workflows/live-forever-stream.yml/dispatches" \
+            -d '{"ref":"main"}' && echo "Proximo ciclo disparado"
           sleep 60
           kill $FFPID 2>/dev/null || true
-          echo "Ciclo completo. Proximo ja iniciando."
