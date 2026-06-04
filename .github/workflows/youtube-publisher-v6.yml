@@ -1,15 +1,17 @@
-name: Publicador Automático — Canal Principal
+name: 🚀 Publicador SEO Global — Canal Principal
 
 on:
   workflow_dispatch:
     inputs:
-      max_videos: {default: '6', description: 'Max uploads (6=max quota diária)'}
+      max_videos:
+        default: '6'
+        description: 'Max uploads (quota=10k/dia, cada upload=1600 units)'
   schedule:
-    - cron: '15 0 * * *'   # 00h15 UTC — logo após reset quota YT API
-    - cron: '0 18 * * *'   # 18h UTC = 15h BR — horário pico
+    - cron: '15 0 * * *'   # 21h15 BR — logo após reset quota YouTube API
+    - cron: '0 18 * * *'   # 15h BR — pico de viewers no Brasil
 
 concurrency:
-  group: youtube-publisher
+  group: publisher-seo
   cancel-in-progress: false
 
 jobs:
@@ -23,7 +25,7 @@ jobs:
         with: { python-version: '3.11' }
       - run: pip install --quiet requests
 
-      - name: Publicar vídeos no YouTube
+      - name: 🚀 Publicar com SEO Global Otimizado
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
@@ -31,4 +33,4 @@ jobs:
           YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
           YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
           MAX_VIDEOS: ${{ inputs.max_videos || '6' }}
-        run: python3 scripts/smart_publisher_v2.py
+        run: python3 scripts/publisher_seo_v1.py
