@@ -1,42 +1,42 @@
-name: 🌍 Multi-Language Engine — EN/ES/FR/DE/JA/KO (RPM Máximo)
+name: Engine Multilíngue — 8 Idiomas Global
 
 on:
-  schedule:
-    - cron: '0 6 * * *'   # todo dia 06:00 UTC
   workflow_dispatch:
     inputs:
-      target_lang:
-        description: 'Idioma alvo (en-US|es-ES|fr-FR|de-DE|ja-JP|ko-KR)'
-        default: 'en-US'
+      max_per_lang: {default: '1', description: 'Shorts por idioma'}
+  schedule:
+    - cron: '30 3 * * *'   # 03h30 UTC — logo após reset quota
+    - cron: '30 9 * * *'   # 09h30 UTC = 06h30 BR
+    - cron: '30 15 * * *'  # 15h30 UTC = 12h30 BR
+    - cron: '30 21 * * *'  # 21h30 UTC = 18h30 BR (horário pico BR)
+
+concurrency:
+  group: multilingual-engine
+  cancel-in-progress: false
 
 jobs:
   multilingual:
-    name: 🌍 Traduzir para ${{ inputs.target_lang || 'en-US' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 90
 
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: {python-version: '3.11'}
+        with: { python-version: '3.11' }
 
-      - name: 🌍 Gerar conteúdo multilingual
+      - name: Instalar dependências
+        run: |
+          pip install imageio-ffmpeg Pillow edge-tts --quiet
+          sudo apt-get install -y ffmpeg --quiet 2>/dev/null || true
+
+      - name: Gerar e publicar em 8 idiomas
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-          TARGET_LANG: ${{ inputs.target_lang || 'en-US' }}
-        run: python3 scripts/multilingual_engine.py
-
-      - name: 📊 RPM Estimado
-        run: |
-          echo "## 🌍 Potencial de Monetização por Idioma" >> $GITHUB_STEP_SUMMARY
-          echo "| Idioma | RPM Estimado | Audiência |" >> $GITHUB_STEP_SUMMARY
-          echo "|--------|-------------|---------|" >> $GITHUB_STEP_SUMMARY
-          echo "| 🇩🇪 Alemão (de-DE) | \$12-30 | Europa |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🇬🇧 Inglês (en-US) | \$8-25 | Global |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🇫🇷 Francês (fr-FR) | \$8-20 | Europa |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🇯🇵 Japonês (ja-JP) | \$6-15 | Asia |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🇰🇷 Coreano (ko-KR) | \$5-12 | Asia |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🇪🇸 Espanhol (es-ES) | \$3-8 | Global |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🇧🇷 Português (pt-BR) | \$3-6 | Brasil |" >> $GITHUB_STEP_SUMMARY
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+          MAX_PER_LANG: ${{ inputs.max_per_lang || '1' }}
+        run: python3 scripts/multilingual_short_engine.py
