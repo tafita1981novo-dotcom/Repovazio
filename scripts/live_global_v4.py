@@ -505,7 +505,7 @@ def start_live():
         # Audio: intro (se existir) + binaural em loop
         "-stream_loop","-1","-i",str(audio_path),
         # Texto mínimo — apenas handle do canal
-        "-vf", "drawtext=text='@psidanicoelho':fontcolor=white:fontsize=20:x=16:y=16:alpha=0.3:font=DejaVuSans",
+        "-vf", "drawtext=text='@psidanicoelho':fontcolor=white:fontsize=20:x=16:y=16:alpha=0.3",
         "-map","0:v","-map","1:a",
         # Codecs: baixo bitrate para tela preta (economiza banda)
         "-c:v","libx264","-preset","ultrafast","-crf","35",
