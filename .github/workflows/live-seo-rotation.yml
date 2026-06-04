@@ -1,0 +1,22 @@
+name: live-seo-rotation
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+jobs:
+  rotate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: SEO rotation + social promo
+        run: |
+          R=$(curl -s -X POST "https://tpjvalzwkqwttvmszvie.supabase.co/functions/v1/live-seo-rotator" -H "Content-Type: application/json" -d '{"action":"rotate"}')
+          echo "$R"
+          L=$(echo "$R" | python3 -c "import sys,json;print(json.load(sys.stdin).get('lang','?'))" 2>/dev/null || echo '?')
+          M=$(echo "$R" | python3 -c "import sys,json;print(json.load(sys.stdin).get('market','?'))" 2>/dev/null || echo '?')
+          echo "SEO: $L | $M"
+      - name: Social publish
+        run: |
+          curl -s -X POST "https://tpjvalzwkqwttvmszvie.supabase.co/functions/v1/social-publisher" -H "Content-Type: application/json" -d '{"action":"publish_all"}' || echo 'sem midia'
