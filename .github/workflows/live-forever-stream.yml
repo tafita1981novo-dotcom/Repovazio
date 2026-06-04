@@ -2,7 +2,6 @@ name: live-forever-stream
 
 on:
   workflow_dispatch:
-  # Não usa schedule - auto-dispara via API antes de morrer
 
 jobs:
   stream:
@@ -12,8 +11,9 @@ jobs:
     steps:
       - name: Instalar dependencias
         run: |
-          sudo apt-get install -y ffmpeg imagemagick python3-pip -q
-          pip3 install numpy --break-system-packages -q
+          sudo apt-get install -y ffmpeg python3-pip -q
+          pip3 install numpy pillow --break-system-packages -q
+          echo "Dependencias OK"
 
       - name: Gerar audio binaural 432Hz (5min loop)
         run: |
@@ -28,19 +28,27 @@ jobs:
           d=np.empty(len(t)*2,dtype=np.int16); d[0::2]=L; d[1::2]=R
           with wave.open('binaural.wav','w') as f:
             f.setnchannels(2); f.setsampwidth(2); f.setframerate(SR); f.writeframes(d.tobytes())
-          print('Audio OK:', round(len(d)*2/1024/1024,1), 'MB')
+          print('Audio OK')
           EOF
           ffmpeg -i binaural.wav -c:a libmp3lame -b:a 192k binaural.mp3 -y -loglevel quiet
           rm binaural.wav
           echo "Audio: $(du -h binaural.mp3 | cut -f1)"
 
-      - name: Baixar cerebro branco do canal
+      - name: Baixar e redimensionar cerebro (Pillow)
         run: |
-          wget -q -O brain_orig.jpg '${{ env.BRAIN_URL }}'
-          convert brain_orig.jpg -resize 20x20! brain.png 2>/dev/null || cp brain_orig.jpg brain.png
+          python3 - << 'EOF'
+          import urllib.request
+          from PIL import Image
+          import io
+          url = 'https://yt3.googleusercontent.com/4NDK-JaBRi0uMyCCeOz-imtfhs6zHuQ2sxUn3d2gCjY_NyS_Z50OCENLFZrS_RjY5wOwKXch=s900-c-k-c0x00ffffff-no-rj'
+          with urllib.request.urlopen(url) as r:
+              data = r.read()
+          img = Image.open(io.BytesIO(data)).convert('RGBA')
+          img = img.resize((20, 20), Image.LANCZOS)
+          img.save('brain.png')
+          print(f'Cerebro OK: {img.size} {img.mode}')
+          EOF
           ls -lh brain.png
-        env:
-          BRAIN_URL: https://yt3.googleusercontent.com/4NDK-JaBRi0uMyCCeOz-imtfhs6zHuQ2sxUn3d2gCjY_NyS_Z50OCENLFZrS_RjY5wOwKXch=s900-c-k-c0x00ffffff-no-rj
 
       - name: Stream 24/7 (5h50min, auto-relay)
         env:
@@ -49,9 +57,8 @@ jobs:
           REPO: tafita81/Repovazio
         run: |
           echo "Iniciando stream psicologia.doc Live 24/7..."
-          echo "Stream key: ${STREAM_KEY:0:4}****"
+          echo "Chave configurada: YES"
           
-          # Iniciar ffmpeg em background
           ffmpeg -loglevel warning \
             -f lavfi -i "color=c=0x06060F:s=1280x720:r=25" \
             -stream_loop -1 -i binaural.mp3 \
@@ -63,21 +70,18 @@ jobs:
             -c:a aac -b:a 192k -ar 44100 -ac 2 \
             -f flv "rtmp://a.rtmp.youtube.com/live2/${STREAM_KEY}" &
           FFPID=$!
-          echo "FFmpeg PID: $FFPID"
+          echo "FFmpeg PID: $FFPID - streamando..."
           
-          # Aguardar 5h50min (21000 segundos)
           sleep 21000
           
-          # Disparar proximo job ANTES de encerrar este (overlap de ~30s = sem interrupcao)
-          echo "Disparando proximo ciclo..."
+          echo "Disparando proximo ciclo (relay)..."
           curl -s -X POST \
             -H "Authorization: Bearer ${GH_PAT}" \
             -H "Accept: application/vnd.github+json" \
             "https://api.github.com/repos/${REPO}/actions/workflows/live-forever-stream.yml/dispatches" \
             -d '{"ref":"main"}' \
-            && echo "Proximo ciclo disparado!" || echo "Aviso: falha ao disparar proximo ciclo"
+            && echo "Proximo ciclo OK" || echo "Aviso: falha relay"
           
-          # Aguardar 60s para proximo job iniciar antes de encerrar este
           sleep 60
           kill $FFPID 2>/dev/null || true
           echo "Ciclo encerrado. Proximo ja esta rodando."
