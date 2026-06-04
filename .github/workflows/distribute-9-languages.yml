@@ -1,0 +1,35 @@
+name: 🌍 Distribute 9 Languages — TikTok + Instagram + YouTube
+
+on:
+  workflow_dispatch:
+    inputs:
+      video_id: {description: 'ID do vídeo #', required: false}
+  schedule:
+    # 4x por dia nos horários de maior audiência global
+    - cron: '30 11 * * *'   # 08:30 BRT = EUA acordando (max CPM)
+    - cron: '0 16 * * *'    # 13:00 BRT = EUA tarde
+    - cron: '30 20 * * *'   # 17:30 BRT = EU + EUA sobreposição
+    - cron: '0 23 * * *'    # 20:00 BRT = BR prime time
+
+jobs:
+  distribute:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install requests Pillow --quiet
+      - name: 🌍 Gerar SEO 9 Idiomas + Distribuir
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+          TT_CLIENT_KEY: ${{ secrets.TT_CLIENT_KEY }}
+          TT_ACCESS_TOKEN: ${{ secrets.TT_ACCESS_TOKEN }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          VIDEO_ID: ${{ inputs.video_id || '' }}
+        run: python3 scripts/distribute_9lang.py
