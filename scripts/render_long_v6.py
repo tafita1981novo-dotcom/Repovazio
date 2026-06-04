@@ -38,25 +38,9 @@ def ff(*args, t=300):
     return subprocess.run([ffm(), *args], capture_output=True, timeout=t)
 
 def ffprobe_dur(path):
-    """Mede duracao usando ffprobe do imageio_ffmpeg ou estimativa."""
-    import shutil
-    ffprobe_bin = shutil.which("ffprobe")
-    if not ffprobe_bin:
-        try:
-            import imageio_ffmpeg
-            ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
-            # Usar ffmpeg com -i para pegar duracao
-            r = subprocess.run([ffmpeg_exe,"-i",str(path),"-f","null","-"],
-                               capture_output=True, timeout=20)
-            m = re.search(r"Duration: (\d+):(\d+):(\d+\.\d+)", r.stderr.decode())
-            if m:
-                h,mn,s=m.groups(); return float(h)*3600+float(mn)*60+float(s)
-        except: pass
-        # Estimativa por tamanho (128kbps)
-        try: return pathlib.Path(path).stat().st_size/16000.0
-        except: return 0.0
-    r = subprocess.run([ffprobe_bin,"-v","quiet","-print_format","json","-show_format",str(path)],
-                       capture_output=True, timeout=15)
+    r = subprocess.run(
+        ["ffprobe","-v","quiet","-print_format","json","-show_format",str(path)],
+        capture_output=True, timeout=15)
     try: return float(json.loads(r.stdout)["format"]["duration"])
     except: return 0.0
 
@@ -237,7 +221,13 @@ def imagem_proc(out, seed, tema):
     except: return False
 
 def get_imagem(prompt, neg, out, seed, tema):
-    if imagem_pollinations(prompt,neg,out,seed): return True
+    if imagem_pollinations(prompt,neg,out,seed):
+        # Verificar que a imagem e valida (>10KB)
+        try:
+            if pathlib.Path(out).stat().st_size > 10000:
+                return True
+        except: pass
+    log("    Imagem invalida/pequena, usando procedural")
     return imagem_proc(out,seed,tema)
 
 def criar_clip_long(img, aud, out, dur, seed):
@@ -252,7 +242,7 @@ def criar_clip_long(img, aud, out, dur, seed):
          "-pix_fmt","yuv420p","-r","30",
          "-c:a","aac","-b:a","192k","-ac","2","-ar","48000",
          "-shortest","-movflags","+faststart",
-         str(out), t=180)
+         str(out), t=300)
     ok=r.returncode==0 and pathlib.Path(out).exists()
     if ok: log(f"    Clip {pathlib.Path(out).name}: {dur:.1f}s OK")
     else:  err(f"Clip: {r.stderr.decode()[-80:]}")
