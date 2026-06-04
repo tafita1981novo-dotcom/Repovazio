@@ -1,33 +1,29 @@
 #!/usr/bin/env python3
 """
-render_short_v6.py — SHORT DEFINITIVO
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+render_short_v6.py - SHORT DEFINITIVO
 REGRAS:
-  1. Script usado ATÉ O FINAL — nenhuma palavra descartada
-  2. Imagem sincronizada com o CONTEÚDO de cada frase
-  3. Duração exata 50-58 segundos (TTS medido por segmento)
-  4. Sinal mais perturbador SEMPRE na penúltima posição
-  5. Viral score ≥95 obrigatório antes de publicar
+  1. Script usado ATE O FINAL - nenhuma palavra descartada
+  2. Imagem sincronizada com o CONTEUDO de cada frase
+  3. Duracao exata 50-58 segundos (TTS medido por segmento)
+  4. Sinal mais perturbador SEMPRE na penultima posicao
+  5. Viral score >=95 obrigatorio antes de publicar
   6. 100% gratuito: edge-tts + Pollinations + imageio-ffmpeg
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """
-import os, sys, json, re, time, subprocess, pathlib, wave, struct, random
-import urllib.request, urllib.parse, shutil
+import os, sys, json, re, time, subprocess, pathlib, wave, random, shutil
+import urllib.request, urllib.parse
 from datetime import datetime
 
-# ──── CONFIG ────────────────────────────────────────────────────────────
 SBU  = os.environ.get("SUPABASE_URL","")
 SBK  = os.environ.get("SUPABASE_SERVICE_KEY","")
 HFT  = os.environ.get("HF_TOKEN","")
 MAX  = int(os.environ.get("MAX_VIDEOS","2"))
-W, H = 1080, 1920          # 9:16
+W, H = 1080, 1920
+POLL = "https://pollinations.ai/p"
 TMP  = pathlib.Path("/tmp/short_v6"); TMP.mkdir(exist_ok=True)
-POLL = "https://pollinations.ai/p"   # Pollinations gratuito
 
 def log(m): print(f"[{datetime.now():%H:%M:%S}] {m}", flush=True)
-def err(m): print(f"[{datetime.now():%H:%M:%S}] ❌ {m}", flush=True, file=sys.stderr)
+def err(m): print(f"[{datetime.now():%H:%M:%S}] ERRO {m}", flush=True, file=sys.stderr)
 
-# ──── FFMPEG PORTÁTIL ────────────────────────────────────────────────────
 def ffm():
     try:
         import imageio_ffmpeg; return imageio_ffmpeg.get_ffmpeg_exe()
@@ -46,26 +42,24 @@ def ffprobe_dur(path):
     try: return float(json.loads(r.stdout)["format"]["duration"])
     except: return 0.0
 
-# ──── SUPABASE ────────────────────────────────────────────────────────────
 def sb(ep, params="", method="GET", data=None):
     url = f"{SBU}/rest/v1/{ep}?{params}"
     req = urllib.request.Request(url, data=data, method=method)
-    req.add_header("apikey", SBK); req.add_header("Authorization", f"Bearer {SBK}")
+    req.add_header("apikey",SBK); req.add_header("Authorization",f"Bearer {SBK}")
     req.add_header("Content-Type","application/json"); req.add_header("Prefer","return=minimal")
     try:
-        with urllib.request.urlopen(req,timeout=20) as r: return json.loads(r.read()) if r.readable() else {}
-    except Exception as e:
-        if method=="GET": return []
-        return {}
+        with urllib.request.urlopen(req,timeout=20) as r:
+            return json.loads(r.read()) if method=="GET" else {}
+    except: return [] if method=="GET" else {}
 
 def patch(id_, data):
-    sb(f"content_pipeline", f"id=eq.{id_}", "PATCH", json.dumps(data).encode())
+    sb(f"content_pipeline",f"id=eq.{id_}","PATCH",json.dumps(data).encode())
 
 def upload_video(local, remote):
     data = open(local,"rb").read()
     req = urllib.request.Request(
-        f"{SBU}/storage/v1/object/videos/{remote}", data=data, method="POST")
-    req.add_header("apikey", SBK); req.add_header("Authorization", f"Bearer {SBK}")
+        f"{SBU}/storage/v1/object/videos/{remote}",data=data,method="POST")
+    req.add_header("apikey",SBK); req.add_header("Authorization",f"Bearer {SBK}")
     req.add_header("Content-Type","video/mp4"); req.add_header("x-upsert","true")
     try:
         with urllib.request.urlopen(req,timeout=180): pass
@@ -73,130 +67,90 @@ def upload_video(local, remote):
     except Exception as e:
         err(f"Upload: {e}"); return ""
 
-# ──── LIMPAR SCRIPT ───────────────────────────────────────────────────────
 def limpar(script):
-    """Remove metadados, markdown e normaliza para texto narrado puro."""
-    # Blocos de metadados: **TITULO:** ... **DESCRICAO:** ...
-    s = re.sub(r'\*\*[A-ZÁÉÍÓÚÇÃÕ _]+[:\*]+\*?\*?
-?.*?(?=
-
-|\Z)', '', script, flags=re.DOTALL|re.MULTILINE)
-    # Markdown
-    s = re.sub(r'\*+|_+|#+|\[|\]|\(http[^\)]+\)', '', s)
-    # Emojis
-    s = re.sub(r'[\U00010000-\U0010ffff]', '', s)
-    # Normalizar espaços
-    s = re.sub(r'
-{3,}', '
-
-', s)
-    s = re.sub(r'[ 	]+', ' ', s)
+    # Remover blocos de metadados
+    s = re.sub(r"\*\*[A-Z_ ]+:\*\*.*?(?=\n\n|\Z)", "", script, flags=re.DOTALL|re.MULTILINE)
+    s = re.sub(r"\*\*[A-Z_ ]+\*\*\s*$", "", s, flags=re.MULTILINE)
+    # Remover markdown
+    s = re.sub(r"\*+|_+|#+|\[|\]", "", s)
+    # Normalizar
+    s = re.sub(r"\n{3,}", "\n\n", s)
+    s = re.sub(r"[ \t]+", " ", s)
     return s.strip()
 
-# ──── DIVIDIR EM CENAS PARA SHORT (50-58s) ───────────────────────────────
-def dividir_em_cenas(script, duracao_alvo=55):
+def dividir_em_cenas(script):
     """
-    Divide o script em cenas de ~8-12s cada.
-    META: usar o script COMPLETO (cada cena = 1 parágrafo ou frase longa).
-    
-    Se o script for longo demais para 58s, usa os melhores trechos:
-      - Primeiro parágrafo (hook)
-      - Trechos com ciência/dados
-      - Trecho mais impactante (sinal perturbador) → PENÚLTIMO
-      - Último parágrafo (CTA)
-    
-    Retorna lista de dicts: [{texto, tipo, duracao_est}]
+    Divide script em cenas de ~8-12s cada.
+    Usa o script COMPLETO. Se muito longo para 58s,
+    seleciona os melhores trechos mantendo a narrativa:
+      hook (inicio) + sinais + PERTURBADOR (penultimo) + CTA (ultimo)
     """
     script_limpo = limpar(script)
-    
-    # Dividir em parágrafos
-    paragrafos = [p.strip() for p in re.split(r'
-
-+', script_limpo) if len(p.strip()) > 10]
-    
+    paragrafos = [p.strip() for p in re.split(r"\n\n+", script_limpo) if len(p.strip()) > 10]
     if not paragrafos:
-        # Fallback: dividir por frases
-        paragrafos = [f.strip() for f in re.split(r'(?<=[.!?])\s+', script_limpo) if len(f.strip())>10]
-    
-    # Estimativa de duração: ~2.2 chars por segundo @ edge-tts +10%
-    def dur_est(texto): return len(texto) / 17.0   # ~170 chars/min ajustado para short
-    
-    # Classificar parágrafos
+        paragrafos = [f.strip() for f in re.split(r"(?<=[.!?])\s+", script_limpo) if len(f.strip())>10]
+
+    # ~17 chars/segundo @ edge-tts velocidade normal
+    def dur_est(texto): return len(texto) / 17.0
+
     def classificar(p, idx, total):
         pl = p.lower()
         if idx == 0: return "hook"
         if idx == total-1: return "cta"
-        if any(w in pl for w in ["perturbador","chocante","surpreendente","o que mais","mais grave",
-                                   "pior de tudo","mas o real","na verdade","o segredo"]): return "perturb"
-        if any(w in pl for w in ["pesquisa","estudo","universidade","harvard","neurociência",
-                                   "descobriu","cérebro","dados","comprovou"]): return "ciencia"
+        perturb_words = ["perturbador","chocante","surpreendente","mais grave",
+                         "pior de tudo","mas o real","na verdade","o segredo"]
+        if any(w in pl for w in perturb_words): return "perturb"
+        ciencia_words = ["pesquisa","estudo","universidade","harvard","neurocienci",
+                         "descobriu","cerebro","dados","comprovou"]
+        if any(w in pl for w in ciencia_words): return "ciencia"
         return "sinal"
-    
-    total = len(paragrafos)
-    cenas_candidatas = []
-    for i, p in enumerate(paragrafos):
-        tipo = classificar(p, i, total)
-        d = dur_est(p)
-        cenas_candidatas.append({"texto": p, "tipo": tipo, "dur": d, "idx_orig": i})
-    
-    # Calcular duração total se usar TODOS os parágrafos
-    dur_total = sum(c["dur"] for c in cenas_candidatas)
-    
-    if dur_total <= 60:
-        # Script cabe! Usar TUDO
-        cenas = cenas_candidatas
-    else:
-        # Selecionar os melhores trechos para caber em ~55s
-        # Prioridade: hook (obrigatório) + perturbador (obrigatório) + ciencia + CTA (obrigatório)
-        obrigatorios = [c for c in cenas_candidatas if c["tipo"] in ("hook","perturb","cta")]
-        opcionais    = [c for c in cenas_candidatas if c["tipo"] not in ("hook","perturb","cta")]
-        
-        cenas = []
-        dur_acum = 0.0
-        
-        # Adicionar hook
-        for c in cenas_candidatas:
-            if c["tipo"] == "hook":
-                cenas.append(c); dur_acum += c["dur"]; break
-        
-        # Adicionar sinais/ciência enquanto couber
-        for c in sorted(opcionais, key=lambda x: -x["dur"] if x["tipo"]=="ciencia" else 0):
-            if dur_acum + c["dur"] + 12 < 55:  # Reservar 12s para perturb+CTA
-                cenas.append(c); dur_acum += c["dur"]
-        
-        # Penúltimo: SINAL MAIS PERTURBADOR
-        perturb = next((c for c in cenas_candidatas if c["tipo"]=="perturb"), None)
-        if not perturb:
-            # Pegar o parágrafo mais longo do meio
-            meio = cenas_candidatas[len(cenas_candidatas)//2]
-            perturb = meio
-        cenas.append(perturb); dur_acum += perturb["dur"]
-        
-        # Último: CTA
-        for c in cenas_candidatas:
-            if c["tipo"] == "cta":
-                cenas.append(c); dur_acum += c["dur"]; break
-        else:
-            # CTA padrão se não encontrou
-            cenas.append({"texto": "Salva esse vídeo — você vai querer rever isso.",
-                          "tipo": "cta", "dur": 3.5, "idx_orig": 999})
-        
-        # Ordenar por posição original (mantendo perturbador penúltimo)
-        hook_cena  = cenas[0]
-        cta_cena   = cenas[-1]
-        pert_cena  = perturb
-        meio_cenas = [c for c in cenas if c not in (hook_cena, cta_cena, pert_cena)]
-        meio_cenas_sorted = sorted(meio_cenas, key=lambda x: x["idx_orig"])
-        cenas = [hook_cena] + meio_cenas_sorted + [pert_cena, cta_cena]
-    
-    # Garantir que perturbador não está no início
-    if cenas and cenas[0]["tipo"] == "perturb" and len(cenas) > 2:
-        cenas.insert(-1, cenas.pop(0))
-    
-    log(f"  Cenas: {len(cenas)} | Dur estimada: {sum(c['dur'] for c in cenas):.1f}s")
-    return cenas
 
-# ──── TTS POR SEGMENTO ────────────────────────────────────────────────────
+    n = len(paragrafos)
+    cenas = [{"texto":p,"tipo":classificar(p,i,n),"dur":dur_est(p),"idx":i}
+             for i,p in enumerate(paragrafos)]
+
+    dur_total = sum(c["dur"] for c in cenas)
+    log(f"  Script: {n} paragrafos | dur estimada: {dur_total:.1f}s")
+
+    if dur_total <= 62:
+        # Cabe tudo
+        resultado = cenas
+    else:
+        # Selecionar para caber em ~55s
+        hook   = next((c for c in cenas if c["tipo"]=="hook"), cenas[0])
+        cta    = next((c for c in cenas if c["tipo"]=="cta"), cenas[-1])
+        perturb= next((c for c in cenas if c["tipo"]=="perturb"), None)
+        outros = [c for c in cenas if c not in (hook,cta,perturb) and c is not None]
+
+        resultado = [hook]
+        dur_acum = hook["dur"]
+        reserva  = (perturb["dur"] if perturb else 0) + cta["dur"] + 4
+
+        for c in sorted(outros, key=lambda x: -x["dur"] if x["tipo"]=="ciencia" else 0):
+            if dur_acum + c["dur"] + reserva < 58:
+                resultado.append(c); dur_acum += c["dur"]
+
+        if perturb:
+            resultado.append(perturb)
+        resultado.append(cta)
+
+        # Ordenar pela posicao original (exceto perturb e cta)
+        hook_c  = resultado[0]
+        cta_c   = resultado[-1]
+        pert_c  = resultado[-2] if perturb else None
+        meio    = [c for c in resultado[1:] if c not in (cta_c, pert_c)]
+        meio_s  = sorted(meio, key=lambda x: x["idx"])
+        if pert_c:
+            resultado = [hook_c] + meio_s + [pert_c, cta_c]
+        else:
+            resultado = [hook_c] + meio_s + [cta_c]
+
+    # Garantir perturbador nao esta no inicio
+    if len(resultado)>2 and resultado[0]["tipo"]=="perturb":
+        resultado.insert(-1, resultado.pop(0))
+
+    return resultado
+
 VOICE_CFG = {
     "hook":    ("pt-BR-ThalitaMultilingualNeural","+20%","+15%"),
     "ciencia": ("pt-BR-ThalitaMultilingualNeural","+8%", "+12%"),
@@ -207,183 +161,148 @@ VOICE_CFG = {
 
 def gerar_tts(texto, out, tipo="sinal"):
     voice, rate, vol = VOICE_CFG.get(tipo, VOICE_CFG["sinal"])
-    texto_clean = re.sub(r'[*_#\[\]]', '', texto)[:600].strip()
-    
+    texto_clean = re.sub(r"[*_#\[\]]","",texto)[:600].strip()
     for attempt in range(3):
         r = subprocess.run(
-            ["edge-tts", f"--voice={voice}", f"--rate={rate}", f"--volume={vol}",
+            ["edge-tts",f"--voice={voice}",f"--rate={rate}",f"--volume={vol}",
              "--text", texto_clean, "--write-media", str(out)],
             capture_output=True, timeout=60)
-        
-        if r.returncode == 0 and pathlib.Path(out).exists():
+        if r.returncode==0 and pathlib.Path(out).exists():
             sz = pathlib.Path(out).stat().st_size
             if sz > 500:
-                # Medir duração real
-                dur = medir_duracao_mp3(out)
+                dur = medir_mp3_dur(out)
                 log(f"    TTS [{tipo}] {dur:.1f}s: {texto_clean[:40]}")
                 return dur
-        
-        time.sleep(2 * attempt)
-    
-    err(f"TTS falhou para: {texto_clean[:40]}")
+        time.sleep(2*attempt)
+    err(f"TTS falhou: {texto_clean[:40]}")
     return None
 
-def medir_duracao_mp3(path):
-    """Mede duração real do MP3 sem mutagen"""
+def medir_mp3_dur(path):
     try:
-        from mutagen.mp3 import MP3
-        return MP3(str(path)).info.length
+        from mutagen.mp3 import MP3; return MP3(str(path)).info.length
     except: pass
-    # Fallback via ffprobe
     r = subprocess.run(
         ["ffprobe","-v","quiet","-print_format","json","-show_streams",str(path)],
         capture_output=True, timeout=10)
     try:
-        streams = json.loads(r.stdout).get("streams", [])
-        for s in streams:
-            if s.get("codec_type") == "audio":
-                return float(s.get("duration", 0))
+        for s in json.loads(r.stdout).get("streams",[]):
+            if s.get("codec_type")=="audio": return float(s.get("duration",0))
     except: pass
-    # Estimativa por tamanho
-    sz = pathlib.Path(path).stat().st_size
-    return sz / 16000.0  # 128kbps
+    return pathlib.Path(path).stat().st_size/16000.0
 
-# ──── IMAGEM POR CONTEÚDO DE CENA (POLLINATIONS GRATUITO) ─────────────────
 ESTILOS = {
-    "narcisismo": "dark dramatic photography, narcissistic mask, mirrors",
-    "ansiedade":  "anxious person, racing thoughts visualization, brain waves",
-    "apego":      "emotional attachment, two people, distance and connection",
-    "burnout":    "exhaustion, person overwhelmed, minimalist dark office",
-    "trauma":     "trauma healing, body memory, neurological patterns",
+    "narcisismo": "dark dramatic psychology, narcissistic mask, mirrors shadows",
+    "ansiedade":  "anxiety visualization, racing thoughts, warm documentary",
+    "apego":      "emotional attachment, connection distance, warm tones",
+    "burnout":    "workplace exhaustion, overwhelm, desaturated colors",
+    "trauma":     "trauma healing, body memory, hopeful undertones",
     "default":    "psychology human behavior, warm cinematic, bokeh",
 }
 
 def prompt_para_cena(texto, tipo, tema, seed):
-    """Gera prompt visual específico para o CONTEÚDO daquela cena"""
     t = texto.lower()
     estilo = ESTILOS.get(tema, ESTILOS["default"])
-    
-    # Contexto visual baseado no CONTEÚDO do texto
-    if any(w in t for w in ["celular","mensagem","notificação","checa","telefone"]):
+
+    if any(w in t for w in ["celular","mensagem","notificacao","checa","telefone"]):
         ctx = "person checking phone obsessively, anxiety, modern apartment night"
-    elif any(w in t for w in ["chora","lágrima","triste","dor","solidão"]):
-        ctx = "person alone, sad expression, dramatic window light, tears"
-    elif any(w in t for w in ["pesquisa","harvard","estudo","neurociência","cérebro"]):
-        ctx = "brain neural connections, scientific visualization, data, research lab"
-    elif any(w in t for w in ["coração","peito","físico","corpo","respiração"]):
+    elif any(w in t for w in ["chora","lagrima","triste","dor","solidao"]):
+        ctx = "person alone, sad expression, dramatic window light"
+    elif any(w in t for w in ["pesquisa","harvard","estudo","neurocienci","cerebro"]):
+        ctx = "brain neural connections, scientific visualization, research lab"
+    elif any(w in t for w in ["coracao","peito","fisico","corpo","respiracao"]):
         ctx = "person hands on chest, physical emotion, cinematic close-up"
     elif any(w in t for w in ["narcis","manipul","control","gaslighting"]):
         ctx = "shadow figure, manipulation psychology, dark mirror reflection"
-    elif any(w in t for w in ["alívio","consegue","mudança","força","superou"]):
+    elif any(w in t for w in ["alivio","consegue","mudanca","forca","superou"]):
         ctx = "person looking up, sunrise, hope and agency, warm golden light"
     elif any(w in t for w in ["perturbador","chocante","revela","surpreend"]):
-        ctx = "shocking revelation, wide eyes, dramatic lighting, close-up face"
+        ctx = "shocking revelation, wide eyes, dramatic revelation lighting"
     elif any(w in t for w in ["salva","comenta","inscreve","segue"]):
-        ctx = "direct eye contact camera, warm encouraging smile, speaking"
+        ctx = "direct eye contact camera, warm encouraging smile"
     elif tipo == "hook":
-        ctx = "intense direct gaze, scroll-stopping composition, dramatic"
+        ctx = "intense direct gaze, scroll-stopping, dramatic cinematic"
     else:
-        ctx = "thoughtful human psychology portrait, cinematic"
-    
-    # Personagem baseado no tema
+        ctx = "thoughtful psychology portrait, cinematic"
+
     chars = {
-        "narcisismo": "Brazilian woman 28, dark straight hair",
-        "ansiedade":  "Brazilian woman 26, curly hair, expressive eyes",
-        "burnout":    "Brazilian man 31, casual worn look, tired",
-        "trauma":     "Brazilian woman 30, gentle features, healing",
-        "default":    "Brazilian woman 33, intelligent warm expression",
+        "narcisismo": "Brazilian woman 28, dark hair, intense expression",
+        "ansiedade":  "Brazilian woman 26, expressive anxious eyes",
+        "burnout":    "Brazilian man 32, exhausted, casual clothes",
+        "trauma":     "Brazilian woman 30, healing expression",
+        "default":    "Brazilian woman 33, warm intelligent expression",
     }
     char = chars.get(tema, chars["default"])
-    
     prompt = f"{char}, {ctx}, {estilo}, masterpiece, 4k, no text, no watermark"
-    neg    = "text, watermark, logo, ugly, blurry, nsfw, cartoon, anime"
+    neg    = "text, watermark, logo, ugly, blurry, nsfw, cartoon"
     return prompt, neg
 
-def gerar_imagem_pollinations(prompt, neg, out, seed):
-    """Pollinations.ai — gratuito, sem API key"""
+def imagem_pollinations(prompt, neg, out, seed):
     p_enc = urllib.parse.quote(prompt)
     n_enc = urllib.parse.quote(neg)
-    url = (f"{POLL}/{p_enc}?width={W}&height={H}"
-           f"&seed={seed}&nologo=true&negative={n_enc}")
-    
-    for attempt in range(3):
+    url   = f"{POLL}/{p_enc}?width={W}&height={H}&seed={seed}&nologo=true&negative={n_enc}"
+    for a in range(3):
         try:
             req = urllib.request.Request(url, headers={"User-Agent":"Mozilla/5.0"})
-            with urllib.request.urlopen(req, timeout=60) as r:
-                data = r.read()
-            if len(data) > 5000:
+            with urllib.request.urlopen(req,timeout=90) as r:
+                data=r.read()
+            if len(data)>5000:
                 open(out,"wb").write(data)
-                log(f"    Img Pollinations: {len(data)//1024}KB ✅")
+                log(f"    Img {len(data)//1024}KB OK")
                 return True
         except Exception as e:
-            log(f"    Img tentativa {attempt+1}: {e}")
-            time.sleep(5 * (attempt+1))
+            log(f"    Img tentativa {a+1}: {e}"); time.sleep(8*(a+1))
     return False
 
-def gerar_imagem_hf(prompt, out, seed):
-    """HuggingFace FLUX fallback"""
+def imagem_hf(prompt, out, seed):
     if not HFT: return False
-    body = json.dumps({"inputs": prompt, "parameters": {
-        "width": W, "height": H, "num_inference_steps": 4, "seed": seed
-    }}).encode()
+    body = json.dumps({"inputs":prompt,"parameters":{
+        "width":W,"height":H,"num_inference_steps":4,"seed":seed}}).encode()
     req = urllib.request.Request(
-        "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell",
-        data=body)
-    req.add_header("Authorization", f"Bearer {HFT}")
+        "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell",data=body)
+    req.add_header("Authorization",f"Bearer {HFT}")
     req.add_header("Content-Type","application/json")
     try:
-        with urllib.request.urlopen(req, timeout=90) as r:
-            data = r.read()
-        if len(data) > 5000:
+        with urllib.request.urlopen(req,timeout=90) as r:
+            data=r.read()
+        if len(data)>5000:
             open(out,"wb").write(data); return True
     except: pass
     return False
 
-def gerar_imagem_proc(out, seed, tema="default"):
-    """Fallback procedural (Pillow)"""
+def imagem_proc(out, seed, tema):
     try:
         from PIL import Image, ImageDraw, ImageFilter
         random.seed(seed)
-        PALETAS = {
-            "narcisismo": [(8,3,18),(180,60,220),(225,30,70)],
-            "ansiedade":  [(3,8,20),(60,120,220),(80,180,255)],
-            "burnout":    [(18,5,3),(220,80,30),(255,160,40)],
-            "trauma":     [(5,3,18),(100,50,200),(180,100,255)],
-            "default":    [(6,6,15),(124,58,237),(91,33,182)],
-        }
-        bg, c1, c2 = PALETAS.get(tema, PALETAS["default"])
-        img = Image.new("RGB",(W,H), bg)
-        draw = ImageDraw.Draw(img)
+        P={"narcisismo":[(8,3,18),(180,60,220)],"ansiedade":[(3,8,20),(60,120,220)],
+           "burnout":[(18,5,3),(220,80,30)],"trauma":[(5,3,18),(100,50,200)],
+           "default":[(6,6,15),(124,58,237)]}
+        bg,c1=P.get(tema,P["default"])
+        img=Image.new("RGB",(W,H),bg); draw=ImageDraw.Draw(img)
         for y in range(H):
-            t=(y/H)**0.7
-            c=tuple(min(255,int(bg[j]+(c1[j]-bg[j])*t*0.8)) for j in range(3))
-            draw.line([(0,y),(W,y)], fill=c)
-        # Figura central
-        cx,cy = W//2, int(H*0.42)
-        r1 = int(W*0.24)
+            t=(y/H)**0.7; c=tuple(min(255,int(bg[j]+(c1[j]-bg[j])*t*0.8)) for j in range(3))
+            draw.line([(0,y),(W,y)],fill=c)
+        cx,cy,r1=W//2,int(H*0.42),int(W*0.24)
         for i in range(6,0,-1):
-            draw.ellipse([(cx-r1-i*8,cy-r1-i*8),(cx+r1+i*8,cy+r1+i*8)], fill=(*c1,20*i))
-        draw.ellipse([(cx-r1,cy-r1),(cx+r1,cy+r1)], fill=(*c1,180))
-        # Vignette
+            draw.ellipse([(cx-r1-i*8,cy-r1-i*8),(cx+r1+i*8,cy+r1+i*8)],fill=(*c1,20*i))
+        draw.ellipse([(cx-r1,cy-r1),(cx+r1,cy+r1)],fill=(*c1,180))
         for e in range(200):
-            a = int(140*(1-e/200))
-            draw.line([(0,e),(W,e)], fill=(0,0,0,a))
-            draw.line([(0,H-1-e),(W,H-1-e)], fill=(0,0,0,a))
-        img.filter(ImageFilter.GaussianBlur(0.6)).save(out,"JPEG",quality=92)
+            a=int(140*(1-e/200))
+            draw.line([(0,e),(W,e)],fill=(0,0,0,a))
+            draw.line([(0,H-1-e),(W,H-1-e)],fill=(0,0,0,a))
+        img.filter(ImageFilter.GaussianBlur(0.5)).save(out,"JPEG",quality=92)
         return True
     except Exception as e:
         err(f"Proc img: {e}"); return False
 
-def gerar_imagem(prompt, neg, out, seed, tema):
-    if gerar_imagem_pollinations(prompt, neg, out, seed): return True
-    if gerar_imagem_hf(prompt, out, seed): return True
-    return gerar_imagem_proc(out, seed, tema)
+def get_imagem(prompt, neg, out, seed, tema):
+    if imagem_pollinations(prompt, neg, out, seed): return True
+    if imagem_hf(prompt, out, seed): return True
+    return imagem_proc(out, seed, tema)
 
-# ──── CLIP DE VÍDEO (duração = duração do áudio) ──────────────────────────
 def criar_clip(img, aud, out, dur):
-    """Ken Burns na imagem pelo EXATO tempo do áudio"""
-    # Scale para garantir cobertura + Ken Burns leve
-    vf = (f"scale={W+80}:{H+80},crop={W}:{H}:"
+    """Ken Burns pelo exato tempo do audio"""
+    vf = (f"scale={W+80}:{H+80},"
+          f"crop={W}:{H}:"
           f"'(iw-{W})*t/{max(dur,1)}':"
           f"'(ih-{H})*t/{max(dur,1)}',"
           f"scale={W}:{H}")
@@ -397,265 +316,207 @@ def criar_clip(img, aud, out, dur):
            "-shortest","-movflags","+faststart",
            str(out), t=90)
     ok = r.returncode==0 and pathlib.Path(out).exists()
-    if ok: log(f"    Clip {pathlib.Path(out).name}: {dur:.1f}s ✅")
+    if ok: log(f"    Clip {pathlib.Path(out).name}: {dur:.1f}s OK")
     else:  err(f"Clip: {r.stderr.decode()[-100:]}")
     return ok
 
-# ──── SCORE VIRAL ────────────────────────────────────────────────────────
 def viral_score(cenas):
-    """Score 0-100. Precisa ≥95 para publicar."""
     if not cenas: return 0, []
-    score = 0; det = []
-    textos = [c["texto"] for c in cenas]
-    all_txt = " ".join(textos).lower()
-    
-    hook = textos[0].lower()
-    penult = textos[-2].lower() if len(textos)>=2 else ""
-    ult   = textos[-1].lower()
-    
-    # 1. Hook forte (25pts)
-    h = 0
-    if "?" in textos[0]: h += 10
-    if any(w in hook for w in ["você","seu","sua","já","toda vez"]): h += 8
-    if len(textos[0]) < 120: h += 7
-    score += min(25,h); det.append(f"Hook:{min(25,h)}/25")
-    
-    # 2. Identificação emocional (20pts)
-    i = 0
-    if "você" in all_txt: i += 10
-    if any(w in all_txt for w in ["sente","sentiu","sentia","vive","viveu"]): i += 10
-    score += min(20,i); det.append(f"ID:{min(20,i)}/20")
-    
-    # 3. Autoridade científica (15pts)
-    c = 0
-    if any(w in all_txt for w in ["pesquisa","estudo","harvard","universidade","neurociência",
-                                    "descobriu","comprovou","cérebro"]): c = 15
-    score += c; det.append(f"Ciência:{c}/15")
-    
-    # 4. Perturbador PENÚLTIMO — CRÍTICO (25pts)
-    p = 0
-    if any(w in penult for w in ["perturbador","chocante","surpreendente","mas o real",
-                                   "mas a verdade","o que mais","pior de tudo",
-                                   "pesquisa","harvard","descobriu"]): p += 20
-    if not any(w in hook for w in ["perturbador","sinal mais perturbador"]): p += 5
-    score += min(25,p); det.append(f"Perturb:{min(25,p)}/25")
-    
-    # 5. CTA + Conclusão completa (15pts)
-    ct = 0
-    if any(w in ult for w in ["salva","comenta","inscreve","me conta","identific"]): ct += 10
-    if len(textos[-1]) < 120: ct += 5
-    score += min(15,ct); det.append(f"CTA:{min(15,ct)}/15")
-    
+    score=0; det=[]
+    textos=[c["texto"] for c in cenas]
+    all_txt=" ".join(textos).lower()
+    hook=textos[0].lower()
+    penult=textos[-2].lower() if len(textos)>=2 else ""
+    ult=textos[-1].lower()
+
+    h=0
+    if "?" in textos[0]: h+=10
+    if any(w in hook for w in ["voce","seu","sua","ja","toda vez"]): h+=8
+    if len(textos[0])<120: h+=7
+    score+=min(25,h); det.append(f"Hook:{min(25,h)}/25")
+
+    i=0
+    if "voce" in all_txt or "você" in all_txt: i+=10
+    if any(w in all_txt for w in ["sente","sentiu","sentia","vive","viveu"]): i+=10
+    score+=min(20,i); det.append(f"ID:{min(20,i)}/20")
+
+    c=0
+    if any(w in all_txt for w in ["pesquisa","estudo","harvard","universidade",
+                                    "neurocienci","descobriu","comprovou","cerebro"]): c=15
+    score+=c; det.append(f"Ciencia:{c}/15")
+
+    p=0
+    perturb_words=["perturbador","chocante","surpreendente","mais grave",
+                   "pior de tudo","mas o real","mas a verdade","pesquisa","harvard"]
+    if any(w in penult for w in perturb_words): p+=20
+    if not any(w in hook for w in ["perturbador","sinal mais"]): p+=5
+    score+=min(25,p); det.append(f"Perturb:{min(25,p)}/25")
+
+    ct=0
+    if any(w in ult for w in ["salva","comenta","inscreve","me conta","identific"]): ct+=10
+    if len(textos[-1])<120: ct+=5
+    score+=min(15,ct); det.append(f"CTA:{min(15,ct)}/15")
+
     return score, det
 
-# ──── RENDER PRINCIPAL ────────────────────────────────────────────────────
 def render_short(vid):
     vid_id = vid["id"]
-    title  = (vid.get("youtube_title") or vid.get("title") or "Short")
+    title  = vid.get("youtube_title") or vid.get("title") or "Short"
     script = vid.get("script") or title
     tema   = vid.get("series_slug") or "default"
-    
-    log(f"
-{'━'*55}")
+
+    log(f"\n{'='*55}")
     log(f"SHORT #{vid_id} | {title[:48]}")
     log(f"Script: {len(script)} chars | Tema: {tema}")
-    
-    work = TMP / f"v{vid_id}_{int(time.time())}"
-    work.mkdir(parents=True, exist_ok=True)
-    
-    # 1. Dividir em cenas (usa o script ATÉ O FINAL)
+
+    work = TMP/f"v{vid_id}_{int(time.time())}"; work.mkdir(parents=True,exist_ok=True)
+
+    # 1. Dividir em cenas (script completo)
     cenas = dividir_em_cenas(script)
-    if not cenas:
-        err("Nenhuma cena extraída!"); return False
-    
-    log(f"Estrutura do vídeo:")
+    if not cenas: err("Nenhuma cena!"); return False
+
+    log("Estrutura:")
     for i,c in enumerate(cenas):
         log(f"  [{c['tipo'].upper():8}] {c['texto'][:60]}...")
-    
-    # 2. Score viral antes de renderizar
+
+    # 2. Score viral
     score, det = viral_score(cenas)
     log(f"Viral score: {score}/100 | {' | '.join(det)}")
-    
+
     if score < 95:
-        log("⚠️ Score <95 — reorganizando...")
-        # Garantir perturbador na penúltima posição
-        perturbs = [c for c in cenas if c["tipo"]=="perturb"]
+        log("Ajustando score...")
+        perturbs=[c for c in cenas if c["tipo"]=="perturb"]
         if perturbs:
-            cenas = [c for c in cenas if c["tipo"]!="perturb"]
-            # Inserir antes do CTA
-            cenas.insert(-1, perturbs[0])
+            cenas=[c for c in cenas if c["tipo"]!="perturb"]
+            cenas.insert(-1,perturbs[0])
         score, det = viral_score(cenas)
         log(f"Score ajustado: {score}/100")
-        
         if score < 70:
-            err(f"Score {score}/100 muito baixo — vídeo rejeitado!")
-            patch(vid_id, {"status":"script_ready","error":f"viral_score={score}"})
-            return False
-    
-    # 3. Gerar TTS + imagem por cena
-    clips = []
-    dur_total = 0.0
-    
-    for i, cena in enumerate(cenas):
-        seed = 9001 + vid_id*77 + i*13
-        log(f"
-  Cena {i+1}/{len(cenas)} [{cena['tipo']}]:")
-        
+            err(f"Score {score}/100 muito baixo!")
+            patch(vid_id,{"status":"script_ready","error":f"viral_score={score}"}); return False
+
+    # 3. TTS + imagem por cena
+    clips=[]; dur_total=0.0
+    TIPOS=["hook","sinal","sinal","perturb","cta"]
+
+    for i,cena in enumerate(cenas):
+        seed = 9001+vid_id*77+i*13
+        tipo = cena["tipo"]
+        log(f"\n  Cena {i+1}/{len(cenas)} [{tipo}]:")
+
         # TTS desta cena
-        mp3_path = work / f"tts_{i:02d}.mp3"
-        dur = gerar_tts(cena["texto"], mp3_path, cena["tipo"])
+        mp3 = work/f"tts_{i:02d}.mp3"
+        dur = gerar_tts(cena["texto"], mp3, tipo)
         if not dur: continue
-        
-        # Converter mp3 → wav para concat
-        wav_path = work / f"tts_{i:02d}.wav"
-        ff("-y","-i",str(mp3_path),"-acodec","pcm_s16le","-ar","44100","-ac","2",str(wav_path),t=30)
-        aud_final = wav_path if wav_path.exists() else mp3_path
-        dur_real  = ffprobe_dur(aud_final) or dur
-        
-        # Pausa dramática entre cenas (exceto última)
+
+        # Converter para wav
+        wav = work/f"tts_{i:02d}.wav"
+        ff("-y","-i",str(mp3),"-acodec","pcm_s16le","-ar","44100","-ac","2",str(wav),t=30)
+        aud = wav if wav.exists() else mp3
+        dur_real = ffprobe_dur(aud) or dur
+
+        # Pausa dramatica entre cenas (exceto ultima)
         if i < len(cenas)-1:
-            pausa = work/f"pausa_{i:02d}.wav"
-            sr=44100; n=int(0.4*sr)
+            pausa=work/f"pausa_{i:02d}.wav"; sr=44100; n=int(0.35*sr)
             with wave.open(str(pausa),"w") as wf:
                 wf.setnchannels(2); wf.setsampwidth(2); wf.setframerate(sr)
-                wf.writeframes(b'\x00'*4*n)
-            
-            cat_f = work/f"cat_{i:02d}.txt"
-            cat_f.write_text(f"file '{aud_final}'
-file '{pausa}'")
-            aud_com_pausa = work/f"aud_{i:02d}.wav"
-            ff("-y","-f","concat","-safe","0","-i",str(cat_f),
-               "-acodec","pcm_s16le","-ar","44100","-ac","2",str(aud_com_pausa),t=30)
-            if aud_com_pausa.exists():
-                aud_final = aud_com_pausa
-                dur_real = ffprobe_dur(aud_final) or (dur_real + 0.4)
-        
-        # Imagem que ilustra o CONTEÚDO desta cena
-        img_path = work / f"img_{i:03d}.jpg"
-        prompt, neg = prompt_para_cena(cena["texto"], cena["tipo"], tema, seed)
-        ok_img = gerar_imagem(prompt, neg, img_path, seed, tema)
-        if not ok_img:
-            err(f"Imagem falhou cena {i+1}!"); continue
-        
-        # Clip: duração = duração REAL do áudio daquela cena
-        clip_path = work / f"clip_{i:03d}.mp4"
-        if criar_clip(img_path, aud_final, clip_path, dur_real):
-            clips.append(clip_path)
-            dur_total += dur_real
-    
-    if not clips:
-        err("Nenhum clip gerado!"); return False
-    
-    log(f"
-  Clips gerados: {len(clips)} | Duração total: {dur_total:.1f}s")
-    
-    # Verificar duração alvo 50-58s
-    if dur_total < 45:
-        err(f"Vídeo muito curto ({dur_total:.1f}s)! Mínimo 50s"); return False
-    
-    # 4. Concatenar todos os clips
-    cat_final = work/"concat_final.txt"
-    cat_final.write_text("
-".join(f"file '{c}'" for c in clips))
-    concat_out = work/"concat.mp4"
-    r = ff("-y","-f","concat","-safe","0","-i",str(cat_final),"-c","copy",str(concat_out),t=60)
-    if not concat_out.exists(): err("Concat falhou!"); return False
-    
-    dur_concat = ffprobe_dur(concat_out)
-    log(f"  Duração real após concat: {dur_concat:.1f}s")
-    
+                wf.writeframes(b"\x00"*4*n)
+            cat=work/f"cat_{i:02d}.txt"
+            cat.write_text(f"file '{aud}'\nfile '{pausa}'")
+            aud2=work/f"aud_{i:02d}.wav"
+            ff("-y","-f","concat","-safe","0","-i",str(cat),
+               "-acodec","pcm_s16le","-ar","44100","-ac","2",str(aud2),t=30)
+            if aud2.exists():
+                aud=aud2; dur_real=ffprobe_dur(aud) or (dur_real+0.35)
+
+        # Imagem que ilustra o CONTEUDO desta cena
+        img=work/f"img_{i:03d}.jpg"
+        prompt,neg=prompt_para_cena(cena["texto"],tipo,tema,seed)
+        if not get_imagem(prompt,neg,img,seed,tema): err(f"Imagem falhou cena {i+1}!"); continue
+
+        # Clip: duracao = duracao REAL do audio desta cena
+        clip=work/f"clip_{i:03d}.mp4"
+        if criar_clip(img,aud,clip,dur_real):
+            clips.append(clip); dur_total+=dur_real
+
+    if not clips: err("Nenhum clip!"); return False
+
+    log(f"\n  Clips: {len(clips)} | Total: {dur_total:.1f}s")
+    if dur_total < 45: err(f"Muito curto ({dur_total:.1f}s)!"); return False
+
+    # 4. Concatenar clips
+    cat_f=work/"concat.txt"; cat_f.write_text("\n".join(f"file '{c}'" for c in clips))
+    concat=work/"concat.mp4"
+    ff("-y","-f","concat","-safe","0","-i",str(cat_f),"-c","copy",str(concat),t=60)
+    if not concat.exists(): err("Concat falhou!"); return False
+
+    dur_concat=ffprobe_dur(concat)
+
     # Cortar se ultrapassar 62s
-    final_mp4 = work/"FINAL.mp4"
-    if dur_concat > 62:
-        log(f"  Cortando de {dur_concat:.1f}s para 58s...")
-        ff("-y","-i",str(concat_out),"-t","58","-c","copy",str(final_mp4),t=30)
+    final=work/"FINAL.mp4"
+    if dur_concat>62:
+        log(f"  Cortando {dur_concat:.1f}s->58s"); ff("-y","-i",str(concat),"-t","58","-c","copy",str(final),t=30)
     else:
-        shutil.copy(concat_out, final_mp4)
-    
-    if not final_mp4.exists(): err("Final.mp4 não criado!"); return False
-    
-    dur_final = ffprobe_dur(final_mp4)
-    sz_mb = final_mp4.stat().st_size//1024//1024
-    log(f"
-  ✅ PRONTO: {dur_final:.1f}s | {sz_mb}MB | viral={score}/100")
-    
-    # 5. Upload e atualizar status
-    remote = f"mp4s/short_v6_{vid_id}_{int(time.time())}.mp4"
-    url    = upload_video(str(final_mp4), remote)
-    
+        shutil.copy(concat,final)
+
+    if not final.exists(): err("Final.mp4 nao criado!"); return False
+
+    dur_final=ffprobe_dur(final); sz=final.stat().st_size//1024//1024
+    log(f"\n  PRONTO: {dur_final:.1f}s | {sz}MB | viral={score}/100")
+
+    # 5. Upload
+    remote=f"mp4s/short_v6_{vid_id}_{int(time.time())}.mp4"
+    url=upload_video(str(final),remote)
     if url:
-        patch(vid_id, {
-            "mp4_url": url,
-            "status":  "mp4_ready",
-            "quality_score_current": score
-        })
-        log(f"  ✅ Upload: {url[-60:]}")
+        patch(vid_id,{"mp4_url":url,"status":"mp4_ready","quality_score_current":score})
+        log(f"  Upload: {url[-60:]}")
     else:
-        # Salvar localmente mesmo sem upload
-        dest = pathlib.Path(f"/tmp/short_v6_final_{vid_id}.mp4")
-        shutil.copy(final_mp4, dest)
-        log(f"  ⚠️ Sem upload — salvo em {dest}")
-    
+        dest=pathlib.Path(f"/tmp/short_final_{vid_id}.mp4"); shutil.copy(final,dest)
+        log(f"  Salvo local: {dest}")
     return True
 
-# ──── MAIN ────────────────────────────────────────────────────────────────
 def main():
     log("="*58)
-    log("RENDER SHORT V6 — Script completo + Sinc perfeita + 50-58s")
-    log(f"FFmpeg: {ffm()} | HF: {'✅' if HFT else '❌→Pollinations'}")
+    log("RENDER SHORT V6 - Script completo + Sinc por cena + 50-58s")
+    log(f"FFmpeg: {ffm()}")
     log("="*58)
-    
-    rows = []
+
+    rows=[]
     if SBU:
-        rows = sb("content_pipeline",
-                  "select=id,title,script,youtube_title,series_slug,pub_order,format"
-                  "&status=in.(audio_ready,script_ready)"
-                  "&format=eq.short"
-                  "&order=pub_order.asc.nullslast,id.asc"
-                  f"&limit={MAX}")
-    
+        rows=sb("content_pipeline",
+                "select=id,title,script,youtube_title,series_slug,pub_order,format"
+                "&status=in.(audio_ready,script_ready)"
+                "&format=eq.short"
+                "&order=pub_order.asc.nullslast,id.asc"
+                f"&limit={MAX}")
+
     if not rows:
         log("Modo teste:")
-        rows = [{
-            "id": 9999, "format": "short", "series_slug": "narcisismo",
-            "pub_order": 1, "title": "Narcisismo Encoberto: O Sinal que Você Ignora",
-            "youtube_title": None,
-            "script": (
-                "Você convive com alguém que nunca grita — mas você sempre se sente errada.
+        rows=[{"id":9999,"format":"short","series_slug":"narcisismo","pub_order":1,
+               "title":"Narcisismo Encoberto: O Sinal que Voce Ignora","youtube_title":None,
+               "script":(
+                   "Voce convive com alguem que nunca grita - mas voce sempre se sente errada.\n\n"
+                   "Isso nao e sorte. E um padrao estudado por pesquisadores da Universidade de "
+                   "Illinois: narcisistas encobertos usam o silencio como punicao.\n\n"
+                   "Quando voce discorda, ele nao briga. Ele some por horas. Dias. "
+                   "E voce, sem entender por que, acaba pedindo desculpas.\n\n"
+                   "O cerebro interpreta a ausencia emocional como rejeicao fisica - "
+                   "ativa as mesmas areas que sentem dor real.\n\n"
+                   "O sinal mais perturbador: voce aprendeu a sentir alivio quando ele voltava a "
+                   "falar com voce. Mesmo sendo voce quem estava certa.\n\n"
+                   "Salva esse video. Quem voce conhece que vive isso?"
+               )}]
 
-"
-                "Isso não é sorte. É um padrão estudado por pesquisadores da Universidade de "
-                "Illinois no Journal of Personality and Social Psychology: narcisistas encobertos "
-                "usam o silêncio como punição.
-
-"
-                "Quando você discorda, ele não briga. Ele some por horas. Dias. "
-                "E você, sem entender por quê, acaba pedindo desculpas.
-
-"
-                "O cérebro interpreta a ausência emocional como rejeição física — "
-                "ativa as mesmas áreas que sentem dor real.
-
-"
-                "O sinal mais perturbador: você aprendeu a sentir alívio quando ele voltava a "
-                "falar com você. Mesmo sendo você quem estava certa.
-
-"
-                "Salva esse vídeo. Quem você conhece que vive isso?"
-            )
-        }]
-    
-    ok = 0
+    ok=0
     for row in rows[:MAX]:
         try:
-            if render_short(row): ok += 1
+            if render_short(row): ok+=1
         except Exception as e:
             err(f"#{row.get('id',0)}: {e}")
             import traceback; traceback.print_exc()
-    
-    log(f"
-{'='*58}")
-    log(f"✅ {ok}/{min(len(rows),MAX)} shorts concluídos")
+
+    log(f"\n{'='*58}")
+    log(f"OK: {ok}/{min(len(rows),MAX)} shorts concluidos")
 
 if __name__ == "__main__":
     main()
