@@ -3,8 +3,12 @@ name: LIVE 24/7 — Psicologia Doc
 on:
   workflow_dispatch:
     inputs:
-      lang: {default: 'pt', description: 'Idioma'}
-      slot: {default: '0', description: 'Slot 0-3'}
+      lang:
+        default: 'pt'
+        description: 'Idioma (pt/en/es/de/fr)'
+      duration_h:
+        default: '6'
+        description: 'Duração em horas'
   schedule:
     - cron: '0 0 * * *'   # Slot 0 — 00h UTC = 21h BR
     - cron: '0 6 * * *'   # Slot 1 — 06h UTC = 03h BR
@@ -12,13 +16,13 @@ on:
     - cron: '0 18 * * *'  # Slot 3 — 18h UTC = 15h BR
 
 concurrency:
-  group: live-24h-${{ github.run_id }}
+  group: live-24h
   cancel-in-progress: false
 
 jobs:
   live:
     runs-on: ubuntu-latest
-    timeout-minutes: 390
+    timeout-minutes: 410
 
     steps:
       - uses: actions/checkout@v4
@@ -28,12 +32,12 @@ jobs:
 
       - name: Instalar dependências
         run: |
-          pip install imageio-ffmpeg Pillow edge-tts --quiet
-          sudo apt-get install -y ffmpeg --quiet 2>/dev/null || true
-          ffmpeg -version | head -1
+          pip install imageio-ffmpeg --quiet
+          sudo apt-get install -y ffmpeg 2>/dev/null || apt-get install -y ffmpeg
+          echo "FFmpeg: $(ffmpeg -version 2>&1 | head -1)"
 
-      - name: Live 24/7 — Slot ${{ inputs.slot || github.run_number }}
-        timeout-minutes: 380
+      - name: Live 24/7 — Transmissão ${{ github.event.schedule || 'manual' }}
+        timeout-minutes: 400
         env:
           YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
           YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
@@ -41,6 +45,6 @@ jobs:
           YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-          DURATION_H: '6'
+          DURATION_H: ${{ inputs.duration_h || '6' }}
           LANG_CODE: ${{ inputs.lang || 'pt' }}
-        run: python3 scripts/live_auto_v1.py
+        run: python3 scripts/live_loop_v1.py
