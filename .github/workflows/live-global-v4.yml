@@ -1,0 +1,72 @@
+name: 🌍 Live Global V4 — Multilingual 24/7 SEO (PT EN ES DE FR JA KO IT)
+
+on:
+  schedule:
+    # Cobertura completa 24h — 1 run por prime time global:
+    # 00:00 UTC → EN (EUA East 20h)
+    - cron: '0 0 * * *'
+    # 03:00 UTC → PT (Brasil 00h sono)
+    - cron: '0 3 * * *'
+    # 06:00 UTC → JA (Japão 15h)
+    - cron: '0 6 * * *'
+    # 08:00 UTC → KO (Coreia 17h)
+    - cron: '0 8 * * *'
+    # 10:00 UTC → AU/EN (Austrália 20h)
+    - cron: '0 10 * * *'
+    # 12:00 UTC → DE (Alemanha 13h)
+    - cron: '0 12 * * *'
+    # 14:00 UTC → FR (França 15h)
+    - cron: '0 14 * * *'
+    # 16:00 UTC → ES (México/Espanha)
+    - cron: '0 16 * * *'
+    # 18:00 UTC → IT (Itália 19h)
+    - cron: '0 18 * * *'
+    # 20:00 UTC → UK/EN (UK 20h GMT)
+    - cron: '0 20 * * *'
+    # 21:00 UTC → PT (Brasil 18h prime)
+    - cron: '0 21 * * *'
+  workflow_dispatch:
+    inputs:
+      lang:
+        description: 'Idioma: PT EN ES DE FR JA KO IT (auto=detectar por hora UTC)'
+        default: 'auto'
+      live_type:
+        description: 'Tipo: auto sleep study meditation anxiety'
+        default: 'auto'
+      duration_hours:
+        description: 'Duracao em horas (max 6)'
+        default: '6'
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 420
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+
+      - name: Instalar deps (imageio-ffmpeg + edge-tts)
+        run: pip install imageio-ffmpeg edge-tts --break-system-packages -q
+
+      - name: 🌍 Live Multilingual — Tela Preta + Binaural HQ
+        env:
+          YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
+          LIVE_LANG:          ${{ inputs.lang || 'auto' }}
+          LIVE_TYPE:          ${{ inputs.live_type || 'auto' }}
+          DURATION_HOURS:     ${{ inputs.duration_hours || '6' }}
+        run: python3 scripts/live_global_v4.py
+
+      - name: Relatorio
+        if: always()
+        run: |
+          HORA_UTC=$(date -u +"%H:%M UTC")
+          echo "## 🌍 Live Global V4" >> $GITHUB_STEP_SUMMARY
+          echo "- Hora: $HORA_UTC" >> $GITHUB_STEP_SUMMARY
+          echo "- Idioma: ${{ inputs.lang || 'auto (detectado por hora UTC)' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Tipo: ${{ inputs.live_type || 'auto' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Duracao: ${{ inputs.duration_hours || '6' }}h" >> $GITHUB_STEP_SUMMARY
+          echo "- Audio: Binaural Python puro (HQ)" >> $GITHUB_STEP_SUMMARY
+          echo "- TTS: edge-tts multilingual (gratis)" >> $GITHUB_STEP_SUMMARY
+          echo "- Tela: Preta absoluta 0x000000" >> $GITHUB_STEP_SUMMARY
