@@ -23,12 +23,22 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
-      - name: Instalar ffmpeg sistema + Python deps
+
+      - name: Instalar ffmpeg estático + Pillow
         run: |
-          sudo apt-get install -y ffmpeg 2>/dev/null || true
           pip install Pillow --quiet
-          ffmpeg -version 2>&1 | head -2
-          echo "FFmpeg path: $(which ffmpeg)"
+          # Baixar ffmpeg estático (versão diferente sem bug SIGSEGV)
+          echo "Baixando ffmpeg estático..."
+          wget -q --timeout=60 \
+            "https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz" \
+            -O /tmp/ffmpeg.tar.xz
+          tar -xJf /tmp/ffmpeg.tar.xz -C /tmp/
+          FFBIN=$(ls /tmp/ffmpeg-*/ffmpeg | head -1)
+          chmod +x "$FFBIN"
+          ln -sf "$FFBIN" /usr/local/bin/ffmpeg
+          ffmpeg -version 2>&1 | head -1
+          echo "FFMPEG_BIN=$FFBIN" >> $GITHUB_ENV
+
       - name: 🔴 LIVE Tela Preta 100% + Binaural 432Hz
         timeout-minutes: 400
         env:
