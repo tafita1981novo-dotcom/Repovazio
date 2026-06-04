@@ -1,7 +1,9 @@
-name: 🎬 Render Short V6 — Script Completo + Sinc Perfeita + 50-58s
+name: 🎬 Render Short V6 — Script Completo + Sinc Perfeita + 5 Cenas
 
 on:
   workflow_dispatch:
+    inputs:
+      video_id: {required: false, description: 'ID específico (opcional)'}
   schedule:
     - cron: '*/20 * * * *'   # A cada 20 minutos
 
@@ -16,21 +18,20 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with: { python-version: '3.11' }
 
       - name: Instalar dependências
         run: |
-          pip install edge-tts imageio-ffmpeg Pillow mutagen --quiet
+          pip install imageio-ffmpeg Pillow edge-tts --quiet
+          sudo apt-get install -y ffmpeg --quiet 2>/dev/null || true
 
-      - name: Render Shorts V6
+      - name: Renderizar Short Viral V6
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-          MAX_VIDEOS: "2"
-        run: |
-          echo "=== RENDER SHORT V6 ==="
-          echo "Script completo | Sinc por cena | 50-58s | Viral ≥95%"
-          python3 scripts/render_short_v6.py
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+          VIDEO_ID: ${{ inputs.video_id || '' }}
+        run: python3 scripts/render_short_v6.py
