@@ -3,9 +3,9 @@ name: 🎬 Render Short V6 — Script Completo + Sinc Perfeita + 5 Cenas
 on:
   workflow_dispatch:
     inputs:
-      video_id: {required: false, description: 'ID específico (opcional)'}
+      video_id: {required: false}
   schedule:
-    - cron: '*/20 * * * *'   # A cada 20 minutos
+    - cron: '*/20 * * * *'
 
 concurrency:
   group: render-short-v6
@@ -22,9 +22,7 @@ jobs:
         with: { python-version: '3.11' }
 
       - name: Instalar dependências
-        run: |
-          pip install imageio-ffmpeg Pillow edge-tts --quiet
-          sudo apt-get install -y ffmpeg --quiet 2>/dev/null || true
+        run: pip install imageio-ffmpeg Pillow edge-tts --quiet && python3 -c "import imageio_ffmpeg; print('FFmpeg OK')"
 
       - name: Renderizar Short Viral V6
         env:
