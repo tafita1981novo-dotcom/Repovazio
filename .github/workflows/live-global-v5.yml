@@ -3,8 +3,8 @@ name: LIVE 24/7 — Tela Preta Pura + Binaural 432Hz + SEO Viral Global
 on:
   workflow_dispatch:
     inputs:
-      lang: {default: 'pt', description: 'Idioma (pt/en/de/es/fr/it/ja/ko)'}
-      duration_h: {default: '6', description: 'Horas (máx 6)'}
+      lang: {default: 'pt', description: 'Idioma SEO'}
+      duration_h: {default: '6', description: 'Horas'}
   schedule:
     - cron: '0 0 * * *'
     - cron: '0 6 * * *'
@@ -16,15 +16,15 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  live_final:
+  live_viral:
     runs-on: ubuntu-latest
     timeout-minutes: 410
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: '3.11' }
-      - run: pip install imageio-ffmpeg Pillow --quiet && python3 -c "import imageio_ffmpeg; print('FFmpeg:', imageio_ffmpeg.get_ffmpeg_exe())"
-      - name: 🔴 LIVE Tela Preta + Binaural 432Hz
+      - run: pip install imageio-ffmpeg Pillow --quiet && python3 -c "import imageio_ffmpeg; print('FFmpeg OK:', imageio_ffmpeg.get_ffmpeg_exe())"
+      - name: 🔴 LIVE Tela Preta 100% + Binaural 432Hz
         timeout-minutes: 400
         env:
           YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
@@ -33,4 +33,4 @@ jobs:
           YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
           DURATION_H: ${{ inputs.duration_h || '6' }}
           LANG_CODE: ${{ inputs.lang || 'pt' }}
-        run: python3 scripts/live_final_v1.py
+        run: python3 scripts/live_v3.py
