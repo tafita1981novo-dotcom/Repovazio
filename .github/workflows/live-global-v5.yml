@@ -24,18 +24,14 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
 
-      - name: Setup ffmpeg
-        uses: FedericoCarboni/setup-ffmpeg@v3
-        id: setup-ffmpeg
-        with:
-          ffmpeg-version: release
-          architecture: amd64
-
-      - name: Instalar Pillow e verificar ffmpeg
+      - name: Instalar ffmpeg + Pillow
         run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg
           pip install Pillow --quiet
-          echo "FFmpeg: $(ffmpeg -version 2>&1 | head -1)"
-          echo "Path: $(which ffmpeg)"
+          echo "=== FFmpeg instalado ==="
+          ffmpeg -version 2>&1 | head -2
+          which ffmpeg
 
       - name: 🔴 LIVE Tela Preta 100% + Binaural 432Hz
         timeout-minutes: 400
