@@ -6,7 +6,8 @@ on:
       max_videos:
         default: '5'
   schedule:
-    - cron: '0 18 * * *'
+    - cron: '15 0 * * *'   # 00h15 UTC (logo após reset da quota)
+    - cron: '0 18 * * *'   # 18h UTC = 15h Brasil (horario de pico)
 
 concurrency:
   group: youtube-publisher-v6
