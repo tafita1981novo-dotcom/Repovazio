@@ -31,12 +31,9 @@ jobs:
         with: { python-version: '3.11' }
 
       - name: Instalar dependências
-        run: |
-          pip install imageio-ffmpeg --quiet
-          sudo apt-get install -y ffmpeg 2>/dev/null || apt-get install -y ffmpeg
-          echo "FFmpeg: $(ffmpeg -version 2>&1 | head -1)"
+        run: pip install imageio-ffmpeg --quiet && python3 -c "import imageio_ffmpeg; print('FFmpeg OK:', imageio_ffmpeg.get_ffmpeg_exe())"
 
-      - name: Live 24/7 — Transmissão ${{ github.event.schedule || 'manual' }}
+      - name: Live 24/7 — Transmissão
         timeout-minutes: 400
         env:
           YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
