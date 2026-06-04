@@ -1,0 +1,43 @@
+name: 📡 Live Global V5 — 24/7 Multilíngue (PT/EN/ES/DE/FR/JA/KO/IT)
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 */6 * * *'   # 4 vezes ao dia (mantém 24h ativa)
+
+concurrency:
+  group: live-global-v5-${{ github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360   # 6 horas
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+
+      - name: Instalar dependências
+        run: |
+          pip install edge-tts imageio-ffmpeg Pillow --quiet
+          sudo apt-get install -y ffmpeg --quiet
+
+      - name: Verificar ffmpeg e stream key
+        run: |
+          ffmpeg -version | head -1
+          echo "Stream key: ${YOUTUBE_STREAM_KEY:0:8}***"
+        env:
+          YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
+
+      - name: Live Multilíngue 6h
+        timeout-minutes: 355
+        env:
+          YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          echo "=== LIVE GLOBAL V5 - 6 HORAS ==="
+          python3 scripts/live_global_v4.py
