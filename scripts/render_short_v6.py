@@ -36,9 +36,25 @@ def ff(*args, t=120):
     return subprocess.run([ffm(), *args], capture_output=True, timeout=t)
 
 def ffprobe_dur(path):
-    r = subprocess.run(
-        ["ffprobe","-v","quiet","-print_format","json","-show_format",str(path)],
-        capture_output=True, timeout=15)
+    """Mede duracao usando ffprobe do imageio_ffmpeg ou estimativa."""
+    import shutil
+    ffprobe_bin = shutil.which("ffprobe")
+    if not ffprobe_bin:
+        try:
+            import imageio_ffmpeg
+            ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
+            # Usar ffmpeg com -i para pegar duracao
+            r = subprocess.run([ffmpeg_exe,"-i",str(path),"-f","null","-"],
+                               capture_output=True, timeout=20)
+            m = re.search(r"Duration: (\d+):(\d+):(\d+\.\d+)", r.stderr.decode())
+            if m:
+                h,mn,s=m.groups(); return float(h)*3600+float(mn)*60+float(s)
+        except: pass
+        # Estimativa por tamanho (128kbps)
+        try: return pathlib.Path(path).stat().st_size/16000.0
+        except: return 0.0
+    r = subprocess.run([ffprobe_bin,"-v","quiet","-print_format","json","-show_format",str(path)],
+                       capture_output=True, timeout=15)
     try: return float(json.loads(r.stdout)["format"]["duration"])
     except: return 0.0
 
