@@ -23,7 +23,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
-      - run: pip install imageio-ffmpeg Pillow --quiet && python3 -c "import imageio_ffmpeg; print('FFmpeg:', imageio_ffmpeg.get_ffmpeg_exe())"
+      - name: Instalar ffmpeg sistema + Python deps
+        run: |
+          sudo apt-get install -y ffmpeg 2>/dev/null || true
+          pip install Pillow --quiet
+          ffmpeg -version 2>&1 | head -2
+          echo "FFmpeg path: $(which ffmpeg)"
       - name: 🔴 LIVE Tela Preta 100% + Binaural 432Hz
         timeout-minutes: 400
         env:
@@ -32,4 +37,4 @@ jobs:
           YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
           DURATION_H: ${{ inputs.duration_h || '6' }}
           LANG_CODE: ${{ inputs.lang || 'pt' }}
-        run: python3 scripts/live_v6.py
+        run: python3 scripts/live_v7.py
