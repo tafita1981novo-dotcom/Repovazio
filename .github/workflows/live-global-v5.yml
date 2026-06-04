@@ -24,20 +24,18 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
 
-      - name: Instalar ffmpeg estático + Pillow
+      - name: Setup ffmpeg
+        uses: FedericoCarboni/setup-ffmpeg@v3
+        id: setup-ffmpeg
+        with:
+          ffmpeg-version: release
+          architecture: amd64
+
+      - name: Instalar Pillow e verificar ffmpeg
         run: |
           pip install Pillow --quiet
-          # Baixar ffmpeg estático (versão diferente sem bug SIGSEGV)
-          echo "Baixando ffmpeg estático..."
-          wget -q --timeout=60 \
-            "https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz" \
-            -O /tmp/ffmpeg.tar.xz
-          tar -xJf /tmp/ffmpeg.tar.xz -C /tmp/
-          FFBIN=$(ls /tmp/ffmpeg-*/ffmpeg | head -1)
-          chmod +x "$FFBIN"
-          ln -sf "$FFBIN" /usr/local/bin/ffmpeg
-          ffmpeg -version 2>&1 | head -1
-          echo "FFMPEG_BIN=$FFBIN" >> $GITHUB_ENV
+          echo "FFmpeg: $(ffmpeg -version 2>&1 | head -1)"
+          echo "Path: $(which ffmpeg)"
 
       - name: 🔴 LIVE Tela Preta 100% + Binaural 432Hz
         timeout-minutes: 400
