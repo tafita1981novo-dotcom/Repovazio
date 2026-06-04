@@ -154,36 +154,9 @@ def gerar_tts_long(texto, out, tipo="problema"):
         time.sleep(3*attempt)
     return None
 
-ESTILOS_LONG = {
-    "narcisismo": "cinematic dark psychology, dramatic shadows",
-    "ansiedade":  "anxiety visualization, racing mind, warm documentary",
-    "apego":      "emotional attachment, warmth, connection",
-    "burnout":    "workplace exhaustion, desaturated, overwhelm",
-    "trauma":     "trauma healing, body memory, hope",
-    "default":    "psychology documentary, warm cinematic",
-}
 
-def prompt_long(texto, tipo, tema, i):
-    t=texto.lower(); estilo=ESTILOS_LONG.get(tema,ESTILOS_LONG["default"])
-    if tipo=="intro": ctx="presenter, direct eye contact, engaging"
-    elif tipo=="problema":
-        ctx="person reflecting problem, thoughtful, documentary"
-    elif tipo=="ciencia":
-        ctx="brain visualization scientific, data, research lab"
-    elif tipo=="perturb": ctx="shocking realization, wide eyes, dramatic light"
-    elif tipo=="resolucao": ctx="hope empowerment, warm sunrise, agency"
-    else: ctx="psychology portrait, cinematic"
-    chars={"narcisismo":"Brazilian woman 28, dark hair",
-           "ansiedade":"Brazilian woman 26, expressive",
-           "burnout":"Brazilian man 32, exhausted",
-           "trauma":"Brazilian woman 30, healing",
-           "default":"Brazilian woman 33, warm intelligent"}
-    char=chars.get(tema,chars["default"])
-    prompt=f"{char}, {ctx}, {estilo}, 4k, ultra detailed, no text, no watermark"
-    neg="text, watermark, logo, cartoon, ugly, blurry, nsfw"
-    return prompt, neg
 
-# HuggingFace FLUX como primario (Pollinations passou a cobrar 402)
+# ---- GERACAO DE IMAGEM (HF FLUX primario, procedural fallback) ----
 HF_API = "https://api-inference.huggingface.co/models"
 HF_MODELS = [
     "black-forest-labs/FLUX.1-schnell",
@@ -191,17 +164,11 @@ HF_MODELS = [
 ]
 
 def imagem_hf(prompt, out, seed):
-    """HuggingFace FLUX.1-schnell - primario, gratuito com HF_TOKEN"""
+    """HuggingFace FLUX - gratuito com HF_TOKEN"""
     if not HFT: return False
-    # Prompt curto para evitar erros
-    p_short = prompt[:150]
     body = json.dumps({
-        "inputs": p_short,
-        "parameters": {
-            "width": 576, "height": 1024,
-            "num_inference_steps": 4, "seed": seed,
-            "guidance_scale": 0.0
-        }
+        "inputs": prompt[:150],
+        "parameters": {"width":576,"height":1024,"num_inference_steps":4,"seed":seed,"guidance_scale":0.0}
     }).encode()
     for model in HF_MODELS:
         req = urllib.request.Request(f"{HF_API}/{model}", data=body)
@@ -211,11 +178,9 @@ def imagem_hf(prompt, out, seed):
             with urllib.request.urlopen(req, timeout=90) as r:
                 data = r.read()
             if len(data)>10000 and data[:4] in (b"\xff\xd8\xff", b"\x89PNG"):
-                # Redimensionar para 1080x1920
                 try:
                     from PIL import Image; import io
-                    img = Image.open(io.BytesIO(data))
-                    img = img.resize((W,H), Image.LANCZOS)
+                    img = Image.open(io.BytesIO(data)).resize((W,H), Image.LANCZOS)
                     img.save(out,"JPEG",quality=92)
                 except: open(out,"wb").write(data)
                 log(f"    Img HF: {len(data)//1024}KB OK")
@@ -223,6 +188,31 @@ def imagem_hf(prompt, out, seed):
         except Exception as e:
             if "503" in str(e): time.sleep(8)
     return False
+
+def imagem_proc(out, seed, tema):
+    """Fallback procedural - garantido mesmo sem internet"""
+    try:
+        from PIL import Image, ImageDraw, ImageFilter
+        random.seed(seed)
+        P={"narcisismo":[(8,3,18),(180,60,220)],"ansiedade":[(3,8,20),(60,120,220)],
+           "burnout":[(18,5,3),(220,80,30)],"trauma":[(5,3,18),(100,50,200)],
+           "apego":[(5,5,20),(100,80,220)],"default":[(6,6,15),(124,58,237)]}
+        bg,c1=P.get(tema,P["default"])
+        img=Image.new("RGB",(W,H),bg); draw=ImageDraw.Draw(img)
+        for y in range(H):
+            t=(y/H)**0.7; c=tuple(min(255,int(bg[j]+(c1[j]-bg[j])*t*0.8)) for j in range(3))
+            draw.line([(0,y),(W,y)],fill=c)
+        cx,cy,r1=W//2,int(H*0.42),int(W*0.24)
+        for i in range(6,0,-1):
+            draw.ellipse([(cx-r1-i*8,cy-r1-i*8),(cx+r1+i*8,cy+r1+i*8)],fill=(*c1,20*i))
+        draw.ellipse([(cx-r1,cy-r1),(cx+r1,cy+r1)],fill=(*c1,180))
+        for e in range(200):
+            a=int(140*(1-e/200))
+            draw.line([(0,e),(W,e)],fill=(0,0,0,a)); draw.line([(0,H-1-e),(W,H-1-e)],fill=(0,0,0,a))
+        img.filter(ImageFilter.GaussianBlur(0.5)).save(out,"JPEG",quality=92)
+        log(f"    Img procedural OK"); return True
+    except Exception as e:
+        err(f"Proc img: {e}"); return False
 
 def get_imagem(prompt, neg, out, seed, tema):
     """HF FLUX primario, procedural fallback garantido"""
