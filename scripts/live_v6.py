@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
 live_v6.py — DEFINITIVO FINAL
-FIX PRINCIPAL: amerge=inputs=2 (dois sine) causa SIGSEGV no ffmpeg 7.0.2
-SOLUÇÃO: gerar WAV binaural em Python (430Hz L + 432Hz R)
-          usar -stream_loop -1 para loop infinito sem filtros
-Tela 100% PRETA garantida
+- WAV binaural Python (fix SIGSEGV amerge ffmpeg7)
+- Tela 100% PRETA garantida
+- SEO dominante em inglês para superar canal mais views do mundo
+- Todos os títulos em inglês + keywords multilíngues
 """
 import os,sys,subprocess,pathlib,shutil,json,urllib.request,urllib.parse
 import time,random,math,struct,wave
@@ -14,12 +14,13 @@ YT_CLIENT_ID     = os.environ.get("YT_CLIENT_ID","")
 YT_CLIENT_SECRET = os.environ.get("YT_CLIENT_SECRET","")
 YT_REFRESH_TOKEN = os.environ.get("YT_REFRESH_TOKEN","")
 DURATION_H       = int(os.environ.get("DURATION_H","6"))
-LANG             = os.environ.get("LANG_CODE","pt")
+LANG             = os.environ.get("LANG_CODE","en")  # inglês como padrão
 
-BC_ID   = "LhAVPY_HK-4"
-ST_KEY  = "ewme-91sq-yae7-yj1q-5skw"
-RTMP    = f"rtmp://a.rtmp.youtube.com/live2/{ST_KEY}"
-TMP     = pathlib.Path("/tmp")
+# IDs existentes — não criar novos broadcasts
+BC_ID = "LhAVPY_HK-4"
+ST_KEY = "ewme-91sq-yae7-yj1q-5skw"
+RTMP  = f"rtmp://a.rtmp.youtube.com/live2/{ST_KEY}"
+TMP   = pathlib.Path("/tmp")
 
 def log(m): print(f"[{datetime.now():%H:%M:%S}] {m}",flush=True)
 def err(m): print(f"[{datetime.now():%H:%M:%S}] ERRO: {m}",flush=True,file=sys.stderr)
@@ -44,7 +45,7 @@ def get_token():
     except Exception as e: err(f"Token: {e}"); return ""
 
 def gerar_wav_binaural():
-    """Gera 5s de binaural 430Hz (L) + 432Hz (R) em Python puro — sem ffmpeg"""
+    """Gera 5s de binaural 430Hz(L)+432Hz(R) em Python — sem ffmpeg, sem SIGSEGV"""
     SR,DUR=44100,5; samples=SR*DUR
     out=bytearray()
     for i in range(samples):
@@ -56,127 +57,118 @@ def gerar_wav_binaural():
     with wave.open(str(p),'wb') as wf:
         wf.setnchannels(2); wf.setsampwidth(2); wf.setframerate(SR)
         wf.writeframes(bytes(out))
-    log(f"WAV binaural: {p.stat().st_size//1024}KB | 430Hz(L)+432Hz(R) beat=2Hz ✅")
+    log(f"WAV binaural: {p.stat().st_size//1024}KB | 430Hz(L)+432Hz(R) | beat=2Hz DELTA ✅")
     return str(p)
 
-TITULOS=[
-    "🔴 AO VIVO 24H | ψ TELA PRETA • Binaural 432Hz • Dark Psychology | @psidanicoelho",
-    "🔴 LIVE | ψ TELA PRETA 24H • Binaural 432Hz • Narcisismo • Foco Total",
-    "🔴 AO VIVO | ψ Tela Preta para Dormir • Binaural 432Hz • Psicologia Quântica",
-    "🔴 LIVE 24H | ψ BLACK SCREEN • Binaural 432Hz • Dark Psychology | @psidanicoelho",
+# ─── SEO DOMINANTE — superar os canais com mais views do mundo ──
+TITULOS_EN = [
+    "🔴 LIVE 24/7 | BLACK SCREEN for Sleep 8 Hours | Binaural Beats 432Hz | Dark Psychology",
+    "🔴 LIVE 24H | BLACK SCREEN Sleep Music | Binaural Beats 432Hz | Psychology Research",
+    "🔴 LIVE | BLACK SCREEN 10 Hours | Binaural Beats 432Hz | Sleep Study Meditation Focus",
+    "🔴 24/7 LIVE | BLACK SCREEN for Insomnia | Binaural 432Hz | Dark Psychology Channel",
 ]
 
-DESC="""🔴 AO VIVO 24 HORAS — ψ TELA PRETA • BINAURAL 432Hz • DARK PSYCHOLOGY
+DESC_EN = """🔴 LIVE 24 HOURS — BLACK SCREEN | BINAURAL BEATS 432Hz | DARK PSYCHOLOGY
+Daniela Coelho — Human Behavior Researcher | @psidanicoelho
 
-Daniela Coelho — Pesquisadora de Comportamento Humano | @psidanicoelho
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🖤 PURE BLACK SCREEN — 100% dark, zero pixels illuminated
+🎵 TRUE BINAURAL BEATS 432Hz (430Hz Left + 432Hz Right = 2Hz Delta)
+🧠 DARK PSYCHOLOGY — Narcissism, Trauma, Anxiety, Attachment Theory
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🖤 TELA 100% PRETA — zero distração visual
-🎵 BINAURAL REAL 432Hz (430Hz esq + 432Hz dir = beat 2Hz DELTA-THETA)
-🧠 DARK PSYCHOLOGY — conteúdo baseado em pesquisa científica
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+★ USE WITH HEADPHONES for true binaural effect
+★ Black screen = zero visual distraction = deeper sleep & focus
+★ 100% pure black — NO logos, NO watermarks, NO brightness
 
-USO IDEAL:
-✅ Dormir profundamente    ✅ Estudar com foco máximo
-✅ Meditar                ✅ Trabalhar concentrado
-✅ Relaxar                ✅ Reduzir ansiedade
+PERFECT FOR:
+→ Deep Sleep & Insomnia Treatment
+→ Intense Study Sessions & Focus
+→ Guided Meditation & Mindfulness
+→ Relaxation & Stress Relief
+→ Work Concentration
 
-COMO USAR: tela preta = zero distração. Binaural = fones de ouvido.
+🔬 SOURCES: Harvard • UCLA • van der Kolk • Ainsworth • Gottman
 
-PSICOLOGIA: Narcisismo • Trauma • Ansiedade • Apego • Dark Psychology
-PESQUISA: Harvard • UCLA • van der Kolk • Ainsworth • Gottman
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💬 SUPER CHAT — Your psychology question answered LIVE!
+❤️ SUPER THANKS — Support this research!
+🔔 SUBSCRIBE + BELL for daily psychology insights!
 
-💬 Super Chat: sua dúvida de psicologia ao vivo!
-❤️ Super Thanks: apoie a pesquisa!
-🔔 ATIVE O SINO para não perder nada!
+🌍 GLOBAL: EN 🇺🇸 PT 🇧🇷 DE 🇩🇪 ES 🇪🇸 FR 🇫🇷 IT 🇮🇹 JA 🇯🇵 KO 🇰🇷
 
-🌍 DISPONÍVEL EM 8 IDIOMAS:
-PT-BR | ENGLISH | DEUTSCH | ESPAÑOL | FRANÇAIS | ITALIANO | 日本語 | 한국어
-
-BLACK SCREEN • TELA PRETA • SCHWARZER BILDSCHIRM • PANTALLA NEGRA
-ÉCRAN NOIR • SCHERMO NERO • 黒い画面 • 검은 화면
-
-#telapreta #blackscreen #binaural432hz #432hz #psicologia
-#narcisismo #trauma #ansiedade #darkpsychology #danielacoelho
-#psidanicoelho #binauralbeats #focototal #concentracao #dormir
-#sleepmusic #studymusic #schwarzerbildschirm #pantallenegra"""
+#blackscreen #blackscreenforsleep #blackscreen8hours #blackscreen10hours
+#blackscreensleep #binauralbeats #binauralbeats432hz #432hz #sleepmusic
+#deepsleepmusic #studymusic #focusmusic #meditationmusic #darkpsychology
+#narcissism #trauma #anxiety #psychology #danielacoelho #psidanicoelho
+#schwarzerbildschirm #pantallenegra #telapreta #ecransombre #schermosero"""
 
 def atualizar_seo(token):
     if not token: return
-    titulo=random.choice(TITULOS)
-    log(f"Título: {titulo[:70]}")
-    start=(datetime.now(timezone.utc)+timedelta(seconds=30)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    titulo=random.choice(TITULOS_EN)
+    log(f"Título EN: {titulo[:70]}")
+    start=(datetime.now(timezone.utc)+timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
     try:
-        body=json.dumps({"id":BC_ID,"snippet":{"title":titulo[:100],"scheduledStartTime":start,
-            "description":DESC[:4900],"categoryId":"22","defaultLanguage":"pt"}}).encode()
-        req=urllib.request.Request("https://www.googleapis.com/youtube/v3/liveBroadcasts?part=snippet",data=body,method="PUT")
+        body=json.dumps({"id":BC_ID,"snippet":{"title":titulo[:100],"description":DESC_EN[:4900],
+            "scheduledStartTime":start,"categoryId":"22","defaultLanguage":"en"}}).encode()
+        req=urllib.request.Request("https://www.googleapis.com/youtube/v3/liveBroadcasts?part=snippet",
+            data=body,method="PUT")
         req.add_header("Authorization",f"Bearer {token}"); req.add_header("Content-Type","application/json")
-        with urllib.request.urlopen(req,timeout=15): log("SEO ✅")
+        with urllib.request.urlopen(req,timeout=15): log("SEO EN dominante ✅")
     except Exception as e: err(f"SEO: {e}")
 
 def thumbnail(token):
     if not token: return
     try:
         from PIL import Image,ImageDraw,ImageFont
-        W,H=1280,720; img=Image.new("RGB",(W,H),(0,0,0))
+        W,H=1280,720
+        img=Image.new("RGB",(W,H),(0,0,0))  # PRETO ABSOLUTO
         draw=ImageDraw.Draw(img)
+        # Gradiente mínimo
         for y in range(H):
-            t=(1-abs(y/H-0.5)*2)*0.14
-            draw.line([(0,y),(W,y)],fill=(int(65*t),int(8*t),int(150*t)))
+            t=(1-abs(y/H-0.5)*2)*0.12
+            draw.line([(0,y),(W,y)],fill=(int(50*t),int(5*t),int(120*t)))
+        # Círculo
         cx,cy,r=W//2,H//2-15,195
         for i in range(10,0,-1):
-            a=i/10*0.43; c=(int(108*a),int(38*a),int(215*a))
+            a=i/10*0.4; c=(int(100*a),int(35*a),int(200*a))
             draw.ellipse([(cx-r-i*15,cy-r-i*15),(cx+r+i*15,cy+r+i*15)],fill=c)
-        draw.ellipse([(cx-r,cy-r),(cx+r,cy+r)],fill=(38,5,88))
+        draw.ellipse([(cx-r,cy-r),(cx+r,cy+r)],fill=(35,5,80))
+        # ψ branco
         try: fnt=ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",240)
         except: fnt=ImageFont.load_default()
-        for dx,dy in [(-4,-4),(4,-4),(-4,4),(4,4)]:
-            draw.text((cx-78+dx,cy-128+dy),"ψ",font=fnt,fill=(100,35,200))
+        for dx,dy in [(-4,-4),(4,-4),(-4,4),(4,4)]: draw.text((cx-78+dx,cy-128+dy),"ψ",font=fnt,fill=(90,30,190))
         draw.text((cx-78,cy-128),"ψ",font=fnt,fill=(255,255,255))
+        # Badges
         try: fb=ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",26)
         except: fb=ImageFont.load_default()
-        draw.rectangle([(25,20),(220,57)],fill=(220,20,60))
-        draw.text((35,27),"● AO VIVO 24H",font=fb,fill=(255,255,255))
-        draw.rectangle([(230,20),(475,57)],fill=(20,20,190))
-        draw.text((240,27),"TELA PRETA 100%",font=fb,fill=(255,255,255))
-        draw.rectangle([(485,20),(730,57)],fill=(40,120,20))
-        draw.text((495,27),"BINAURAL 432Hz",font=fb,fill=(255,255,255))
+        draw.rectangle([(25,20),(220,57)],fill=(220,20,60)); draw.text((35,27),"● LIVE 24/7",font=fb,fill=(255,255,255))
+        draw.rectangle([(230,20),(470,57)],fill=(0,0,0),outline=(255,255,255),width=1); draw.text((240,27),"BLACK SCREEN 100%",font=fb,fill=(255,255,255))
+        draw.rectangle([(480,20),(720,57)],fill=(40,120,20)); draw.text((490,27),"BINAURAL 432Hz",font=fb,fill=(255,255,255))
         try: ftag=ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",34)
         except: ftag=ImageFont.load_default()
         draw.text((cx-165,H-65),"@psidanicoelho",font=ftag,fill=(200,175,255))
-        draw.rectangle([(0,H-10),(W,H)],fill=(245,158,11))
+        draw.rectangle([(0,H-10),(W,H)],fill=(255,255,255))  # linha branca embaixo
         p=TMP/"thumb.jpg"; img.save(str(p),"JPEG",quality=95)
         req=urllib.request.Request(f"https://www.googleapis.com/upload/youtube/v3/thumbnails/set?videoId={BC_ID}&uploadType=media",
             data=open(str(p),"rb").read(),method="POST")
-        req.add_header("Authorization",f"Bearer {token}")
-        req.add_header("Content-Type","image/jpeg")
+        req.add_header("Authorization",f"Bearer {token}"); req.add_header("Content-Type","image/jpeg")
         req.add_header("Content-Length",str(p.stat().st_size))
-        with urllib.request.urlopen(req,timeout=60): log("Thumbnail ψ ✅")
+        with urllib.request.urlopen(req,timeout=60): log("Thumbnail ✅")
     except Exception as e: err(f"Thumb: {e}")
 
-def transmitir(wav_path, ff, dur_s):
-    """
-    DEFINITIVO: WAV binaural loop infinito + tela preta
-    SEM amerge (causa SIGSEGV no ffmpeg 7.0.2)
-    """
+def transmitir(wav_path,ff,dur_s):
     log(f"Transmitindo {dur_s//3600}h → {RTMP[:50]}...")
     cmd=[
         ff,"-y","-re",
-        # AUDIO: WAV binaural em loop (-stream_loop ANTES do -i)
-        "-stream_loop","-1","-i",wav_path,
-        # VIDEO: tela 100% preta
-        "-f","lavfi","-i","color=black:size=1920x1080:rate=25",
-        # Map: audio do WAV, video da cor preta
-        "-map","1:v","-map","0:a",
-        # Video: ultrafast, bitrate mínimo
+        "-stream_loop","-1","-i",wav_path,  # WAV binaural em loop
+        "-f","lavfi","-i","color=black:size=1920x1080:rate=25",  # tela preta
+        "-map","1:v","-map","0:a",  # video da lavfi, audio do WAV
         "-c:v","libx264","-preset","ultrafast","-crf","36",
         "-b:v","150k","-maxrate","200k","-bufsize","400k",
         "-g","50","-r","25","-pix_fmt","yuv420p",
-        # Audio: AAC stereo binaural direto do WAV
         "-c:a","aac","-b:a","128k","-ac","2","-ar","44100",
-        # Output RTMP
-        "-f","flv","-t",str(dur_s),
-        RTMP
+        "-f","flv","-t",str(dur_s), RTMP
     ]
     result=subprocess.run(cmd,timeout=dur_s+900)
     log(f"rc={result.returncode}")
@@ -184,22 +176,14 @@ def transmitir(wav_path, ff, dur_s):
 
 def main():
     log("="*65)
-    log(f"LIVE V6 DEFINITIVO | {LANG} | {DURATION_H}h")
-    log(f"FIX: WAV binaural loop (sem amerge SIGSEGV)")
+    log(f"LIVE V6 | SEO DOMINANTE EN | {DURATION_H}h | {datetime.now(timezone.utc):%H:%M} UTC")
     log(f"Broadcast: {BC_ID} | RTMP: {RTMP[:50]}")
     log("="*65)
-
     ff=ffm()
-
-    # Gerar WAV binaural (rápido, <1s)
     wav=gerar_wav_binaural()
-
-    # Token e SEO
     token=get_token()
     atualizar_seo(token)
     thumbnail(token)
-
-    # Transmitir com retry
     dur_s=DURATION_H*3600; inicio=time.time(); tentativas=0
     while time.time()-inicio<dur_s and tentativas<30:
         restante=int(dur_s-(time.time()-inicio))
@@ -208,17 +192,15 @@ def main():
         log(f"[{tentativas}] {restante//3600}h{restante%3600//60}m restantes")
         rc=transmitir(wav,ff,restante)
         if rc==0: break
-        espera=min(20*tentativas,120); log(f"rc={rc} — retry em {espera}s..."); time.sleep(espera)
-
-    # Encerrar broadcast
+        espera=min(20*tentativas,120); log(f"rc={rc} retry em {espera}s..."); time.sleep(espera)
+    # Encerrar
     if token:
         try:
             req=urllib.request.Request(f"https://www.googleapis.com/youtube/v3/liveBroadcasts/transition?broadcastStatus=complete&id={BC_ID}&part=id",data=b"{}",method="POST")
             req.add_header("Authorization",f"Bearer {token}"); req.add_header("Content-Type","application/json")
-            urllib.request.urlopen(req,timeout=15); log("Broadcast encerrado ✅")
-        except Exception as e: err(f"Encerrar: {e}")
-
-    log(f"ENCERRADO | {(time.time()-inicio)//60:.0f}min total")
+            urllib.request.urlopen(req,timeout=15); log("Encerrado ✅")
+        except: pass
+    log(f"ENCERRADO | {(time.time()-inicio)//60:.0f}min")
 
 if __name__=="__main__":
     main()
