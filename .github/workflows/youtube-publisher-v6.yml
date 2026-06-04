@@ -3,10 +3,10 @@ name: Publicador Automático — Canal Principal
 on:
   workflow_dispatch:
     inputs:
-      max_videos: {default: '6', description: 'Max uploads (quota=10k, cada=1600)'}
+      max_videos: {default: '6', description: 'Max uploads (6=max quota diária)'}
   schedule:
-    - cron: '15 0 * * *'   # Reset quota YouTube API — publica 6 vídeos
-    - cron: '0 18 * * *'   # 15h BR — horário pico viewers
+    - cron: '15 0 * * *'   # 00h15 UTC — logo após reset quota YT API
+    - cron: '0 18 * * *'   # 18h UTC = 15h BR — horário pico
 
 concurrency:
   group: youtube-publisher
@@ -31,4 +31,4 @@ jobs:
           YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
           YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
           MAX_VIDEOS: ${{ inputs.max_videos || '6' }}
-        run: python3 scripts/youtube_publisher_v6b.py
+        run: python3 scripts/smart_publisher_v2.py
