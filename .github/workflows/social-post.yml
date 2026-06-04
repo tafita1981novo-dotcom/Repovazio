@@ -1,0 +1,39 @@
+name: 📱 Social Media Auto-Post — TikTok + Instagram
+
+on:
+  workflow_dispatch:
+    inputs:
+      caption: {default: '🔴 BLACK SCREEN | BINAURAL 432Hz | #blackscreen #432hz #darkpsychology', description: 'Caption'}
+  schedule:
+    # Postar 3x ao dia nos horários de pico
+    - cron: '0 12 * * *'    # 09:00 BRT
+    - cron: '30 19 * * *'   # 16:30 BRT
+    - cron: '0 23 * * *'    # 20:00 BRT
+
+jobs:
+  social_post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - uses: actions/setup-node@v4
+        with: {node-version: '20'}
+      - run: |
+          pip install requests --quiet
+          npm install playwright --save-dev --quiet || true
+          npx playwright install chromium --with-deps --quiet || true
+        continue-on-error: true
+      - name: 📱 TikTok + Instagram Post
+        env:
+          TT_SESSION_ID: ${{ secrets.TT_SESSION_ID }}
+          IG_SESSION_ID: ${{ secrets.IG_SESSION_ID }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+          CAPTION: ${{ inputs.caption || '🔴 BLACK SCREEN | BINAURAL 432Hz | #blackscreen #432hz #darkpsychology #danielacoelho' }}
+        run: python3 scripts/tiktok_post.py
+        continue-on-error: true
