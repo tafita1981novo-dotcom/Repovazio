@@ -156,6 +156,39 @@ def gerar_tts_long(texto, out, tipo="problema"):
 
 
 
+
+ESTILOS_LONG = {
+    "narcisismo": "cinematic dark psychology, dramatic shadows",
+    "ansiedade":  "anxiety visualization, racing mind, warm documentary",
+    "apego":      "emotional attachment, warmth, connection",
+    "burnout":    "workplace exhaustion, desaturated, overwhelm",
+    "trauma":     "trauma healing, body memory, hope",
+    "default":    "psychology documentary, warm cinematic",
+}
+
+def prompt_long(texto, tipo, tema, i):
+    """Gera prompt visual para o CONTEUDO especifico desta cena do long"""
+    t=texto.lower(); estilo=ESTILOS_LONG.get(tema,ESTILOS_LONG["default"])
+    if tipo=="intro": ctx="presenter, direct eye contact, engaging"
+    elif tipo=="problema":
+        ctx="person reflecting problem, thoughtful, documentary"
+    elif tipo=="ciencia":
+        ctx="brain visualization scientific, data, research lab"
+    elif tipo=="perturb": ctx="shocking realization, wide eyes, dramatic light"
+    elif tipo=="resolucao": ctx="hope empowerment, warm sunrise, agency"
+    else: ctx="psychology portrait, cinematic"
+    chars={"narcisismo":"Brazilian woman 28, dark hair",
+           "ansiedade":"Brazilian woman 26, expressive",
+           "burnout":"Brazilian man 32, exhausted",
+           "trauma":"Brazilian woman 30, healing",
+           "apego":"Brazilian woman 27, emotional eyes",
+           "default":"Brazilian woman 33, warm intelligent"}
+    char=chars.get(tema,chars["default"])
+    prompt=f"{char}, {ctx}, {estilo}, 4k, no text, no watermark"
+    neg="text, watermark, logo, cartoon, ugly, blurry, nsfw"
+    return prompt, neg
+
+
 # ---- GERACAO DE IMAGEM (HF FLUX primario, procedural fallback) ----
 HF_API = "https://api-inference.huggingface.co/models"
 HF_MODELS = [
