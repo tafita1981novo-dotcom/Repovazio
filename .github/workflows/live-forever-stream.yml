@@ -9,16 +9,14 @@ jobs:
     timeout-minutes: 358
 
     steps:
-      - name: Setup ffmpeg (BtbN GitHub) + Python
+      - name: ffmpeg (BtbN GitHub) + Python
         run: |
-          # BtbN builds hospedado no GitHub - sem bloqueio de IP
           wget -q "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz"
           tar -xf ffmpeg-master-latest-linux64-gpl.tar.xz
           sudo cp ffmpeg-master-latest-linux64-gpl/bin/ffmpeg /usr/local/bin/ffmpeg
-          sudo cp ffmpeg-master-latest-linux64-gpl/bin/ffprobe /usr/local/bin/ffprobe
           ffmpeg -version | head -1
           pip3 install numpy pillow -q
-          echo "Setup OK"
+          echo "OK"
 
       - name: Cloudflare WARP
         run: |
@@ -28,14 +26,22 @@ jobs:
             sudo tee /etc/apt/sources.list.d/cloudflare-client.list
           sudo apt-get update -qq 2>/dev/null
           sudo apt-get install -y cloudflare-warp 2>/dev/null
-          sudo systemctl start warp-svc && sleep 4
-          warp-cli --accept-tos registration new 2>&1 | head -3
-          sleep 2
-          warp-cli --accept-tos connect && sleep 8
-          echo "WARP:"; warp-cli status
-          echo "IP via WARP:"; curl -s --max-time 10 https://1.1.1.1/cdn-cgi/trace | grep -E "^ip="
+          sudo systemctl start warp-svc
+          sleep 5
+          warp-cli --accept-tos registration new || true
+          sleep 3
+          warp-cli --accept-tos set-mode warp || true
+          warp-cli --accept-tos connect || true
+          sleep 10
+          warp-cli --accept-tos status 2>/dev/null || true
+          echo "IP antes do WARP (Azure):"
+          curl -s --max-time 5 https://api.ipify.org || echo "n/a"
+          echo ""
+          echo "IP via WARP (deve ser Cloudflare):"
+          curl -s --max-time 10 https://1.1.1.1/cdn-cgi/trace 2>/dev/null | grep -E "^ip=" || echo "WARP IP check falhou (pode ainda estar conectando)"
+          echo "WARP configurado."
 
-      - name: Gerar audio + cerebro
+      - name: Audio + cerebro
         run: |
           python3 - << 'EOF'
           import numpy as np, wave, urllib.request, io
@@ -63,7 +69,7 @@ jobs:
           STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
-          echo "Teste RTMP via WARP:"
+          echo "Porta 1935 via WARP:"
           nc -zv a.rtmp.youtube.com 1935 2>&1 | tail -1
           
           ffmpeg -loglevel warning \
@@ -79,7 +85,7 @@ jobs:
           FFPID=$!
           sleep 50
           if kill -0 $FFPID 2>/dev/null; then
-            echo "STREAM ATIVO via WARP + YouTube!"
+            echo "STREAM ATIVO! Cloudflare WARP funcionou."
             sleep 20650
           else
             echo "RTMP falhou:"; tail -25 /tmp/ff.log
@@ -96,8 +102,8 @@ jobs:
               -f flv "rtmps://a.rtmps.youtube.com/live2/${STREAM_KEY}" 2>&1 | tee /tmp/ff2.log &
             FFPID=$!
             sleep 50
-            kill -0 $FFPID 2>/dev/null && (echo "RTMPS ATIVO!"; sleep 20650) || \
-              (echo "RTMPS falhou:"; tail -15 /tmp/ff2.log; exit 1)
+            kill -0 $FFPID 2>/dev/null && echo "RTMPS ATIVO!" && sleep 20650 || \
+              (echo "AMBAS FALHARAM:"; tail -15 /tmp/ff2.log; exit 1)
           fi
           
           curl -s -X POST -H "Authorization: Bearer ${GH_PAT}" \
