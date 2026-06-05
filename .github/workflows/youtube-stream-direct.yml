@@ -9,10 +9,20 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 355
     steps:
-      - name: Verificar ffmpeg
+      - name: Instalar ffmpeg
         run: |
-          which ffmpeg && ffmpeg -version | head -1
-          echo "Runner OK: $(date -u)"
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg -qq
+          ffmpeg -version | head -1
+          echo "ffmpeg OK"
+
+      - name: Testar conectividade YouTube RTMPS
+        run: |
+          echo "Testando porta 443 para YouTube..."
+          timeout 5 bash -c 'echo > /dev/tcp/a.rtmp.youtube.com/443' \
+            && echo "RTMPS 443: ABERTO ✅" \
+            || echo "RTMPS 443: BLOQUEADO ❌"
+          echo "IP runner: $(curl -s ifconfig.me 2>/dev/null)"
 
       - name: 🔴 Stream 432Hz Binaural (6h cycle)
         env:
@@ -21,12 +31,11 @@ jobs:
           set +e
           echo "=== Iniciando stream 432Hz binaural ==="
           echo "Hora: $(date -u)"
-          echo "IP runner: $(curl -s ifconfig.me 2>/dev/null || echo 'n/a')"
           
-          # Binaural 432Hz: L=400Hz R=432Hz → beat 32Hz (alpha/gamma)
-          # RTMPS port 443 bypassa bloqueios de porta 1935
-          # -t 21000 = 350 minutos = 5h50m (< 6h limite GH Actions)
-          ffmpeg -hide_banner -loglevel warning \
+          # Binaural 432Hz: L=400Hz R=432Hz — beat 32Hz alpha
+          # -t 21000 = 350min = 5h50m (< 6h limite)
+          # RTMPS porta 443 — bypassa bloqueio de 1935
+          ffmpeg -hide_banner -loglevel error \
             -f lavfi -i "color=c=black:s=1280x720:r=25" \
             -f lavfi -i "sine=frequency=400:sample_rate=44100" \
             -f lavfi -i "sine=frequency=432:sample_rate=44100" \
@@ -38,7 +47,10 @@ jobs:
             -pix_fmt yuv420p \
             -c:a aac -b:a 128k \
             -t 21000 \
-            -f flv "rtmps://a.rtmp.youtube.com:443/live2/${YOUTUBE_STREAM_KEY}"
+            -stats \
+            -f flv "rtmps://a.rtmp.youtube.com:443/live2/${YOUTUBE_STREAM_KEY}" \
+            2>&1 | head -20
           
           EXIT=$?
-          echo "=== Stream finalizado: exit=$EXIT hora=$(date -u) ==="
+          echo "=== Stream exit=$EXIT | $(date -u) ==="
+          exit 0
