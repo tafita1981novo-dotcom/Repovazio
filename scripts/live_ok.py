@@ -109,8 +109,12 @@ Research: Harvard • UCLA • van der Kolk • Ainsworth • Gottman • Beck
 #schwarzerbildschirm #pantallanegraparadormir #telapreta #검은화면 #黑屏幕"""
 
 def ffm():
+    # USE_SYSTEM_FFMPEG=true → usar /usr/bin/ffmpeg do apt (evitar SIGSEGV imageio v7)
+    if os.environ.get("USE_SYSTEM_FFMPEG","").lower()=="true":
+        sf=shutil.which("ffmpeg")
+        if sf: log(f"FFmpeg system: {sf}"); return sf
     try:
-        import imageio_ffmpeg; f=imageio_ffmpeg.get_ffmpeg_exe(); log(f"FFmpeg: {f}"); return f
+        import imageio_ffmpeg; f=imageio_ffmpeg.get_ffmpeg_exe(); log(f"FFmpeg imageio: {f}"); return f
     except: pass
     return shutil.which("ffmpeg") or "ffmpeg"
 
@@ -129,8 +133,8 @@ def gerar_wav():
 def delete_all(token):
     log("─── Apagando todas as lives ───")
     total=0
-    for status in ["active","complete","created","ready","testStarting","testing","live"]:
-        url=f"https://www.googleapis.com/youtube/v3/liveBroadcasts?part=id,snippet,status&broadcastStatus={status}&mine=true&maxResults=50"
+    for btype in ["persistent","event"]:
+        url=f"https://www.googleapis.com/youtube/v3/liveBroadcasts?part=id,snippet,status&broadcastType={btype}&mine=true&maxResults=50"
         data=yt_get(token,url)
         for item in data.get("items",[]):
             bid=item["id"]
