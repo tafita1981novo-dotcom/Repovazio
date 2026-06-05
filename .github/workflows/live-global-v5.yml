@@ -3,7 +3,6 @@ name: LIVE 24/7 — BLACK SCREEN + Binaural 432Hz + SEO DOMINANT WORLDWIDE
 on:
   workflow_dispatch:
     inputs:
-      lang: {default: 'en', description: 'Language (default: en)'}
       duration_h: {default: '6', description: 'Hours'}
   schedule:
     - cron: '0 0 * * *'
@@ -24,12 +23,11 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
       - run: pip install imageio-ffmpeg Pillow --quiet && python3 -c "import imageio_ffmpeg; print('FFmpeg:', imageio_ffmpeg.get_ffmpeg_exe())"
-      - name: 🔴 LIVE 15 IDIOMAS — Delete+Recriar+Stream
+      - name: 🔴 LIVE 15 IDIOMAS — Full Reset + Stream
         timeout-minutes: 400
         env:
           YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
           YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
           YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
           DURATION_H: ${{ inputs.duration_h || '6' }}
-          LANG_CODE: ${{ inputs.lang || 'en' }}
-        run: python3 scripts/live_v7.py
+        run: python3 scripts/full_reset.py
