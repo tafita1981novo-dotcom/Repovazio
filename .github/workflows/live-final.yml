@@ -1,16 +1,19 @@
-name: 🔴 LIVE UNIFICADA FINAL — 15 idiomas
+name: 🔴 LIVE 24/7 UNIFICADA — 15 idiomas definitivo
+
 on:
   workflow_dispatch:
     inputs:
-      duration_h: {default: '6', description: 'Hours'}
+      duration_h: {default: '6', description: 'Hours per cycle'}
   schedule:
     - cron: '0 0 * * *'
     - cron: '0 6 * * *'
     - cron: '0 12 * * *'
     - cron: '0 18 * * *'
+
 concurrency:
   group: live-final-24h
   cancel-in-progress: true
+
 jobs:
   live:
     runs-on: ubuntu-latest
@@ -20,11 +23,11 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
       - run: pip install imageio-ffmpeg --quiet
-      - name: 🔴 Live Unificada Final
+      - name: 🔴 Live Unificada Final — Delete + Create + Stream
         timeout-minutes: 400
         env:
           YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
           YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
           YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
           DURATION_H: ${{ inputs.duration_h || '6' }}
-        run: python3 scripts/live_diag.py
+        run: python3 scripts/live_final.py
