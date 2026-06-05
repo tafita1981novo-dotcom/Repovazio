@@ -1,33 +1,28 @@
-name: 🔴 LIVE 24/7 UNIFICADA — 15 idiomas definitivo
+name: 🔍 Diagnóstico RTMP + Live Final
 
 on:
   workflow_dispatch:
     inputs:
-      duration_h: {default: '6', description: 'Hours per cycle'}
-  schedule:
-    - cron: '0 0 * * *'
-    - cron: '0 6 * * *'
-    - cron: '0 12 * * *'
-    - cron: '0 18 * * *'
+      duration_h: {default: '6'}
 
 concurrency:
   group: live-final-24h
   cancel-in-progress: true
 
 jobs:
-  live:
+  diag:
     runs-on: ubuntu-latest
     timeout-minutes: 410
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
-      - run: pip install imageio-ffmpeg --quiet
-      - name: 🔴 Live Unificada Final — Delete + Create + Stream
+      - run: pip install imageio-ffmpeg --quiet && sudo apt-get install -y netcat-openbsd 2>/dev/null || true
+      - name: 🔍 RTMP Diagnóstico + Stream
         timeout-minutes: 400
         env:
           YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
           YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
           YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
           DURATION_H: ${{ inputs.duration_h || '6' }}
-        run: python3 scripts/live_final.py
+        run: python3 scripts/diag_rtmp.py
