@@ -9,12 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 358
     steps:
-      - name: Setup OCI CLI via pip
-        run: |
-          pip3 install oci-cli -q
-          oci --version
-
-      - name: Configurar OCI
+      - name: Setup
         env:
           OCI_USER_OCID: ${{ secrets.OCI_USER_OCID }}
           OCI_TENANCY_OCID: ${{ secrets.OCI_TENANCY_OCID }}
@@ -22,20 +17,17 @@ jobs:
           OCI_FINGERPRINT: ${{ secrets.OCI_FINGERPRINT }}
           OCI_PRIVATE_KEY: ${{ secrets.OCI_PRIVATE_KEY }}
         run: |
-          mkdir -p ~/.oci
+          pip3 install oci-cli -q
+          mkdir -p ~/.oci ~/.ssh
           printf '%s' "$OCI_PRIVATE_KEY" > ~/.oci/oci_api_key.pem
           chmod 600 ~/.oci/oci_api_key.pem
-          cat > ~/.oci/config << OCIEOF
-[DEFAULT]
-user=$OCI_USER_OCID
-fingerprint=$OCI_FINGERPRINT
-tenancy=$OCI_TENANCY_OCID
-region=$OCI_REGION
-key_file=~/.oci/oci_api_key.pem
-OCIEOF
-          oci iam region list --query 'data[0].name' --raw-output && echo "Auth OK"
+          printf '[DEFAULT]\nuser=%s\nfingerprint=%s\ntenancy=%s\nregion=%s\nkey_file=%s\n' \
+            "$OCI_USER_OCID" "$OCI_FINGERPRINT" "$OCI_TENANCY_OCID" "$OCI_REGION" \
+            "$HOME/.oci/oci_api_key.pem" > ~/.oci/config
+          ssh-keygen -t rsa -b 2048 -f ~/.ssh/oracle_stream -N '' -q
+          oci iam region list --query 'data[0].name' --raw-output && echo 'Auth OK'
 
-      - name: SSH Key + Retry VM ARM (ate criar)
+      - name: Retry VM ARM
         env:
           OCI_SUBNET_ID: ${{ secrets.OCI_SUBNET_ID }}
           OCI_IMAGE_ID: ${{ secrets.OCI_IMAGE_ID }}
@@ -44,10 +36,9 @@ OCIEOF
           GH_PAT: ${{ secrets.GH_PAT }}
           YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
         run: |
-          ssh-keygen -t rsa -b 2048 -f ~/.ssh/oracle_stream -N '' -q
-          echo "Iniciando retry loop para criar VM ARM..."
+          echo 'Retry loop - ate criar VM ARM'
           for i in $(seq 1 600); do
-            echo -n "[$i/600] "
+            echo -n "[$i] "
             R=$(oci compute instance launch \
               --compartment-id "$OCI_TENANCY_OCID" \
               --availability-domain "$OCI_AD" \
@@ -61,30 +52,28 @@ OCIEOF
               --boot-volume-size-in-gbs 50 \
               --query 'data.id' --raw-output 2>&1)
             if echo "$R" | grep -q 'ocid1.instance'; then
-              INST="$R"
-              echo "VM CRIADA! $INST"
-              echo "Aguardando 3min para VM iniciar..."
+              echo "VM CRIADA: $R"
               sleep 180
-              IP=$(oci compute instance list-vnics --instance-id "$INST" \
-                --query 'data[0]."public-ip"' --raw-output 2>/dev/null || echo "")
+              IP=$(oci compute instance list-vnics --instance-id "$R" \
+                --query 'data[0]."public-ip"' --raw-output 2>/dev/null || echo '')
               echo "IP: $IP"
-              if [ -n "$IP" ] && [ "$IP" != "null" ]; then
-                echo "Configurando stream via SSH..."
-                ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 -i ~/.ssh/oracle_stream ubuntu@$IP \
-                  "sudo apt-get update -qq && sudo apt-get install -y ffmpeg python3-pip wget -q && \
+              if [ -n "$IP" ] && [ "$IP" != 'null' ]; then
+                ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 \
+                  -i ~/.ssh/oracle_stream ubuntu@$IP \
+                  "sudo apt-get install -y ffmpeg python3-pip wget -q && \
                    pip3 install numpy pillow -q && \
-                   wget -qO /tmp/setup.sh https://raw.githubusercontent.com/tafita81/Repovazio/main/scripts/oracle-forever-live-setup.sh && \
-                   chmod +x /tmp/setup.sh && STREAM_KEY='$YOUTUBE_STREAM_KEY' bash /tmp/setup.sh && \
-                   echo 'STREAM INICIADO!'" 2>&1 || echo "SSH falhou, tentar manualmente"
+                   wget -qO /tmp/s.sh https://raw.githubusercontent.com/tafita81/Repovazio/main/scripts/oracle-forever-live-setup.sh && \
+                   chmod +x /tmp/s.sh && STREAM_KEY='$YOUTUBE_STREAM_KEY' bash /tmp/s.sh" || true
+                echo "Setup OK. IP Oracle: $IP"
               fi
               break
             else
-              echo "sem capacidade. sleep 30..."
+              echo 'sem capacidade. sleep 30...'
               sleep 30
             fi
           done
-          # Auto-relay para proximo ciclo
-          curl -s -X POST -H "Authorization: Bearer $GH_PAT" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/tafita81/Repovazio/actions/workflows/oracle-vm-create.yml/dispatches" \
-            -d '{"ref":"main"}' && echo "Proximo ciclo agendado"
+          curl -s -X POST \
+            -H 'Authorization: Bearer '"$GH_PAT" \
+            -H 'Accept: application/vnd.github+json' \
+            'https://api.github.com/repos/tafita81/Repovazio/actions/workflows/oracle-vm-create.yml/dispatches' \
+            -d '{"ref":"main"}' && echo 'Proximo ciclo agendado'
