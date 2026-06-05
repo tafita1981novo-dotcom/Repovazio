@@ -13,7 +13,7 @@ on:
 
 concurrency:
   group: live-viral-24h
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   live_viral:
@@ -24,7 +24,7 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
       - run: pip install imageio-ffmpeg Pillow --quiet && python3 -c "import imageio_ffmpeg; print('FFmpeg:', imageio_ffmpeg.get_ffmpeg_exe())"
-      - name: 🔴 LIVE BLACK SCREEN + Binaural 432Hz
+      - name: 🔴 LIVE 15 IDIOMAS — Delete+Recriar+Stream
         timeout-minutes: 400
         env:
           YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
@@ -32,4 +32,4 @@ jobs:
           YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
           DURATION_H: ${{ inputs.duration_h || '6' }}
           LANG_CODE: ${{ inputs.lang || 'en' }}
-        run: python3 scripts/live_v6.py
+        run: python3 scripts/live_v7.py
