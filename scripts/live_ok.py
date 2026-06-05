@@ -49,86 +49,50 @@ def yt_delete(token,url):
     except: return False
 
 # ─── DESCRIÇÃO 15 IDIOMAS ────────────────────────────────────────
-TITULO="🔴 BLACK SCREEN 24/7 | Tela Preta para Dormir | Binaural Beats 432Hz | Dark Screen Sleep"
-DESC="""🖤 BLACK SCREEN 24/7 | Binaural Beats 432Hz | Sleep • Study • Meditation
+TITULO="🔴 BLACK SCREEN 24/7 | Tela Preta para Dormir | Pantalla Negra Dormir | 432Hz Binaural Beats Sleep"
+DESC="""🖤 BLACK SCREEN 24/7 | 432Hz Binaural Beats | Sleep • Study • Meditation • Focus
+🔴 100% PURE BLACK SCREEN — zero light, zero distractions, perfect for sleep
+🎵 432Hz BINAURAL — 430Hz LEFT ear + 432Hz RIGHT ear = 2Hz DELTA brainwaves
+⭐ Wear HEADPHONES • Volume low • Runs 24/7 non-stop
 
-🔴 PURE BLACK SCREEN — 100% dark. Zero light. Perfect for sleep, focus & meditation.
-🎵 TRUE BINAURAL 432Hz — 430Hz (Left) + 432Hz (Right) = 2Hz Delta beat
-   ★ Wear HEADPHONES for the binaural effect to work
-🧠 Use for: Deep Sleep • Study Session • Meditation • Relax • ASMR • Focus
+🇺🇸 Black screen for sleeping | black screen 10 hours | black screen 8 hours | black screen for babies | black screen for studying | dark screen for sleep | black screen ASMR | 432hz sleep music | binaural beats 432hz | 432hz frequency | sleep music 432hz | white noise sleep | solfeggio 432hz | deep sleep music | relaxing music sleep | black screen no sound | black screen video | sleep sounds
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🇪🇸 Pantalla negra para dormir | pantalla negra 10 horas | pantalla negra 8 horas | pantalla negra bebé | pantalla negra para estudiar | pantalla negra ASMR | 432hz para dormir | frecuencia 432hz | latidos binaurales 432hz | música para dormir 432hz | música relajante dormir | sonidos para dormir | meditación profunda | sonidos binaurales | pantalla negra sin sonido
 
-🇺🇸 ENGLISH — Black Screen for Sleep
-Black screen 10 hours | Black screen for sleeping | Dark screen sleep | Black screen study
-Black screen 8 hours | Black screen for baby sleep | Black screen ASMR | 432hz sleep music
-Binaural beats 432hz | 432hz frequency | Sleep music 432hz | Solfeggio 432hz
+🇧🇷 Tela preta para dormir | tela preta 10 horas | tela preta 8 horas | tela preta para bebê | tela preta para estudar | tela preta ASMR | frequência 432hz | binaural 432hz | música para dormir 432hz | som para dormir | música relaxante para dormir | meditação profunda | sons binaurais | frequência de cura 432hz | sono profundo | tela preta sem som
 
-🇧🇷 PORTUGUÊS — Tela Preta para Dormir
-Tela preta para dormir | Tela preta 8 horas | Tela preta para estudar | Tela preta bebê
-Tela preta meditação | Frequência 432hz | Binaural 432hz | Música para dormir 432hz
-Sons binaurais | Frequência de cura 432hz | Meditação profunda | Sono profundo
+🇩🇪 Schwarzer Bildschirm schlafen | schwarzer Bildschirm 10 Stunden | schwarzer Bildschirm Baby | schwarzer Bildschirm lernen | 432hz Schlafmusik | binaurale Beats 432hz | Tiefschlaf Musik | Entspannungsmusik | 432hz Heilfrequenz | schwarzer Bildschirm Meditation
 
-🇩🇪 DEUTSCH — Schwarzer Bildschirm zum Schlafen
-Schwarzer Bildschirm schlafen | 8 Stunden | Baby | lernen | 432hz Schlafmusik
-Binaurale Beats 432hz | Tiefschlaf Musik | 432hz Heilfrequenz | Entspannungsmusik
+🇫🇷 Écran noir pour dormir | écran noir 10 heures | écran noir bébé | écran noir étudier | 432hz sommeil | battements binauraux 432hz | musique sommeil 432hz | musique relaxante dormir | sommeil profond | méditation profonde | fréquence 432hz | écran noir ASMR
 
-🇫🇷 FRANÇAIS — Écran Noir pour Dormir
-Écran noir pour dormir | 8 heures | bébé | étudier | 432hz | Battements binauraux
-Méditation profonde | Sommeil profond | Musique relaxante | ASMR écran noir
+🇯🇵 黒い画面 睡眠 | ブラックスクリーン 10時間 | ブラックスクリーン 赤ちゃん | 黒画面 勉強 | 432hz 睡眠音楽 | バイノーラルビート 432hz | 熟睡 音楽 | リラックス音楽 | 432hz 周波数 | 深い眠り | 瞑想音楽
 
-🇪🇸 ESPAÑOL — Pantalla Negra para Dormir
-Pantalla negra para dormir | 8 horas | bebé | estudiar | 432hz dormir
-Latidos binaurales 432hz | Meditación profunda | Música relajante | ASMR pantalla negra
+🇰🇷 검은 화면 수면 | 블랙 스크린 10시간 | 검은 화면 아기 | 검은 화면 공부 | 432hz 수면 음악 | 바이노럴 비트 432hz | 깊은 수면 음악 | 집중 음악 | 432hz 주파수 | 명상 음악
 
-🇯🇵 日本語 — 睡眠のためのブラックスクリーン
-黒い画面 睡眠 | 8時間 | 勉強 | 赤ちゃん | 432hz 睡眠音楽 | バイノーラルビート
-熟睡 音楽 | 瞑想音楽 | 深い眠り | リラックス音楽 | 432hz ヒーリング
+🇨🇳 黑屏睡眠 | 黑屏10小时 | 黑屏学习 | 黑屏冥想 | 432hz睡眠音乐 | 双耳节拍432hz | 深度睡眠音乐 | 放松音乐 | 432hz频率 | 白噪音睡眠
 
-🇰🇷 한국어 — 수면을 위한 검은 화면
-검은 화면 수면 | 8시간 | 공부 | 아기 | 432hz 수면 음악 | 바이노럴 비트
-깊은 수면 음악 | 명상 음악 | 집중 음악 | 432hz 힐링
+🇮🇹 Schermo nero per dormire | schermo nero 10 ore | schermo nero bambino | 432hz dormire | battiti binaurali 432hz | musica per dormire | sonno profondo | meditazione | frequenza 432hz
 
-🇨🇳 中文 — 黑屏睡眠
-黑屏睡眠 | 8小时 | 学习 | 冥想 | 432hz睡眠音乐 | 双耳节拍
-深度睡眠音乐 | 放松音乐 | 深度冥想 | 白噪音睡眠 | 432hz频率
+🇸🇦 شاشة سوداء للنوم | شاشة سوداء 10 ساعات | شاشة سوداء دراسة | موسيقى نوم 432hz | نغمات ثنائية 432hz | نوم عميق | تأمل | استرخاء 432hz
 
-🇮🇹 ITALIANO — Schermo Nero per Dormire
-Schermo nero dormire | 8 ore | bambino | studiare | 432hz dormire
-Battiti binaurali 432hz | Meditazione profonda | Musica rilassante | ASMR schermo nero
+🇷🇺 Чёрный экран для сна | чёрный экран 10 часов | чёрный экран ребёнок | 432гц музыка сна | бинауральные ритмы | глубокий сон | медитация 432гц | расслабление
 
-🇳🇱 NEDERLANDS — Zwart Scherm voor Slapen
-Zwart scherm slapen | 8 uur | baby | studeren | 432hz slaap muziek
-Binaurale beats 432hz | Diepe slaap muziek | Zwart scherm meditatie
+🇮🇳 काली स्क्रीन नींद | काली स्क्रीन 10 घंटे | काली स्क्रीन बच्चा | 432hz नींद संगीत | बाइनॉरल बीट्स | गहरी नींद | ध्यान | आराम संगीत
 
-🇵🇱 POLSKI — Czarny Ekran do Spania
-Czarny ekran spanie | 8 godzin | nauka | dziecko | 432hz muzyka do snu
-Bity binauralne 432hz | Głęboki sen | Czarny ekran medytacja
+🇮🇩 Layar hitam tidur | layar hitam 10 jam | layar hitam bayi | 432hz musik tidur | binaural beats | tidur nyenyak | meditasi | relaksasi 432hz
 
-🇹🇷 TÜRKÇE — Uyumak için Siyah Ekran
-Siyah ekran uyku | 8 saat | bebek | ders çalışma | 432hz uyku müziği
-İkili vuruşlar 432hz | Derin uyku müziği | Siyah ekran meditasyon
+🇳🇱 Zwart scherm slapen | zwart scherm 10 uur | zwart scherm baby | 432hz slaap muziek | binaurale beats | diepe slaap | meditatie | ontspanning
 
-🇮🇩 INDONESIA — Layar Hitam untuk Tidur
-Layar hitam tidur | 8 jam | belajar | bayi | 432hz musik tidur
-Binaural beats 432hz | Musik tidur dalam | Layar hitam meditasi
+🇹🇷 Siyah ekran uyku | siyah ekran 10 saat | siyah ekran bebek | 432hz uyku müziği | ikili vuruşlar | derin uyku | meditasyon | rahatlatıcı müzik
 
-🇮🇳 हिन्दी — सोने के लिए काली स्क्रीन
-काली स्क्रीन नींद | 8 घंटे | पढ़ाई | बच्चा | 432hz नींद संगीत
-बाइनॉरल बीट्स 432hz | गहरी नींद | काली स्क्रीन ध्यान
+🇵🇱 Czarny ekran spanie | czarny ekran 10 godzin | czarny ekran dziecko | 432hz muzyka do snu | bity binauralne | głęboki sen | medytacja | relaks
 
-🇸🇦 العربية — الشاشة السوداء للنوم
-شاشة سوداء للنوم | 8 ساعات | دراسة | طفل | موسيقى نوم 432hz
-نغمات ثنائية 432hz | نوم عميق | شاشة سوداء تأمل | صوت للنوم
+🇻🇳 Màn hình đen để ngủ | màn hình đen 10 giờ | màn hình đen cho bé | nhạc ngủ 432hz | nhịp đôi tai | ngủ sâu | thiền định | thư giãn
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🇺🇦 Чорний екран для сну | чорний екран 10 годин | музика для сну 432гц | бінауральні ритми | глибокий сон | медитація | розслаблення
 
-🖤 HOW 432Hz WORKS:
-430Hz (LEFT ear) + 432Hz (RIGHT ear) = 2Hz DELTA brainwave
-→ Induces deep sleep, reduces anxiety, promotes healing
-→ Use HEADPHONES. Keep volume LOW.
-
-🔔 SUBSCRIBE | 💬 Super Chat questions | @psidanicoelho"""
+@psidanicoelho
+#blackscreen #blackscreenforsleep #blackscreen10hours #blackscreen8hours #telapreta #telapretaparadormir #pantallanegraparadormir #pantallanegra #432hz #binauralbeats432hz #sleepmusic #deepsleep #studymusic #meditationmusic #relaxingmusic #432hzsleep #whitenoise #schwarzerbildschirm #ecrannoirdormir #darkscreen"""
 
 def ffm():
     # USE_SYSTEM_FFMPEG=true → usar /usr/bin/ffmpeg do apt (evitar SIGSEGV imageio v7)
