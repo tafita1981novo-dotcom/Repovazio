@@ -49,64 +49,86 @@ def yt_delete(token,url):
     except: return False
 
 # ─── DESCRIÇÃO 15 IDIOMAS ────────────────────────────────────────
-TITULO="🔴 LIVE 24/7 | BLACK SCREEN for Sleep & Focus | Binaural Beats 432Hz | Dark Psychology"
-DESC="""🔴 LIVE 24/7 | BLACK SCREEN | BINAURAL BEATS 432Hz | DARK PSYCHOLOGY
-Daniela Coelho — Human Behavior Researcher | @psidanicoelho
-🖤 PURE BLACK SCREEN — 100% dark, zero pixels illuminated
-🎵 TRUE BINAURAL 432Hz (430Hz Left + 432Hz Right = 2Hz DELTA beat)
-🧠 DARK PSYCHOLOGY — Narcissism, Trauma, Anxiety, Attachment Theory
-★ Use HEADPHONES for true binaural effect
-★ Perfect: Deep Sleep • Study • Meditation • Work • Focus
+TITULO="🔴 BLACK SCREEN 24/7 | Tela Preta para Dormir | Binaural Beats 432Hz | Dark Screen Sleep"
+DESC="""🖤 BLACK SCREEN 24/7 | Binaural Beats 432Hz | Sleep • Study • Meditation
 
-🔴 LIVE | SCHWARZER BILDSCHIRM | BINAURAL 432Hz | PSYCHOLOGIE [DE]
-Daniela Coelho | @psidanicoelho | 🖤 100% SCHWARZ | Kopfhörer | Schlafen • Lernen • Meditieren
+🔴 PURE BLACK SCREEN — 100% dark. Zero light. Perfect for sleep, focus & meditation.
+🎵 TRUE BINAURAL 432Hz — 430Hz (Left) + 432Hz (Right) = 2Hz Delta beat
+   ★ Wear HEADPHONES for the binaural effect to work
+🧠 Use for: Deep Sleep • Study Session • Meditation • Relax • ASMR • Focus
 
-🔴 EN DIRECT | ÉCRAN NOIR | BINAURAL 432Hz | PSYCHOLOGIE SOMBRE [FR]
-Daniela Coelho | @psidanicoelho | 🖤 100% NOIR | Casque | Sommeil • Étude • Méditation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🔴 EN VIVO | PANTALLA NEGRA | BINAURAL 432Hz | PSICOLOGÍA OSCURA [ES]
-Daniela Coelho | @psidanicoelho | 🖤 100% NEGRA | Auriculares | Sueño • Estudio • Meditación
+🇺🇸 ENGLISH — Black Screen for Sleep
+Black screen 10 hours | Black screen for sleeping | Dark screen sleep | Black screen study
+Black screen 8 hours | Black screen for baby sleep | Black screen ASMR | 432hz sleep music
+Binaural beats 432hz | 432hz frequency | Sleep music 432hz | Solfeggio 432hz
 
-🔴 AO VIVO | TELA PRETA | BINAURAL 432Hz | DARK PSYCHOLOGY [PT]
-Daniela Coelho | @psidanicoelho | 🖤 100% PRETA | Fones | Sono • Estudo • Meditação
+🇧🇷 PORTUGUÊS — Tela Preta para Dormir
+Tela preta para dormir | Tela preta 8 horas | Tela preta para estudar | Tela preta bebê
+Tela preta meditação | Frequência 432hz | Binaural 432hz | Música para dormir 432hz
+Sons binaurais | Frequência de cura 432hz | Meditação profunda | Sono profundo
 
-🔴 24時間ライブ | ブラックスクリーン | バイノーラル432Hz | ダーク心理学 [JA]
-ダニエラ・コエーリョ | @psidanicoelho | 🖤 完全ブラック | ヘッドフォン | 睡眠・勉強・瞑想
+🇩🇪 DEUTSCH — Schwarzer Bildschirm zum Schlafen
+Schwarzer Bildschirm schlafen | 8 Stunden | Baby | lernen | 432hz Schlafmusik
+Binaurale Beats 432hz | Tiefschlaf Musik | 432hz Heilfrequenz | Entspannungsmusik
 
-🔴 24시간 라이브 | 검은 화면 | 바이노럴 432Hz | 다크 심리학 [KO]
-다니엘라 코에요 | @psidanicoelho | 🖤 100% 검은 | 헤드폰 | 수면 • 공부 • 명상
+🇫🇷 FRANÇAIS — Écran Noir pour Dormir
+Écran noir pour dormir | 8 heures | bébé | étudier | 432hz | Battements binauraux
+Méditation profonde | Sommeil profond | Musique relaxante | ASMR écran noir
 
-🔴 24小时直播 | 纯黑屏幕 | 双耳节拍432Hz | 暗黑心理学 [ZH]
-达尼埃拉·科埃略 | @psidanicoelho | 🖤 纯黑100% | 耳机 | 睡眠 • 学习 • 冥想
+🇪🇸 ESPAÑOL — Pantalla Negra para Dormir
+Pantalla negra para dormir | 8 horas | bebé | estudiar | 432hz dormir
+Latidos binaurales 432hz | Meditación profunda | Música relajante | ASMR pantalla negra
 
-🔴 LIVE | SCHERMO NERO | BINAURAL 432Hz | PSICOLOGIA OSCURA [IT]
-Daniela Coelho | @psidanicoelho | 🖤 100% NERO | Cuffie | Sonno • Studio • Meditazione
+🇯🇵 日本語 — 睡眠のためのブラックスクリーン
+黒い画面 睡眠 | 8時間 | 勉強 | 赤ちゃん | 432hz 睡眠音楽 | バイノーラルビート
+熟睡 音楽 | 瞑想音楽 | 深い眠り | リラックス音楽 | 432hz ヒーリング
 
-🔴 LIVE | ZWART SCHERM | BINAURAL 432Hz | DONKERE PSYCHOLOGIE [NL]
-Daniela Coelho | @psidanicoelho | 🖤 100% ZWART | Koptelefoon | Slaap • Studie • Meditatie
+🇰🇷 한국어 — 수면을 위한 검은 화면
+검은 화면 수면 | 8시간 | 공부 | 아기 | 432hz 수면 음악 | 바이노럴 비트
+깊은 수면 음악 | 명상 음악 | 집중 음악 | 432hz 힐링
 
-🔴 NA ŻYWO | CZARNY EKRAN | BINAURAL 432Hz | CIEMNA PSYCHOLOGIA [PL]
-Daniela Coelho | @psidanicoelho | 🖤 100% CZARNY | Słuchawki | Sen • Nauka • Medytacja
+🇨🇳 中文 — 黑屏睡眠
+黑屏睡眠 | 8小时 | 学习 | 冥想 | 432hz睡眠音乐 | 双耳节拍
+深度睡眠音乐 | 放松音乐 | 深度冥想 | 白噪音睡眠 | 432hz频率
 
-🔴 CANLI | SİYAH EKRAN | BINAURAL 432Hz | KARANLIK PSİKOLOJİ [TR]
-Daniela Coelho | @psidanicoelho | 🖤 100% SİYAH | Kulaklık | Uyku • Çalışma • Meditasyon
+🇮🇹 ITALIANO — Schermo Nero per Dormire
+Schermo nero dormire | 8 ore | bambino | studiare | 432hz dormire
+Battiti binaurali 432hz | Meditazione profonda | Musica rilassante | ASMR schermo nero
 
-🔴 LIVE | LAYAR HITAM | BINAURAL 432Hz | PSIKOLOGI GELAP [ID]
-Daniela Coelho | @psidanicoelho | 🖤 100% HITAM | Headphone | Tidur • Belajar • Meditasi
+🇳🇱 NEDERLANDS — Zwart Scherm voor Slapen
+Zwart scherm slapen | 8 uur | baby | studeren | 432hz slaap muziek
+Binaurale beats 432hz | Diepe slaap muziek | Zwart scherm meditatie
 
-🔴 लाइव | काली स्क्रीन | बाइनॉरल 432Hz | डार्क साइकोलॉजी [HI]
-डेनियला कोएल्हो | @psidanicoelho | 🖤 100% काली | हेडफोन | नींद • अध्ययन • ध्यान
+🇵🇱 POLSKI — Czarny Ekran do Spania
+Czarny ekran spanie | 8 godzin | nauka | dziecko | 432hz muzyka do snu
+Bity binauralne 432hz | Głęboki sen | Czarny ekran medytacja
 
-🔴 مباشر | شاشة سوداء | نغمات ثنائية 432Hz | علم النفس المظلم [AR]
-دانييلا كويلو | @psidanicoelho | 🖤 سوداء 100٪ | سماعات | النوم • الدراسة • التأمل
+🇹🇷 TÜRKÇE — Uyumak için Siyah Ekran
+Siyah ekran uyku | 8 saat | bebek | ders çalışma | 432hz uyku müziği
+İkili vuruşlar 432hz | Derin uyku müziği | Siyah ekran meditasyon
 
-Research: Harvard • UCLA • van der Kolk • Ainsworth • Gottman • Beck
-💬 Super Chat: psychology LIVE! 🔔 SUBSCRIBE + BELL!
+🇮🇩 INDONESIA — Layar Hitam untuk Tidur
+Layar hitam tidur | 8 jam | belajar | bayi | 432hz musik tidur
+Binaural beats 432hz | Musik tidur dalam | Layar hitam meditasi
 
-#blackscreen #blackscreenforsleep #blackscreen8hours #blackscreen10hours
-#binauralbeats432hz #432hz #432hzmusic #sleepmusic #studymusic #focusmusic
-#darkpsychology #narcissism #trauma #anxiety #danielacoelho #psidanicoelho
-#schwarzerbildschirm #pantallanegraparadormir #telapreta #검은화면 #黑屏幕"""
+🇮🇳 हिन्दी — सोने के लिए काली स्क्रीन
+काली स्क्रीन नींद | 8 घंटे | पढ़ाई | बच्चा | 432hz नींद संगीत
+बाइनॉरल बीट्स 432hz | गहरी नींद | काली स्क्रीन ध्यान
+
+🇸🇦 العربية — الشاشة السوداء للنوم
+شاشة سوداء للنوم | 8 ساعات | دراسة | طفل | موسيقى نوم 432hz
+نغمات ثنائية 432hz | نوم عميق | شاشة سوداء تأمل | صوت للنوم
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🖤 HOW 432Hz WORKS:
+430Hz (LEFT ear) + 432Hz (RIGHT ear) = 2Hz DELTA brainwave
+→ Induces deep sleep, reduces anxiety, promotes healing
+→ Use HEADPHONES. Keep volume LOW.
+
+🔔 SUBSCRIBE | 💬 Super Chat questions | @psidanicoelho"""
 
 def ffm():
     # USE_SYSTEM_FFMPEG=true → usar /usr/bin/ffmpeg do apt (evitar SIGSEGV imageio v7)
