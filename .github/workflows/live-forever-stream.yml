@@ -9,12 +9,16 @@ jobs:
     timeout-minutes: 358
 
     steps:
-      - name: Verificar ffmpeg + Python (pre-instalados no runner)
+      - name: Setup ffmpeg (BtbN GitHub) + Python
         run: |
-          # Runner ubuntu-22.04 ja tem ffmpeg, numpy, pillow
+          # BtbN builds hospedado no GitHub - sem bloqueio de IP
+          wget -q "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz"
+          tar -xf ffmpeg-master-latest-linux64-gpl.tar.xz
+          sudo cp ffmpeg-master-latest-linux64-gpl/bin/ffmpeg /usr/local/bin/ffmpeg
+          sudo cp ffmpeg-master-latest-linux64-gpl/bin/ffprobe /usr/local/bin/ffprobe
           ffmpeg -version | head -1
-          python3 -c "import numpy, PIL; print('numpy+pillow OK')"
-          echo "Runner OK"
+          pip3 install numpy pillow -q
+          echo "Setup OK"
 
       - name: Cloudflare WARP
         run: |
@@ -28,10 +32,8 @@ jobs:
           warp-cli --accept-tos registration new 2>&1 | head -3
           sleep 2
           warp-cli --accept-tos connect && sleep 8
-          echo "WARP status:"
-          warp-cli status
-          echo "IP via WARP:"
-          curl -s --max-time 10 https://1.1.1.1/cdn-cgi/trace | grep -E "^ip="
+          echo "WARP:"; warp-cli status
+          echo "IP via WARP:"; curl -s --max-time 10 https://1.1.1.1/cdn-cgi/trace | grep -E "^ip="
 
       - name: Gerar audio + cerebro
         run: |
@@ -61,7 +63,7 @@ jobs:
           STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
-          echo "Teste porta 1935 via WARP:"
+          echo "Teste RTMP via WARP:"
           nc -zv a.rtmp.youtube.com 1935 2>&1 | tail -1
           
           ffmpeg -loglevel warning \
@@ -75,12 +77,13 @@ jobs:
             -c:a aac -b:a 192k -ar 44100 -ac 2 \
             -f flv "rtmp://a.rtmp.youtube.com/live2/${STREAM_KEY}" 2>&1 | tee /tmp/ff.log &
           FFPID=$!
-          sleep 45
+          sleep 50
           if kill -0 $FFPID 2>/dev/null; then
-            echo "STREAM ATIVO via WARP!"
-            sleep 20670
+            echo "STREAM ATIVO via WARP + YouTube!"
+            sleep 20650
           else
-            echo "falhou. Log:"; tail -20 /tmp/ff.log
+            echo "RTMP falhou:"; tail -25 /tmp/ff.log
+            echo "Tentando RTMPS..."
             ffmpeg -loglevel warning \
               -f lavfi -i "color=c=0x06060F:s=1280x720:r=25" \
               -stream_loop -1 -i binaural.mp3 \
@@ -92,8 +95,9 @@ jobs:
               -c:a aac -b:a 192k -ar 44100 -ac 2 \
               -f flv "rtmps://a.rtmps.youtube.com/live2/${STREAM_KEY}" 2>&1 | tee /tmp/ff2.log &
             FFPID=$!
-            sleep 45
-            kill -0 $FFPID 2>/dev/null && echo "RTMPS ativo!" && sleep 20670 || (echo "RTMPS falhou:"; tail -10 /tmp/ff2.log; exit 1)
+            sleep 50
+            kill -0 $FFPID 2>/dev/null && (echo "RTMPS ATIVO!"; sleep 20650) || \
+              (echo "RTMPS falhou:"; tail -15 /tmp/ff2.log; exit 1)
           fi
           
           curl -s -X POST -H "Authorization: Bearer ${GH_PAT}" \
