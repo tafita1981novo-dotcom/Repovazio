@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 358
     steps:
-      - name: Setup
+      - name: Setup OCI
         env:
           OCI_USER_OCID: ${{ secrets.OCI_USER_OCID }}
           OCI_TENANCY_OCID: ${{ secrets.OCI_TENANCY_OCID }}
@@ -36,7 +36,9 @@ jobs:
           GH_PAT: ${{ secrets.GH_PAT }}
           YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
         run: |
-          echo 'Retry loop - ate criar VM ARM'
+          set +e
+          echo 'Iniciando retry loop ARM...'
+          CRIADO=0
           for i in $(seq 1 600); do
             echo -n "[$i] "
             R=$(oci compute instance launch \
@@ -53,9 +55,11 @@ jobs:
               --query 'data.id' --raw-output 2>&1)
             if echo "$R" | grep -q 'ocid1.instance'; then
               echo "VM CRIADA: $R"
+              CRIADO=1
+              echo "Aguardando 3min VM iniciar..."
               sleep 180
               IP=$(oci compute instance list-vnics --instance-id "$R" \
-                --query 'data[0]."public-ip"' --raw-output 2>/dev/null || echo '')
+                --query 'data[0]."public-ip"' --raw-output 2>/dev/null)
               echo "IP: $IP"
               if [ -n "$IP" ] && [ "$IP" != 'null' ]; then
                 ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 \
@@ -63,8 +67,9 @@ jobs:
                   "sudo apt-get install -y ffmpeg python3-pip wget -q && \
                    pip3 install numpy pillow -q && \
                    wget -qO /tmp/s.sh https://raw.githubusercontent.com/tafita81/Repovazio/main/scripts/oracle-forever-live-setup.sh && \
-                   chmod +x /tmp/s.sh && STREAM_KEY='$YOUTUBE_STREAM_KEY' bash /tmp/s.sh" || true
-                echo "Setup OK. IP Oracle: $IP"
+                   chmod +x /tmp/s.sh && STREAM_KEY='$YOUTUBE_STREAM_KEY' bash /tmp/s.sh && \
+                   echo STREAM_OK" || echo 'SSH falhou'
+                echo "IP Oracle: $IP"
               fi
               break
             else
@@ -73,7 +78,8 @@ jobs:
             fi
           done
           curl -s -X POST \
-            -H 'Authorization: Bearer '"$GH_PAT" \
+            -H "Authorization: Bearer $GH_PAT" \
             -H 'Accept: application/vnd.github+json' \
             'https://api.github.com/repos/tafita81/Repovazio/actions/workflows/oracle-vm-create.yml/dispatches' \
-            -d '{"ref":"main"}' && echo 'Proximo ciclo agendado'
+            -d '{"ref":"main"}' && echo 'Relay para proximo ciclo OK'
+          exit 0
