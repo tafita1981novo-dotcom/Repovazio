@@ -12,24 +12,66 @@ jobs:
       - name: Instalar ffmpeg
         run: |
           sudo apt-get update -qq && sudo apt-get install -y ffmpeg -qq
-          ffmpeg -version | head -1 && echo "ffmpeg OK"
+          ffmpeg -version | head -1
 
-      - name: Testar RTMPS 443
-        run: |
-          timeout 5 bash -c 'echo > /dev/tcp/a.rtmp.youtube.com/443' \
-            && echo "PORTA 443: ABERTA ✅" || echo "PORTA 443: FALHOU ❌"
-          echo "IP: $(curl -s ifconfig.me 2>/dev/null)"
-
-      - name: 🔴 Stream 432Hz Binaural (6h)
+      - name: Diagnóstico RTMP vs RTMPS
         env:
           YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
         run: |
-          echo "=== Stream iniciando: $(date -u) ==="
+          echo "=== Testando conectividade ==="
+          echo "Porta 1935 (RTMP):"
+          timeout 5 bash -c 'echo > /dev/tcp/a.rtmp.youtube.com/1935' \
+            && echo "1935: ABERTA ✅" || echo "1935: FECHADA ❌"
+          
+          echo "Porta 443 (RTMPS):"
+          timeout 5 bash -c 'echo > /dev/tcp/a.rtmp.youtube.com/443' \
+            && echo "443: ABERTA ✅" || echo "443: FECHADA ❌"
+          
+          echo "IP runner: $(curl -s ifconfig.me 2>/dev/null)"
+          echo ""
+          echo "=== Teste RTMP 30s ==="
+          timeout 35 ffmpeg -hide_banner -loglevel verbose \
+            -f lavfi -i "color=c=black:s=1280x720:r=25" \
+            -f lavfi -i "sine=frequency=432:sample_rate=44100" \
+            -c:v libx264 -preset ultrafast -b:v 500k \
+            -c:a aac -b:a 128k \
+            -t 30 \
+            -f flv "rtmp://a.rtmp.youtube.com/live2/${YOUTUBE_STREAM_KEY}" \
+            2>&1 | grep -E '(rtmp|error|Error|connect|Opening|Output|AVIOContext|Handshake|Segfault|ffmpeg|fps|frame|Stream|Invalid|refused|failed|timeout|Connection)' | head -30 \
+            ; echo "RTMP exit: $?"
+          
+          echo ""
+          echo "=== Teste RTMPS port 443 30s ==="
+          timeout 35 ffmpeg -hide_banner -loglevel verbose \
+            -f lavfi -i "color=c=black:s=1280x720:r=25" \
+            -f lavfi -i "sine=frequency=432:sample_rate=44100" \
+            -c:v libx264 -preset ultrafast -b:v 500k \
+            -c:a aac -b:a 128k \
+            -t 30 \
+            -f flv "rtmps://a.rtmp.youtube.com:443/live2/${YOUTUBE_STREAM_KEY}" \
+            2>&1 | grep -E '(rtmp|error|Error|connect|Opening|Output|AVIOContext|Handshake|Segfault|ffmpeg|fps|frame|Stream|Invalid|refused|failed|timeout|Connection)' | head -30 \
+            ; echo "RTMPS exit: $?"
 
-          # SEM pipe — ffmpeg roda diretamente, sem | head que causaria SIGPIPE
-          # -loglevel info para ver status de conexao
-          # -t 21000 = 350min ciclo
-          ffmpeg -hide_banner -loglevel info \
+      - name: 🔴 Stream 432Hz Binaural (6h)
+        if: always()
+        env:
+          YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
+        run: |
+          echo "=== Stream 6h iniciando: $(date -u) ==="
+          ffmpeg -hide_banner -loglevel error \
+            -f lavfi -i "color=c=black:s=1280x720:r=25" \
+            -f lavfi -i "sine=frequency=400:sample_rate=44100" \
+            -f lavfi -i "sine=frequency=432:sample_rate=44100" \
+            -filter_complex "[1:a][2:a]amerge=inputs=2[stereo]" \
+            -map 0:v -map "[stereo]" \
+            -c:v libx264 -preset ultrafast -tune stillimage \
+            -g 50 -keyint_min 50 \
+            -b:v 500k -maxrate 500k -bufsize 1000k \
+            -pix_fmt yuv420p \
+            -c:a aac -b:a 128k \
+            -t 21000 \
+            -f flv "rtmp://a.rtmp.youtube.com/live2/${YOUTUBE_STREAM_KEY}" \
+            || ffmpeg -hide_banner -loglevel error \
             -f lavfi -i "color=c=black:s=1280x720:r=25" \
             -f lavfi -i "sine=frequency=400:sample_rate=44100" \
             -f lavfi -i "sine=frequency=432:sample_rate=44100" \
@@ -42,6 +84,5 @@ jobs:
             -c:a aac -b:a 128k \
             -t 21000 \
             -f flv "rtmps://a.rtmp.youtube.com:443/live2/${YOUTUBE_STREAM_KEY}" \
-            || echo "ffmpeg saiu: $?"
-
+            || echo "Stream finalizou"
           echo "=== Ciclo completo: $(date -u) ==="
