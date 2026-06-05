@@ -1,0 +1,77 @@
+name: oracle-vm-micro
+on:
+  workflow_dispatch:
+
+jobs:
+  create-micro:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Setup OCI
+        env:
+          OCI_USER_OCID: ${{ secrets.OCI_USER_OCID }}
+          OCI_TENANCY_OCID: ${{ secrets.OCI_TENANCY_OCID }}
+          OCI_REGION: ${{ secrets.OCI_REGION }}
+          OCI_FINGERPRINT: ${{ secrets.OCI_FINGERPRINT }}
+          OCI_PRIVATE_KEY: ${{ secrets.OCI_PRIVATE_KEY }}
+        run: |
+          pip3 install oci-cli -q
+          mkdir -p ~/.oci ~/.ssh
+          printf '%s' "$OCI_PRIVATE_KEY" > ~/.oci/oci_api_key.pem
+          chmod 600 ~/.oci/oci_api_key.pem
+          printf '[DEFAULT]\nuser=%s\nfingerprint=%s\ntenancy=%s\nregion=%s\nkey_file=%s\n' \
+            "$OCI_USER_OCID" "$OCI_FINGERPRINT" "$OCI_TENANCY_OCID" "$OCI_REGION" \
+            "$HOME/.oci/oci_api_key.pem" > ~/.oci/config
+          ssh-keygen -t rsa -b 2048 -f ~/.ssh/oracle_stream -N '' -q
+          echo 'OCI OK'
+
+      - name: Criar E2.1.Micro (sempre disponivel, sem fila)
+        env:
+          OCI_SUBNET_ID: ${{ secrets.OCI_SUBNET_ID }}
+          OCI_AD: ${{ secrets.OCI_AD }}
+          OCI_TENANCY_OCID: ${{ secrets.OCI_TENANCY_OCID }}
+          GH_PAT: ${{ secrets.GH_PAT }}
+          YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
+        run: |
+          set +e
+          # Buscar imagem Ubuntu 22.04 para x86
+          IMG=$(oci compute image list \
+            --compartment-id "$OCI_TENANCY_OCID" \
+            --operating-system 'Canonical Ubuntu' \
+            --operating-system-version '22.04' \
+            --shape VM.Standard.E2.1.Micro \
+            --sort-by TIMECREATED \
+            --query 'data[0].id' --raw-output 2>/dev/null)
+          echo "Ubuntu x86 image: $IMG"
+          
+          R=$(oci compute instance launch \
+            --compartment-id "$OCI_TENANCY_OCID" \
+            --availability-domain "$OCI_AD" \
+            --shape VM.Standard.E2.1.Micro \
+            --image-id "$IMG" \
+            --subnet-id "$OCI_SUBNET_ID" \
+            --assign-public-ip true \
+            --ssh-authorized-keys-file ~/.ssh/oracle_stream.pub \
+            --display-name psidoc-micro-server \
+            --boot-volume-size-in-gbs 50 \
+            --query 'data.id' --raw-output 2>&1)
+          
+          if echo "$R" | grep -q 'ocid1.instance'; then
+            echo "MICRO CRIADA: $R"
+            sleep 120
+            IP=$(oci compute instance list-vnics --instance-id "$R" \
+              --query 'data[0]."public-ip"' --raw-output 2>/dev/null)
+            echo "IP: $IP"
+            if [ -n "$IP" ] && [ "$IP" != 'null' ]; then
+              ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 \
+                -i ~/.ssh/oracle_stream ubuntu@$IP \
+                "sudo apt-get install -y ffmpeg python3-pip wget -q && \
+                 pip3 install numpy pillow -q && \
+                 wget -qO /tmp/s.sh https://raw.githubusercontent.com/tafita81/Repovazio/main/scripts/oracle-forever-live-setup.sh && \
+                 chmod +x /tmp/s.sh && STREAM_KEY='$YOUTUBE_STREAM_KEY' bash /tmp/s.sh && \
+                 echo MICRO_STREAM_OK" || echo 'SSH falhou'
+              echo "E2.1.Micro Stream ativo! IP: $IP"
+            fi
+          else
+            echo "Erro: $R"
+          fi
