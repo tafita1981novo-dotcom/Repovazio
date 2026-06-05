@@ -11,31 +11,25 @@ jobs:
     steps:
       - name: Instalar ffmpeg
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y ffmpeg -qq
-          ffmpeg -version | head -1
-          echo "ffmpeg OK"
+          sudo apt-get update -qq && sudo apt-get install -y ffmpeg -qq
+          ffmpeg -version | head -1 && echo "ffmpeg OK"
 
-      - name: Testar conectividade YouTube RTMPS
+      - name: Testar RTMPS 443
         run: |
-          echo "Testando porta 443 para YouTube..."
           timeout 5 bash -c 'echo > /dev/tcp/a.rtmp.youtube.com/443' \
-            && echo "RTMPS 443: ABERTO ✅" \
-            || echo "RTMPS 443: BLOQUEADO ❌"
-          echo "IP runner: $(curl -s ifconfig.me 2>/dev/null)"
+            && echo "PORTA 443: ABERTA ✅" || echo "PORTA 443: FALHOU ❌"
+          echo "IP: $(curl -s ifconfig.me 2>/dev/null)"
 
-      - name: 🔴 Stream 432Hz Binaural (6h cycle)
+      - name: 🔴 Stream 432Hz Binaural (6h)
         env:
           YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
         run: |
-          set +e
-          echo "=== Iniciando stream 432Hz binaural ==="
-          echo "Hora: $(date -u)"
-          
-          # Binaural 432Hz: L=400Hz R=432Hz — beat 32Hz alpha
-          # -t 21000 = 350min = 5h50m (< 6h limite)
-          # RTMPS porta 443 — bypassa bloqueio de 1935
-          ffmpeg -hide_banner -loglevel error \
+          echo "=== Stream iniciando: $(date -u) ==="
+
+          # SEM pipe — ffmpeg roda diretamente, sem | head que causaria SIGPIPE
+          # -loglevel info para ver status de conexao
+          # -t 21000 = 350min ciclo
+          ffmpeg -hide_banner -loglevel info \
             -f lavfi -i "color=c=black:s=1280x720:r=25" \
             -f lavfi -i "sine=frequency=400:sample_rate=44100" \
             -f lavfi -i "sine=frequency=432:sample_rate=44100" \
@@ -47,10 +41,7 @@ jobs:
             -pix_fmt yuv420p \
             -c:a aac -b:a 128k \
             -t 21000 \
-            -stats \
             -f flv "rtmps://a.rtmp.youtube.com:443/live2/${YOUTUBE_STREAM_KEY}" \
-            2>&1 | head -20
-          
-          EXIT=$?
-          echo "=== Stream exit=$EXIT | $(date -u) ==="
-          exit 0
+            || echo "ffmpeg saiu: $?"
+
+          echo "=== Ciclo completo: $(date -u) ==="
