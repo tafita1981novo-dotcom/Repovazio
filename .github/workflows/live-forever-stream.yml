@@ -5,28 +5,58 @@ on:
 
 jobs:
   stream:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 358
 
     steps:
-      - name: Setup (ffmpeg estatico + Python)
+      - name: ffmpeg estatico + Python
         run: |
-          echo "Baixando ffmpeg estatico (sem apt-get)..."
           wget -q "https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz"
           tar -xf ffmpeg-release-amd64-static.tar.xz
-          FFDIR=$(ls -d ffmpeg-*-static)
-          sudo cp $FFDIR/ffmpeg /usr/local/bin/ffmpeg
+          sudo cp ffmpeg-*-static/ffmpeg /usr/local/bin/ffmpeg
           sudo chmod +x /usr/local/bin/ffmpeg
-          ffmpeg -version | head -1
           pip3 install numpy pillow --break-system-packages -q
-          echo "Setup OK"
+          ffmpeg -version | head -1
+
+      - name: Cloudflare WARP (bypass bloqueio RTMP Azure)
+        run: |
+          echo "Instalando Cloudflare WARP..."
+          curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg | \
+            sudo gpg --yes --dearmor --output /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg
+          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] \
+            https://pkg.cloudflareclient.com/ jammy main" | \
+            sudo tee /etc/apt/sources.list.d/cloudflare-client.list
+          sudo apt-get update -qq 2>/dev/null
+          sudo apt-get install -y cloudflare-warp 2>/dev/null
+          
+          echo "Iniciando daemon WARP..."
+          sudo systemctl start warp-svc
+          sleep 3
+          
+          echo "Registrando (modo anonimo, sem conta)..."
+          warp-cli --accept-tos registration new 2>&1 | head -5
+          sleep 2
+          
+          echo "Conectando ao WARP..."
+          warp-cli --accept-tos connect
+          sleep 8
+          
+          echo "Verificando status:"
+          warp-cli status
+          
+          echo "IP antes do WARP (Azure):"
+          curl -s --max-time 5 https://api.ipify.org 2>/dev/null || echo "n/a"
+          
+          echo "IP via WARP (Cloudflare):"
+          curl -s --max-time 10 https://1.1.1.1/cdn-cgi/trace 2>/dev/null | grep -E "^ip=" || \
+            curl -s --max-time 10 https://cloudflare.com/cdn-cgi/trace 2>/dev/null | grep -E "^ip=" || \
+            echo "IP check falhou"
 
       - name: Gerar audio binaural + cerebro
         run: |
           python3 - << 'EOF'
           import numpy as np, wave, urllib.request, io
           from PIL import Image
-          # Binaural 432Hz 5min loop
           SR=44100; DUR=300
           t=np.linspace(0,DUR,int(SR*DUR),endpoint=False)
           L=(np.sin(2*np.pi*432*t)*0.3*32767).astype(np.int16)
@@ -36,27 +66,25 @@ jobs:
           d=np.empty(len(t)*2,dtype=np.int16); d[0::2]=L; d[1::2]=R
           with wave.open('binaural.wav','w') as f:
             f.setnchannels(2); f.setsampwidth(2); f.setframerate(SR); f.writeframes(d.tobytes())
-          # Cerebro 20x20px do canal @psidanicoelho
           with urllib.request.urlopen('https://yt3.googleusercontent.com/4NDK-JaBRi0uMyCCeOz-imtfhs6zHuQ2sxUn3d2gCjY_NyS_Z50OCENLFZrS_RjY5wOwKXch=s900-c-k-c0x00ffffff-no-rj') as r:
             img=Image.open(io.BytesIO(r.read())).convert('RGBA').resize((20,20))
           img.save('brain.png')
-          print('Tudo OK')
+          print('Audio+cerebro OK')
           EOF
           ffmpeg -i binaural.wav -c:a libmp3lame -b:a 192k binaural.mp3 -y -loglevel quiet
           rm binaural.wav
           ls -lh binaural.mp3 brain.png
 
-      - name: Testar RTMP/RTMPS + Stream 24/7
+      - name: Stream 24/7 via WARP -> YouTube RTMP
         env:
           STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
           GH_PAT: ${{ secrets.GH_PAT }}
-          REPO: tafita81/Repovazio
         run: |
-          echo "Testando portas YouTube RTMP..."
-          nc -zv a.rtmp.youtube.com 1935 2>&1 | tail -1 && echo "RTMP 1935 OK" || echo "RTMP 1935 BLOCKED"
-          nc -zv a.rtmps.youtube.com 443 2>&1 | tail -1 && echo "RTMPS 443 OK" || echo "RTMPS 443 BLOCKED"
+          echo "Testando conectividade RTMP via WARP..."
+          nc -zv a.rtmp.youtube.com 1935 2>&1 | head -3
+          nc -zv a.rtmps.youtube.com 443 2>&1 | head -3
           
-          echo "Iniciando stream RTMPS (porta 443)..."
+          echo "Iniciando stream..."
           ffmpeg -loglevel warning \
             -f lavfi -i "color=c=0x06060F:s=1280x720:r=25" \
             -stream_loop -1 -i binaural.mp3 \
@@ -66,20 +94,18 @@ jobs:
             -c:v libx264 -preset ultrafast -tune stillimage -crf 28 -pix_fmt yuv420p \
             -b:v 500k -maxrate 1000k -bufsize 2000k \
             -c:a aac -b:a 192k -ar 44100 -ac 2 \
-            -f flv "rtmps://a.rtmps.youtube.com/live2/${STREAM_KEY}" 2>&1 | tee /tmp/ffmpeg.log &
+            -f flv "rtmp://a.rtmp.youtube.com/live2/${STREAM_KEY}" 2>&1 | tee /tmp/ff.log &
           FFPID=$!
           echo "ffmpeg PID=$FFPID"
           
-          # Aguardar 60s e verificar se conectou
-          sleep 60
+          sleep 45
           if kill -0 $FFPID 2>/dev/null; then
-            echo "CONECTADO via RTMPS! Stream em andamento."
-            # Continuar por 5h45m restantes
-            sleep 20700
+            echo "CONECTADO! Stream ativo via Cloudflare WARP."
+            sleep 20670  # 5h43m restantes
           else
-            echo "RTMPS falhou. Log:"
-            tail -20 /tmp/ffmpeg.log || true
-            echo "Tentando RTMP porta 1935..."
+            echo "ffmpeg morreu. Log:"
+            tail -30 /tmp/ff.log || true
+            echo "Tentando RTMPS porta 443..."
             ffmpeg -loglevel warning \
               -f lavfi -i "color=c=0x06060F:s=1280x720:r=25" \
               -stream_loop -1 -i binaural.mp3 \
@@ -89,26 +115,24 @@ jobs:
               -c:v libx264 -preset ultrafast -tune stillimage -crf 28 -pix_fmt yuv420p \
               -b:v 500k -maxrate 1000k -bufsize 2000k \
               -c:a aac -b:a 192k -ar 44100 -ac 2 \
-              -f flv "rtmp://a.rtmp.youtube.com/live2/${STREAM_KEY}" 2>&1 | tee /tmp/ffmpeg2.log &
-            FFPID2=$!
-            sleep 60
-            if kill -0 $FFPID2 2>/dev/null; then
-              echo "CONECTADO via RTMP! Stream em andamento."
-              sleep 20700
-              FFPID=$FFPID2
+              -f flv "rtmps://a.rtmps.youtube.com/live2/${STREAM_KEY}" 2>&1 | tee /tmp/ff2.log &
+            FFPID=$!
+            sleep 45
+            if kill -0 $FFPID 2>/dev/null; then
+              echo "CONECTADO via RTMPS!"
+              sleep 20670
             else
-              echo "AMBAS PORTAS BLOQUEADAS. Log RTMP:"
-              tail -10 /tmp/ffmpeg2.log || true
+              echo "AMBAS FALHARAM. Log RTMPS:"
+              tail -20 /tmp/ff2.log || true
               exit 1
             fi
           fi
           
-          echo "Disparando relay para proximo ciclo..."
+          echo "Disparando proximo ciclo..."
           curl -s -X POST \
             -H "Authorization: Bearer ${GH_PAT}" \
             -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/${REPO}/actions/workflows/live-forever-stream.yml/dispatches" \
-            -d '{"ref":"main"}' && echo "Relay OK" || echo "Aviso: falha relay"
+            "https://api.github.com/repos/tafita81/Repovazio/actions/workflows/live-forever-stream.yml/dispatches" \
+            -d '{"ref":"main"}' && echo "Relay OK"
           sleep 60
           kill $FFPID 2>/dev/null || true
-          echo "Ciclo completo."
