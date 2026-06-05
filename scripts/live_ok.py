@@ -49,50 +49,50 @@ def yt_delete(token,url):
     except: return False
 
 # ─── DESCRIÇÃO 15 IDIOMAS ────────────────────────────────────────
-TITULO="🔴 BLACK SCREEN 24/7 | Tela Preta para Dormir | Pantalla Negra Dormir | 432Hz Binaural Beats Sleep"
-DESC="""🖤 BLACK SCREEN 24/7 | 432Hz Binaural Beats | Sleep • Study • Meditation • Focus
+TITULO="🔴 BLACK SCREEN 24/7 | White Noise & Brown Noise for Sleep | Tela Preta | Pantalla Negra | 10 Hours"
+DESC="""🖤 BLACK SCREEN 24/7 | White Noise & Brown Noise | Sleep • Study • Focus • Baby
 🔴 100% PURE BLACK SCREEN — zero light, zero distractions, perfect for sleep
-🎵 432Hz BINAURAL — 430Hz LEFT ear + 432Hz RIGHT ear = 2Hz DELTA brainwaves
-⭐ Wear HEADPHONES • Volume low • Runs 24/7 non-stop
+🎵 WHITE NOISE + BROWN NOISE — scientifically proven to improve sleep quality
+⭐ No headphones needed • Safe for babies • Runs 24/7 non-stop
 
-🇺🇸 Black screen for sleeping | black screen 10 hours | black screen 8 hours | black screen for babies | black screen for studying | dark screen for sleep | black screen ASMR | 432hz sleep music | binaural beats 432hz | 432hz frequency | sleep music 432hz | white noise sleep | solfeggio 432hz | deep sleep music | relaxing music sleep | black screen no sound | black screen video | sleep sounds
+🇺🇸 White noise for sleeping | white noise 10 hours | white noise black screen | white noise baby sleep | white noise for studying | brown noise 10 hours | brown noise black screen | brown noise sleep | brown noise for ADHD | brown noise for studying | black screen white noise | black screen 10 hours | black screen for sleeping | sleep sounds 10 hours | sleep sounds white noise | sleep music black screen | deep sleep sounds | rain sounds for sleeping | rain noise black screen | white noise machine sounds
 
-🇪🇸 Pantalla negra para dormir | pantalla negra 10 horas | pantalla negra 8 horas | pantalla negra bebé | pantalla negra para estudiar | pantalla negra ASMR | 432hz para dormir | frecuencia 432hz | latidos binaurales 432hz | música para dormir 432hz | música relajante dormir | sonidos para dormir | meditación profunda | sonidos binaurales | pantalla negra sin sonido
+🇪🇸 Ruido blanco para dormir | ruido blanco pantalla negra | ruido blanco bebé | pantalla negra para dormir | pantalla negra 10 horas | ruido marrón dormir | sonidos para dormir | música para dormir pantalla negra | ruido blanco 10 horas | ruido blanco estudiar | sonidos blancos dormir | pantalla negra bebé | sonido lluvia para dormir | ruido rosa dormir | pantalla negra sin sonido
 
-🇧🇷 Tela preta para dormir | tela preta 10 horas | tela preta 8 horas | tela preta para bebê | tela preta para estudar | tela preta ASMR | frequência 432hz | binaural 432hz | música para dormir 432hz | som para dormir | música relaxante para dormir | meditação profunda | sons binaurais | frequência de cura 432hz | sono profundo | tela preta sem som
+🇧🇷 Ruído branco para dormir | ruído branco tela preta | ruído branco bebê | ruído branco estudar | tela preta para dormir | tela preta 10 horas | ruído marrom para dormir | ruído marrom tela preta | som para dormir | música para dormir tela preta | ruído branco 10 horas | tela preta sem som | tela preta bebê | som de chuva para dormir | ruído rosa tela preta
 
-🇩🇪 Schwarzer Bildschirm schlafen | schwarzer Bildschirm 10 Stunden | schwarzer Bildschirm Baby | schwarzer Bildschirm lernen | 432hz Schlafmusik | binaurale Beats 432hz | Tiefschlaf Musik | Entspannungsmusik | 432hz Heilfrequenz | schwarzer Bildschirm Meditation
+🇩🇪 Weißes Rauschen schlafen | weißes Rauschen schwarzer Bildschirm | weißes Rauschen Baby | braunes Rauschen schlafen | braunes Rauschen schwarzer Bildschirm | schwarzer Bildschirm schlafen | schwarzer Bildschirm 10 Stunden | Schlafgeräusche | weißes Rauschen lernen | braunes Rauschen ADHS
 
-🇫🇷 Écran noir pour dormir | écran noir 10 heures | écran noir bébé | écran noir étudier | 432hz sommeil | battements binauraux 432hz | musique sommeil 432hz | musique relaxante dormir | sommeil profond | méditation profonde | fréquence 432hz | écran noir ASMR
+🇫🇷 Bruit blanc pour dormir | bruit blanc écran noir | bruit blanc bébé | bruit brun dormir | bruit brun écran noir | écran noir pour dormir | écran noir 10 heures | sons pour dormir | bruit blanc 10 heures | bruit blanc étudier | bruit brun TDAH
 
-🇯🇵 黒い画面 睡眠 | ブラックスクリーン 10時間 | ブラックスクリーン 赤ちゃん | 黒画面 勉強 | 432hz 睡眠音楽 | バイノーラルビート 432hz | 熟睡 音楽 | リラックス音楽 | 432hz 周波数 | 深い眠り | 瞑想音楽
+🇯🇵 ホワイトノイズ 睡眠 | ホワイトノイズ 黒画面 | ホワイトノイズ 赤ちゃん | ブラウンノイズ 睡眠 | ブラウンノイズ 黒画面 | 黒い画面 睡眠 | 黒い画面 10時間 | 睡眠音楽 黒画面 | ホワイトノイズ 勉強
 
-🇰🇷 검은 화면 수면 | 블랙 스크린 10시간 | 검은 화면 아기 | 검은 화면 공부 | 432hz 수면 음악 | 바이노럴 비트 432hz | 깊은 수면 음악 | 집중 음악 | 432hz 주파수 | 명상 음악
+🇰🇷 백색소음 수면 | 백색소음 검은 화면 | 백색소음 아기 | 갈색소음 수면 | 갈색소음 검은 화면 | 검은 화면 수면 | 검은 화면 10시간 | 수면 소리 | 백색소음 공부
 
-🇨🇳 黑屏睡眠 | 黑屏10小时 | 黑屏学习 | 黑屏冥想 | 432hz睡眠音乐 | 双耳节拍432hz | 深度睡眠音乐 | 放松音乐 | 432hz频率 | 白噪音睡眠
+🇨🇳 白噪音睡眠 | 白噪音黑屏 | 白噪音婴儿 | 棕噪音睡眠 | 棕噪音黑屏 | 黑屏睡眠 | 黑屏10小时 | 睡眠音乐 | 白噪音学习
 
-🇮🇹 Schermo nero per dormire | schermo nero 10 ore | schermo nero bambino | 432hz dormire | battiti binaurali 432hz | musica per dormire | sonno profondo | meditazione | frequenza 432hz
+🇮🇹 Rumore bianco dormire | rumore bianco schermo nero | rumore bianco bambini | rumore marrone dormire | schermo nero dormire | schermo nero 10 ore | suoni per dormire
 
-🇸🇦 شاشة سوداء للنوم | شاشة سوداء 10 ساعات | شاشة سوداء دراسة | موسيقى نوم 432hz | نغمات ثنائية 432hz | نوم عميق | تأمل | استرخاء 432hz
+🇸🇦 ضوضاء بيضاء للنوم | ضوضاء بيضاء شاشة سوداء | ضوضاء بنية نوم | شاشة سوداء للنوم | شاشة سوداء 10 ساعات | أصوات النوم | ضوضاء بيضاء للأطفال
 
-🇷🇺 Чёрный экран для сна | чёрный экран 10 часов | чёрный экран ребёнок | 432гц музыка сна | бинауральные ритмы | глубокий сон | медитация 432гц | расслабление
+🇷🇺 Белый шум для сна | белый шум чёрный экран | белый шум для детей | коричневый шум сон | чёрный экран сон | чёрный экран 10 часов | звуки для сна
 
-🇮🇳 काली स्क्रीन नींद | काली स्क्रीन 10 घंटे | काली स्क्रीन बच्चा | 432hz नींद संगीत | बाइनॉरल बीट्स | गहरी नींद | ध्यान | आराम संगीत
+🇮🇳 सफेद शोर नींद | सफेद शोर काली स्क्रीन | भूरा शोर नींद | काली स्क्रीन नींद | काली स्क्रीन 10 घंटे | नींद की आवाज़
 
-🇮🇩 Layar hitam tidur | layar hitam 10 jam | layar hitam bayi | 432hz musik tidur | binaural beats | tidur nyenyak | meditasi | relaksasi 432hz
+🇮🇩 White noise tidur | white noise layar hitam | white noise bayi | brown noise tidur | layar hitam tidur | layar hitam 10 jam | suara tidur
 
-🇳🇱 Zwart scherm slapen | zwart scherm 10 uur | zwart scherm baby | 432hz slaap muziek | binaurale beats | diepe slaap | meditatie | ontspanning
+🇳🇱 Witte ruis slapen | witte ruis zwart scherm | bruine ruis slapen | zwart scherm slapen | zwart scherm 10 uur | slaapgeluiden
 
-🇹🇷 Siyah ekran uyku | siyah ekran 10 saat | siyah ekran bebek | 432hz uyku müziği | ikili vuruşlar | derin uyku | meditasyon | rahatlatıcı müzik
+🇹🇷 Beyaz gürültü uyku | beyaz gürültü siyah ekran | kahverengi gürültü uyku | siyah ekran uyku | siyah ekran 10 saat | uyku sesleri
 
-🇵🇱 Czarny ekran spanie | czarny ekran 10 godzin | czarny ekran dziecko | 432hz muzyka do snu | bity binauralne | głęboki sen | medytacja | relaks
+🇵🇱 Biały szum spanie | biały szum czarny ekran | brązowy szum sen | czarny ekran spanie | czarny ekran 10 godzin | dźwięki do snu
 
-🇻🇳 Màn hình đen để ngủ | màn hình đen 10 giờ | màn hình đen cho bé | nhạc ngủ 432hz | nhịp đôi tai | ngủ sâu | thiền định | thư giãn
+🇻🇳 Tiếng ồn trắng ngủ | tiếng ồn trắng màn hình đen | tiếng ồn nâu ngủ | màn hình đen ngủ | âm thanh ngủ
 
-🇺🇦 Чорний екран для сну | чорний екран 10 годин | музика для сну 432гц | бінауральні ритми | глибокий сон | медитація | розслаблення
+🇺🇦 Білий шум для сну | чорний екран сон | звуки для сну
 
 @psidanicoelho
-#blackscreen #blackscreenforsleep #blackscreen10hours #blackscreen8hours #telapreta #telapretaparadormir #pantallanegraparadormir #pantallanegra #432hz #binauralbeats432hz #sleepmusic #deepsleep #studymusic #meditationmusic #relaxingmusic #432hzsleep #whitenoise #schwarzerbildschirm #ecrannoirdormir #darkscreen"""
+#whitenoise #brownnoise #blackscreen #blackscreensleep #whitenoisesleep #brownnoisesleep #blackscreen10hours #sleepsounds #whitenoisebaby #brownnoisebaby #telapreta #ruídobranco #pantallanegraparadormir #ruidoblanco #blackscreenstudying #sleepmusic #whitenoise10hours #brownnoise10hours #deepsleep #asmrsleep"""
 
 def ffm():
     # USE_SYSTEM_FFMPEG=true → usar /usr/bin/ffmpeg do apt (evitar SIGSEGV imageio v7)
@@ -105,15 +105,34 @@ def ffm():
     return shutil.which("ffmpeg") or "ffmpeg"
 
 def gerar_wav():
-    """430Hz L + 432Hz R = 2Hz delta — sem filtros ffmpeg"""
-    SR,DUR=44100,5; s=SR*DUR; out=bytearray()
+    """White Noise + Brown Noise (combo #1 em buscas globais)
+    White noise: todas as frequências em igual intensidade
+    Brown noise: mais grave, ênfase em baixas frequências (random walk)
+    Mix 70% brown + 30% white = som mais suave e popular para sono
+    """
+    import random
+    SR, DUR = 44100, 10  # 10s loop
+    s = SR * DUR
+    out = bytearray()
+    # Gerar Brown Noise por random walk (integração de white)
+    bL, bR = 0.0, 0.0
     for i in range(s):
-        t=i/SR
-        out+=struct.pack("<hh",int(math.sin(2*math.pi*430*t)*22000),int(math.sin(2*math.pi*432*t)*22000))
-    p=TMP/"b432.wav"
-    with wave.open(str(p),"wb") as wf:
-        wf.setnchannels(2); wf.setsampwidth(2); wf.setframerate(SR); wf.writeframes(bytes(out))
-    log(f"WAV binaural 432Hz: {p.stat().st_size//1024}KB ✅")
+        # White noise components
+        wL = (random.random() * 2 - 1)
+        wR = (random.random() * 2 - 1)
+        # Brown noise = integração do white (random walk)
+        bL = max(-1.0, min(1.0, bL * 0.999 + wL * 0.02))
+        bR = max(-1.0, min(1.0, bR * 0.999 + wR * 0.02))
+        # Mix: 65% brown + 35% white
+        mixL = bL * 0.65 + wL * 0.35
+        mixR = bR * 0.65 + wR * 0.35
+        # Amplitude confortável para sono
+        out += struct.pack("<hh", int(mixL * 18000), int(mixR * 18000))
+    p = TMP / "sleep_noise.wav"
+    with wave.open(str(p), "wb") as wf:
+        wf.setnchannels(2); wf.setsampwidth(2)
+        wf.setframerate(SR); wf.writeframes(bytes(out))
+    log(f"WAV White+Brown Noise: {p.stat().st_size//1024}KB ✅")
     return str(p)
 
 def delete_all(token):
