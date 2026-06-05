@@ -9,17 +9,14 @@ jobs:
     timeout-minutes: 358
 
     steps:
-      - name: Setup
+      - name: Verificar ffmpeg + Python (pre-instalados no runner)
         run: |
-          wget -q "https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz"
-          tar -xf ffmpeg-release-amd64-static.tar.xz
-          sudo cp ffmpeg-*-static/ffmpeg /usr/local/bin/ffmpeg
-          sudo chmod +x /usr/local/bin/ffmpeg
+          # Runner ubuntu-22.04 ja tem ffmpeg, numpy, pillow
           ffmpeg -version | head -1
-          pip3 install numpy pillow -q
-          echo "Setup OK"
+          python3 -c "import numpy, PIL; print('numpy+pillow OK')"
+          echo "Runner OK"
 
-      - name: Cloudflare WARP (IPs nao-bloqueados pelo YouTube)
+      - name: Cloudflare WARP
         run: |
           curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg | \
             sudo gpg --yes --dearmor --output /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg
@@ -27,16 +24,14 @@ jobs:
             sudo tee /etc/apt/sources.list.d/cloudflare-client.list
           sudo apt-get update -qq 2>/dev/null
           sudo apt-get install -y cloudflare-warp 2>/dev/null
-          sudo systemctl start warp-svc
-          sleep 4
+          sudo systemctl start warp-svc && sleep 4
           warp-cli --accept-tos registration new 2>&1 | head -3
           sleep 2
-          warp-cli --accept-tos connect
-          sleep 8
-          echo "Status WARP:"
+          warp-cli --accept-tos connect && sleep 8
+          echo "WARP status:"
           warp-cli status
           echo "IP via WARP:"
-          curl -s --max-time 10 https://1.1.1.1/cdn-cgi/trace | grep -E "^ip=" || echo "IP check falhou"
+          curl -s --max-time 10 https://1.1.1.1/cdn-cgi/trace | grep -E "^ip="
 
       - name: Gerar audio + cerebro
         run: |
@@ -66,7 +61,7 @@ jobs:
           STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
-          echo "Portas RTMP via WARP:"
+          echo "Teste porta 1935 via WARP:"
           nc -zv a.rtmp.youtube.com 1935 2>&1 | tail -1
           
           ffmpeg -loglevel warning \
@@ -80,16 +75,12 @@ jobs:
             -c:a aac -b:a 192k -ar 44100 -ac 2 \
             -f flv "rtmp://a.rtmp.youtube.com/live2/${STREAM_KEY}" 2>&1 | tee /tmp/ff.log &
           FFPID=$!
-          echo "PID=$FFPID"
-          
           sleep 45
           if kill -0 $FFPID 2>/dev/null; then
-            echo "CONECTADO via WARP! Stream ativo."
+            echo "STREAM ATIVO via WARP!"
             sleep 20670
           else
-            echo "RTMP 1935 falhou via WARP. Log:"
-            tail -20 /tmp/ff.log
-            echo "Tentando RTMPS 443 via WARP..."
+            echo "falhou. Log:"; tail -20 /tmp/ff.log
             ffmpeg -loglevel warning \
               -f lavfi -i "color=c=0x06060F:s=1280x720:r=25" \
               -stream_loop -1 -i binaural.mp3 \
@@ -102,19 +93,11 @@ jobs:
               -f flv "rtmps://a.rtmps.youtube.com/live2/${STREAM_KEY}" 2>&1 | tee /tmp/ff2.log &
             FFPID=$!
             sleep 45
-            if kill -0 $FFPID 2>/dev/null; then
-              echo "CONECTADO via RTMPS!"
-              sleep 20670
-            else
-              echo "AMBAS FALHARAM."
-              tail -10 /tmp/ff2.log
-              exit 1
-            fi
+            kill -0 $FFPID 2>/dev/null && echo "RTMPS ativo!" && sleep 20670 || (echo "RTMPS falhou:"; tail -10 /tmp/ff2.log; exit 1)
           fi
           
           curl -s -X POST -H "Authorization: Bearer ${GH_PAT}" \
             -H "Accept: application/vnd.github+json" \
             "https://api.github.com/repos/tafita81/Repovazio/actions/workflows/live-forever-stream.yml/dispatches" \
             -d '{"ref":"main"}' && echo "Relay OK"
-          sleep 30
-          kill $FFPID 2>/dev/null || true
+          sleep 30; kill $FFPID 2>/dev/null || true
