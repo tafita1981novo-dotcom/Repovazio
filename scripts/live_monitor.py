@@ -172,24 +172,36 @@ def groq_analyze(status_dict: dict) -> str:
 
 # ── Supabase — logging ────────────────────────────────────────
 def supa_log(data: dict):
+    """Grava status no Supabase ia_cache via upsert"""
     if not SUPABASE_URL or not SUPABASE_KEY:
         return
     try:
-        payload = json.dumps({
+        record = {
             "key":   "live:monitor:last",
             "value": json.dumps({**data, "ts": datetime.now(timezone.utc).isoformat()})
-        }).encode()
-        req = urllib.request.Request(
-            f"{SUPABASE_URL}/rest/v1/ia_cache",
-            data=payload, method="POST"
-        )
-        req.add_header("apikey", SUPABASE_KEY)
-        req.add_header("Authorization", f"Bearer {SUPABASE_KEY}")
-        req.add_header("Content-Type", "application/json")
-        req.add_header("Prefer", "resolution=merge-duplicates")
-        urllib.request.urlopen(req, timeout=10)
-    except Exception as e:
-        pass  # log falhou — não crítico
+        }
+        payload = json.dumps(record).encode()
+        # Tentar upsert via PATCH (update se existe)
+        for method, url_suffix, prefer in [
+            ("POST",  "/rest/v1/ia_cache",                          "resolution=merge-duplicates"),
+            ("PATCH", "/rest/v1/ia_cache?key=eq.live%3Amonitor%3Alast", ""),
+        ]:
+            try:
+                req = urllib.request.Request(
+                    f"{SUPABASE_URL}{url_suffix}",
+                    data=payload, method=method
+                )
+                req.add_header("apikey", SUPABASE_KEY)
+                req.add_header("Authorization", f"Bearer {SUPABASE_KEY}")
+                req.add_header("Content-Type", "application/json")
+                if prefer:
+                    req.add_header("Prefer", prefer)
+                urllib.request.urlopen(req, timeout=8)
+                return  # sucesso
+            except Exception:
+                continue
+    except Exception:
+        pass  # silencioso — log não é crítico
 
 # ── Check único ───────────────────────────────────────────────
 def run_check(token_cache: list) -> dict:
@@ -300,7 +312,8 @@ def main():
                 "gh_running": r.get("gh_running")
             })
 
-            if r.get("ok") and r.get("live"):
+            # OK = workflow rodando (live pode estar inicializando)
+            if r.get("gh_running"):
                 consecutive_ok += 1
                 consecutive_fail = 0
             else:
