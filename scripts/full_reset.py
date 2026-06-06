@@ -166,25 +166,32 @@ def get_stream_id(token):
             return item["id"]
     return None
 
-def deletar_broadcasts(token):
+def deletar_broadcasts(token, max_seconds=90):
+    """Deleta broadcasts com timeout máximo para não travar o init"""
     deleted = 0
-    for status in ["active", "live", "testing", "testStarting", "ready", "created", "complete"]:
-        url = f"https://www.googleapis.com/youtube/v3/liveBroadcasts?part=id,snippet,status&broadcastStatus={status}&maxResults=50"
+    inicio = time.time()
+    for status in ["active", "live", "testing", "ready", "created"]:
+        if time.time() - inicio > max_seconds:
+            log(f"  Timeout {max_seconds}s atingido, parando deleção ({deleted} deletados)")
+            break
+        url = f"https://www.googleapis.com/youtube/v3/liveBroadcasts?part=id,status&broadcastStatus={status}&maxResults=20"
         data = yt_get(token, url)
         for item in data.get("items", []):
+            if time.time() - inicio > max_seconds:
+                break
             bc_id = item["id"]
             lc = item.get("status", {}).get("lifeCycleStatus", "")
             if lc in ["active", "testing", "testStarting", "live"]:
                 yt_call(token, f"https://www.googleapis.com/youtube/v3/liveBroadcasts/transition?broadcastStatus=complete&id={bc_id}&part=id", {})
-                time.sleep(1.5)
+                time.sleep(1.0)
             req = urllib.request.Request(f"https://www.googleapis.com/youtube/v3/liveBroadcasts?id={bc_id}", method="DELETE")
             req.add_header("Authorization", f"Bearer {token}")
             try:
-                urllib.request.urlopen(req, timeout=10)
+                urllib.request.urlopen(req, timeout=8)
                 deleted += 1
             except: pass
-            time.sleep(0.3)
-    log(f"Broadcasts deletados: {deleted}")
+            time.sleep(0.2)
+    log(f"Broadcasts deletados: {deleted} ({time.time()-inicio:.0f}s)")
     return deleted
 
 def criar_broadcast(token):
