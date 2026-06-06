@@ -27,7 +27,7 @@ jobs:
           ssh-keygen -t rsa -b 2048 -f ~/.ssh/oracle_stream -N '' -q
           oci iam region list --query 'data[0].name' --raw-output && echo 'Auth OK'
 
-      - name: Retry VM ARM multi-size
+      - name: Retry VM multi-shape
         env:
           OCI_SUBNET_ID: ${{ secrets.OCI_SUBNET_ID }}
           OCI_IMAGE_ID: ${{ secrets.OCI_IMAGE_ID }}
@@ -37,22 +37,43 @@ jobs:
           YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
           SUPABASE_URL: https://tpjvalzwkqwttvmszvie.supabase.co
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          CALLMEBOT_PHONE: ${{ secrets.CALLMEBOT_PHONE }}
+          CALLMEBOT_APIKEY: ${{ secrets.CALLMEBOT_APIKEY }}
         run: |
           set +e
-          echo "=== Oracle VM retry — multi-size fallback ==="
-          echo "Tamanhos: 4OCPU/24GB → 2OCPU/12GB → 1OCPU/6GB"
-          echo "Regiao home: sa-saopaulo-1 (Always Free)"
 
-          SIZES=("4:24" "2:12" "1:6")
+          # Funcao de notificacao WhatsApp via CallMeBot
+          notify_whatsapp() {
+            MSG="$1"
+            ENC=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$MSG'))")
+            if [ "$CALLMEBOT_APIKEY" != "PENDING_ACTIVATION" ]; then
+              curl -s "https://api.callmebot.com/whatsapp.php?phone=${CALLMEBOT_PHONE}&text=${ENC}&apikey=${CALLMEBOT_APIKEY}" \
+                -o /dev/null && echo "[WA] Notificacao enviada: $MSG" || echo "[WA] Falha no envio"
+            else
+              echo "[WA] PENDING_ACTIVATION — notificacao ignorada"
+            fi
+          }
+
+          echo "=== Oracle VM retry v4 — multi-shape fallback ==="
+          echo "Shapes tentados:"
+          echo "  1. VM.Standard.A1.Flex 4OCPU/24GB (ARM Always Free)"
+          echo "  2. VM.Standard.A1.Flex 2OCPU/12GB (ARM Always Free)"
+          echo "  3. VM.Standard.A1.Flex 1OCPU/6GB  (ARM Always Free)"
+          echo "  4. VM.Standard.E2.1.Micro           (x86 Always Free)"
+
+          # Shape ARM: variantes de tamanho
+          ARM_SIZES=("4:24" "2:12" "1:6")
           CRIADO=0
           INSTANCE_ID=""
+          SHAPE_USADO=""
 
           for i in $(seq 1 500); do
-            for SIZE in "${SIZES[@]}"; do
+
+            # --- Tentar ARM flex ---
+            for SIZE in "${ARM_SIZES[@]}"; do
               OCPU="${SIZE%%:*}"
               MEM="${SIZE##*:}"
-              echo -n "[#$i] ${OCPU}cpu/${MEM}GB → "
-
+              echo -n "[#$i] ARM ${OCPU}cpu/${MEM}GB → "
               R=$(oci compute instance launch \
                 --compartment-id "$OCI_TENANCY_OCID" \
                 --availability-domain "$OCI_AD" \
@@ -62,30 +83,53 @@ jobs:
                 --subnet-id "$OCI_SUBNET_ID" \
                 --assign-public-ip true \
                 --ssh-authorized-keys-file ~/.ssh/oracle_stream.pub \
-                --display-name "psidoc-stream-${OCPU}cpu" \
+                --display-name "psidoc-arm-${OCPU}cpu" \
                 --boot-volume-size-in-gbs 50 \
                 --query 'data.id' --raw-output 2>&1)
-
               if echo "$R" | grep -q 'ocid1.instance'; then
-                echo "CRIADA! ${OCPU}OCPU/${MEM}GB"
-                INSTANCE_ID="$R"
-                CRIADO=1
-                break 2
+                echo "CRIADA!"
+                INSTANCE_ID="$R"; SHAPE_USADO="A1.Flex ${OCPU}OCPU/${MEM}GB"; CRIADO=1; break 2
               elif echo "$R" | grep -q 'LimitExceeded'; then
-                echo "limite atingido (VM ja existe?)"
-                break 2
+                echo "limite (VM ja existe?)"; break 2
               elif echo "$R" | grep -q 'Out of host capacity'; then
                 echo "sem capacidade"
               else
-                echo "erro: ${R:0:80}"
+                echo "erro: ${R:0:60}"
               fi
             done
+
+            [ "$CRIADO" -eq 1 ] && break
+
+            # --- Tentar E2.1.Micro (x86) ---
+            echo -n "[#$i] x86 E2.1.Micro → "
+            R=$(oci compute instance launch \
+              --compartment-id "$OCI_TENANCY_OCID" \
+              --availability-domain "$OCI_AD" \
+              --shape VM.Standard.E2.1.Micro \
+              --image-id "$OCI_IMAGE_ID" \
+              --subnet-id "$OCI_SUBNET_ID" \
+              --assign-public-ip true \
+              --ssh-authorized-keys-file ~/.ssh/oracle_stream.pub \
+              --display-name "psidoc-micro-x86" \
+              --boot-volume-size-in-gbs 50 \
+              --query 'data.id' --raw-output 2>&1)
+            if echo "$R" | grep -q 'ocid1.instance'; then
+              echo "CRIADA!"
+              INSTANCE_ID="$R"; SHAPE_USADO="E2.1.Micro x86"; CRIADO=1; break
+            elif echo "$R" | grep -q 'LimitExceeded'; then
+              echo "limite"
+            elif echo "$R" | grep -q 'Out of host capacity'; then
+              echo "sem capacidade"
+            else
+              echo "erro: ${R:0:60}"
+            fi
 
             [ "$i" -lt 10 ] && sleep 30 || sleep 60
           done
 
+          # --- Sem VM ---
           if [ "$CRIADO" -eq 0 ]; then
-            echo "Sem capacidade neste ciclo. Proximo em 6h."
+            echo "Sem capacidade neste ciclo. Relay para proximo ciclo (6h)."
             curl -s -X POST \
               -H "Authorization: Bearer $GH_PAT" \
               -H "Accept: application/vnd.github+json" \
@@ -94,44 +138,47 @@ jobs:
             exit 0
           fi
 
+          # --- VM CRIADA ---
           echo ""
-          echo "=== VM CRIADA: $INSTANCE_ID ==="
-          echo "Aguardando 4min para inicializar..."
+          echo "=== VM CRIADA: $INSTANCE_ID ($SHAPE_USADO) ==="
+          notify_whatsapp "Oracle VM criada! Shape: $SHAPE_USADO. Aguardando IP..."
           sleep 240
 
-          # Pegar IP (retry por 3min caso ainda provisionando)
+          # Pegar IP
           IP=""
-          for t in $(seq 1 6); do
+          for t in $(seq 1 8); do
             IP=$(oci compute instance list-vnics --instance-id "$INSTANCE_ID" \
               --query 'data[0]."public-ip"' --raw-output 2>/dev/null)
             [ -n "$IP" ] && [ "$IP" != "null" ] && break
-            echo "IP ainda nao disponivel, aguardando 30s..."
-            sleep 30
+            echo "IP ainda indisponivel ($t/8)..."; sleep 30
           done
-          echo "IP: $IP"
+          echo "IP publico: $IP"
 
-          # Salvar IP e ID no Supabase
+          # Salvar no Supabase
           curl -s -X POST "${SUPABASE_URL}/rest/v1/ia_cache" \
             -H "apikey: ${SUPABASE_ANON_KEY}" \
             -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
             -H "Content-Type: application/json" \
             -H "Prefer: resolution=merge-duplicates" \
-            -d "{\"cache_key\":\"oracle_vm_ip\",\"value\":\"${IP}\",\"expires_at\":null}"
+            -d "{\"cache_key\":\"oracle_vm_ip\",\"value\":\"${IP}\",\"expires_at\":null}" && echo "IP salvo"
           curl -s -X POST "${SUPABASE_URL}/rest/v1/ia_cache" \
             -H "apikey: ${SUPABASE_ANON_KEY}" \
             -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
             -H "Content-Type: application/json" \
             -H "Prefer: resolution=merge-duplicates" \
-            -d "{\"cache_key\":\"oracle_vm_id\",\"value\":\"${INSTANCE_ID}\",\"expires_at\":null}"
-          echo "IP e ID salvos no Supabase"
+            -d "{\"cache_key\":\"oracle_vm_id\",\"value\":\"${INSTANCE_ID}\",\"expires_at\":null}" && echo "ID salvo"
+
+          # Notificar com IP
+          notify_whatsapp "Oracle VM IP: ${IP} | Shape: ${SHAPE_USADO} | Configurando stream..."
 
           if [ -z "$IP" ] || [ "$IP" = "null" ]; then
-            echo "ERRO: IP nao disponivel. VM criada mas SSH nao pode prosseguir."
+            notify_whatsapp "ERRO: VM criada mas IP nao disponivel. Verifique console Oracle."
             exit 1
           fi
 
-          # SSH com retry (VM pode estar ainda bootando)
+          # SSH + setup stream
           echo "Configurando servidor via SSH..."
+          STREAM_OK=0
           for t in $(seq 1 5); do
             ssh -o StrictHostKeyChecking=accept-new \
                 -o ConnectTimeout=30 \
@@ -139,14 +186,19 @@ jobs:
                 -i ~/.ssh/oracle_stream ubuntu@$IP \
                 "sudo apt-get update -q && \
                  sudo apt-get install -y ffmpeg python3-pip wget -q && \
-                 pip3 install numpy pillow -q --break-system-packages 2>/dev/null || pip3 install numpy pillow -q && \
                  wget -qO /tmp/s.sh https://raw.githubusercontent.com/tafita81/Repovazio/main/scripts/oracle-forever-live-setup.sh && \
                  chmod +x /tmp/s.sh && \
                  STREAM_KEY='$YOUTUBE_STREAM_KEY' bash /tmp/s.sh && \
-                 echo STREAM_OK" && break
+                 echo STREAM_OK" && STREAM_OK=1 && break
             echo "SSH tentativa $t falhou, aguardando 30s..."
             sleep 30
           done
+
+          if [ "$STREAM_OK" -eq 1 ]; then
+            notify_whatsapp "Stream 24/7 ATIVO! IP: ${IP} | Shape: ${SHAPE_USADO} | Canal psidanicoelho no ar!"
+          else
+            notify_whatsapp "VM criada (${IP}) mas SSH falhou. Configure manualmente: ssh ubuntu@${IP}"
+          fi
 
           echo "=== CONCLUIDO ==="
           exit 0
