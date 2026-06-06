@@ -1,120 +1,202 @@
 #!/usr/bin/env python3
 """
-full_reset.py — Cria broadcast limpo, bind, SEO 15 idiomas, inicia stream
+full_reset.py v3 — WHITE NOISE + BROWN NOISE | SEO 15 IDIOMAS | 24/7 ANTI-CRASH
+Canal: @psidanicoelho | Daniela Coelho
+Referência: "Relaxing White Noise" — 1,47 BILHÃO de views
 """
-import os, json, urllib.request, urllib.parse, time, math, struct, wave, subprocess, pathlib, shutil
+import os, json, urllib.request, urllib.parse, time, math, struct, wave
+import subprocess, pathlib, shutil, random, sys
 from datetime import datetime, timezone, timedelta
 
 YT_CLIENT_ID     = os.environ["YT_CLIENT_ID"]
 YT_CLIENT_SECRET = os.environ["YT_CLIENT_SECRET"]
 YT_REFRESH_TOKEN = os.environ["YT_REFRESH_TOKEN"]
-DURATION_H       = int(os.environ.get("DURATION_H","6"))
+DURATION_H       = int(os.environ.get("DURATION_H", "6"))
 ST_KEY_VAL       = "ewme-91sq-yae7-yj1q-5skw"
 RTMP             = f"rtmp://a.rtmp.youtube.com/live2/{ST_KEY_VAL}"
 TMP              = pathlib.Path("/tmp")
 
-def log(m): print(f"[{datetime.now():%H:%M:%S}] {m}", flush=True)
-def err(m): print(f"[{datetime.now():%H:%M:%S}] ERR: {m}", flush=True)
+def log(m):  print(f"[{datetime.now():%H:%M:%S}] {m}", flush=True)
+def err(m):  print(f"[{datetime.now():%H:%M:%S}] ERR: {m}", flush=True)
 
+# ─────────────────────────────────────────────────────────────
+# SEO — 15 IDIOMAS
+# ─────────────────────────────────────────────────────────────
+TITULOS = {
+    "en": "🔴 LIVE 24/7 | White Noise & Brown Noise for Sleep, Focus & Study | Daniela Coelho",
+    "pt": "🔴 AO VIVO 24H | Ruído Branco e Marrom para Dormir e Concentrar | Daniela Coelho",
+    "de": "🔴 LIVE 24/7 | Weißes & Braunes Rauschen zum Schlafen & Lernen | Daniela Coelho",
+    "es": "🔴 EN VIVO 24H | Ruido Blanco y Marrón para Dormir y Estudiar | Daniela Coelho",
+    "fr": "🔴 EN DIRECT 24H | Bruit Blanc & Brun pour Dormir et Étudier | Daniela Coelho",
+    "ja": "🔴 24時間ライブ | ホワイトノイズ＆ブラウンノイズ 睡眠・集中・勉強 | ダニエラ",
+    "ko": "🔴 24시간 라이브 | 화이트노이즈 & 브라운노이즈 수면 집중 공부 | 다니엘라",
+    "zh": "🔴 24小时直播 | 白噪音和棕噪音助眠专注学习 | 达尼埃拉·科埃略",
+    "it": "🔴 LIVE 24H | Rumore Bianco e Marrone per Dormire e Studiare | Daniela Coelho",
+    "nl": "🔴 LIVE 24H | Witte & Bruine Ruis voor Slapen en Studeren | Daniela Coelho",
+    "pl": "🔴 NA ŻYWO 24H | Biały i Brązowy Szum do Spania i Nauki | Daniela Coelho",
+    "tr": "🔴 CANLI 24H | Beyaz ve Kahverengi Gürültü Uyku ve Çalışma | Daniela Coelho",
+    "id": "🔴 LIVE 24H | White Noise & Brown Noise untuk Tidur & Fokus | Daniela Coelho",
+    "hi": "🔴 24 घंटे लाइव | व्हाइट नॉइज़ और ब्राउन नॉइज़ नींद के लिए | डेनियला",
+    "ar": "🔴 بث مباشر 24 ساعة | ضجيج أبيض وبني للنوم والتركيز والدراسة | دانييلا كويلو",
+}
+
+# Horário UTC → idioma dominante (CPM máximo)
+# DE: $14 | EN: $18 | PT: $8 | ES: $7 | FR: $12 | JA: $15
+def idioma_por_hora():
+    h = datetime.now(timezone.utc).hour
+    if   5  <= h < 8:  return "de"   # Manhã alemã — CPM $14
+    elif 8  <= h < 10: return "fr"   # França acorda — CPM $12
+    elif 10 <= h < 12: return "ja"   # Japão — CPM $15
+    elif 12 <= h < 15: return "en"   # EUA East wakes — CPM $18
+    elif 15 <= h < 18: return "en"   # EUA prime — CPM $18
+    elif 18 <= h < 20: return "es"   # América Latina tarde
+    elif 20 <= h < 22: return "pt"   # Brasil prime time
+    elif 22 <= h < 24: return "pt"   # Brasil noite
+    else:              return "en"   # Madrugada — EN global
+
+DESCRICAO = """\
+🔴 LIVE 24/7 | WHITE NOISE & BROWN NOISE | Sleep · Focus · Study · ADHD
+Daniela Coelho — Human Behavior Researcher | @psidanicoelho
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎧 Use HEADPHONES for the best experience
+🤍 WHITE NOISE — covers all background sounds, perfect for sleep
+🟤 BROWN NOISE — deep, rumbling bass, loved by people with ADHD & anxiety
+🌙 Mix: 40% White + 60% Brown — scientifically proven for deep sleep
+
+PERFECT FOR:
+😴 Deep sleep & insomnia relief
+🧠 ADHD focus & concentration
+📚 Study sessions & exam prep
+🏢 Office work & productivity
+👶 Baby sleep & colic
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔴 AO VIVO 24H | RUÍDO BRANCO & MARROM | Dormir · Focar · Estudar [PT]
+Daniela Coelho | @psidanicoelho | 🤍 Ruído Branco + 🟤 Ruído Marrom
+😴 Sono profundo | 🧠 TDAH/foco | 📚 Estudo | 🔇 Bloqueia barulho
+
+🔴 LIVE 24H | WEISSES & BRAUNES RAUSCHEN | Schlafen · Lernen · ADHS [DE]
+Daniela Coelho | @psidanicoelho | 🤍 Weißes + 🟤 Braunes Rauschen
+😴 Tiefschlaf | 🧠 ADHS Fokus | 📚 Konzentration | 🔇 Geräuschunterdrückung
+
+🔴 EN VIVO 24H | RUIDO BLANCO & MARRÓN | Dormir · Estudiar · TDAH [ES]
+Daniela Coelho | @psidanicoelho | 🤍 Ruido Blanco + 🟤 Ruido Marrón
+😴 Sueño profundo | 🧠 TDAH foco | 📚 Estudio | 👶 Bebé
+
+🔴 EN DIRECT 24H | BRUIT BLANC & BRUN | Dormir · Étudier · TDAH [FR]
+Daniela Coelho | @psidanicoelho | 🤍 Bruit Blanc + 🟤 Bruit Brun
+😴 Sommeil profond | 🧠 TDAH | 📚 Études | 🔇 Anti-bruit
+
+🔴 24時間ライブ | ホワイトノイズ & ブラウンノイズ | 睡眠·集中·ADHD [JA]
+ダニエラ | @psidanicoelho | 🤍 ホワイトノイズ + 🟤 ブラウンノイズ
+😴 深い眠り | 🧠 ADHD 集中 | 📚 勉強 | 🔇 遮音
+
+🔴 24시간 라이브 | 화이트노이즈 & 브라운노이즈 | 수면·집중·ADHD [KO]
+다니엘라 | @psidanicoelho | 🤍 화이트노이즈 + 🟤 브라운노이즈
+
+🔴 24小时直播 | 白噪音和棕噪音 | 睡眠·专注·学习·ADHD [ZH]
+达尼埃拉 | @psidanicoelho | 🤍 白噪音 + 🟤 棕噪音
+
+🔴 LIVE 24H | RUMORE BIANCO & MARRONE | Dormire · Studiare · ADHD [IT]
+Daniela Coelho | @psidanicoelho | 🤍 Bianco + 🟤 Marrone
+
+🔴 LIVE 24H | WITTE & BRUINE RUIS | Slapen · Studeren · ADHD [NL]
+Daniela Coelho | @psidanicoelho | 🤍 Wit + 🟤 Bruin
+
+🔴 NA ŻYWO 24H | BIAŁY & BRĄZOWY SZUM | Spanie · Nauka · ADHD [PL]
+Daniela Coelho | @psidanicoelho | 🤍 Biały + 🟤 Brązowy
+
+🔴 CANLI 24H | BEYAZ & KAHVERENGİ GÜRÜLTÜ | Uyku · Çalışma · DEHB [TR]
+Daniela Coelho | @psidanicoelho
+
+🔴 LIVE 24H | WHITE NOISE & BROWN NOISE untuk Tidur & Fokus [ID]
+Daniela Coelho | @psidanicoelho
+
+🔴 24 घंटे लाइव | व्हाइट नॉइज़ और ब्राउन नॉइज़ नींद के लिए [HI]
+डेनियला | @psidanicoelho
+
+🔴 بث مباشر 24 ساعة | ضجيج أبيض وبني للنوم والتركيز [AR]
+دانييلا كويلو | @psidanicoelho
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Research: Harvard · van der Kolk · Ainsworth · Gottman · Siegel/UCLA
+#whitenoise #brownnoise #whitenoiseforsleep #brownnoiseforsleep
+#sleepmusic #studymusic #focusmusic #adhdfocus #adhdmusic
+#danielacoelho #psidanicoelho #ruïdobranco #ruïdoblanco
+#weißesrauschen #whitenoisebaby #brownnoisead #deepfocus
+#schwarzerbildschirm #pantallanegraparadormir #telapretapradormir\
+"""
+
+# ─────────────────────────────────────────────────────────────
+# YOUTUBE API
+# ─────────────────────────────────────────────────────────────
 def get_token():
-    data=urllib.parse.urlencode({"client_id":YT_CLIENT_ID,"client_secret":YT_CLIENT_SECRET,
-        "refresh_token":YT_REFRESH_TOKEN,"grant_type":"refresh_token"}).encode()
-    req=urllib.request.Request("https://oauth2.googleapis.com/token",data=data)
-    req.add_header("Content-Type","application/x-www-form-urlencoded")
-    with urllib.request.urlopen(req,timeout=15) as r:
+    data = urllib.parse.urlencode({
+        "client_id": YT_CLIENT_ID, "client_secret": YT_CLIENT_SECRET,
+        "refresh_token": YT_REFRESH_TOKEN, "grant_type": "refresh_token"
+    }).encode()
+    req = urllib.request.Request("https://oauth2.googleapis.com/token", data=data)
+    req.add_header("Content-Type", "application/x-www-form-urlencoded")
+    with urllib.request.urlopen(req, timeout=15) as r:
         return json.loads(r.read())["access_token"]
 
 def yt_get(token, url):
-    req=urllib.request.Request(url)
-    req.add_header("Authorization",f"Bearer {token}")
+    req = urllib.request.Request(url)
+    req.add_header("Authorization", f"Bearer {token}")
     try:
-        with urllib.request.urlopen(req,timeout=15) as r: return json.loads(r.read())
-    except Exception as e: return {"error":str(e)}
+        with urllib.request.urlopen(req, timeout=15) as r: return json.loads(r.read())
+    except Exception as e: return {"error": str(e)}
 
 def yt_call(token, url, body=None, method="POST"):
-    data=json.dumps(body).encode() if body else b"{}"
-    req=urllib.request.Request(url,data=data,method=method)
-    req.add_header("Authorization",f"Bearer {token}")
-    req.add_header("Content-Type","application/json")
+    data = json.dumps(body).encode() if body else b"{}"
+    req = urllib.request.Request(url, data=data, method=method)
+    req.add_header("Authorization", f"Bearer {token}")
+    req.add_header("Content-Type", "application/json")
     try:
-        with urllib.request.urlopen(req,timeout=15) as r:
-            txt=r.read(); return json.loads(txt) if txt else {}
-    except Exception as e: return {"error":str(e)}
-
-DESC_15 = """🔴 LIVE 24/7 | BLACK SCREEN | BINAURAL BEATS 432Hz | DARK PSYCHOLOGY
-Daniela Coelho — Human Behavior Researcher | @psidanicoelho
-🖤 PURE BLACK SCREEN | TRUE BINAURAL 432Hz (430Hz L + 432Hz R = 2Hz DELTA) | Use HEADPHONES
-Perfect for: Deep Sleep • Study • Meditation • Work • Focus
-
-🔴 LIVE 24H | SCHWARZER BILDSCHIRM | BINAURAL 432Hz | PSYCHOLOGIE [DE]
-Daniela Coelho | @psidanicoelho | 🖤 100% SCHWARZ | Kopfhörer | Schlaf • Lernen • Meditation
-
-🔴 EN DIRECT 24H | ÉCRAN NOIR | BINAURAL 432Hz | PSYCHOLOGIE SOMBRE [FR]
-Daniela Coelho | @psidanicoelho | 🖤 ÉCRAN 100% NOIR | Casque | Sommeil • Étude • Méditation
-
-🔴 EN VIVO 24H | PANTALLA NEGRA | BINAURAL 432Hz | PSICOLOGÍA OSCURA [ES]
-Daniela Coelho | @psidanicoelho | 🖤 100% NEGRA | Auriculares | Sueño • Estudio • Meditación
-
-🔴 AO VIVO 24H | TELA PRETA | BINAURAL 432Hz | DARK PSYCHOLOGY [PT]
-Daniela Coelho | @psidanicoelho | 🖤 100% PRETA | Fones | Sono • Estudo • Meditação
-
-🔴 24時間ライブ | ブラックスクリーン | バイノーラル432Hz | ダーク心理学 [JA]
-ダニエラ・コエーリョ | @psidanicoelho | 🖤 完全ブラック | ヘッドフォン | 睡眠・勉強・瞑想
-
-🔴 24시간 라이브 | 검은 화면 | 바이노럴 432Hz | 다크 심리학 [KO]
-다니엘라 코에요 | @psidanicoelho | 🖤 100% 검은 | 헤드폰 | 수면 • 공부 • 명상
-
-🔴 24小时直播 | 纯黑屏幕 | 双耳节拍432Hz | 暗黑心理学 [ZH]
-达尼埃拉·科埃略 | @psidanicoelho | 🖤 纯黑100% | 耳机 | 睡眠 • 学习 • 冥想
-
-🔴 LIVE 24H | SCHERMO NERO | BINAURAL 432Hz | PSICOLOGIA OSCURA [IT]
-Daniela Coelho | @psidanicoelho | 🖤 100% NERO | Cuffie | Sonno • Studio • Meditazione
-
-🔴 LIVE 24/7 | ZWART SCHERM | BINAURAL 432Hz | DONKERE PSYCHOLOGIE [NL]
-Daniela Coelho | @psidanicoelho | 🖤 100% ZWART | Koptelefoon | Slaap • Studie • Meditatie
-
-🔴 NA ŻYWO 24H | CZARNY EKRAN | BINAURAL 432Hz | CIEMNA PSYCHOLOGIA [PL]
-Daniela Coelho | @psidanicoelho | 🖤 100% CZARNY | Słuchawki | Sen • Nauka • Medytacja
-
-🔴 CANLI 24S | SİYAH EKRAN | BINAURAL 432Hz | KARANLIK PSİKOLOJİ [TR]
-Daniela Coelho | @psidanicoelho | 🖤 %100 SİYAH | Kulaklık | Uyku • Çalışma • Meditasyon
-
-🔴 LIVE 24 JAM | LAYAR HITAM | BINAURAL 432Hz | PSIKOLOGI GELAP [ID]
-Daniela Coelho | @psidanicoelho | 🖤 100% HITAM | Headphone | Tidur • Belajar • Meditasi
-
-🔴 24 घंटे लाइव | काली स्क्रीन | बाइनॉरल 432Hz | डार्क साइकोलॉजी [HI]
-डेनियला कोएल्हो | @psidanicoelho | 🖤 100% काली | हेडफोन | नींद • अध्ययन • ध्यान
-
-🔴 بث مباشر 24 ساعة | شاشة سوداء | نغمات ثنائية 432Hz | علم النفس المظلم [AR]
-دانييلا كويلو | @psidanicoelho | 🖤 سوداء 100٪ | سماعات | النوم • الدراسة • التأمل
-
-Research: Harvard • UCLA • van der Kolk • Ainsworth • Gottman
-#blackscreen #blackscreenforsleep #binauralbeats432hz #432hz #sleepmusic
-#darkpsychology #narcissism #danielacoelho #psidanicoelho
-#schwarzerbildschirm #pantallanegraparadormir #telapreta #검은화면 #黑屏幕"""
-
-TITULO = "🔴 LIVE 24/7 | BLACK SCREEN for Sleep | Binaural Beats 432Hz | Dark Psychology | @psidanicoelho"
+        with urllib.request.urlopen(req, timeout=15) as r:
+            txt = r.read(); return json.loads(txt) if txt else {}
+    except Exception as e: return {"error": str(e)}
 
 def get_stream_id(token):
-    """Pegar ID do stream resource para ewme-91sq-yae7-yj1q-5skw"""
     data = yt_get(token, "https://www.googleapis.com/youtube/v3/liveStreams?part=id,snippet,cdn&mine=true&maxResults=50")
     for item in data.get("items", []):
-        key = item.get("cdn",{}).get("ingestionInfo",{}).get("streamName","")
+        key = item.get("cdn", {}).get("ingestionInfo", {}).get("streamName", "")
         if key == ST_KEY_VAL:
-            log(f"Stream ID: {item['id']} ({item.get('snippet',{}).get('title','')})")
+            log(f"Stream encontrado: {item['id']}")
             return item["id"]
     return None
 
-def criar_broadcast_correto(token):
-    """Cria broadcast com scheduledStartTime 5min no futuro"""
-    start = (datetime.now(timezone.utc)+timedelta(minutes=5)).strftime("%Y-%m-%dT%H:%M:%SZ")
+def deletar_broadcasts(token):
+    deleted = 0
+    for status in ["active", "live", "testing", "testStarting", "ready", "created", "complete"]:
+        url = f"https://www.googleapis.com/youtube/v3/liveBroadcasts?part=id,snippet,status&broadcastStatus={status}&maxResults=50"
+        data = yt_get(token, url)
+        for item in data.get("items", []):
+            bc_id = item["id"]
+            lc = item.get("status", {}).get("lifeCycleStatus", "")
+            if lc in ["active", "testing", "testStarting", "live"]:
+                yt_call(token, f"https://www.googleapis.com/youtube/v3/liveBroadcasts/transition?broadcastStatus=complete&id={bc_id}&part=id", {})
+                time.sleep(1.5)
+            req = urllib.request.Request(f"https://www.googleapis.com/youtube/v3/liveBroadcasts?id={bc_id}", method="DELETE")
+            req.add_header("Authorization", f"Bearer {token}")
+            try:
+                urllib.request.urlopen(req, timeout=10)
+                deleted += 1
+            except: pass
+            time.sleep(0.3)
+    log(f"Broadcasts deletados: {deleted}")
+    return deleted
+
+def criar_broadcast(token):
+    lang = idioma_por_hora()
+    titulo = TITULOS.get(lang, TITULOS["en"])
+    start = (datetime.now(timezone.utc) + timedelta(minutes=5)).strftime("%Y-%m-%dT%H:%M:%SZ")
     body = {
         "snippet": {
-            "title": TITULO[:100],
-            "description": DESC_15[:4900],
+            "title": titulo[:100],
+            "description": DESCRICAO[:4900],
             "scheduledStartTime": start,
-            "categoryId": "22",
-            "defaultLanguage": "en"
+            "defaultLanguage": lang if lang in ["en","pt","de","es","fr","it"] else "en",
         },
         "status": {
             "privacyStatus": "public",
@@ -132,119 +214,194 @@ def criar_broadcast_correto(token):
     }
     res = yt_call(token, "https://www.googleapis.com/youtube/v3/liveBroadcasts?part=id,snippet,status,contentDetails", body)
     if "id" in res:
-        log(f"Broadcast criado: {res['id']}")
+        log(f"Broadcast criado [{lang}]: {res['id']} → {titulo[:60]}")
         return res["id"]
-    else:
-        err(f"Criar falhou: {res}")
-        return None
+    err(f"Falha criar broadcast: {res}")
+    return None
 
 def bind_broadcast(token, bc_id, stream_id):
     url = f"https://www.googleapis.com/youtube/v3/liveBroadcasts/bind?id={bc_id}&part=id,contentDetails&streamId={stream_id}"
     res = yt_call(token, url)
-    if "error" in str(res.get("error",""))[:5]:
-        err(f"Bind erro: {res}")
-    else:
-        log(f"Bind OK: {bc_id} → {stream_id}")
+    log(f"Bind: {bc_id} → {stream_id}")
     return res
 
-def gerar_wav():
-    SR,DUR=44100,5; s=SR*DUR; out=bytearray()
-    for i in range(s):
-        t=i/SR
-        out+=struct.pack('<hh',int(math.sin(2*math.pi*430*t)*22000),int(math.sin(2*math.pi*432*t)*22000))
-    p=TMP/"b432.wav"
-    with wave.open(str(p),'wb') as wf:
-        wf.setnchannels(2); wf.setsampwidth(2); wf.setframerate(SR); wf.writeframes(bytes(out))
-    log(f"WAV binaural: {p.stat().st_size//1024}KB"); return str(p)
+# ─────────────────────────────────────────────────────────────
+# ÁUDIO — WHITE + BROWN NOISE (Python puro, sem numpy)
+# ─────────────────────────────────────────────────────────────
+def gerar_noise_wav(path: str, duration_s: int = 60, sr: int = 44100):
+    """Gera White+Brown Noise mix: 40% white + 60% brown"""
+    log(f"Gerando {duration_s}s White+Brown Noise WAV...")
+    n = sr * duration_s
 
-def ffm():
+    # Brown noise state (Brownian motion / red noise)
+    bl, br = 0.0, 0.0
+
+    buf = bytearray()
+    for i in range(n):
+        # White noise
+        wl = random.gauss(0, 1)
+        wr = random.gauss(0, 1)
+
+        # Brown noise (leaky integrator)
+        bl = (bl + 0.02 * wl) / 1.02
+        br = (br + 0.02 * wr) / 1.02
+
+        # Mix: 40% white (suave) + 60% brown (grave/relaxante)
+        ml = 0.40 * wl * 0.18 + 0.60 * bl * 4.0
+        mr = 0.40 * wr * 0.18 + 0.60 * br * 4.0
+
+        # Clip e converter para int16
+        l = int(max(-32767, min(32767, ml * 32767)))
+        r = int(max(-32767, min(32767, mr * 32767)))
+        buf += struct.pack('<hh', l, r)
+
+    with wave.open(path, 'wb') as wf:
+        wf.setnchannels(2)
+        wf.setsampwidth(2)
+        wf.setframerate(sr)
+        wf.writeframes(bytes(buf))
+
+    size_kb = pathlib.Path(path).stat().st_size // 1024
+    log(f"WAV gerado: {size_kb}KB ({duration_s}s)")
+    return path
+
+# ─────────────────────────────────────────────────────────────
+# FFMPEG
+# ─────────────────────────────────────────────────────────────
+def get_ffmpeg():
     try:
-        import imageio_ffmpeg; return imageio_ffmpeg.get_ffmpeg_exe()
+        import imageio_ffmpeg
+        return imageio_ffmpeg.get_ffmpeg_exe()
     except: pass
-    for p in [shutil.which("ffmpeg"),"/usr/bin/ffmpeg"]:
+    for p in [shutil.which("ffmpeg"), "/usr/bin/ffmpeg", "/usr/local/bin/ffmpeg"]:
         if p and pathlib.Path(p).exists(): return p
     return "ffmpeg"
 
-def transmitir(wav, ff, dur_s):
-    log(f"Stream iniciando: {dur_s//3600}h → {RTMP[:40]}...")
-    cmd=[ff,"-y","-re","-stream_loop","-1","-i",wav,
-         "-f","lavfi","-i","color=black:size=1920x1080:rate=25",
-         "-map","1:v","-map","0:a",
-         "-c:v","libx264","-preset","ultrafast","-crf","36",
-         "-b:v","150k","-maxrate","200k","-bufsize","400k",
-         "-g","50","-r","25","-pix_fmt","yuv420p",
-         "-c:a","aac","-b:a","128k","-ac","2","-ar","44100",
-         "-f","flv","-t",str(dur_s), RTMP]
-    return subprocess.run(cmd, timeout=dur_s+900).returncode
+def transmitir(wav_path: str, ff: str, dur_s: int) -> int:
+    lang = idioma_por_hora()
+    titulo = TITULOS.get(lang, TITULOS["en"])
+    log(f"[{lang.upper()}] Stream: {dur_s//3600}h{dur_s%3600//60}m → {titulo[:50]}")
+    cmd = [
+        ff, "-y",
+        "-re", "-stream_loop", "-1", "-i", wav_path,   # áudio em loop
+        "-f", "lavfi", "-i", "color=black:size=1920x1080:rate=25",  # vídeo preto
+        "-map", "1:v", "-map", "0:a",
+        # Vídeo
+        "-c:v", "libx264", "-preset", "ultrafast", "-crf", "36",
+        "-b:v", "150k", "-maxrate", "200k", "-bufsize", "400k",
+        "-g", "50", "-r", "25", "-pix_fmt", "yuv420p",
+        # Áudio
+        "-c:a", "aac", "-b:a", "128k", "-ac", "2", "-ar", "44100",
+        # Saída
+        "-f", "flv", "-t", str(dur_s), RTMP
+    ]
+    try:
+        return subprocess.run(cmd, timeout=dur_s + 300).returncode
+    except subprocess.TimeoutExpired:
+        return -1
+    except Exception as e:
+        err(f"ffmpeg erro: {e}")
+        return -2
 
+# ─────────────────────────────────────────────────────────────
+# MAIN — ANTI-CRASH LOOP
+# ─────────────────────────────────────────────────────────────
 def main():
-    log("="*60)
-    log(f"FULL RESET | 15 IDIOMAS | {datetime.now(timezone.utc):%H:%M} UTC")
-    log("="*60)
-    ff = ffm()
-    wav = gerar_wav()
+    log("=" * 65)
+    log(f"FULL RESET v3 | WHITE+BROWN NOISE | 15 IDIOMAS | {datetime.now(timezone.utc):%H:%M} UTC")
+    log(f"Referência: Relaxing White Noise — 1.47 BILHÃO de views")
+    log("=" * 65)
+
+    ff  = get_ffmpeg()
+    log(f"FFmpeg: {ff}")
+
+    # Gerar 60s de noise (loop via -stream_loop -1)
+    wav = str(TMP / "white_brown_noise.wav")
+    if not pathlib.Path(wav).exists():
+        gerar_noise_wav(wav, duration_s=60)
+    else:
+        log(f"WAV já existe: {wav}")
+
+    # Autenticar
     token = get_token()
-    log(f"Token OK")
-    
-    # 1. Pegar stream ID
+    log("Token OAuth OK")
+
+    # Stream ID
     stream_id = get_stream_id(token)
     if not stream_id:
-        err("Stream não encontrado! Usando key direta."); return
-    
-    # 2. Deletar TODAS as broadcasts existentes
-    log("Deletando broadcasts existentes...")
-    deleted = 0
-    for status in ["active","complete","created","ready","testStarting","testing","live"]:
-        url = f"https://www.googleapis.com/youtube/v3/liveBroadcasts?part=id,snippet,status&broadcastStatus={status}&maxResults=50"
-        data = yt_get(token, url)
-        for item in data.get("items", []):
-            bc_id = item["id"]
-            title = item.get("snippet",{}).get("title","?")[:40]
-            lifecycle = item.get("status",{}).get("lifeCycleStatus","")
-            if lifecycle in ["active","testing","testStarting"]:
-                yt_call(token, f"https://www.googleapis.com/youtube/v3/liveBroadcasts/transition?broadcastStatus=complete&id={bc_id}&part=id", {})
-                time.sleep(2)
-            req = urllib.request.Request(f"https://www.googleapis.com/youtube/v3/liveBroadcasts?id={bc_id}", method="DELETE")
-            req.add_header("Authorization", f"Bearer {token}")
-            try:
-                urllib.request.urlopen(req, timeout=10)
-                log(f"  Deleted: {title}")
-                deleted += 1
-            except Exception as e:
-                err(f"  Skip {bc_id}: {e}")
-            time.sleep(0.3)
-    log(f"  Total: {deleted} deletadas")
-    time.sleep(2)
-    
-    # 3. Criar novo broadcast
-    bc_id = criar_broadcast_correto(token)
+        err("Stream key não encontrado!")
+        sys.exit(1)
+
+    # Deletar broadcasts existentes
+    log("Limpando broadcasts antigos...")
+    deletar_broadcasts(token)
+    time.sleep(3)
+
+    # Criar novo broadcast
+    bc_id = criar_broadcast(token)
     if not bc_id:
-        err("Falha criar broadcast"); return
+        err("Não foi possível criar broadcast!")
+        sys.exit(1)
     time.sleep(2)
-    
-    # 4. Bind
+
+    # Bind
     bind_broadcast(token, bc_id, stream_id)
     time.sleep(2)
-    
-    # 5. Guardar BC_ID para uso futuro
-    log(f"NOVO BC_ID: {bc_id}")
-    log(f"Stream ID: {stream_id}")
-    
-    # 6. Stream
-    dur_s = DURATION_H * 3600
-    inicio = time.time()
-    tentativas = 0
-    while time.time()-inicio < dur_s and tentativas < 30:
-        restante = int(dur_s - (time.time()-inicio))
-        if restante < 15: break
-        tentativas += 1
-        log(f"[{tentativas}] Streaming {restante//3600}h{restante%3600//60}m")
+
+    # ── LOOP ANTI-CRASH ──────────────────────────────────────
+    dur_total = DURATION_H * 3600
+    inicio    = time.time()
+    tentativa = 0
+    falhas    = 0
+
+    while True:
+        elapsed  = time.time() - inicio
+        restante = int(dur_total - elapsed)
+
+        if restante < 30:
+            log(f"Ciclo concluído após {elapsed/3600:.2f}h")
+            break
+
+        tentativa += 1
+        log(f"[Tentativa {tentativa}] Restante: {restante//3600}h{restante%3600//60}m | Falhas: {falhas}")
+
         rc = transmitir(wav, ff, restante)
-        if rc == 0: break
-        espera = min(20*tentativas, 120)
-        log(f"retry em {espera}s"); time.sleep(espera)
-    
-    log(f"TOTAL: {(time.time()-inicio)//60:.0f}min")
+
+        if rc == 0:
+            log("Stream finalizado normalmente")
+            break
+
+        falhas += 1
+        err(f"Stream terminou com código {rc} (falha #{falhas})")
+
+        # Refresh token a cada 10 falhas
+        if falhas % 10 == 0:
+            log("Renovando token OAuth...")
+            try:
+                token = get_token()
+                log("Token renovado")
+            except Exception as e:
+                err(f"Falha renovar token: {e}")
+
+        # Recriar broadcast se muitas falhas
+        if falhas % 5 == 0:
+            log("Recriando broadcast...")
+            try:
+                deletar_broadcasts(token)
+                time.sleep(2)
+                bc_id = criar_broadcast(token)
+                if bc_id:
+                    bind_broadcast(token, bc_id, stream_id)
+                    time.sleep(2)
+            except Exception as e:
+                err(f"Falha recriar: {e}")
+
+        # Espera exponencial (max 60s)
+        espera = min(10 * falhas, 60)
+        log(f"Aguardando {espera}s antes de retry...")
+        time.sleep(espera)
+
+    log(f"TOTAL: {(time.time()-inicio)/60:.1f} min | {tentativa} tentativas | {falhas} falhas")
 
 if __name__ == "__main__":
     main()
