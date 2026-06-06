@@ -23,12 +23,18 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
 
-      - name: Instalar dependências
+      - name: Instalar dependências (ffmpeg sistema + imageio fallback)
         run: |
+          # Sistema ffmpeg com drawtext + fontes para símbolo ψ
+          sudo apt-get install -y ffmpeg fonts-dejavu-core 2>/dev/null || true
+          # imageio-ffmpeg como fallback
           pip install imageio-ffmpeg --quiet
-          python3 -c "import imageio_ffmpeg; print('FFmpeg OK:', imageio_ffmpeg.get_ffmpeg_exe())"
+          # Verificar
+          ffmpeg -version 2>&1 | head -1 || true
+          python3 -c "import imageio_ffmpeg; print('imageio-ffmpeg:', imageio_ffmpeg.get_ffmpeg_exe())"
+          fc-list | grep -i dejavu | head -3 || true
 
-      - name: "🔴 WHITE+BROWN NOISE | SEO 15 IDIOMAS | 24/7"
+      - name: "🔴 WHITE+BROWN NOISE | ψ piscando | SEO 15 IDIOMAS | 24/7"
         timeout-minutes: 400
         env:
           YT_CLIENT_ID:      ${{ secrets.YT_CLIENT_ID }}
