@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-update_broadcast_title.py — Atualiza título/descrição do broadcast LIVE ativo
-Prioridade: live > testing > liveStarting > ready (mais recente)
+update_broadcast_title.py — Atualiza todos os broadcasts encontrados para o idioma correto
+Faz query separada por: live, testing, active, all
 """
 import os, json, urllib.request, urllib.parse
 from datetime import datetime, timezone
@@ -30,17 +30,6 @@ TITULOS = {
     "ar": "🔴 بث مباشر 24 ساعة | ضجيج أبيض وبني للنوم والتركيز والدراسة | دانييلا كويلو",
 }
 
-DESCRICOES_CURTAS = {
-    "en": "🎧 White Noise 40% + Brown Noise 60% — Sleep · Focus · ADHD · Study\nDaniela Coelho | @psidanicoelho\n#whitenoise #brownnoise #sleep #adhd #focus",
-    "pt": "🎧 Ruído Branco 40% + Ruído Marrom 60% — Dormir · Focar · TDAH · Estudar\nDaniela Coelho | @psidanicoelho\n#ruidobranco #ruidomarrom #dormir #tdah #foco",
-    "de": "🎧 Weißes Rauschen 40% + Braunes Rauschen 60% — Schlafen · Fokus · ADHS\nDaniela Coelho | @psidanicoelho\n#weißesrauschen #schlafen #adhs #konzentration",
-    "es": "🎧 Ruido Blanco 40% + Ruido Marrón 60% — Dormir · Concentrarse · TDAH\nDaniela Coelho | @psidanicoelho\n#ruidoblanco #dormir #tdah #concentracion",
-    "fr": "🎧 Bruit Blanc 40% + Bruit Brun 60% — Dormir · Focus · TDAH\nDaniela Coelho | @psidanicoelho\n#bruitblanc #dormir #tdah #concentration",
-    "ja": "🎧 ホワイトノイズ40% + ブラウンノイズ60% — 睡眠·集中·ADHD\nダニエラ | @psidanicoelho\n#ホワイトノイズ #睡眠 #集中 #ADHD",
-    "ko": "🎧 화이트노이즈 40% + 브라운노이즈 60% — 수면·집중·ADHD\n다니엘라 | @psidanicoelho\n#화이트노이즈 #수면 #집중 #ADHD",
-    "zh": "🎧 白噪音40% + 棕噪音60% — 睡眠·专注·ADHD\n达尼埃拉 | @psidanicoelho\n#白噪音 #睡眠 #专注 #ADHD",
-}
-
 def idioma_por_hora():
     h = datetime.now(timezone.utc).hour
     if   5  <= h < 8:  return "de"
@@ -66,32 +55,19 @@ def get_token():
 def yt_get(token, url):
     req = urllib.request.Request(url)
     req.add_header("Authorization", f"Bearer {token}")
-    with urllib.request.urlopen(req, timeout=15) as r:
-        return json.loads(r.read())
+    try:
+        with urllib.request.urlopen(req, timeout=15) as r:
+            return json.loads(r.read())
+    except Exception as e:
+        log(f"  ERR GET: {e}")
+        return {}
 
-def atualizar(token, bc):
-    bc_id = bc["id"]
-    lc    = bc["status"]["lifeCycleStatus"]
-    sched = bc["snippet"].get("scheduledStartTime", "")
-    cur_t = bc["snippet"]["title"]
-    lang  = idioma_por_hora()
-    titulo = TITULOS.get(lang, TITULOS["en"])
-    desc   = DESCRICOES_CURTAS.get(lang, DESCRICOES_CURTAS.get("en", ""))
-    
-    log(f"\nBroadcast: {bc_id} [{lc}] scheduledStartTime={sched}")
-    log(f"  Atual:    {cur_t}")
-    log(f"  Desejado: {titulo}")
-    
-    if cur_t == titulo:
-        log(f"  ✅ Já correto!")
-        return True
-    
+def update_bc(token, bc_id, sched, titulo, descricao=""):
     body = {"id": bc_id, "snippet": {"title": titulo[:100]}}
     if sched:
         body["snippet"]["scheduledStartTime"] = sched
-    if desc:
-        body["snippet"]["description"] = desc[:4900]
-    
+    if descricao:
+        body["snippet"]["description"] = descricao[:4900]
     req = urllib.request.Request(
         "https://www.googleapis.com/youtube/v3/liveBroadcasts?part=id,snippet",
         data=json.dumps(body).encode(), method="PUT"
@@ -101,35 +77,42 @@ def atualizar(token, bc):
     try:
         with urllib.request.urlopen(req, timeout=15) as resp:
             result = json.loads(resp.read())
-            log(f"  ✅ Atualizado: {result.get('snippet',{}).get('title','')}")
-            return True
+            return result.get("snippet", {}).get("title", "")
     except urllib.error.HTTPError as e:
-        log(f"  ❌ Erro {e.code}: {e.read().decode()[:200]}")
-        return False
+        return f"ERR {e.code}: {e.read().decode()[:100]}"
 
 def main():
     token = get_token()
-    log("Token OK")
+    lang = idioma_por_hora()
+    titulo = TITULOS.get(lang, TITULOS["en"])
     h = datetime.now(timezone.utc).hour
-    log(f"{h:02d}h UTC → idioma: {idioma_por_hora()}")
+    log(f"Token OK | {h:02d}h UTC → {lang} | Desejado: {titulo[:50]}")
 
-    # Listar TODOS os broadcasts (broadcastStatus=all)
-    all_bc = []
-    url = "https://www.googleapis.com/youtube/v3/liveBroadcasts?part=id,snippet,status&broadcastStatus=all&maxResults=10"
-    data = yt_get(token, url)
-    all_bc.extend(data.get("items", []))
-    log(f"\nTotal broadcasts: {len(all_bc)}")
-    for item in all_bc:
-        log(f"  {item['id']} [{item['status']['lifeCycleStatus']}] {item['snippet']['title'][:50]}")
+    # Buscar por TODOS os status possíveis incluindo live separado
+    all_bc = {}
+    for bs in ["live", "active", "all"]:
+        url = f"https://www.googleapis.com/youtube/v3/liveBroadcasts?part=id,snippet,status&broadcastStatus={bs}&maxResults=50"
+        data = yt_get(token, url)
+        count = 0
+        for item in data.get("items", []):
+            bc_id = item["id"]
+            if bc_id not in all_bc:
+                all_bc[bc_id] = item
+                count += 1
+        log(f"  broadcastStatus={bs}: {count} novos | total {len(all_bc)}")
 
-    # Prioridade: live > testing > liveStarting > ready (mais recente)
-    prioridade = {"live": 0, "testing": 1, "liveStarting": 2, "testStarting": 3, "ready": 4, "created": 5}
-    all_bc_sorted = sorted(all_bc, key=lambda x: prioridade.get(x["status"]["lifeCycleStatus"], 99))
+    log(f"\nTotal único: {len(all_bc)}")
+    for bc_id, item in all_bc.items():
+        lc = item["status"]["lifeCycleStatus"]
+        t  = item["snippet"]["title"][:60]
+        sched = item["snippet"].get("scheduledStartTime","")
+        log(f"  {bc_id} [{lc}] {t}")
 
-    if all_bc_sorted:
-        atualizar(token, all_bc_sorted[0])
-    else:
-        log("Nenhum broadcast encontrado!")
+        if t != titulo:
+            result = update_bc(token, bc_id, sched, titulo)
+            log(f"    → UPDATE: {result[:60]}")
+        else:
+            log(f"    → ✅ Já correto")
 
 if __name__ == "__main__":
     main()
