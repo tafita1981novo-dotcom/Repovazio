@@ -54,78 +54,134 @@ def idioma_por_hora():
     elif 22 <= h < 24: return "pt"   # Brasil noite
     else:              return "en"   # Madrugada — EN global
 
-DESCRICAO = """\
-🔴 LIVE 24/7 | WHITE NOISE & BROWN NOISE | Sleep · Focus · Study · ADHD
+# ─── DESCRIÇÕES POR IDIOMA (primeiras palavras no idioma do viewer) ───
+_DESC_BLOCOS = {
+    "en": """🔴 LIVE 24/7 | WHITE NOISE & BROWN NOISE | Sleep · Focus · Study · ADHD
 Daniela Coelho — Human Behavior Researcher | @psidanicoelho
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🎧 Use HEADPHONES for the best experience
-🤍 WHITE NOISE — covers all background sounds, perfect for sleep
+🤍 WHITE NOISE — covers all background sounds, perfect for sleep & concentration
 🟤 BROWN NOISE — deep, rumbling bass, loved by people with ADHD & anxiety
 🌙 Mix: 40% White + 60% Brown — scientifically proven for deep sleep
-
-PERFECT FOR:
-😴 Deep sleep & insomnia relief
-🧠 ADHD focus & concentration
-📚 Study sessions & exam prep
-🏢 Office work & productivity
-👶 Baby sleep & colic
-
+😴 Deep sleep & insomnia | 🧠 ADHD focus | 📚 Study | 🏢 Productivity | 👶 Baby""",
+    "pt": """🔴 AO VIVO 24H | RUÍDO BRANCO & MARROM | Dormir · Focar · Estudar
+Daniela Coelho — Pesquisadora de Comportamento Humano | @psidanicoelho
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔴 AO VIVO 24H | RUÍDO BRANCO & MARROM | Dormir · Focar · Estudar [PT]
-Daniela Coelho | @psidanicoelho | 🤍 Ruído Branco + 🟤 Ruído Marrom
-😴 Sono profundo | 🧠 TDAH/foco | 📚 Estudo | 🔇 Bloqueia barulho
+🎧 Use FONES DE OUVIDO para melhor experiência
+🤍 RUÍDO BRANCO — cobre todos os barulhos externos, ideal para dormir
+🟤 RUÍDO MARROM — grave profundo, amado por pessoas com TDAH e ansiedade
+🌙 Mix: 40% Branco + 60% Marrom — comprovado cientificamente para sono profundo
+😴 Sono profundo | 🧠 TDAH/foco | 📚 Estudo | 🏢 Produtividade | 👶 Bebê""",
+    "de": """🔴 LIVE 24H | WEISSES & BRAUNES RAUSCHEN | Schlafen · Lernen · ADHS
+Daniela Coelho — Verhaltensforscherin | @psidanicoelho
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎧 Kopfhörer für das beste Erlebnis empfohlen
+🤍 WEISSES RAUSCHEN — deckt alle Hintergrundgeräusche ab, ideal zum Schlafen
+🟤 BRAUNES RAUSCHEN — tiefer Bass, von Menschen mit ADHS geliebt
+🌙 Mix: 40% Weiß + 60% Braun — wissenschaftlich für Tiefschlaf bewiesen
+😴 Tiefschlaf | 🧠 ADHS Fokus | 📚 Lernen | 🏢 Produktivität""",
+    "es": """🔴 EN VIVO 24H | RUIDO BLANCO & MARRÓN | Dormir · Estudiar · TDAH
+Daniela Coelho — Investigadora del Comportamiento Humano | @psidanicoelho
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎧 Usa AURICULARES para la mejor experiencia
+🤍 RUIDO BLANCO — cubre todos los sonidos de fondo, perfecto para dormir
+🟤 RUIDO MARRÓN — graves profundos, amado por personas con TDAH y ansiedad
+🌙 Mix: 40% Blanco + 60% Marrón — científicamente probado para el sueño profundo
+😴 Sueño profundo | 🧠 TDAH foco | 📚 Estudio | 👶 Bebé""",
+    "fr": """🔴 EN DIRECT 24H | BRUIT BLANC & BRUN | Dormir · Étudier · TDAH
+Daniela Coelho — Chercheuse en comportement humain | @psidanicoelho
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎧 Utilisez des ÉCOUTEURS pour la meilleure expérience
+🤍 BRUIT BLANC — couvre tous les bruits de fond, parfait pour dormir
+🟤 BRUIT BRUN — basse profonde, adorée des personnes TDAH
+🌙 Mix: 40% Blanc + 60% Brun — scientifiquement prouvé pour le sommeil profond
+😴 Sommeil profond | 🧠 TDAH | 📚 Études | 🔇 Anti-bruit""",
+    "ja": """🔴 24時間ライブ | ホワイトノイズ & ブラウンノイズ | 睡眠·集中·ADHD
+ダニエラ・コエーリョ — 人間行動研究者 | @psidanicoelho
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎧 ヘッドフォンで最高の体験を
+🤍 ホワイトノイズ — 背景音を全てカバー、睡眠に最適
+🟤 ブラウンノイズ — 深いベース、ADHDや不安を持つ人に人気
+😴 深い眠り | 🧠 ADHD 集中 | 📚 勉強 | 🔇 遮音""",
+    "ko": """🔴 24시간 라이브 | 화이트노이즈 & 브라운노이즈 | 수면·집중·ADHD
+다니엘라 코엘류 — 인간 행동 연구자 | @psidanicoelho
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎧 헤드폰으로 최고의 경험을
+😴 깊은 수면 | 🧠 ADHD 집중 | 📚 공부 | 🔇 소음 차단""",
+    "zh": """🔴 24小时直播 | 白噪音和棕噪音 | 睡眠·专注·学习·ADHD
+达尼埃拉·科埃略 — 人类行为研究员 | @psidanicoelho
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎧 建议使用耳机以获得最佳体验
+🤍 白噪音 — 覆盖所有背景声音，适合睡眠
+🟤 棕噪音 — 深沉低音，ADHD人群最爱
+😴 深度睡眠 | 🧠 ADHD专注 | 📚 学习 | 🏢 工作效率""",
+    "it": """🔴 LIVE 24H | RUMORE BIANCO & MARRONE | Dormire · Studiare · ADHD
+Daniela Coelho — Ricercatrice del Comportamento Umano | @psidanicoelho
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎧 Usa le CUFFIE per la migliore esperienza
+😴 Sonno profondo | 🧠 ADHD focus | 📚 Studio | 🔇 Isolamento acustico""",
+    "nl": """🔴 LIVE 24H | WITTE & BRUINE RUIS | Slapen · Studeren · ADHD
+Daniela Coelho — Gedragsonderzoeker | @psidanicoelho
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎧 Gebruik OORDOPJES voor de beste ervaring
+😴 Diepe slaap | 🧠 ADHD focus | 📚 Studeren | 🔇 Geluidisolatie""",
+    "pl": """🔴 NA ŻYWO 24H | BIAŁY & BRĄZOWY SZUM | Spanie · Nauka · ADHD
+Daniela Coelho — Badaczka Zachowania Człowieka | @psidanicoelho
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎧 Używaj SŁUCHAWEK dla najlepszych wrażeń
+😴 Głęboki sen | 🧠 ADHD koncentracja | 📚 Nauka""",
+    "tr": """🔴 CANLI 24H | BEYAZ & KAHVERENGİ GÜRÜLTÜ | Uyku · Çalışma · DEHB
+Daniela Coelho — İnsan Davranışı Araştırmacısı | @psidanicoelho
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+😴 Derin uyku | 🧠 DEHB odaklanma | 📚 Çalışma""",
+    "id": """🔴 LIVE 24H | WHITE NOISE & BROWN NOISE untuk Tidur & Fokus
+Daniela Coelho — Peneliti Perilaku Manusia | @psidanicoelho
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+😴 Tidur nyenyak | 🧠 Fokus ADHD | 📚 Belajar""",
+    "hi": """🔴 24 घंटे लाइव | व्हाइट नॉइज़ और ब्राउन नॉइज़ नींद के लिए
+डेनियला कोएल्हो — मानव व्यवहार शोधकर्ता | @psidanicoelho
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+😴 गहरी नींद | 🧠 ADHD फोकस | 📚 अध्ययन""",
+    "ar": """🔴 بث مباشر 24 ساعة | ضجيج أبيض وبني للنوم والتركيز والدراسة
+دانييلا كويلو — باحثة في السلوك البشري | @psidanicoelho
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+😴 نوم عميق | 🧠 تركيز ADHD | 📚 دراسة | 🔇 عزل الصوت""",
+}
 
-🔴 LIVE 24H | WEISSES & BRAUNES RAUSCHEN | Schlafen · Lernen · ADHS [DE]
-Daniela Coelho | @psidanicoelho | 🤍 Weißes + 🟤 Braunes Rauschen
-😴 Tiefschlaf | 🧠 ADHS Fokus | 📚 Konzentration | 🔇 Geräuschunterdrückung
-
-🔴 EN VIVO 24H | RUIDO BLANCO & MARRÓN | Dormir · Estudiar · TDAH [ES]
-Daniela Coelho | @psidanicoelho | 🤍 Ruido Blanco + 🟤 Ruido Marrón
-😴 Sueño profundo | 🧠 TDAH foco | 📚 Estudio | 👶 Bebé
-
-🔴 EN DIRECT 24H | BRUIT BLANC & BRUN | Dormir · Étudier · TDAH [FR]
-Daniela Coelho | @psidanicoelho | 🤍 Bruit Blanc + 🟤 Bruit Brun
-😴 Sommeil profond | 🧠 TDAH | 📚 Études | 🔇 Anti-bruit
-
-🔴 24時間ライブ | ホワイトノイズ & ブラウンノイズ | 睡眠·集中·ADHD [JA]
-ダニエラ | @psidanicoelho | 🤍 ホワイトノイズ + 🟤 ブラウンノイズ
-😴 深い眠り | 🧠 ADHD 集中 | 📚 勉強 | 🔇 遮音
-
-🔴 24시간 라이브 | 화이트노이즈 & 브라운노이즈 | 수면·집중·ADHD [KO]
-다니엘라 | @psidanicoelho | 🤍 화이트노이즈 + 🟤 브라운노이즈
-
-🔴 24小时直播 | 白噪音和棕噪音 | 睡眠·专注·学习·ADHD [ZH]
-达尼埃拉 | @psidanicoelho | 🤍 白噪音 + 🟤 棕噪音
-
-🔴 LIVE 24H | RUMORE BIANCO & MARRONE | Dormire · Studiare · ADHD [IT]
-Daniela Coelho | @psidanicoelho | 🤍 Bianco + 🟤 Marrone
-
-🔴 LIVE 24H | WITTE & BRUINE RUIS | Slapen · Studeren · ADHD [NL]
-Daniela Coelho | @psidanicoelho | 🤍 Wit + 🟤 Bruin
-
-🔴 NA ŻYWO 24H | BIAŁY & BRĄZOWY SZUM | Spanie · Nauka · ADHD [PL]
-Daniela Coelho | @psidanicoelho | 🤍 Biały + 🟤 Brązowy
-
-🔴 CANLI 24H | BEYAZ & KAHVERENGİ GÜRÜLTÜ | Uyku · Çalışma · DEHB [TR]
-Daniela Coelho | @psidanicoelho
-
-🔴 LIVE 24H | WHITE NOISE & BROWN NOISE untuk Tidur & Fokus [ID]
-Daniela Coelho | @psidanicoelho
-
-🔴 24 घंटे लाइव | व्हाइट नॉइज़ और ब्राउन नॉइज़ नींद के लिए [HI]
-डेनियला | @psidanicoelho
-
-🔴 بث مباشر 24 ساعة | ضجيج أبيض وبني للنوم والتركيز [AR]
-دانييلا كويلو | @psidanicoelho
-
+_HASHTAGS = """
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Research: Harvard · van der Kolk · Ainsworth · Gottman · Siegel/UCLA
 #whitenoise #brownnoise #whitenoiseforsleep #brownnoiseforsleep
 #sleepmusic #studymusic #focusmusic #adhdfocus #adhdmusic
-#danielacoelho #psidanicoelho #ruïdobranco #ruïdoblanco
-#weißesrauschen #whitenoisebaby #brownnoisead #deepfocus
-#schwarzerbildschirm #pantallanegraparadormir #telapretapradormir\
-"""
+#danielacoelho #psidanicoelho #ruïdobranco #ruidoblanco
+#weißesrauschen #whitenoisebaby #deepfocus #telapretaparaadormir"""
+
+def get_descricao(lang: str) -> str:
+    """Descrição começa no idioma ativo, depois lista todos os outros"""
+    # Bloco do idioma ativo primeiro
+    partes = [_DESC_BLOCOS.get(lang, _DESC_BLOCOS["en"])]
+    # Depois todos os outros idiomas (exceto o ativo) — resumidos
+    outros = {
+        "en": "🔴 LIVE 24/7 | White Noise & Brown Noise | Sleep · Focus · Study",
+        "pt": "🔴 AO VIVO 24H | Ruído Branco & Marrom | Dormir · Focar · Estudar",
+        "de": "🔴 LIVE 24H | Weißes & Braunes Rauschen | Schlafen · Lernen",
+        "es": "🔴 EN VIVO 24H | Ruido Blanco & Marrón | Dormir · Estudiar",
+        "fr": "🔴 EN DIRECT 24H | Bruit Blanc & Brun | Dormir · Étudier",
+        "ja": "🔴 24時間ライブ | ホワイトノイズ & ブラウンノイズ | 睡眠·集中",
+        "ko": "🔴 24시간 라이브 | 화이트노이즈 & 브라운노이즈 | 수면·집중",
+        "zh": "🔴 24小时直播 | 白噪音和棕噪音 | 睡眠·专注",
+        "it": "🔴 LIVE 24H | Rumore Bianco & Marrone | Dormire · Studiare",
+        "nl": "🔴 LIVE 24H | Witte & Bruine Ruis | Slapen · Studeren",
+        "pl": "🔴 NA ŻYWO 24H | Biały & Brązowy Szum | Spanie · Nauka",
+        "tr": "🔴 CANLI 24H | Beyaz & Kahverengi Gürültü | Uyku · Çalışma",
+        "id": "🔴 LIVE 24H | White Noise & Brown Noise untuk Tidur & Fokus",
+        "hi": "🔴 24 घंटे लाइव | व्हाइट नॉइज़ और ब्राउन नॉइज़ | नींद",
+        "ar": "🔴 بث مباشر 24 ساعة | ضجيج أبيض وبني للنوم والتركيز",
+    }
+    resumo = "\n".join(v for k, v in outros.items() if k != lang)
+    partes.append(resumo)
+    partes.append(_HASHTAGS)
+    return "\n\n".join(partes)
 
 # ─────────────────────────────────────────────────────────────
 # YOUTUBE API
@@ -201,7 +257,7 @@ def criar_broadcast(token):
     body = {
         "snippet": {
             "title": titulo[:100],
-            "description": DESCRICAO[:4900],
+            "description": get_descricao(lang)[:4900],
             "scheduledStartTime": start,
             "defaultLanguage": lang if lang in ["en","pt","de","es","fr","it"] else "en",
         },
