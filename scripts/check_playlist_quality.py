@@ -205,8 +205,14 @@ def main():
         if mp4_url:
             ok_audio, audio_info = check_mp4(mp4_url, title)
             if not ok_audio:
-                motivos.append(audio_info)
-                log(f"  ❌ Áudio: {audio_info}")
+                # Inconclusivo (ffprobe/download falhou) → NÃO deletar
+                inconclusivo = any(x in audio_info for x in
+                    ["DURACAO_INDETERMINAVEL","DOWNLOAD_FALHOU","ffprobe","SEM_MP4"])
+                if inconclusivo:
+                    log(f"  ⚠️  Áudio inconclusivo — não deletar: {audio_info}")
+                else:
+                    motivos.append(audio_info)
+                    log(f"  ❌ Áudio: {audio_info}")
             else:
                 log(f"  ✅ Áudio OK: {audio_info}")
         else:
