@@ -82,43 +82,68 @@ def criar_short_video(ff, wav, titulo):
     return out_path
 
 def upload_short(token, video_path, titulo):
-    """Upload via YouTube Data API v3 resumable upload"""
-    # Metadata
+    """Upload via YouTube Data API v3 resumable upload (requests lib)"""
+    import requests as req_lib
+    
+    # Título limpo sem emoji (YouTube API pode rejeitar)
+    titulo_clean = titulo.split(" #")[0].strip()
+    
     meta = {
         "snippet": {
-            "title": titulo[:100],
+            "title": titulo_clean[:100],
             "description": DESC_SHORT,
-            "categoryId": "22",
-            "tags": ["white noise","brown noise","black screen","sleep","study","shorts",
-                     "tela preta","ruido blanco","pantalla negra","whitenoise","brownnoise"]
+            "categoryId": "10",
+            "tags": ["white noise","brown noise","black screen","sleep","study",
+                     "tela preta","ruido blanco","pantalla negra","whitenoise","brownnoise",
+                     "blackscreen","sleepsounds","whitenoiseforbabies","brownnoise10hours"]
         },
         "status": {
             "privacyStatus": "public",
             "selfDeclaredMadeForKids": False
         }
     }
-    # Iniciar upload resumable
-    meta_bytes=json.dumps(meta).encode()
+    
     video_size = pathlib.Path(video_path).stat().st_size
-    req=urllib.request.Request(
+    
+    # Iniciar upload resumable
+    init_resp = req_lib.post(
         "https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status",
-        data=meta_bytes, method="POST")
-    req.add_header("Authorization",f"Bearer {token}")
-    req.add_header("Content-Type","application/json; charset=UTF-8")
-    req.add_header("X-Upload-Content-Type","video/mp4")
-    req.add_header("X-Upload-Content-Length",str(video_size))
-    with urllib.request.urlopen(req,timeout=30) as r:
-        upload_url=r.headers.get("Location","")
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json; charset=UTF-8",
+            "X-Upload-Content-Type": "video/mp4",
+            "X-Upload-Content-Length": str(video_size)
+        },
+        json=meta,
+        timeout=30
+    )
+    
+    if init_resp.status_code not in (200, 201):
+        print(f"Erro iniciar upload: {init_resp.status_code} {init_resp.text[:500]}")
+        return None
+    
+    upload_url = init_resp.headers.get("Location","")
     if not upload_url:
         print("Sem upload URL"); return None
+    
+    print(f"Upload URL obtida: {upload_url[:60]}...")
+    
     # Enviar vídeo
     with open(video_path,"rb") as f: video_data=f.read()
-    req2=urllib.request.Request(upload_url,data=video_data,method="PUT")
-    req2.add_header("Content-Type","video/mp4")
-    req2.add_header("Content-Length",str(video_size))
-    with urllib.request.urlopen(req2,timeout=300) as r:
-        res=json.loads(r.read())
-    vid_id=res.get("id","")
+    
+    upload_resp = req_lib.put(
+        upload_url,
+        headers={"Content-Type": "video/mp4", "Content-Length": str(video_size)},
+        data=video_data,
+        timeout=300
+    )
+    
+    if upload_resp.status_code not in (200, 201):
+        print(f"Erro enviar vídeo: {upload_resp.status_code} {upload_resp.text[:300]}")
+        return None
+    
+    res = upload_resp.json()
+    vid_id = res.get("id","")
     print(f"✅ Short publicado: https://www.youtube.com/shorts/{vid_id}")
     return vid_id
 
