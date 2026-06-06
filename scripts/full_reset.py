@@ -293,12 +293,12 @@ def atualizar_broadcast(token, bc_id):
     lang   = idioma_por_hora()
     titulo = TITULOS.get(lang, TITULOS["en"])
     desc   = get_descricao(lang)
+    # NOTA: não incluir scheduledStartTime em broadcasts já live — causa erro 400
     body = {
         "id": bc_id,
         "snippet": {
             "title": titulo[:100],
             "description": desc[:4900],
-            "scheduledStartTime": (datetime.now(timezone.utc) + timedelta(minutes=1)).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "defaultLanguage": lang if lang in ["en","pt","de","es","fr","it"] else "en",
         }
     }
@@ -307,8 +307,16 @@ def atualizar_broadcast(token, bc_id):
         body, method="PUT")
     if "id" in res:
         log(f"✅ Broadcast atualizado [{lang}]: {titulo[:60]}")
-    else:
-        log(f"  Aviso update: {str(res)[:80]}")
+    elif "error" in res:
+        # Tentar sem defaultLanguage se der erro
+        body["snippet"].pop("defaultLanguage", None)
+        res2 = yt_call(token,
+            "https://www.googleapis.com/youtube/v3/liveBroadcasts?part=id,snippet",
+            body, method="PUT")
+        if "id" in res2:
+            log(f"✅ Broadcast atualizado [{lang}] (sem defaultLanguage): {titulo[:60]}")
+        else:
+            log(f"  Aviso update: {str(res2)[:80]}")
     return res
 
 # ─────────────────────────────────────────────────────────────
