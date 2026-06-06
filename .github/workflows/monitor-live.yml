@@ -1,0 +1,23 @@
+name: 📊 Monitor Live — Métricas por Hora
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install requests --quiet
+      - name: 📊 Coletar métricas
+        env:
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python3 scripts/monitor_live.py
