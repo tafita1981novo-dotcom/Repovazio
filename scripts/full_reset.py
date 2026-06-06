@@ -288,6 +288,29 @@ def bind_broadcast(token, bc_id, stream_id):
     log(f"Bind: {bc_id} → {stream_id}")
     return res
 
+def atualizar_broadcast(token, bc_id):
+    """Atualiza título e descrição do broadcast para o idioma atual"""
+    lang   = idioma_por_hora()
+    titulo = TITULOS.get(lang, TITULOS["en"])
+    desc   = get_descricao(lang)
+    body = {
+        "id": bc_id,
+        "snippet": {
+            "title": titulo[:100],
+            "description": desc[:4900],
+            "scheduledStartTime": (datetime.now(timezone.utc) + timedelta(minutes=1)).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "defaultLanguage": lang if lang in ["en","pt","de","es","fr","it"] else "en",
+        }
+    }
+    res = yt_call(token,
+        "https://www.googleapis.com/youtube/v3/liveBroadcasts?part=id,snippet",
+        body, method="PUT")
+    if "id" in res:
+        log(f"✅ Broadcast atualizado [{lang}]: {titulo[:60]}")
+    else:
+        log(f"  Aviso update: {str(res)[:80]}")
+    return res
+
 # ─────────────────────────────────────────────────────────────
 # ÁUDIO — WHITE + BROWN NOISE (Python puro, sem numpy)
 # ─────────────────────────────────────────────────────────────
@@ -447,6 +470,8 @@ def main():
     if bc_id:
         log(f"✅ Broadcast já ativo: {bc_id} | {bc_title}")
         log("   Reusando — SEM deletar, SEM recriar")
+        # Atualizar título/descrição para o idioma atual
+        atualizar_broadcast(token, bc_id)
     else:
         log("Nenhum broadcast ativo — criando 1 novo...")
         deletar_broadcasts(token, max_seconds=90)
