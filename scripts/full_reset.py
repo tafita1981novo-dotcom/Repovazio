@@ -284,14 +284,14 @@ def transmitir(wav_path: str, ff: str, dur_s: int) -> int:
     cmd = [
         ff, "-y",
         "-re", "-stream_loop", "-1", "-i", wav_path,   # áudio em loop
-        "-f", "lavfi", "-i", "color=black:size=1920x1080:rate=25",  # vídeo preto
+        "-f", "lavfi", "-i", "color=black:size=854x480:rate=25",  # vídeo preto
         "-map", "1:v", "-map", "0:a",
         # Vídeo
-        "-c:v", "libx264", "-preset", "ultrafast", "-crf", "36",
-        "-b:v", "150k", "-maxrate", "200k", "-bufsize", "400k",
-        "-g", "50", "-r", "25", "-pix_fmt", "yuv420p",
+        "-c:v", "libx264", "-preset", "ultrafast", "-crf", "51",
+        "-b:v", "100k", "-maxrate", "150k", "-bufsize", "200k",
+        "-g", "25", "-r", "25", "-pix_fmt", "yuv420p",
         # Áudio
-        "-c:a", "aac", "-b:a", "128k", "-ac", "2", "-ar", "44100",
+        "-c:a", "aac", "-b:a", "96k", "-ac", "2", "-ar", "44100",
         # Saída
         "-f", "flv", "-t", str(dur_s), RTMP
     ]
