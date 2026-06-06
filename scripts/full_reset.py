@@ -277,16 +277,63 @@ def get_ffmpeg():
         if p and pathlib.Path(p).exists(): return p
     return "ffmpeg"
 
+def get_psi_vf(ff: str) -> str:
+    """Retorna filtro drawtext com ψ piscando para garantir originalidade/monetização.
+    ψ = cor #111111 (quase preto), 12px, pisca 2s ON / 2s OFF — invisível ao olho."""
+    # Fontes disponíveis no Ubuntu (em ordem de preferência)
+    fontes = [
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+        "/usr/share/fonts/truetype/ubuntu/Ubuntu-R.ttf",
+        "/usr/share/fonts/truetype/freefont/FreeSans.ttf",
+    ]
+    fonte = next((f for f in fontes if pathlib.Path(f).exists()), None)
+
+    # Verificar se drawtext está disponível neste ffmpeg
+    try:
+        out = subprocess.check_output([ff, "-filters"], stderr=subprocess.STDOUT,
+                                       timeout=5).decode(errors="ignore")
+        has_drawtext = "drawtext" in out
+    except Exception:
+        has_drawtext = False
+
+    if has_drawtext and fonte:
+        # ψ no centro — cor #111111 = RGB(17,17,17) ≈ 6% de brilho
+        # enable: aparece 2s a cada ciclo de 4s (pisca devagar)
+        log(f"ψ overlay: drawtext ativo ({fonte.split('/')[-1]})")
+        return (
+            f"drawtext=fontfile='{fonte}':"
+            "text='\u03c8':"          # ψ unicode
+            "fontsize=12:"
+            "fontcolor=0x111111:"
+            "x=(w-text_w)/2:"
+            "y=(h-text_h)/2:"
+            "enable='lt(mod(t\,4)\,2)'"   # pisca: 2s ON, 2s OFF
+        )
+    else:
+        log("ψ overlay: drawtext indisponível — usando tela preta pura")
+        return None
+
 def transmitir(wav_path: str, ff: str, dur_s: int) -> int:
-    lang = idioma_por_hora()
+    lang  = idioma_por_hora()
     titulo = TITULOS.get(lang, TITULOS["en"])
-    log(f"[{lang.upper()}] Stream: {dur_s//3600}h{dur_s%3600//60}m → {titulo[:50]}")
+    vf    = get_psi_vf(ff)
+    log(f"[{lang.upper()}] Stream: {dur_s//3600}h{dur_s%3600//60}m | ψ={'ON' if vf else 'OFF'}")
+
+    # Base do comando
     cmd = [
         ff, "-y",
-        "-re", "-stream_loop", "-1", "-i", wav_path,   # áudio em loop
-        "-f", "lavfi", "-i", "color=black:size=854x480:rate=25",  # vídeo preto
+        "-re", "-stream_loop", "-1", "-i", wav_path,
+        "-f", "lavfi", "-i", "color=black:size=854x480:rate=25",
         "-map", "1:v", "-map", "0:a",
-        # Vídeo
+    ]
+
+    # Adicionar filtro ψ se disponível
+    if vf:
+        cmd += ["-vf", vf]
+
+    cmd += [
+        # Vídeo — mínimo absoluto
         "-c:v", "libx264", "-preset", "ultrafast", "-crf", "51",
         "-b:v", "100k", "-maxrate", "150k", "-bufsize", "200k",
         "-g", "25", "-r", "25", "-pix_fmt", "yuv420p",
@@ -295,6 +342,7 @@ def transmitir(wav_path: str, ff: str, dur_s: int) -> int:
         # Saída
         "-f", "flv", "-t", str(dur_s), RTMP
     ]
+
     try:
         return subprocess.run(cmd, timeout=dur_s + 300).returncode
     except subprocess.TimeoutExpired:
