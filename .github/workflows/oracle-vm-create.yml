@@ -27,7 +27,7 @@ jobs:
           ssh-keygen -t rsa -b 2048 -f ~/.ssh/oracle_stream -N '' -q
           oci iam region list --query 'data[0].name' --raw-output && echo 'Auth OK'
 
-      - name: Retry VM ARM
+      - name: Retry VM ARM multi-size
         env:
           OCI_SUBNET_ID: ${{ secrets.OCI_SUBNET_ID }}
           OCI_IMAGE_ID: ${{ secrets.OCI_IMAGE_ID }}
@@ -37,49 +37,67 @@ jobs:
           YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
         run: |
           set +e
-          echo 'Iniciando retry loop ARM...'
+          echo "Iniciando retry loop ARM — tentando 3 tamanhos na home region sa-saopaulo-1"
+          echo "Ordem: 4 OCPU/24GB → 2 OCPU/12GB → 1 OCPU/6GB"
+
+          # Tamanhos em ordem decrescente — todos Always Free dentro do limite 4 OCPU/24GB
+          SIZES=("4:24" "2:12" "1:6")
           CRIADO=0
-          for i in $(seq 1 600); do
-            echo -n "[$i] "
-            R=$(oci compute instance launch \
-              --compartment-id "$OCI_TENANCY_OCID" \
-              --availability-domain "$OCI_AD" \
-              --shape VM.Standard.A1.Flex \
-              --shape-config '{"ocpus":4,"memoryInGBs":24}' \
-              --image-id "$OCI_IMAGE_ID" \
-              --subnet-id "$OCI_SUBNET_ID" \
-              --assign-public-ip true \
-              --ssh-authorized-keys-file ~/.ssh/oracle_stream.pub \
-              --display-name psidoc-stream-server \
-              --boot-volume-size-in-gbs 50 \
-              --query 'data.id' --raw-output 2>&1)
-            if echo "$R" | grep -q 'ocid1.instance'; then
-              echo "VM CRIADA: $R"
-              CRIADO=1
-              echo "Aguardando 3min VM iniciar..."
-              sleep 180
-              IP=$(oci compute instance list-vnics --instance-id "$R" \
-                --query 'data[0]."public-ip"' --raw-output 2>/dev/null)
-              echo "IP: $IP"
-              if [ -n "$IP" ] && [ "$IP" != 'null' ]; then
-                ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 \
-                  -i ~/.ssh/oracle_stream ubuntu@$IP \
-                  "sudo apt-get install -y ffmpeg python3-pip wget -q && \
-                   pip3 install numpy pillow -q && \
-                   wget -qO /tmp/s.sh https://raw.githubusercontent.com/tafita81/Repovazio/main/scripts/oracle-forever-live-setup.sh && \
-                   chmod +x /tmp/s.sh && STREAM_KEY='$YOUTUBE_STREAM_KEY' bash /tmp/s.sh && \
-                   echo STREAM_OK" || echo 'SSH falhou'
-                echo "IP Oracle: $IP"
+          INSTANCE_ID=""
+          OCPUS_USED=0
+
+          for i in $(seq 1 500); do
+            for SIZE in "${SIZES[@]}"; do
+              OCPU="${SIZE%%:*}"
+              MEM="${SIZE##*:}"
+              echo -n "[tentativa $i] ${OCPU}OCPU/${MEM}GB → "
+
+              R=$(oci compute instance launch                 --compartment-id "$OCI_TENANCY_OCID"                 --availability-domain "$OCI_AD"                 --shape VM.Standard.A1.Flex                 --shape-config "{"ocpus":${OCPU},"memoryInGBs":${MEM}}"                 --image-id "$OCI_IMAGE_ID"                 --subnet-id "$OCI_SUBNET_ID"                 --assign-public-ip true                 --ssh-authorized-keys-file ~/.ssh/oracle_stream.pub                 --display-name "psidoc-stream-${OCPU}cpu"                 --boot-volume-size-in-gbs 50                 --query 'data.id' --raw-output 2>&1)
+
+              if echo "$R" | grep -q 'ocid1.instance'; then
+                echo "CRIADA! ID=$R (${OCPU} OCPU / ${MEM}GB)"
+                CRIADO=1
+                INSTANCE_ID="$R"
+                OCPUS_USED="$OCPU"
+                break 2
+              elif echo "$R" | grep -q 'Out of host capacity'; then
+                echo "sem capacidade"
+              elif echo "$R" | grep -q 'LimitExceeded'; then
+                echo "limite atingido (ja tem VM?)"
+                break 2
+              else
+                echo "erro: ${R:0:80}"
               fi
-              break
-            else
-              echo 'sem capacidade. sleep 30...'
+            done
+
+            # Intervalo progressivo: primeiros 10 tentativas 30s, depois 60s
+            if [ "$i" -lt 10 ]; then
               sleep 30
+            else
+              sleep 60
             fi
           done
-          curl -s -X POST \
-            -H "Authorization: Bearer $GH_PAT" \
-            -H 'Accept: application/vnd.github+json' \
-            'https://api.github.com/repos/tafita81/Repovazio/actions/workflows/oracle-vm-create.yml/dispatches' \
-            -d '{"ref":"main"}' && echo 'Relay para proximo ciclo OK'
+
+          if [ "$CRIADO" -eq 1 ]; then
+            echo ""
+            echo "=== VM CRIADA COM SUCESSO ==="
+            echo "Aguardando 3min VM iniciar..."
+            sleep 180
+
+            IP=$(oci compute instance list-vnics --instance-id "$INSTANCE_ID"               --query 'data[0]."public-ip"' --raw-output 2>/dev/null)
+            echo "IP Publico: $IP"
+
+            # Salvar IP no Supabase via API
+            curl -s -X POST               "https://tpjvalzwkqwttvmszvie.supabase.co/rest/v1/ia_cache"               -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}"               -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}"               -H "Content-Type: application/json"               -H "Prefer: resolution=merge-duplicates"               -d "{"cache_key":"oracle_vm_ip","value":"$IP","expires_at":null}"               && echo "IP salvo no Supabase"
+
+            if [ -n "$IP" ] && [ "$IP" != "null" ]; then
+              echo "Configurando servidor via SSH..."
+              ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30                 -i ~/.ssh/oracle_stream ubuntu@$IP                 "sudo apt-get install -y ffmpeg python3-pip wget -q &&                  pip3 install numpy pillow -q &&                  wget -qO /tmp/s.sh https://raw.githubusercontent.com/tafita81/Repovazio/main/scripts/oracle-forever-live-setup.sh &&                  chmod +x /tmp/s.sh && STREAM_KEY='$YOUTUBE_STREAM_KEY' bash /tmp/s.sh &&                  echo STREAM_OK" || echo 'SSH falhou — IP salvo, tente manualmente'
+            fi
+          else
+            echo "Nenhum tamanho disponivel neste ciclo. Proximo ciclo em 6h."
+          fi
+
+          # Auto-relay para proximo ciclo
+          curl -s -X POST             -H "Authorization: Bearer $GH_PAT"             -H "Accept: application/vnd.github+json"             "https://api.github.com/repos/tafita81/Repovazio/actions/workflows/oracle-vm-create.yml/dispatches"             -d "{\"ref\":\"main\"}" && echo "Relay proximo ciclo OK"
           exit 0
