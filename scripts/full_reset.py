@@ -349,124 +349,124 @@ def gerar_noise_wav(path: str, duration_s: int = 10, sr: int = 44100):
     return path
 
 # ─────────────────────────────────────────────────────────────
-# PNG PRETO ESTÁTICO — mais estável que lavfi color=
+# PNG COM ψ EMBUTIDO — Python puro, sem PIL, SEM depender de drawtext
+# O ψ é gravado no próprio pixel (#111111 ≈ 6% brilho) → presença
+# GARANTIDA em qualquer ffmpeg. Monetização nunca cai por "ψ OFF".
 # ─────────────────────────────────────────────────────────────
-def criar_png_preto(path: str, w: int = 1280, h: int = 720):
-    """Gera PNG preto puro em Python puro (sem PIL). Rápido, sem deps."""
+def _psi_pixels(w, h):
+    """Coordenadas (x,y) do glifo ψ centralizado, discreto."""
+    cx, cy = w // 2, h // 2
+    GW, GH = 44, 56
+    x0, y0 = cx - GW // 2, cy - GH // 2
+    px = set()
+    for y in range(0, 38):                       # haste esquerda
+        for x in range(0, 4):           px.add((x0 + x, y0 + y))
+    for y in range(0, 38):                       # haste direita
+        for x in range(GW - 4, GW):     px.add((x0 + x, y0 + y))
+    for y in range(0, GH):                        # haste central (toda altura)
+        for x in range(GW//2 - 2, GW//2 + 2): px.add((x0 + x, y0 + y))
+    for y in range(34, 38):                       # base do U
+        for x in range(0, GW):          px.add((x0 + x, y0 + y))
+    return px
+
+def criar_png_psi(path, w=1280, h=720, com_psi=True):
+    """PNG preto com ψ embutido em #111111 (imperceptível ao olho)."""
     import struct, zlib
-    def chunk(tag, data):
-        crc = zlib.crc32(tag + data) & 0xFFFFFFFF
-        return struct.pack('>I', len(data)) + tag + data + struct.pack('>I', crc)
+    def chunk(tag, d):
+        crc = zlib.crc32(tag + d) & 0xFFFFFFFF
+        return struct.pack('>I', len(d)) + tag + d + struct.pack('>I', crc)
     sig  = b'\x89PNG\r\n\x1a\n'
     ihdr = chunk(b'IHDR', struct.pack('>IIBBBBB', w, h, 8, 2, 0, 0, 0))
-    row  = b'\x00' + b'\x00\x00\x00' * w          # filter=0, RGB preto
-    raw  = b''.join(row for _ in range(h))
-    idat = chunk(b'IDAT', zlib.compress(raw, 1))   # compressão mínima (rápido)
-    iend = chunk(b'IEND', b'')
+    BLACK, PSI = b'\x00\x00\x00', b'\x11\x11\x11'
+    rows = {}
+    if com_psi:
+        for (x, y) in _psi_pixels(w, h):
+            rows.setdefault(y, set()).add(x)
+    black_row = b'\x00' + BLACK * w
+    raw = bytearray()
+    for y in range(h):
+        if y in rows:
+            xs = rows[y]; r = bytearray(b'\x00')
+            for x in range(w):
+                r += PSI if x in xs else BLACK
+            raw += r
+        else:
+            raw += black_row
+    idat = chunk(b'IDAT', zlib.compress(bytes(raw), 6))
     with open(path, 'wb') as f:
-        f.write(sig + ihdr + idat + iend)
-    log(f"PNG preto ok: {w}x{h} → {path}")
+        f.write(sig + ihdr + idat + chunk(b'IEND', b''))
 
 # ─────────────────────────────────────────────────────────────
-# FFMPEG — escolhe sistema (tem drawtext) ou imageio (fallback)
+# FFMPEG
 # ─────────────────────────────────────────────────────────────
 def get_ffmpeg():
-    """Tenta sistema ffmpeg primeiro (tem drawtext/libfreetype).
-       Fallback: imageio_ffmpeg estático."""
     for p in ["/usr/bin/ffmpeg", "/usr/local/bin/ffmpeg", "ffmpeg"]:
         try:
-            r = subprocess.run([p, "-version"], capture_output=True, timeout=5)
-            if r.returncode == 0:
-                log(f"ffmpeg: {p}")
-                return p
+            if subprocess.run([p, "-version"], capture_output=True, timeout=5).returncode == 0:
+                log(f"ffmpeg: {p}"); return p
         except Exception:
             pass
     try:
         import imageio_ffmpeg
-        p = imageio_ffmpeg.get_ffmpeg_exe()
-        log(f"ffmpeg imageio: {p}")
-        return p
+        p = imageio_ffmpeg.get_ffmpeg_exe(); log(f"ffmpeg imageio: {p}"); return p
     except Exception:
         return "ffmpeg"
 
-def tem_drawtext(ff: str) -> str | None:
-    """Retorna path da fonte se drawtext+libfreetype disponíveis, senão None."""
+def preparar_fonte_video(ff):
+    """Gera loop.mp4 (4s, ψ pisca 2s ON / 2s OFF) de 2 PNGs com ψ embutido.
+       Retorna ('video', mp4). Se a render falhar → ('image', png_on) com ψ
+       SEMPRE visível. ψ garantido nos dois casos (zero dependência de drawtext)."""
+    png_on  = str(TMP / "psi_0.png")     # ψ visível
+    png_off = str(TMP / "psi_1.png")     # tela preta
+    criar_png_psi(png_on,  com_psi=True)
+    criar_png_psi(png_off, com_psi=False)
+    log("PNGs ψ ok (on/off, #111111 embutido no pixel)")
+
+    loop_mp4 = str(TMP / "loop.mp4")
+    # image2 a 0.5fps → cada PNG dura 2s → 2 frames = 4s de piscar
+    cmd = [ff, "-y", "-framerate", "0.5", "-i", str(TMP / "psi_%d.png"),
+           "-t", "4", "-r", "2", "-pix_fmt", "yuv420p",
+           "-c:v", "libx264", "-preset", "ultrafast", "-crf", "51",
+           "-b:v", "120k", "-maxrate", "160k", "-bufsize", "300k", "-g", "4",
+           loop_mp4]
     try:
-        out = subprocess.check_output([ff, "-filters"], stderr=subprocess.STDOUT,
-                                      timeout=5).decode(errors="ignore")
-        if "drawtext" not in out:
-            return None
-    except Exception:
-        return None
-    fontes = [
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-        "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
-        "/usr/share/fonts/truetype/ubuntu/Ubuntu-R.ttf",
-        "/usr/share/fonts/truetype/freefont/FreeSans.ttf",
-    ]
-    for f in fontes:
-        if pathlib.Path(f).exists():
-            return f
-    return None
+        r = subprocess.run(cmd, capture_output=True, timeout=60)
+        if r.returncode == 0 and pathlib.Path(loop_mp4).exists() \
+           and pathlib.Path(loop_mp4).stat().st_size > 1000:
+            kb = pathlib.Path(loop_mp4).stat().st_size // 1024
+            log(f"loop.mp4 ok: ψ PISCANDO 2s/2s ({kb}KB)")
+            return ("video", loop_mp4)
+        err(f"loop.mp4 falhou (rc={r.returncode}) — fallback PNG ψ fixo")
+    except Exception as e:
+        err(f"loop.mp4 exception: {e} — fallback PNG ψ fixo")
+    return ("image", png_on)             # ψ sempre visível mesmo no fallback
 
-def build_vf(fonte: str | None) -> str | None:
-    """Monta filtro de vídeo: drawtext ψ piscando + eventuais extras."""
-    if not fonte:
-        log("ψ overlay: drawtext indisponível — tela preta pura")
-        return None
-    log(f"ψ overlay: {fonte.split('/')[-1]}")
-    # ψ quase invisível (6% brilho), centro, pisca 2s ON / 2s OFF
-    return (
-        f"drawtext=fontfile='{fonte}':"
-        "text='ψ':"
-        "fontsize=12:"
-        "fontcolor=0x111111:"
-        "x=(w-text_w)/2:"
-        "y=(h-text_h)/2:"
-        "enable='lt(mod(t\\,4)\\,2)'"
-    )
+def transmitir(modo, src, wav_path, ff, dur_s):
+    lang = idioma_por_hora()
+    if modo == "video":
+        v_in = ["-re", "-stream_loop", "-1", "-i", src]
+        psi = "ON (piscando, embutido)"
+    else:
+        v_in = ["-loop", "1", "-i", src]
+        psi = "ON (fixo, embutido)"
+    log(f"[{lang.upper()}] Stream {dur_s//3600}h{dur_s%3600//60}m | ψ={psi}")
 
-def transmitir(png_path: str, wav_path: str, ff: str, dur_s: int) -> int:
-    lang   = idioma_por_hora()
-    titulo = TITULOS.get(lang, TITULOS["en"])
-    fonte  = tem_drawtext(ff)
-    vf     = build_vf(fonte)
-    log(f"[{lang.upper()}] Stream {dur_s//3600}h{dur_s%3600//60}m | ψ={'ON' if vf else 'OFF'}")
-
-    # Comando base — PNG estática em loop + WAV em loop
-    cmd = [
-        ff, "-y",
-        # Vídeo: imagem estática em loop
-        "-loop", "1", "-i", png_path,
-        # Áudio: WAV em loop
+    cmd = [ff, "-y"] + v_in + [
         "-re", "-stream_loop", "-1", "-i", wav_path,
         "-map", "0:v", "-map", "1:a",
-    ]
-
-    # Filtro ψ se disponível
-    if vf:
-        cmd += ["-vf", vf]
-
-    cmd += [
-        # Vídeo — 2fps suficiente para tela estática, economiza CPU/banda
         "-c:v", "libx264", "-preset", "ultrafast", "-crf", "51",
-        "-b:v", "100k", "-maxrate", "150k", "-bufsize", "200k",
-        "-g", "50", "-r", "2", "-pix_fmt", "yuv420p",
-        # Áudio
+        "-b:v", "120k", "-maxrate", "160k", "-bufsize", "300k",
+        "-g", "4", "-r", "2", "-pix_fmt", "yuv420p",
         "-c:a", "aac", "-b:a", "96k", "-ac", "2", "-ar", "44100",
-        # Duração + destino
-        "-t", str(dur_s),
-        "-f", "flv", RTMP
+        "-t", str(dur_s), "-f", "flv", RTMP,
     ]
-
-    log(f"CMD: {' '.join(cmd[:12])}...")
+    log(f"CMD: {' '.join(cmd[:14])}...")
     try:
         return subprocess.run(cmd, timeout=dur_s + 300).returncode
     except subprocess.TimeoutExpired:
         return -1
     except Exception as e:
-        err(f"ffmpeg exception: {e}")
-        return -2
+        err(f"ffmpeg exception: {e}"); return -2
 
 # ─────────────────────────────────────────────────────────────
 # MAIN — ANTI-CRASH LOOP
@@ -493,11 +493,11 @@ def main():
 
     ff  = get_ffmpeg()
 
-    # Gerar assets
-    png = str(TMP / "black_1280x720.png")
+    # Gerar assets — ψ embutido no vídeo (piscando) + noise
     wav = str(TMP / "white_brown_noise.wav")
-    criar_png_preto(png, 1280, 720)
     gerar_noise_wav(wav, duration_s=10)
+    modo_v, fonte_v = preparar_fonte_video(ff)
+    log(f"Fonte de vídeo: modo={modo_v}")
 
     token = get_token()
     log("Token OK")
@@ -538,7 +538,7 @@ def main():
         tentativa += 1
         log(f"[T{tentativa}] Restante: {restante//3600}h{restante%3600//60}m | Falhas: {falhas}")
 
-        rc = transmitir(png, wav, ff, restante)
+        rc = transmitir(modo_v, fonte_v, wav, ff, restante)
 
         if rc == 0:
             log("Stream encerrado normalmente"); break
