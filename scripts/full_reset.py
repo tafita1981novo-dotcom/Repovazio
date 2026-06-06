@@ -349,96 +349,129 @@ def gerar_noise_wav(path: str, duration_s: int = 10, sr: int = 44100):
     return path
 
 # ─────────────────────────────────────────────────────────────
-# FFMPEG
+# PNG PRETO ESTÁTICO — mais estável que lavfi color=
+# ─────────────────────────────────────────────────────────────
+def criar_png_preto(path: str, w: int = 1280, h: int = 720):
+    """Gera PNG preto puro em Python puro (sem PIL). Rápido, sem deps."""
+    import struct, zlib
+    def chunk(tag, data):
+        crc = zlib.crc32(tag + data) & 0xFFFFFFFF
+        return struct.pack('>I', len(data)) + tag + data + struct.pack('>I', crc)
+    sig  = b'\x89PNG\r\n\x1a\n'
+    ihdr = chunk(b'IHDR', struct.pack('>IIBBBBB', w, h, 8, 2, 0, 0, 0))
+    row  = b'\x00' + b'\x00\x00\x00' * w          # filter=0, RGB preto
+    raw  = b''.join(row for _ in range(h))
+    idat = chunk(b'IDAT', zlib.compress(raw, 1))   # compressão mínima (rápido)
+    iend = chunk(b'IEND', b'')
+    with open(path, 'wb') as f:
+        f.write(sig + ihdr + idat + iend)
+    log(f"PNG preto ok: {w}x{h} → {path}")
+
+# ─────────────────────────────────────────────────────────────
+# FFMPEG — escolhe sistema (tem drawtext) ou imageio (fallback)
 # ─────────────────────────────────────────────────────────────
 def get_ffmpeg():
+    """Tenta sistema ffmpeg primeiro (tem drawtext/libfreetype).
+       Fallback: imageio_ffmpeg estático."""
+    for p in ["/usr/bin/ffmpeg", "/usr/local/bin/ffmpeg", "ffmpeg"]:
+        try:
+            r = subprocess.run([p, "-version"], capture_output=True, timeout=5)
+            if r.returncode == 0:
+                log(f"ffmpeg: {p}")
+                return p
+        except Exception:
+            pass
     try:
         import imageio_ffmpeg
-        return imageio_ffmpeg.get_ffmpeg_exe()
-    except: pass
-    for p in [shutil.which("ffmpeg"), "/usr/bin/ffmpeg", "/usr/local/bin/ffmpeg"]:
-        if p and pathlib.Path(p).exists(): return p
-    return "ffmpeg"
+        p = imageio_ffmpeg.get_ffmpeg_exe()
+        log(f"ffmpeg imageio: {p}")
+        return p
+    except Exception:
+        return "ffmpeg"
 
-def get_psi_vf(ff: str) -> str:
-    """Retorna filtro drawtext com ψ piscando para garantir originalidade/monetização.
-    ψ = cor #111111 (quase preto), 12px, pisca 2s ON / 2s OFF — invisível ao olho."""
-    # Fontes disponíveis no Ubuntu (em ordem de preferência)
+def tem_drawtext(ff: str) -> str | None:
+    """Retorna path da fonte se drawtext+libfreetype disponíveis, senão None."""
+    try:
+        out = subprocess.check_output([ff, "-filters"], stderr=subprocess.STDOUT,
+                                      timeout=5).decode(errors="ignore")
+        if "drawtext" not in out:
+            return None
+    except Exception:
+        return None
     fontes = [
         "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
         "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
         "/usr/share/fonts/truetype/ubuntu/Ubuntu-R.ttf",
         "/usr/share/fonts/truetype/freefont/FreeSans.ttf",
     ]
-    fonte = next((f for f in fontes if pathlib.Path(f).exists()), None)
+    for f in fontes:
+        if pathlib.Path(f).exists():
+            return f
+    return None
 
-    # Verificar se drawtext está disponível neste ffmpeg
-    try:
-        out = subprocess.check_output([ff, "-filters"], stderr=subprocess.STDOUT,
-                                       timeout=5).decode(errors="ignore")
-        has_drawtext = "drawtext" in out
-    except Exception:
-        has_drawtext = False
-
-    if has_drawtext and fonte:
-        # ψ no centro — cor #111111 = RGB(17,17,17) ≈ 6% de brilho
-        # enable: aparece 2s a cada ciclo de 4s (pisca devagar)
-        log(f"ψ overlay: drawtext ativo ({fonte.split('/')[-1]})")
-        return (
-            f"drawtext=fontfile='{fonte}':"
-            "text='ψ':"                # ψ unicode direto
-            "fontsize=12:"
-            "fontcolor=0x111111:"
-            "x=(w-text_w)/2:"
-            "y=(h-text_h)/2:"
-            "enable='lt(mod(t\,4)\,2)'"   # pisca: 2s ON, 2s OFF
-        )
-    else:
-        log("ψ overlay: drawtext indisponível — usando tela preta pura")
+def build_vf(fonte: str | None) -> str | None:
+    """Monta filtro de vídeo: drawtext ψ piscando + eventuais extras."""
+    if not fonte:
+        log("ψ overlay: drawtext indisponível — tela preta pura")
         return None
+    log(f"ψ overlay: {fonte.split('/')[-1]}")
+    # ψ quase invisível (6% brilho), centro, pisca 2s ON / 2s OFF
+    return (
+        f"drawtext=fontfile='{fonte}':"
+        "text='ψ':"
+        "fontsize=12:"
+        "fontcolor=0x111111:"
+        "x=(w-text_w)/2:"
+        "y=(h-text_h)/2:"
+        "enable='lt(mod(t\\,4)\\,2)'"
+    )
 
-def transmitir(wav_path: str, ff: str, dur_s: int) -> int:
-    lang  = idioma_por_hora()
+def transmitir(png_path: str, wav_path: str, ff: str, dur_s: int) -> int:
+    lang   = idioma_por_hora()
     titulo = TITULOS.get(lang, TITULOS["en"])
-    vf    = get_psi_vf(ff)
-    log(f"[{lang.upper()}] Stream: {dur_s//3600}h{dur_s%3600//60}m | ψ={'ON' if vf else 'OFF'}")
+    fonte  = tem_drawtext(ff)
+    vf     = build_vf(fonte)
+    log(f"[{lang.upper()}] Stream {dur_s//3600}h{dur_s%3600//60}m | ψ={'ON' if vf else 'OFF'}")
 
-    # Base do comando
+    # Comando base — PNG estática em loop + WAV em loop
     cmd = [
         ff, "-y",
+        # Vídeo: imagem estática em loop
+        "-loop", "1", "-i", png_path,
+        # Áudio: WAV em loop
         "-re", "-stream_loop", "-1", "-i", wav_path,
-        "-f", "lavfi", "-i", "color=black:size=854x480:rate=25",
-        "-map", "1:v", "-map", "0:a",
+        "-map", "0:v", "-map", "1:a",
     ]
 
-    # Adicionar filtro ψ se disponível
+    # Filtro ψ se disponível
     if vf:
         cmd += ["-vf", vf]
 
     cmd += [
-        # Vídeo — mínimo absoluto
+        # Vídeo — 2fps suficiente para tela estática, economiza CPU/banda
         "-c:v", "libx264", "-preset", "ultrafast", "-crf", "51",
         "-b:v", "100k", "-maxrate", "150k", "-bufsize", "200k",
-        "-g", "25", "-r", "25", "-pix_fmt", "yuv420p",
+        "-g", "50", "-r", "2", "-pix_fmt", "yuv420p",
         # Áudio
         "-c:a", "aac", "-b:a", "96k", "-ac", "2", "-ar", "44100",
-        # Saída
-        "-f", "flv", "-t", str(dur_s), RTMP
+        # Duração + destino
+        "-t", str(dur_s),
+        "-f", "flv", RTMP
     ]
 
+    log(f"CMD: {' '.join(cmd[:12])}...")
     try:
         return subprocess.run(cmd, timeout=dur_s + 300).returncode
     except subprocess.TimeoutExpired:
         return -1
     except Exception as e:
-        err(f"ffmpeg erro: {e}")
+        err(f"ffmpeg exception: {e}")
         return -2
 
 # ─────────────────────────────────────────────────────────────
 # MAIN — ANTI-CRASH LOOP
 # ─────────────────────────────────────────────────────────────
 def broadcast_ativo(token):
-    """Retorna (bc_id, title) se já existe 1 broadcast live, senão (None, None)"""
     for status in ["live", "active"]:
         try:
             url = (f"https://www.googleapis.com/youtube/v3/liveBroadcasts"
@@ -455,14 +488,15 @@ def broadcast_ativo(token):
 
 def main():
     log("=" * 65)
-    log(f"FULL RESET v4 | WHITE+BROWN NOISE | {datetime.now(timezone.utc):%H:%M} UTC")
+    log(f"FULL RESET v5-STABLE | WHITE+BROWN NOISE | {datetime.now(timezone.utc):%H:%M} UTC")
     log("=" * 65)
 
     ff  = get_ffmpeg()
-    log(f"FFmpeg: {ff}")
 
-    # WAV 10s — rápido, loop via -stream_loop -1
+    # Gerar assets
+    png = str(TMP / "black_1280x720.png")
     wav = str(TMP / "white_brown_noise.wav")
+    criar_png_preto(png, 1280, 720)
     gerar_noise_wav(wav, duration_s=10)
 
     token = get_token()
@@ -472,16 +506,14 @@ def main():
     if not stream_id:
         err("Stream key não encontrado!"); sys.exit(1)
 
-    # ── POLÍTICA: 1 BROADCAST ETERNO — nunca recriar se já está live ──
+    # ── POLÍTICA: 1 BROADCAST ETERNO ──────────────────────────────
     bc_id, bc_title = broadcast_ativo(token)
 
     if bc_id:
         log(f"✅ Broadcast já ativo: {bc_id} | {bc_title}")
-        log("   Reusando — SEM deletar, SEM recriar")
-        # Atualizar título/descrição para o idioma atual
         atualizar_broadcast(token, bc_id)
     else:
-        log("Nenhum broadcast ativo — criando 1 novo...")
+        log("Criando broadcast...")
         deletar_broadcasts(token, max_seconds=90)
         time.sleep(2)
         bc_id = criar_broadcast(token)
@@ -492,7 +524,7 @@ def main():
         time.sleep(2)
         log(f"Broadcast criado: {bc_id}")
 
-    # ── LOOP PERPÉTUO DE TRANSMISSÃO ──────────────────────────────────
+    # ── LOOP PERPÉTUO ─────────────────────────────────────────────
     dur_total = DURATION_H * 3600
     inicio    = time.time()
     tentativa = 0
@@ -506,26 +538,36 @@ def main():
         tentativa += 1
         log(f"[T{tentativa}] Restante: {restante//3600}h{restante%3600//60}m | Falhas: {falhas}")
 
-        rc = transmitir(wav, ff, restante)
+        rc = transmitir(png, wav, ff, restante)
 
         if rc == 0:
-            log("Stream ok"); break
+            log("Stream encerrado normalmente"); break
 
         falhas += 1
         err(f"ffmpeg saiu com código {rc} (falha #{falhas})")
 
-        # Renovar token periodicamente
+        # Renovar token a cada 10 falhas
         if falhas % 10 == 0:
             try: token = get_token(); log("Token renovado")
             except Exception as e: err(f"Token err: {e}")
 
-        # Verificar broadcast — NUNCA recriar, apenas logar
+        # Verificar broadcast a cada 5 falhas
         if falhas % 5 == 0:
             bc_id2, title2 = broadcast_ativo(token)
             if bc_id2:
                 log(f"  Broadcast OK: {bc_id2}")
             else:
-                log("  Broadcast não encontrado — YouTube pode ter encerrado")
+                log("  Broadcast encerrado — recriando...")
+                try:
+                    deletar_broadcasts(token, max_seconds=60)
+                    time.sleep(2)
+                    bc_id = criar_broadcast(token)
+                    if bc_id:
+                        time.sleep(2)
+                        bind_broadcast(token, bc_id, stream_id)
+                        log(f"  Novo broadcast: {bc_id}")
+                except Exception as e:
+                    err(f"Recriar falhou: {e}")
 
         espera = min(10 * falhas, 60)
         log(f"Retry em {espera}s..."); time.sleep(espera)
