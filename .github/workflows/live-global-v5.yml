@@ -1,4 +1,4 @@
-name: LIVE 24/7 — BLACK SCREEN + Binaural 432Hz + SEO DOMINANT WORLDWIDE
+name: LIVE 24/7 — WHITE NOISE + BROWN NOISE | SEO 15 IDIOMAS | @psidanicoelho
 
 on:
   workflow_dispatch:
@@ -22,12 +22,18 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
-      - run: pip install imageio-ffmpeg Pillow --quiet && python3 -c "import imageio_ffmpeg; print('FFmpeg:', imageio_ffmpeg.get_ffmpeg_exe())"
-      - name: 🔴 LIVE 15 IDIOMAS — Full Reset + Stream
+
+      - name: Instalar dependências
+        run: |
+          pip install imageio-ffmpeg --quiet
+          python3 -c "import imageio_ffmpeg; print('FFmpeg OK:', imageio_ffmpeg.get_ffmpeg_exe())"
+
+      - name: "🔴 WHITE+BROWN NOISE | SEO 15 IDIOMAS | 24/7"
         timeout-minutes: 400
         env:
-          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
-          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
-          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
-          DURATION_H: ${{ inputs.duration_h || '6' }}
+          YT_CLIENT_ID:      ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET:  ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN:  ${{ secrets.YT_REFRESH_TOKEN }}
+          DURATION_H:        ${{ inputs.duration_h || '6' }}
         run: python3 scripts/full_reset.py
+        continue-on-error: false
