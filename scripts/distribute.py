@@ -306,7 +306,8 @@ def main():
 
     rows = sb_select("content_pipeline",
         f"status=eq.mp4_ready&select=id,title,target_platform,format,mp4_url,video_url,"
-        f"youtube_title,youtube_description,youtube_tags,metadata"
+        f"youtube_title,youtube_description,youtube_tags,metadata,"
+        f"viral_score,quality_score_current"
         f"&order=id.asc&limit={MAX_VIDEOS}")
     log(f"found {len(rows)} mp4_ready pipelines (max={MAX_VIDEOS})")
     published = failed = quota_hit = 0
@@ -321,6 +322,19 @@ def main():
         if not pub:
             log(f"  [{r['id']}] sem publisher para target={target}"); continue
         log(f"  [{r['id']}] {target} → {(get_video_url(r) or 'NONE')[:50]}")
+        # ─── GATE DE SCORE: bloquear publicação se score < 95 ──────────
+        score = max(r.get("viral_score") or 0, r.get("quality_score_current") or 0)
+        if score > 0 and score < 95:
+            reason = f"SCORE_BAIXO:{score}<95 — não publicar até atingir 95+"
+            log(f"  [{r['id']}] ❌ {reason}")
+            sb_patch("content_pipeline", f"id=eq.{r['id']}", {
+                "status": "quality_blocked",
+                "publish_blocked": True,
+                "publish_block_reason": reason,
+            })
+            failed += 1
+            continue
+        # ────────────────────────────────────────────────────────────────
         try:
             yt_url, err = pub(r)
             if err:
