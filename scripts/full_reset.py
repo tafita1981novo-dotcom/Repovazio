@@ -350,99 +350,99 @@ def transmitir(wav_path: str, ff: str, dur_s: int) -> int:
 # ─────────────────────────────────────────────────────────────
 # MAIN — ANTI-CRASH LOOP
 # ─────────────────────────────────────────────────────────────
+def broadcast_ativo(token):
+    """Retorna (bc_id, title) se já existe 1 broadcast live, senão (None, None)"""
+    for status in ["live", "active"]:
+        try:
+            url = (f"https://www.googleapis.com/youtube/v3/liveBroadcasts"
+                   f"?part=id,snippet,status&broadcastStatus={status}&maxResults=5")
+            data = yt_get(token, url)
+            for item in data.get("items", []):
+                lc = item["status"]["lifeCycleStatus"]
+                if lc in ["live", "testing", "testStarting", "liveStarting"]:
+                    return item["id"], item["snippet"]["title"][:60]
+        except Exception:
+            pass
+    return None, None
+
+
 def main():
     log("=" * 65)
-    log(f"FULL RESET v3 | WHITE+BROWN NOISE | 15 IDIOMAS | {datetime.now(timezone.utc):%H:%M} UTC")
-    log(f"Referência: Relaxing White Noise — 1.47 BILHÃO de views")
+    log(f"FULL RESET v4 | WHITE+BROWN NOISE | {datetime.now(timezone.utc):%H:%M} UTC")
     log("=" * 65)
 
     ff  = get_ffmpeg()
     log(f"FFmpeg: {ff}")
 
-    # Gerar 60s de noise (loop via -stream_loop -1)
+    # WAV 10s — rápido, loop via -stream_loop -1
     wav = str(TMP / "white_brown_noise.wav")
-    gerar_noise_wav(wav, duration_s=10)  # sempre gera fresco (10s = ~5s de CPU)
+    gerar_noise_wav(wav, duration_s=10)
 
-    # Autenticar
     token = get_token()
-    log("Token OAuth OK")
+    log("Token OK")
 
-    # Stream ID
     stream_id = get_stream_id(token)
     if not stream_id:
-        err("Stream key não encontrado!")
-        sys.exit(1)
+        err("Stream key não encontrado!"); sys.exit(1)
 
-    # Deletar broadcasts existentes
-    log("Limpando broadcasts antigos...")
-    deletar_broadcasts(token)
-    time.sleep(3)
+    # ── POLÍTICA: 1 BROADCAST ETERNO — nunca recriar se já está live ──
+    bc_id, bc_title = broadcast_ativo(token)
 
-    # Criar novo broadcast
-    bc_id = criar_broadcast(token)
-    if not bc_id:
-        err("Não foi possível criar broadcast!")
-        sys.exit(1)
-    time.sleep(2)
+    if bc_id:
+        log(f"✅ Broadcast já ativo: {bc_id} | {bc_title}")
+        log("   Reusando — SEM deletar, SEM recriar")
+    else:
+        log("Nenhum broadcast ativo — criando 1 novo...")
+        deletar_broadcasts(token, max_seconds=90)
+        time.sleep(2)
+        bc_id = criar_broadcast(token)
+        if not bc_id:
+            err("Falha criar broadcast!"); sys.exit(1)
+        time.sleep(2)
+        bind_broadcast(token, bc_id, stream_id)
+        time.sleep(2)
+        log(f"Broadcast criado: {bc_id}")
 
-    # Bind
-    bind_broadcast(token, bc_id, stream_id)
-    time.sleep(2)
-
-    # ── LOOP ANTI-CRASH ──────────────────────────────────────
+    # ── LOOP PERPÉTUO DE TRANSMISSÃO ──────────────────────────────────
     dur_total = DURATION_H * 3600
     inicio    = time.time()
     tentativa = 0
     falhas    = 0
 
     while True:
-        elapsed  = time.time() - inicio
-        restante = int(dur_total - elapsed)
-
+        restante = int(dur_total - (time.time() - inicio))
         if restante < 30:
-            log(f"Ciclo concluído após {elapsed/3600:.2f}h")
-            break
+            log(f"Ciclo {DURATION_H}h encerrado"); break
 
         tentativa += 1
-        log(f"[Tentativa {tentativa}] Restante: {restante//3600}h{restante%3600//60}m | Falhas: {falhas}")
+        log(f"[T{tentativa}] Restante: {restante//3600}h{restante%3600//60}m | Falhas: {falhas}")
 
         rc = transmitir(wav, ff, restante)
 
         if rc == 0:
-            log("Stream finalizado normalmente")
-            break
+            log("Stream ok"); break
 
         falhas += 1
-        err(f"Stream terminou com código {rc} (falha #{falhas})")
+        err(f"ffmpeg saiu com código {rc} (falha #{falhas})")
 
-        # Refresh token a cada 10 falhas
+        # Renovar token periodicamente
         if falhas % 10 == 0:
-            log("Renovando token OAuth...")
-            try:
-                token = get_token()
-                log("Token renovado")
-            except Exception as e:
-                err(f"Falha renovar token: {e}")
+            try: token = get_token(); log("Token renovado")
+            except Exception as e: err(f"Token err: {e}")
 
-        # Recriar broadcast se muitas falhas
+        # Verificar broadcast — NUNCA recriar, apenas logar
         if falhas % 5 == 0:
-            log("Recriando broadcast...")
-            try:
-                deletar_broadcasts(token)
-                time.sleep(2)
-                bc_id = criar_broadcast(token)
-                if bc_id:
-                    bind_broadcast(token, bc_id, stream_id)
-                    time.sleep(2)
-            except Exception as e:
-                err(f"Falha recriar: {e}")
+            bc_id2, title2 = broadcast_ativo(token)
+            if bc_id2:
+                log(f"  Broadcast OK: {bc_id2}")
+            else:
+                log("  Broadcast não encontrado — YouTube pode ter encerrado")
 
-        # Espera exponencial (max 60s)
         espera = min(10 * falhas, 60)
-        log(f"Aguardando {espera}s antes de retry...")
-        time.sleep(espera)
+        log(f"Retry em {espera}s..."); time.sleep(espera)
 
-    log(f"TOTAL: {(time.time()-inicio)/60:.1f} min | {tentativa} tentativas | {falhas} falhas")
+    log(f"TOTAL: {(time.time()-inicio)/60:.1f}min | {tentativa} tentativas | {falhas} falhas")
+
 
 if __name__ == "__main__":
     main()
