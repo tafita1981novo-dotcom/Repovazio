@@ -116,33 +116,59 @@ def gh_dispatch_live():
         return False
 
 # ── Groq — análise inteligente ────────────────────────────────
+# Modelos Groq em ordem de preferência (todos gratuitos)
+GROQ_MODELS = [
+    "llama3-8b-8192",
+    "llama-3.1-8b-instant",
+    "llama-3.3-70b-versatile",
+    "mixtral-8x7b-32768",
+    "gemma2-9b-it",
+]
+
 def groq_analyze(status_dict: dict) -> str:
-    """Usa Groq Llama 3.3 70B para análise e recomendação"""
-    prompt = f"""Você é um agente de monitoramento de live YouTube 24/7.
-Analise o status atual em 1 linha curta e diga se precisa de ação:
+    """Usa Groq (modelo grátis) para análise inteligente da live"""
+    gh_ok  = status_dict.get("gh_running", False)
+    yt_ok  = status_dict.get("live", False)
+    stream = status_dict.get("stream_health", "?")
+    viewers= status_dict.get("viewers", 0)
 
-Status: {json.dumps(status_dict, ensure_ascii=False)}
-Hora UTC: {datetime.now(timezone.utc).strftime('%H:%M')}
+    # Diagnóstico rápido sem IA se possível
+    if gh_ok and yt_ok and stream in ["good","ok","OK"]:
+        return f"[OK] Live saudável | {viewers} viewers | stream={stream}"
+    if gh_ok and not yt_ok and stream in ["noData","inactive"]:
+        return f"[OK] Inicializando — workflow rodando, broadcast conectando"
 
-Responda APENAS: [OK|ALERTA|CRÍTICO] + uma frase curta de diagnóstico."""
-
-    payload = json.dumps({
-        "model": "llama-3.3-70b-versatile",
-        "messages": [{"role": "user", "content": prompt}],
-        "max_tokens": 60,
-        "temperature": 0
-    }).encode()
-    req = urllib.request.Request(
-        "https://api.groq.com/openai/v1/chat/completions",
-        data=payload
+    prompt = (
+        f"Live YouTube status: gh_running={gh_ok}, yt_live={yt_ok}, "
+        f"stream={stream}, viewers={viewers}, "
+        f"hora={datetime.now(timezone.utc).strftime('%H:%M')} UTC. "
+        f"Responda APENAS: [OK|ALERTA|CRITICO] + diagnóstico em 1 frase."
     )
-    req.add_header("Authorization", f"Bearer {GROQ_API_KEY}")
-    req.add_header("Content-Type", "application/json")
-    try:
-        with urllib.request.urlopen(req, timeout=15) as r:
-            return json.loads(r.read())["choices"][0]["message"]["content"].strip()
-    except Exception as e:
-        return f"[GROQ_ERR] {e}"
+    payload = json.dumps({
+        "messages": [{"role": "user", "content": prompt}],
+        "max_tokens": 60, "temperature": 0
+    })
+
+    for model in GROQ_MODELS:
+        try:
+            body = json.loads(payload)
+            body["model"] = model
+            req = urllib.request.Request(
+                "https://api.groq.com/openai/v1/chat/completions",
+                data=json.dumps(body).encode()
+            )
+            req.add_header("Authorization", f"Bearer {GROQ_API_KEY}")
+            req.add_header("Content-Type", "application/json")
+            with urllib.request.urlopen(req, timeout=12) as r:
+                txt = json.loads(r.read())["choices"][0]["message"]["content"].strip()
+                return f"[{model.split('-')[0]}] {txt}"
+        except Exception:
+            continue
+
+    # Fallback: diagnóstico local sem IA
+    if not gh_ok: return "[CRITICO] Workflow parado — redispatch necessário"
+    if not yt_ok: return "[ALERTA] Broadcast offline mas workflow OK"
+    return "[OK] Status nominal"
 
 # ── Supabase — logging ────────────────────────────────────────
 def supa_log(data: dict):
@@ -204,17 +230,27 @@ def run_check(token_cache: list) -> dict:
     except Exception as e:
         result["groq"] = f"err:{e}"
 
-    # 4. Auto-correção
-    if not result.get("gh_running"):
-        log("⚠️  Workflow da live NÃO está rodando! Disparando...")
+    # 4. Auto-correção inteligente
+    gh_running = result.get("gh_running", False)
+    yt_live    = result.get("live", False)
+    stream_st  = result.get("stream_status", "")
+    stream_h   = result.get("stream_health", "")
+
+    if not gh_running:
+        # Workflow parado = live morreu definitivamente → re-dispatch
+        log("⚠️  Workflow da live PARADO → re-dispatch imediato!")
         ok = gh_dispatch_live()
-        result["actions"].append(f"dispatch:{'ok' if ok else 'fail'}")
+        result["actions"].append(f"dispatch:workflow_dead:{'ok' if ok else 'fail'}")
         result["ok"] = ok
         time.sleep(5)
-    elif not result.get("live") and result.get("status") not in ["created","ready","testStarting"]:
-        log(f"⚠️  Broadcast não está live (status={result.get('status','?')}) — re-dispatch...")
-        gh_dispatch_live()
-        result["actions"].append("dispatch:broadcast_dead")
+    elif gh_running and not yt_live and stream_h in ["noData", ""] and stream_st == "inactive":
+        # Workflow rodando mas broadcast inativo → inicializando, aguardar
+        log("ℹ️  Workflow OK, broadcast inicializando (noData normal) — aguardando...")
+        result["ok"] = True
+    elif gh_running and not yt_live and stream_st not in ["active","inactive","not_found",""]:
+        # Broadcast morreu mas workflow ainda rodando → aguardar auto-recuperação
+        log(f"ℹ️  Broadcast não live (status={result.get('status')}) — workflow OK, auto-recuperando...")
+        result["ok"] = True
 
     # 5. Stream RTMP com problema?
     if result.get("stream_status") not in ["active", "inactive", "not_found"]:
