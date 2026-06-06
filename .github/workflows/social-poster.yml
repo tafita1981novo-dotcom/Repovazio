@@ -1,0 +1,28 @@
+name: 📱 Social Poster — Instagram + TikTok
+
+on:
+  schedule:
+    - cron: '0 12 * * *'   # 12h UTC = 9h BR
+    - cron: '0 18 * * *'   # 18h UTC = 15h BR  
+    - cron: '0 22 * * *'   # 22h UTC = 19h BR
+  workflow_dispatch:
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Instalar dependências
+        run: |
+          sudo apt-get update -y -qq && sudo apt-get install -y ffmpeg -qq
+          pip install requests imageio-ffmpeg --quiet
+      - name: 📱 Postar Instagram + TikTok
+        env:
+          IG_ACCESS_TOKEN:    ${{ secrets.IG_ACCESS_TOKEN }}
+          IG_BUSINESS_ID:     ${{ secrets.IG_BUSINESS_ID }}
+          TIKTOK_ACCESS_TOKEN: ${{ secrets.TIKTOK_ACCESS_TOKEN }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python3 scripts/social_poster.py
