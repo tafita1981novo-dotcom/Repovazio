@@ -262,13 +262,14 @@ def run_check(token_cache: list) -> dict:
         result["actions"].append(f"dispatch:workflow_dead:{'ok' if ok else 'fail'}")
         result["ok"] = ok
         time.sleep(5)
-    elif gh_running and not yt_live and stream_h in ["noData","","good"] and result.get("gh_elapsed_min",0) > 8:
+    elif gh_running and not yt_live and stream_h in ["noData","","good"] and result.get("gh_elapsed_min",0) > 18:  # 18min = tempo máximo real de init
         # Run >8min sem stream → TRAVADO → forçar restart
         elapsed = result.get("gh_elapsed_min",0)
         log(f"⚠️  Run TRAVADO {elapsed:.1f}min sem dados → re-dispatch forçado!")
         ok = gh_dispatch_live()
         result["actions"].append(f"dispatch:stuck_{elapsed:.0f}min:{'ok' if ok else 'fail'}")
         result["ok"] = ok
+        time.sleep(10)  # cooldown antes de continuar
     elif gh_running and not yt_live and stream_h in ["noData", ""] and stream_st == "inactive":
         # Inicializando normalmente (<8min) → aguardar
         elapsed = result.get("gh_elapsed_min",0)
