@@ -6,13 +6,16 @@ on:
 jobs:
   check-quality:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: "3.11"}
-      - name: Verificar ffprobe
-        run: ffprobe -version | head -1
+      - name: Instalar ffmpeg+ffprobe
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          ffprobe -version | head -1
       - name: Verificar score e áudio de todos os vídeos de playlist
         env:
           SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
