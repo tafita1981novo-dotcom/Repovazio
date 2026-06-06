@@ -1,6 +1,8 @@
 name: oracle-vm-micro
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '30 */6 * * *'
 
 jobs:
   create-micro:
@@ -22,56 +24,149 @@ jobs:
           printf '[DEFAULT]\nuser=%s\nfingerprint=%s\ntenancy=%s\nregion=%s\nkey_file=%s\n' \
             "$OCI_USER_OCID" "$OCI_FINGERPRINT" "$OCI_TENANCY_OCID" "$OCI_REGION" \
             "$HOME/.oci/oci_api_key.pem" > ~/.oci/config
+          chmod 600 ~/.oci/config
+          export OCI_CLI_SUPPRESS_FILE_PERMISSIONS_WARNING=True
           ssh-keygen -t rsa -b 2048 -f ~/.ssh/oracle_stream -N '' -q
-          echo 'OCI OK'
+          oci iam region list --query 'data[0].name' --raw-output && echo 'OCI OK'
 
-      - name: Criar E2.1.Micro (sempre disponivel, sem fila)
+      - name: Criar E2.1.Micro
         env:
           OCI_SUBNET_ID: ${{ secrets.OCI_SUBNET_ID }}
           OCI_AD: ${{ secrets.OCI_AD }}
           OCI_TENANCY_OCID: ${{ secrets.OCI_TENANCY_OCID }}
           GH_PAT: ${{ secrets.GH_PAT }}
           YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
+          SUPABASE_URL: https://tpjvalzwkqwttvmszvie.supabase.co
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          CALLMEBOT_PHONE: ${{ secrets.CALLMEBOT_PHONE }}
+          CALLMEBOT_APIKEY: ${{ secrets.CALLMEBOT_APIKEY }}
+          OCI_CLI_SUPPRESS_FILE_PERMISSIONS_WARNING: "True"
         run: |
           set +e
-          # Buscar imagem Ubuntu 22.04 para x86
+
+          notify_whatsapp() {
+            MSG="$1"
+            ENC=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))" "$MSG")
+            if [ "$CALLMEBOT_APIKEY" != "PENDING_ACTIVATION" ]; then
+              curl -s "https://api.callmebot.com/whatsapp.php?phone=${CALLMEBOT_PHONE}&text=${ENC}&apikey=${CALLMEBOT_APIKEY}" -o /dev/null
+            fi
+          }
+
+          # Buscar imagem Ubuntu 22.04 x86 automaticamente
           IMG=$(oci compute image list \
             --compartment-id "$OCI_TENANCY_OCID" \
             --operating-system 'Canonical Ubuntu' \
             --operating-system-version '22.04' \
             --shape VM.Standard.E2.1.Micro \
             --sort-by TIMECREATED \
+            --sort-order DESC \
             --query 'data[0].id' --raw-output 2>/dev/null)
-          echo "Ubuntu x86 image: $IMG"
-          
+          echo "Imagem x86 Ubuntu 22.04: $IMG"
+
+          if [ -z "$IMG" ] || [ "$IMG" = "null" ]; then
+            echo "Imagem nao encontrada — tentando 20.04..."
+            IMG=$(oci compute image list \
+              --compartment-id "$OCI_TENANCY_OCID" \
+              --operating-system 'Canonical Ubuntu' \
+              --operating-system-version '20.04' \
+              --shape VM.Standard.E2.1.Micro \
+              --sort-by TIMECREATED \
+              --sort-order DESC \
+              --query 'data[0].id' --raw-output 2>/dev/null)
+            echo "Imagem x86 Ubuntu 20.04: $IMG"
+          fi
+
+          # Buscar subnet disponivel automaticamente (caso OCI_SUBNET_ID nao funcione)
+          SUBNET="$OCI_SUBNET_ID"
+          echo "Subnet configurada: $SUBNET"
+
+          # Tentar criar com subnet configurada
+          echo "Tentando criar E2.1.Micro..."
           R=$(oci compute instance launch \
             --compartment-id "$OCI_TENANCY_OCID" \
             --availability-domain "$OCI_AD" \
             --shape VM.Standard.E2.1.Micro \
             --image-id "$IMG" \
-            --subnet-id "$OCI_SUBNET_ID" \
+            --subnet-id "$SUBNET" \
             --assign-public-ip true \
             --ssh-authorized-keys-file ~/.ssh/oracle_stream.pub \
-            --display-name psidoc-micro-server \
+            --display-name "psidoc-micro-x86" \
             --boot-volume-size-in-gbs 50 \
             --query 'data.id' --raw-output 2>&1)
-          
+
+          echo "Resultado: $R"
+
+          # Se falhou com subnet, buscar subnet automaticamente
+          if ! echo "$R" | grep -q 'ocid1.instance'; then
+            echo "Tentativa com subnet fixa falhou. Buscando subnets disponíveis..."
+            SUBNETS=$(oci network subnet list \
+              --compartment-id "$OCI_TENANCY_OCID" \
+              --query 'data[*].id' --raw-output 2>/dev/null)
+            echo "Subnets encontradas: $SUBNETS"
+
+            # Tentar cada subnet
+            for SN in $(oci network subnet list \
+              --compartment-id "$OCI_TENANCY_OCID" \
+              --query 'data[*].id' -o json 2>/dev/null | python3 -c "import sys,json; [print(x) for x in json.load(sys.stdin)]"); do
+              echo -n "Tentando subnet $SN → "
+              R=$(oci compute instance launch \
+                --compartment-id "$OCI_TENANCY_OCID" \
+                --availability-domain "$OCI_AD" \
+                --shape VM.Standard.E2.1.Micro \
+                --image-id "$IMG" \
+                --subnet-id "$SN" \
+                --assign-public-ip true \
+                --ssh-authorized-keys-file ~/.ssh/oracle_stream.pub \
+                --display-name "psidoc-micro-x86" \
+                --boot-volume-size-in-gbs 50 \
+                --query 'data.id' --raw-output 2>&1)
+              if echo "$R" | grep -q 'ocid1.instance'; then
+                echo "SUCESSO!"
+                break
+              else
+                echo "falhou: ${R:0:60}"
+              fi
+            done
+          fi
+
           if echo "$R" | grep -q 'ocid1.instance'; then
-            echo "MICRO CRIADA: $R"
+            INSTANCE_ID="$R"
+            echo "=== E2.1.MICRO CRIADA: $INSTANCE_ID ==="
+            notify_whatsapp "Oracle Micro criada! Aguardando IP..."
             sleep 120
-            IP=$(oci compute instance list-vnics --instance-id "$R" \
-              --query 'data[0]."public-ip"' --raw-output 2>/dev/null)
+
+            IP=""
+            for t in $(seq 1 6); do
+              IP=$(oci compute instance list-vnics --instance-id "$INSTANCE_ID" \
+                --query 'data[0]."public-ip"' --raw-output 2>/dev/null)
+              [ -n "$IP" ] && [ "$IP" != "null" ] && break
+              sleep 20
+            done
             echo "IP: $IP"
-            if [ -n "$IP" ] && [ "$IP" != 'null' ]; then
-              ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 \
-                -i ~/.ssh/oracle_stream ubuntu@$IP \
-                "sudo apt-get install -y ffmpeg python3-pip wget -q && \
-                 pip3 install numpy pillow -q && \
-                 wget -qO /tmp/s.sh https://raw.githubusercontent.com/tafita81/Repovazio/main/scripts/oracle-forever-live-setup.sh && \
-                 chmod +x /tmp/s.sh && STREAM_KEY='$YOUTUBE_STREAM_KEY' bash /tmp/s.sh && \
-                 echo MICRO_STREAM_OK" || echo 'SSH falhou'
-              echo "E2.1.Micro Stream ativo! IP: $IP"
+
+            # Salvar no Supabase
+            curl -s -X POST "${SUPABASE_URL}/rest/v1/ia_cache" \
+              -H "apikey: ${SUPABASE_ANON_KEY}" \
+              -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+              -H "Content-Type: application/json" \
+              -H "Prefer: resolution=merge-duplicates" \
+              -d "{\"cache_key\":\"oracle_vm_ip\",\"value\":\"${IP}\",\"expires_at\":null}"
+
+            notify_whatsapp "Oracle Micro ATIVA! IP: ${IP} | Shape: E2.1.Micro x86"
+
+            # SSH setup stream
+            if [ -n "$IP" ] && [ "$IP" != "null" ]; then
+              for t in $(seq 1 5); do
+                ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=30 \
+                    -i ~/.ssh/oracle_stream ubuntu@$IP \
+                    "sudo apt-get update -q && \
+                     sudo apt-get install -y ffmpeg wget -q && \
+                     wget -qO /tmp/s.sh https://raw.githubusercontent.com/tafita81/Repovazio/main/scripts/oracle-forever-live-setup.sh && \
+                     chmod +x /tmp/s.sh && STREAM_KEY='$YOUTUBE_STREAM_KEY' bash /tmp/s.sh && \
+                     echo MICRO_STREAM_OK" && break
+                sleep 30
+              done
             fi
           else
-            echo "Erro: $R"
+            echo "E2.1.Micro nao criada: $R"
           fi
