@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 cleanup_broadcasts.py — Apaga TODOS os broadcasts exceto o único ativo
-Roda uma vez para limpar o acúmulo histórico
+Usa broadcastStatus=all para pegar absolutamente todos
 """
 import os, json, urllib.request, urllib.parse, time
 
@@ -24,50 +24,73 @@ def get_token():
 def yt_get(token, url):
     req = urllib.request.Request(url)
     req.add_header("Authorization", f"Bearer {token}")
-    with urllib.request.urlopen(req, timeout=15) as r:
-        return json.loads(r.read())
+    try:
+        with urllib.request.urlopen(req, timeout=15) as r:
+            return json.loads(r.read())
+    except Exception as e:
+        log(f"  GET err: {e}")
+        return {}
 
 def main():
     token = get_token()
     log("Token OK")
 
-    # Listar TODOS os broadcasts
+    # Usar broadcastStatus=all para pegar absolutamente todos
     all_bc = {}
-    for status in ["active","live","ready","created","complete","testStarting","testing"]:
-        url = f"https://www.googleapis.com/youtube/v3/liveBroadcasts?part=id,snippet,status&broadcastStatus={status}&maxResults=50"
-        try:
-            data = yt_get(token, url)
-            for item in data.get("items", []):
-                bc_id = item["id"]
-                lc    = item["status"]["lifeCycleStatus"]
-                title = item["snippet"]["title"][:60]
-                all_bc[bc_id] = {"lc": lc, "title": title}
-        except Exception as e:
-            log(f"  Erro listar {status}: {e}")
+    next_token = None
+    page = 0
+    while True:
+        page += 1
+        url = "https://www.googleapis.com/youtube/v3/liveBroadcasts?part=id,snippet,status&broadcastStatus=all&maxResults=50"
+        if next_token:
+            url += f"&pageToken={next_token}"
+        data = yt_get(token, url)
+        for item in data.get("items", []):
+            bc_id = item["id"]
+            lc    = item["status"]["lifeCycleStatus"]
+            title = item["snippet"]["title"][:60]
+            all_bc[bc_id] = {"lc": lc, "title": title}
+        log(f"  Página {page}: {len(data.get('items',[]))} broadcasts")
+        next_token = data.get("nextPageToken")
+        if not next_token:
+            break
 
-    log(f"\nTotal broadcasts encontrados: {len(all_bc)}")
+    log(f"\nTotal broadcasts: {len(all_bc)}")
+    for bc_id, info in all_bc.items():
+        log(f"  {bc_id} [{info['lc']}] {info['title'][:50]}")
 
-    # Identificar o broadcast ATIVO (live ou testing)
-    ativo = [(bc_id, info) for bc_id, info in all_bc.items()
-             if info["lc"] in ["live", "testing", "testStarting", "liveStarting"]]
+    # Identificar o broadcast ATIVO (live/testing)
+    ESTADOS_ATIVOS = {"live","testing","testStarting","liveStarting"}
+    ativos = {bc_id: info for bc_id, info in all_bc.items()
+              if info["lc"] in ESTADOS_ATIVOS}
 
-    log(f"Broadcasts ativos: {len(ativo)}")
-    for bc_id, info in ativo:
-        log(f"  MANTER → {bc_id} [{info['lc']}] {info['title']}")
+    log(f"\nAtivos ({len(ativos)}): {list(ativos.keys())}")
 
-    manter_ids = {bc_id for bc_id, _ in ativo}
+    if len(ativos) > 1:
+        log("⚠️  Múltiplos broadcasts ativos! Manter apenas o mais recente.")
+        # Manter apenas o último (mapeado por ordem no dict — preserva ordem de inserção)
+        manter_id = list(ativos.keys())[-1]
+        manter_ids = {manter_id}
+        log(f"   Mantendo: {manter_id}")
+    elif len(ativos) == 1:
+        manter_ids = set(ativos.keys())
+        log(f"   Mantendo: {list(manter_ids)[0]}")
+    else:
+        manter_ids = set()
+        log("   Nenhum broadcast ativo — limpando tudo")
 
     # Deletar todos os outros
     deletados = 0
     erros = 0
     for bc_id, info in all_bc.items():
         if bc_id in manter_ids:
+            log(f"  ✅ MANTER: {bc_id} [{info['lc']}]")
             continue
         lc = info["lc"]
-        log(f"  Deletando {bc_id} [{lc}] {info['title'][:40]}...")
+        log(f"  🗑  Deletando {bc_id} [{lc}] {info['title'][:35]}...")
 
         # Transicionar para complete se necessário
-        if lc in ["ready", "created", "testStarting", "testing"]:
+        if lc in ["ready","created","testStarting","testing","liveStarting"]:
             try:
                 req = urllib.request.Request(
                     f"https://www.googleapis.com/youtube/v3/liveBroadcasts/transition?broadcastStatus=complete&id={bc_id}&part=id",
@@ -78,7 +101,7 @@ def main():
                 urllib.request.urlopen(req, timeout=10)
                 time.sleep(1)
             except Exception as e:
-                pass
+                pass  # Ignorar erros de transição
 
         # Deletar
         req = urllib.request.Request(
@@ -90,11 +113,11 @@ def main():
             urllib.request.urlopen(req, timeout=10)
             deletados += 1
         except Exception as e:
-            log(f"    Erro: {e}")
+            log(f"    Err deletar: {e}")
             erros += 1
         time.sleep(0.3)
 
-    log(f"\n✅ Limpeza concluída: {deletados} deletados | {erros} erros | {len(manter_ids)} mantidos")
+    log(f"\n✅ Concluído: {deletados} deletados | {erros} erros | {len(manter_ids)} mantidos")
 
 if __name__ == "__main__":
     main()
