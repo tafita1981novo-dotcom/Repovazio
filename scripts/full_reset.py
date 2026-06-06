@@ -228,41 +228,30 @@ def bind_broadcast(token, bc_id, stream_id):
 # ─────────────────────────────────────────────────────────────
 # ÁUDIO — WHITE + BROWN NOISE (Python puro, sem numpy)
 # ─────────────────────────────────────────────────────────────
-def gerar_noise_wav(path: str, duration_s: int = 60, sr: int = 44100):
-    """Gera White+Brown Noise mix: 40% white + 60% brown"""
-    log(f"Gerando {duration_s}s White+Brown Noise WAV...")
+def gerar_noise_wav(path: str, duration_s: int = 10, sr: int = 44100):
+    """White+Brown Noise mix — 10s loop (geração rápida, ffmpeg repete via -stream_loop -1)"""
+    import array as arr
+    log(f"Gerando {duration_s}s White+Brown Noise...")
     n = sr * duration_s
+    buf = arr.array('h', [0] * (n * 2))  # pre-aloca int16 stereo
 
-    # Brown noise state (Brownian motion / red noise)
     bl, br = 0.0, 0.0
-
-    buf = bytearray()
+    rg = random.gauss
     for i in range(n):
-        # White noise
-        wl = random.gauss(0, 1)
-        wr = random.gauss(0, 1)
-
-        # Brown noise (leaky integrator)
+        wl = rg(0, 1); wr = rg(0, 1)
         bl = (bl + 0.02 * wl) / 1.02
         br = (br + 0.02 * wr) / 1.02
-
-        # Mix: 40% white (suave) + 60% brown (grave/relaxante)
         ml = 0.40 * wl * 0.18 + 0.60 * bl * 4.0
         mr = 0.40 * wr * 0.18 + 0.60 * br * 4.0
-
-        # Clip e converter para int16
-        l = int(max(-32767, min(32767, ml * 32767)))
-        r = int(max(-32767, min(32767, mr * 32767)))
-        buf += struct.pack('<hh', l, r)
+        buf[i*2]   = int(max(-32767, min(32767, ml * 32767)))
+        buf[i*2+1] = int(max(-32767, min(32767, mr * 32767)))
 
     with wave.open(path, 'wb') as wf:
-        wf.setnchannels(2)
-        wf.setsampwidth(2)
-        wf.setframerate(sr)
-        wf.writeframes(bytes(buf))
+        wf.setnchannels(2); wf.setsampwidth(2)
+        wf.setframerate(sr); wf.writeframes(buf.tobytes())
 
     size_kb = pathlib.Path(path).stat().st_size // 1024
-    log(f"WAV gerado: {size_kb}KB ({duration_s}s)")
+    log(f"WAV ok: {size_kb}KB ({duration_s}s loop)")
     return path
 
 # ─────────────────────────────────────────────────────────────
@@ -303,7 +292,7 @@ def get_psi_vf(ff: str) -> str:
         log(f"ψ overlay: drawtext ativo ({fonte.split('/')[-1]})")
         return (
             f"drawtext=fontfile='{fonte}':"
-            "text='\u03c8':"          # ψ unicode
+            "text='ψ':"                # ψ unicode direto
             "fontsize=12:"
             "fontcolor=0x111111:"
             "x=(w-text_w)/2:"
@@ -365,10 +354,7 @@ def main():
 
     # Gerar 60s de noise (loop via -stream_loop -1)
     wav = str(TMP / "white_brown_noise.wav")
-    if not pathlib.Path(wav).exists():
-        gerar_noise_wav(wav, duration_s=60)
-    else:
-        log(f"WAV já existe: {wav}")
+    gerar_noise_wav(wav, duration_s=10)  # sempre gera fresco (10s = ~5s de CPU)
 
     # Autenticar
     token = get_token()
