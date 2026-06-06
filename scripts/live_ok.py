@@ -178,6 +178,14 @@ def bind(token,bc_id):
 def transmitir(wav,ff,dur_s):
     """SEM pipes, SEM capture — exatamente como live_v6.py"""
     log(f"  🔴 ffmpeg → {RTMP[:40]}... [{dur_s//3600}h{dur_s%3600//60}m]")
+    # ψ: 10px, cinza #111@7%, canto inf-dir, pisca 0.5Hz (a cada 2s)
+    # Elemento visual original — requisito monetização YouTube (inauthentic content policy)
+    psi_vf = (
+        "drawtext=text=\u03c8:"
+        "x=w-22:y=h-18:fontsize=10:"
+        "fontcolor=0x111111@0.07:"
+        "enable='gt(mod(t\,2)\,1)'"
+    )
     cmd=[ff,"-y","-re",
          "-stream_loop","-1","-i",wav,
          "-f","lavfi","-i","color=black:size=1920x1080:rate=25",
@@ -185,6 +193,7 @@ def transmitir(wav,ff,dur_s):
          "-c:v","libx264","-preset","ultrafast","-crf","36",
          "-b:v","150k","-maxrate","200k","-bufsize","400k",
          "-g","50","-r","25","-pix_fmt","yuv420p",
+         "-vf",psi_vf,
          "-c:a","aac","-b:a","128k","-ac","2","-ar","44100",
          "-f","flv","-t",str(dur_s), RTMP]
     # SEM capture_output, SEM stderr=PIPE — idêntico ao live_v6.py
