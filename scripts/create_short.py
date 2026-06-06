@@ -89,20 +89,24 @@ def upload_short(token, video_path, titulo):
             "title": titulo[:100],
             "description": DESC_SHORT,
             "categoryId": "22",
-            "tags": ["white noise","brown noise","black screen","sleep","study","tela preta","ruido blanco","pantalla negra","ruidobranco","shorts"],
-            "defaultLanguage": "en"
+            "tags": ["white noise","brown noise","black screen","sleep","study","shorts",
+                     "tela preta","ruido blanco","pantalla negra","whitenoise","brownnoise"]
         },
-        "status": {"privacyStatus":"public","selfDeclaredMadeForKids":False}
+        "status": {
+            "privacyStatus": "public",
+            "selfDeclaredMadeForKids": False
+        }
     }
     # Iniciar upload resumable
     meta_bytes=json.dumps(meta).encode()
+    video_size = pathlib.Path(video_path).stat().st_size
     req=urllib.request.Request(
         "https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status",
         data=meta_bytes, method="POST")
     req.add_header("Authorization",f"Bearer {token}")
-    req.add_header("Content-Type","application/json")
+    req.add_header("Content-Type","application/json; charset=UTF-8")
     req.add_header("X-Upload-Content-Type","video/mp4")
-    req.add_header("X-Upload-Content-Length",str(pathlib.Path(video_path).stat().st_size))
+    req.add_header("X-Upload-Content-Length",str(video_size))
     with urllib.request.urlopen(req,timeout=30) as r:
         upload_url=r.headers.get("Location","")
     if not upload_url:
@@ -111,6 +115,7 @@ def upload_short(token, video_path, titulo):
     with open(video_path,"rb") as f: video_data=f.read()
     req2=urllib.request.Request(upload_url,data=video_data,method="PUT")
     req2.add_header("Content-Type","video/mp4")
+    req2.add_header("Content-Length",str(video_size))
     with urllib.request.urlopen(req2,timeout=300) as r:
         res=json.loads(r.read())
     vid_id=res.get("id","")
