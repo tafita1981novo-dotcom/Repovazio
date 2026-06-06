@@ -16,6 +16,102 @@ H_SB_J = {**H_SB, "Content-Type": "application/json"}
 MAX_VIDEOS = int(os.environ.get("MAX_VIDEOS", "20"))
 QUOTA_KEY = "quota:yt_used_today"
 
+# ── Critérios de duração obrigatórios ─────────────────────────────────────────
+SHORT_DURATION_MIN = 50   # segundos mínimo para shorts
+SHORT_DURATION_MAX = 58   # segundos máximo para shorts
+LONG_DURATION_MIN  = 240  # 4 minutos mínimo para longs/playlists
+
+def get_mp4_duration_seconds(mp4_bytes):
+    """
+    Extrai a duração real do MP4 em segundos usando ffprobe.
+    Se ffprobe não estiver disponível, tenta ler o header do MP4 diretamente.
+    Retorna None se não conseguir determinar.
+    """
+    import subprocess, struct, io, tempfile, os
+
+    # Método 1: ffprobe (disponível no ubuntu-latest)
+    with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as tmp:
+        tmp.write(mp4_bytes)
+        tmp_path = tmp.name
+    try:
+        result = subprocess.run(
+            ["ffprobe", "-v", "quiet", "-print_format", "json",
+             "-show_format", tmp_path],
+            capture_output=True, text=True, timeout=30
+        )
+        if result.returncode == 0:
+            info = json.loads(result.stdout)
+            dur = float(info.get("format", {}).get("duration", 0))
+            return dur if dur > 0 else None
+    except Exception:
+        pass
+    finally:
+        try: os.unlink(tmp_path)
+        except: pass
+
+    # Método 2: Parse do MP4 box mvhd diretamente
+    try:
+        buf = io.BytesIO(mp4_bytes)
+        total = len(mp4_bytes)
+        while buf.tell() < total - 8:
+            size_bytes = buf.read(4)
+            if len(size_bytes) < 4: break
+            size = struct.unpack(">I", size_bytes)[0]
+            box_type = buf.read(4).decode("ascii", errors="ignore")
+            if size < 8: break
+            content_size = size - 8
+            if box_type == "moov":
+                # Entrar no moov
+                inner = buf.read(content_size)
+                inner_buf = io.BytesIO(inner)
+                while inner_buf.tell() < len(inner) - 8:
+                    s2 = struct.unpack(">I", inner_buf.read(4))[0]
+                    t2 = inner_buf.read(4).decode("ascii", errors="ignore")
+                    c2 = s2 - 8
+                    if s2 < 8: break
+                    if t2 == "mvhd" and c2 >= 20:
+                        mvhd = inner_buf.read(c2)
+                        version = mvhd[0]
+                        if version == 0 and len(mvhd) >= 16:
+                            time_scale = struct.unpack(">I", mvhd[8:12])[0]
+                            duration   = struct.unpack(">I", mvhd[12:16])[0]
+                        elif version == 1 and len(mvhd) >= 24:
+                            time_scale = struct.unpack(">I", mvhd[16:20])[0]
+                            duration   = struct.unpack(">Q", mvhd[20:28])[0]
+                        else:
+                            return None
+                        if time_scale > 0:
+                            return duration / time_scale
+                    else:
+                        inner_buf.seek(c2, 1)
+            else:
+                buf.seek(content_size, 1)
+    except Exception:
+        pass
+    return None
+
+def validate_duration(mp4_bytes, is_short):
+    """
+    Valida a duração do MP4 antes do upload.
+    Retorna (True, duração_s) se OK, (False, motivo) se rejeitado.
+    """
+    dur = get_mp4_duration_seconds(mp4_bytes)
+    if dur is None:
+        return False, "DURACAO_INDETERMINADA — ffprobe falhou"
+    dur_s = int(dur)
+    if is_short:
+        if SHORT_DURATION_MIN <= dur_s <= SHORT_DURATION_MAX:
+            return True, dur_s
+        else:
+            return False, f"SHORT_DURACAO_INVALIDA: {dur_s}s (exigido: {SHORT_DURATION_MIN}-{SHORT_DURATION_MAX}s)"
+    else:
+        if dur_s >= LONG_DURATION_MIN:
+            return True, dur_s
+        else:
+            return False, f"LONG_INCOMPLETO: {dur_s}s ({dur_s//60}min) — mínimo {LONG_DURATION_MIN}s ({LONG_DURATION_MIN//60}min)"
+
+
+
 def log(*a): print(f"[{time.strftime('%H:%M:%S')}]", *a, flush=True)
 
 def http_json(url, method="GET", body=None, headers=None, timeout=300, raw_body=False):
@@ -150,6 +246,14 @@ def yt_publish(mp4_url, title, description, tags, is_shorts=False):
     except Exception as e:
         return None, f"DOWNLOAD_FAIL: {e}"
     log(f"  downloaded {len(mp4_bytes):,} bytes")
+    # ─── GATE DE DURAÇÃO: validar ANTES de qualquer upload ──────────
+    ok_dur, dur_result = validate_duration(mp4_bytes, is_short=is_shorts)
+    if ok_dur:
+        log(f"  ✅ Duração validada: {dur_result}s")
+    else:
+        log(f"  ❌ Duração REJEITADA: {dur_result}")
+        return None, f"DURACAO_REJEITADA: {dur_result}"
+    # ────────────────────────────────────────────────────────────────
     if is_shorts and "#Shorts" not in (description or ""):
         description = (description or "") + "\n\n#Shorts"
     metadata = {
@@ -225,7 +329,12 @@ def main():
                     quota_hit += 1
                     break
                 log(f"    FAILED: {err[:120]}")
-                sb_patch("content_pipeline", f"id=eq.{r['id']}", {"error": err[:400]})
+                # Se rejeitado por duração → status especial para correção
+                new_status = "duration_rejected" if "DURACAO_REJEITADA" in err else None
+                patch = {"error": err[:400]}
+                if new_status:
+                    patch["status"] = new_status
+                sb_patch("content_pipeline", f"id=eq.{r['id']}", patch)
                 failed += 1
             else:
                 log(f"    PUBLISHED → {yt_url}")
