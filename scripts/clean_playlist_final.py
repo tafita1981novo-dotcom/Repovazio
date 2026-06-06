@@ -169,7 +169,8 @@ def ffprobe_audio_gap(mp4_url):
         except: pass
 
 def cancel_upcoming_broadcasts(tok):
-    """Cancela broadcasts em estado upcoming"""
+    """Deleta apenas broadcasts upcoming DUPLICADOS (mantém 1 eterno ativo)"""
+    from datetime import datetime, timezone
     s, b, _ = http_json(
         "https://www.googleapis.com/youtube/v3/liveBroadcasts"
         "?part=id,snippet,status&broadcastStatus=upcoming&maxResults=50",
@@ -179,18 +180,29 @@ def cancel_upcoming_broadcasts(tok):
         return 0
     items = json.loads(b).get("items", [])
     log(f"  Broadcasts upcoming: {len(items)}")
+    if len(items) <= 1:
+        log("  ✅ 0 ou 1 upcoming — nada a deletar")
+        return 0
+    # Ordenar por scheduledStartTime — manter o MAIS RECENTE, deletar os outros
+    def get_start(item):
+        t = item["snippet"].get("scheduledStartTime","")
+        try: return datetime.fromisoformat(t.replace("Z","+00:00"))
+        except: return datetime.min.replace(tzinfo=timezone.utc)
+    items_sorted = sorted(items, key=get_start, reverse=True)
+    keep = items_sorted[0]
+    to_del = items_sorted[1:]
+    log(f"  Mantendo: {keep['snippet']['title'][:50]} | {keep['snippet'].get('scheduledStartTime','?')}")
     cancelled = 0
-    for item in items:
-        bid   = item["id"]
+    for item in to_del:
+        bid    = item["id"]
         btitle = item["snippet"]["title"][:50]
-        # DELETE (cancela o broadcast)
         req = urllib.request.Request(
             f"https://www.googleapis.com/youtube/v3/liveBroadcasts?id={bid}",
             method="DELETE")
         req.add_header("Authorization", f"Bearer {tok}")
         try:
             with urllib.request.urlopen(req, timeout=15) as r:
-                log(f"  ✅ Upcoming broadcast deletado: {btitle} | HTTP {r.status}")
+                log(f"  🗑  Duplicado deletado: {btitle} | HTTP {r.status}")
                 cancelled += 1
         except urllib.error.HTTPError as e:
             log(f"  ❌ Erro ao deletar {bid}: {e.code}")
