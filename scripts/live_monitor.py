@@ -85,7 +85,7 @@ def yt_stream_health(token):
 
 # ── GitHub API ────────────────────────────────────────────────
 def gh_live_running():
-    """Verifica se live-global-v5 está in_progress"""
+    """Verifica se live-global-v5 está in_progress + quanto tempo rodando"""
     req = urllib.request.Request(
         f"https://api.github.com/repos/{GH_REPO}/actions/runs"
         f"?workflow_id={LIVE_WF_ID}&status=in_progress&per_page=5"
@@ -96,8 +96,13 @@ def gh_live_running():
         data = json.loads(r.read())
     runs = data.get("workflow_runs", [])
     if runs:
-        return True, runs[0]["id"], runs[0]["created_at"]
-    return False, None, None
+        # Calcular tempo de execução
+        from datetime import datetime, timezone
+        started_str = runs[0]["created_at"].replace("Z", "+00:00")
+        started_dt  = datetime.fromisoformat(started_str)
+        elapsed_min = (datetime.now(timezone.utc) - started_dt).total_seconds() / 60
+        return True, runs[0]["id"], runs[0]["created_at"], elapsed_min
+    return False, None, None, 0
 
 def gh_dispatch_live():
     """Dispara o workflow da live"""
@@ -209,13 +214,15 @@ def run_check(token_cache: list) -> dict:
 
     # 1. GitHub Actions — workflow rodando?
     try:
-        running, run_id, started_at = gh_live_running()
-        result["gh_running"]  = running
-        result["gh_run_id"]   = run_id
-        result["gh_started"]  = started_at
+        running, run_id, started_at, elapsed_min = gh_live_running()
+        result["gh_running"]     = running
+        result["gh_run_id"]      = run_id
+        result["gh_started"]     = started_at
+        result["gh_elapsed_min"] = round(elapsed_min, 1)
     except Exception as e:
         result["gh_running"] = False
         result["gh_error"]   = str(e)
+        result["gh_elapsed_min"] = 0
 
     # 2. YouTube — broadcast ativo?
     try:
@@ -260,9 +267,13 @@ def run_check(token_cache: list) -> dict:
         log("ℹ️  Workflow OK, broadcast inicializando (noData normal) — aguardando...")
         result["ok"] = True
     elif gh_running and not yt_live and stream_st not in ["active","inactive","not_found",""]:
-        # Broadcast morreu mas workflow ainda rodando → aguardar auto-recuperação
         log(f"ℹ️  Broadcast não live (status={result.get('status')}) — workflow OK, auto-recuperando...")
         result["ok"] = True
+    elif gh_running and not yt_live and stream_h in ["noData",""] and result.get("gh_elapsed_min", 0) > 8:
+        # Run há mais de 8 min e stream ainda sem dados → travado → forçar restart
+        log(f"⚠️  Run travado há {result.get('gh_elapsed_min')}min sem stream! Forçando restart...")
+        gh_dispatch_live()
+        result["actions"].append(f"dispatch:stuck_run:{result.get('gh_elapsed_min')}min")
 
     # 5. Stream RTMP com problema?
     if result.get("stream_status") not in ["active", "inactive", "not_found"]:
