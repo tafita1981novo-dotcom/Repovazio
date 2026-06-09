@@ -76,8 +76,23 @@ def disable_self():
     try: urllib.request.urlopen(req, timeout=10); print("Watcher desabilitado")
     except Exception as e: print("Disable fail: "+str(e)[:60])
 
+
+def invoke_kill_overload():
+    """Invoca a Edge Function que mata queries longas e NOTIFY PostgREST."""
+    req = urllib.request.Request(
+        SBU + "/functions/v1/kill-overload",
+        headers=H)
+    try:
+        with urllib.request.urlopen(req, timeout=15) as r:
+            result = json.loads(r.read())
+            print("kill-overload: " + json.dumps(result)[:120])
+    except Exception as e:
+        pass  # Non-fatal
+
+
 def main():
     print("=== PIPELINE WATCHER | " + WEEK_ID + " ===")
+    invoke_kill_overload()  # Forcar NOTIFY + desabilitar crons
     print("Testando Supabase...")
     if not sb_ok():
         print("Supabase ainda indisponivel")
