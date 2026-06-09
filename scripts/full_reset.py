@@ -251,15 +251,17 @@ def deletar_broadcasts(token, max_seconds=90):
     return deleted
 
 def criar_broadcast(token):
-    lang = idioma_por_hora()
-    titulo = TITULOS.get(lang, TITULOS["en"])
+    # SEMPRE cria em EN — título rotaciona via atualizar_broadcast a cada hora
+    # Evita broadcast em japonês/coreano/árabe que confunde o YouTube
+    lang = "en"
+    titulo = TITULOS["en"]
     start = (datetime.now(timezone.utc) + timedelta(minutes=5)).strftime("%Y-%m-%dT%H:%M:%SZ")
     body = {
         "snippet": {
             "title": titulo[:100],
             "description": get_descricao(lang)[:4900],
             "scheduledStartTime": start,
-            "defaultLanguage": lang if lang in ["en","pt","de","es","fr","it"] else "en",
+            "defaultLanguage": "en",
         },
         "status": {
             "privacyStatus": "public",
@@ -472,14 +474,17 @@ def transmitir(modo, src, wav_path, ff, dur_s):
 # MAIN — ANTI-CRASH LOOP
 # ─────────────────────────────────────────────────────────────
 def broadcast_ativo(token):
-    for status in ["live", "active"]:
+    """Retorna qualquer broadcast reutilizável — live, ready ou upcoming."""
+    for status in ["live", "active", "all"]:
         try:
             url = (f"https://www.googleapis.com/youtube/v3/liveBroadcasts"
-                   f"?part=id,snippet,status&broadcastStatus={status}&maxResults=5")
+                   f"?part=id,snippet,status&broadcastStatus={status}&maxResults=10")
             data = yt_get(token, url)
             for item in data.get("items", []):
                 lc = item["status"]["lifeCycleStatus"]
-                if lc in ["live", "testing", "testStarting", "liveStarting"]:
+                # Aceita qualquer estado ativo ou pronto para uso
+                if lc in ["live", "testing", "testStarting", "liveStarting",
+                           "ready", "created", "revoked"]:
                     return item["id"], item["snippet"]["title"][:60]
         except Exception:
             pass
