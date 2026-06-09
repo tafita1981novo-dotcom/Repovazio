@@ -1,0 +1,56 @@
+name: 🔴 YT Cleanup + Update Live
+
+on:
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Generate sounds (white + brown only)
+        run: python scripts/generate_sounds.py
+
+      - name: Delete Shorts + Update live description
+        env:
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+        run: python scripts/yt_cleanup.py
+
+      - name: Apply thumbnail v14 to eternal broadcast
+        env:
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+        run: |
+          python3 << 'PY'
+          import json, urllib.request, urllib.parse, urllib.error, os
+          r=urllib.request.urlopen(urllib.request.Request(
+              "https://oauth2.googleapis.com/token",
+              data=urllib.parse.urlencode({"client_id":os.environ["YT_CLIENT_ID"],"client_secret":os.environ["YT_CLIENT_SECRET"],
+                  "refresh_token":os.environ["YT_REFRESH_TOKEN"],"grant_type":"refresh_token"}).encode(),
+              headers={"Content-Type":"application/x-www-form-urlencoded"}),timeout=15)
+          TOKEN=json.loads(r.read())["access_token"]
+          url="https://raw.githubusercontent.com/tafita81/Repovazio/main/assets/thumbnail_live.png"
+          with urllib.request.urlopen(urllib.request.Request(url,headers={"User-Agent":"Mozilla/5.0"}),timeout=30) as r2:
+              thumb=r2.read()
+          print(f"Thumbnail: {len(thumb)//1024}KB")
+          bid="5HqPWz058Qw"
+          bnd=b"thumb_v14_bnd"
+          body=(b"--"+bnd+b"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n{}\r\n"
+                +b"--"+bnd+b"\r\nContent-Type: image/jpeg\r\n\r\n"+thumb+b"\r\n--"+bnd+b"--")
+          req=urllib.request.Request(
+              f"https://www.googleapis.com/upload/youtube/v3/thumbnails/set?videoId={bid}&uploadType=multipart",
+              data=body,method="POST",
+              headers={"Authorization":f"Bearer {TOKEN}","Content-Type":f"multipart/related; boundary={bnd.decode()}","Content-Length":str(len(body))})
+          try:
+              with urllib.request.urlopen(req,timeout=30): print("Thumbnail v14 OK!")
+          except urllib.error.HTTPError as e: print(f"Erro {e.code}: {e.read()[:200]}")
+          PY
