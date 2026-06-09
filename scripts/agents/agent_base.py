@@ -34,9 +34,11 @@ def _http(url, method="GET", body=None, headers=None, timeout=60):
     req = urllib.request.Request(url, data=data, method=method, headers=h)
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
-            return r.status, json.loads(r.read())
+            raw = r.read()
+            return r.status, (json.loads(raw) if raw.strip() else {})
     except urllib.error.HTTPError as e:
-        return e.code, json.loads(e.read() or b"{}")
+        raw = e.read() or b"{}"
+        return e.code, (json.loads(raw) if raw.strip() else {})
 
 # ── LLM call (Groq → Nvidia fallback, ambos gratuitos) ──────────────────────
 def llm(prompt: str, system: str = "", model: str = MODEL_DEFAULT, max_tokens: int = 2000) -> str:
