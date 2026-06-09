@@ -22,36 +22,30 @@ def err(m):  print(f"[{datetime.now():%H:%M:%S}] ERR: {m}", flush=True)
 # ─────────────────────────────────────────────────────────────
 # SEO — 15 IDIOMAS
 # ─────────────────────────────────────────────────────────────
+# TÍTULOS — só idiomas com alfabeto latino para o título do broadcast
+# JA/KO/ZH/AR/HI ficam SOMENTE na descrição (evita broadcast em japonês/chinês)
 TITULOS = {
     "en": "🔴 LIVE 24/7 | White Noise & Brown Noise for Sleep, Focus & Study | Daniela Coelho",
     "pt": "🔴 AO VIVO 24H | Ruído Branco e Marrom para Dormir e Concentrar | Daniela Coelho",
     "de": "🔴 LIVE 24/7 | Weißes & Braunes Rauschen zum Schlafen & Lernen | Daniela Coelho",
     "es": "🔴 EN VIVO 24H | Ruido Blanco y Marrón para Dormir y Estudiar | Daniela Coelho",
     "fr": "🔴 EN DIRECT 24H | Bruit Blanc & Brun pour Dormir et Étudier | Daniela Coelho",
-    "ja": "🔴 24時間ライブ | ホワイトノイズ＆ブラウンノイズ 睡眠・集中・勉強 | ダニエラ",
-    "ko": "🔴 24시간 라이브 | 화이트노이즈 & 브라운노이즈 수면 집중 공부 | 다니엘라",
-    "zh": "🔴 24小时直播 | 白噪音和棕噪音助眠专注学习 | 达尼埃拉·科埃略",
     "it": "🔴 LIVE 24H | Rumore Bianco e Marrone per Dormire e Studiare | Daniela Coelho",
     "nl": "🔴 LIVE 24H | Witte & Bruine Ruis voor Slapen en Studeren | Daniela Coelho",
-    "pl": "🔴 NA ŻYWO 24H | Biały i Brązowy Szum do Spania i Nauki | Daniela Coelho",
-    "tr": "🔴 CANLI 24H | Beyaz ve Kahverengi Gürültü Uyku ve Çalışma | Daniela Coelho",
-    "id": "🔴 LIVE 24H | White Noise & Brown Noise untuk Tidur & Fokus | Daniela Coelho",
-    "hi": "🔴 24 घंटे लाइव | व्हाइट नॉइज़ और ब्राउन नॉइज़ नींद के लिए | डेनियला",
-    "ar": "🔴 بث مباشر 24 ساعة | ضجيج أبيض وبني للنوم والتركيز والدراسة | دانييلا كويلو",
 }
 
 # Horário UTC → idioma dominante (CPM máximo)
 # DE: $14 | EN: $18 | PT: $8 | ES: $7 | FR: $12 | JA: $15
 def idioma_por_hora():
+    # Só idiomas com títulos em alfabeto latino — JA/KO/ZH/AR/HI removidos
+    # (ficam só na descrição multi-idioma)
     h = datetime.now(timezone.utc).hour
-    if   5  <= h < 8:  return "de"   # Manhã alemã — CPM $14
-    elif 8  <= h < 10: return "fr"   # França acorda — CPM $12
-    elif 10 <= h < 12: return "ja"   # Japão — CPM $15
-    elif 12 <= h < 15: return "en"   # EUA East wakes — CPM $18
-    elif 15 <= h < 18: return "en"   # EUA prime — CPM $18
+    if   5  <= h < 8:  return "de"   # Manhã alemã
+    elif 8  <= h < 10: return "fr"   # França acorda
+    elif 10 <= h < 14: return "en"   # EN global (era JA 10-12h → corrigido)
+    elif 14 <= h < 18: return "en"   # EUA prime — CPM $18
     elif 18 <= h < 20: return "es"   # América Latina tarde
-    elif 20 <= h < 22: return "pt"   # Brasil prime time
-    elif 22 <= h < 24: return "pt"   # Brasil noite
+    elif 20 <= h < 24: return "pt"   # Brasil prime time
     else:              return "en"   # Madrugada — EN global
 
 # ─── DESCRIÇÕES POR IDIOMA (primeiras palavras no idioma do viewer) ───
