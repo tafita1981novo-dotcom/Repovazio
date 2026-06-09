@@ -1,206 +1,127 @@
 #!/usr/bin/env python3
 """
-analytics_agent.py — Analisa stats reais do YouTube + atualiza cerebro_knowledge
-LLM: Groq DeepSeek R1 (raciocínio, grátis)
-Input: YouTube Data API v3 (stats reais) + content_pipeline publicados
-Output: → cerebro_knowledge (memória atualizada com novos padrões)
-Cron: 8h00 UTC diário
+analytics_agent.py - Stats YouTube reais + atualiza cerebro_knowledge
+LLM: Groq llama-3.3-70b
+Cron: 8h00 UTC diario
 """
-import sys, os, json, time
+import sys, os, json, time, urllib.request, urllib.error
 from datetime import datetime, timezone, timedelta
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from agents.agent_base import *
+from agents.agent_base import (
+    log, llm, sb_select, swarm_register, swarm_report, memory_store,
+    SBU, H_SB, MODEL_DEFAULT, MODEL_FAST
+)
 
-YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY", "")
-CHANNEL_ID      = "UCSH63tBfY6wEIdkC4u4zKdg"
-WEEK_ID         = datetime.now(timezone.utc).strftime("%Y-W%V")
+YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY","")
+WEEK_ID = datetime.now(timezone.utc).strftime("%Y-W%V")
+TODAY   = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+SYSTEM  = ("Analista de performance canal psicologia.doc. "
+           "Identifique padroes sucesso/fracasso baseados em dados reais. "
+           "Responda SOMENTE JSON valido sem markdown.")
 
-SYSTEM = """Você é o analista de performance do canal psicologia.doc.
-Sua função: identificar padrões reais de sucesso e fracasso nos vídeos publicados,
-e extrair insights acionáveis para o time de produção.
-Foque em: o que faz um vídeo passar de 1k para 10k views? Quais formatos, temas,
-horários e títulos geram mais watch time? Seja específico e baseado em dados."""
+def sb_insert(table, row):
+    req = urllib.request.Request(SBU+"/rest/v1/"+table,
+          data=json.dumps(row).encode(), method="POST", headers=H_SB)
+    try:
+        with urllib.request.urlopen(req, timeout=20) as r:
+            raw=r.read(); return r.status,(json.loads(raw) if raw.strip() else {})
+    except urllib.error.HTTPError as e:
+        raw=e.read() or b"{}"; return e.code,(json.loads(raw) if raw.strip() else {})
 
-def yt_stats(video_ids: list) -> dict:
-    """Busca stats reais via YouTube Data API v3."""
-    if not YOUTUBE_API_KEY or not video_ids:
-        return {}
-    ids_str = ",".join(video_ids[:50])
-    url = (f"https://www.googleapis.com/youtube/v3/videos"
-           f"?part=statistics,snippet&id={ids_str}&key={YOUTUBE_API_KEY}")
-    s, r = _http(url)
-    if s != 200:
-        log(f"YouTube API error {s}: {r}")
-        return {}
-    stats = {}
-    for item in r.get("items", []):
-        vid_id = item["id"]
-        st = item.get("statistics", {})
-        sn = item.get("snippet", {})
-        stats[vid_id] = {
-            "title":           sn.get("title", ""),
-            "published":       sn.get("publishedAt", ""),
-            "views":           int(st.get("viewCount", 0)),
-            "likes":           int(st.get("likeCount", 0)),
-            "comments":        int(st.get("commentCount", 0)),
-            "like_ratio":      round(int(st.get("likeCount",0)) / max(int(st.get("viewCount",1)),1) * 100, 2),
-        }
-    return stats
+def clean_json(s):
+    s=s.strip()
+    if s.startswith("```"):
+        for p in s.split("```"):
+            p=p.strip()
+            if p.startswith("json"): p=p[4:].strip()
+            if p.startswith("{"): return p
+    i=s.find("{"); j=s.rfind("}")+1
+    return s[i:j] if i>=0 and j>i else s
+
+def yt_stats(ids):
+    if not YOUTUBE_API_KEY or not ids: return {}
+    url = ("https://www.googleapis.com/youtube/v3/videos"
+           "?part=statistics,snippet&id="+",".join(ids[:50])+"&key="+YOUTUBE_API_KEY)
+    try:
+        with urllib.request.urlopen(url, timeout=15) as r:
+            data = json.load(r)
+    except Exception as e: log("YouTube API: "+str(e)[:80]); return {}
+    return {item["id"]: {
+        "title": item.get("snippet",{}).get("title",""),
+        "views": int(item.get("statistics",{}).get("viewCount",0)),
+        "likes": int(item.get("statistics",{}).get("likeCount",0)),
+    } for item in data.get("items",[])}
 
 def run():
-    log(f"=== ANALYTICS AGENT | {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M')} UTC ===")
-    swarm_register("analytics-agent")
+    log("=== ANALYTICS AGENT | "+TODAY+" ===")
+    try: swarm_register("analytics-agent")
+    except Exception as e: log("swarm_register skip: "+str(e)[:50])
 
-    # 1. Pegar vídeos publicados dos últimos 30 dias
-    cutoff = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
+    cutoff = (datetime.now(timezone.utc)-timedelta(days=30)).isoformat()
     published = sb_select("content_pipeline",
-        f"status=eq.published&published_at=gte.{cutoff}"
-        "&select=id,title,youtube_id,youtube_long_id,format,viral_score,quality_score_current,published_at,target_platform"
+        "status=eq.published&published_at=gte."+cutoff
+        +"&select=id,title,youtube_id,youtube_long_id,format,viral_score"
         "&order=published_at.desc&limit=50")
+    log("Videos 30d: "+str(len(published)))
+    if not published: swarm_report({"status":"no_data"}); return
 
-    log(f"Vídeos publicados (30d): {len(published)}")
+    yt_ids = list({v.get("youtube_id") or v.get("youtube_long_id","") for v in published if v.get("youtube_id") or v.get("youtube_long_id")})
+    real   = yt_stats(yt_ids)
+    log("Stats reais: "+str(len(real)))
 
-    if not published:
-        log("Sem vídeos para analisar")
-        swarm_report({"status": "no_data"})
-        return
-
-    # 2. Coletar YouTube IDs para buscar stats reais
-    yt_ids = []
-    for v in published:
-        vid = v.get("youtube_id") or v.get("youtube_long_id")
-        if vid and vid not in yt_ids:
-            yt_ids.append(vid)
-
-    log(f"Buscando stats de {len(yt_ids)} vídeos via YouTube API...")
-    real_stats = yt_stats(yt_ids) if yt_ids else {}
-    log(f"Stats recebidas: {len(real_stats)} vídeos")
-
-    # 3. Montar contexto de análise
     video_data = []
     for v in published:
-        vid_id = v.get("youtube_id") or v.get("youtube_long_id", "")
-        yt = real_stats.get(vid_id, {})
-        video_data.append({
-            "title":   v.get("title", "")[:60],
-            "format":  v.get("format", "?"),
-            "platform": v.get("target_platform","?"),
-            "score_viral":   v.get("viral_score", 0),
-            "score_quality": v.get("quality_score_current", 0),
-            "views":   yt.get("views", "N/A"),
-            "likes":   yt.get("likes", "N/A"),
-            "like_pct": yt.get("like_ratio", "N/A"),
-        })
+        vid = v.get("youtube_id") or v.get("youtube_long_id","")
+        yt  = real.get(vid,{})
+        video_data.append({"title":v.get("title","")[:55],"format":v.get("format","?"),
+                           "score":v.get("viral_score",0),"views":yt.get("views","N/A")})
 
-    # Top e bottom performers
-    with_views = [v for v in video_data if isinstance(v["views"], int)]
-    with_views.sort(key=lambda x: x["views"], reverse=True)
-    top5     = with_views[:5]
-    bottom5  = with_views[-5:] if len(with_views) >= 5 else with_views
+    wv = sorted([x for x in video_data if isinstance(x["views"],int)], key=lambda x:x["views"], reverse=True)
+    top_ctx = "\n".join("+"+str(v["views"])+"v | "+v["title"]+" | "+v["format"] for v in wv[:5]) or "Sem dados reais"
+    bot_ctx = "\n".join("-"+str(v["views"])+"v | "+v["title"]+" | "+v["format"] for v in wv[-5:]) if len(wv)>=5 else ""
 
-    top_ctx = "\n".join([f"  +{v['views']}views | {v['title']} | {v['format']} | score={v['score_viral']}"
-                          for v in top5])
-    bot_ctx = "\n".join([f"  -{v['views']}views | {v['title']} | {v['format']} | score={v['score_viral']}"
-                          for v in bottom5])
+    cerebro = sb_select("cerebro_knowledge","select=titulo,categoria,confidence_score&order=confidence_score.desc&limit=8")
+    cerebro_ctx = "\n".join("["+c.get("categoria","")+"| "+str(c.get("confidence_score",0))+"] "+c.get("titulo","")[:80] for c in cerebro) if cerebro else "Sem dados"
 
-    # 4. Pegar cerebro_knowledge existente
-    cerebro = sb_select("cerebro_knowledge",
-        "select=id,insight,category,confidence,created_at&order=confidence.desc&limit=20")
-    cerebro_ctx = "\n".join([f"  [{c.get('category','')}|{c.get('confidence',0):.0f}%] {c.get('insight','')[:100]}"
-                              for c in cerebro]) if cerebro else "Sem dados"
+    prompt = ("Analise performance 30d canal psicologia.doc.\n\n"
+              "TOP 5:\n"+top_ctx+"\n\nBOTTOM 5:\n"+(bot_ctx or "sem dados")+
+              "\n\nCEREBRO ATUAL:\n"+cerebro_ctx+
+              "\n\nTotal: "+str(len(published))+" videos | "+str(len(wv))+" com dados.\n\n"
+              "Extraia 3-5 insights NOVOS (que o cerebro ainda nao sabe).\n"
+              'JSON: {"insights":[{"category":"title|format|topic|timing|thumbnail|engagement",'
+              '"insight":"max 100 chars","confidence":75,"evidence":"1 frase","action":"1 frase"}],'
+              '"weekly_summary":"2 frases"}')
 
-    prompt = f"""Analise a performance dos últimos 30 dias do canal psicologia.doc.
-
-=== TOP 5 VÍDEOS (mais views) ===
-{top_ctx if top_ctx else "Sem dados de views (API não configurada)"}
-
-=== BOTTOM 5 VÍDEOS (menos views) ===
-{bot_ctx if bot_ctx else "Sem dados"}
-
-=== CEREBRO_KNOWLEDGE ATUAL ===
-{cerebro_ctx}
-
-=== TOTAL ===
-{len(published)} vídeos publicados | {len(with_views)} com dados reais de views
-
-Extraia de 3 a 7 novos insights acionáveis baseados nestes dados.
-Foque em padrões que o cérebro autônomo ainda NÃO conhece ou pode atualizar.
-
-Responda em JSON válido (sem markdown):
-{{
-  "insights": [
-    {{
-      "category": "title|format|topic|timing|thumbnail|engagement|algorithm",
-      "insight": "aprendizado específico e acionável (max 120 chars)",
-      "confidence": 75,
-      "evidence": "o que nos dados justifica isso (1 frase)",
-      "action": "o que mudar na próxima semana (1 frase)"
-    }}
-  ],
-  "weekly_summary": "resumo executivo da semana em 2-3 frases"
-}}"""
-
-    log("Analisando com DeepSeek R1...")
-    raw = llm(prompt, system=SYSTEM, model=MODEL_DEEP, max_tokens=2000)
-
+    log("Analisando...")
     try:
-        start = raw.find("{"); end = raw.rfind("}") + 1
-        data = json.loads(raw[start:end])
-        insights = data.get("insights", [])
-        summary  = data.get("weekly_summary", "")
-    except Exception as e:
-        log(f"JSON parse error: {e}")
-        swarm_report({"status": "parse_error"})
-        return
+        raw  = llm(prompt, system=SYSTEM, model=MODEL_DEFAULT, max_tokens=1000)
+        data = json.loads(clean_json(raw))
+        insights = data.get("insights",[]); summary = data.get("weekly_summary","")
+    except Exception as e: log("LLM/parse: "+str(e)[:100]); swarm_report({"status":"error"}); return
 
-    log(f"{len(insights)} novos insights extraídos")
-
-    # 5. Salvar em cerebro_knowledge (estrutura real da tabela)
-    # Colunas: categoria, subcategoria, titulo, conteudo(jsonb), fonte, confidence_score(int)
+    log(str(len(insights))+" insights extraidos")
     saved = 0
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     for ins in insights:
         if not ins.get("insight"): continue
-        row = {
-            "categoria":          ins.get("category", "performance"),
-            "subcategoria":       ins.get("category", "algorithm"),
+        status, _ = sb_insert("cerebro_knowledge", {
+            "categoria":          ins.get("category","performance"),
+            "subcategoria":       ins.get("category","algorithm"),
             "titulo":             ins["insight"][:120],
-            "conteudo": {
-                "insight":  ins["insight"],
-                "evidence": ins.get("evidence", ""),
-                "action":   ins.get("action", ""),
-                "week":     WEEK_ID,
-            },
-            "fonte":              f"analytics-agent-{WEEK_ID}",
-            "confidence_score":   int(ins.get("confidence", 70)),
-            "aprendido_em":       today,
-            "ultima_verificacao": today,
+            "conteudo":           {"insight":ins["insight"],"evidence":ins.get("evidence",""),
+                                   "action":ins.get("action",""),"week":WEEK_ID},
+            "fonte":              "analytics-agent-"+WEEK_ID,
+            "confidence_score":   int(ins.get("confidence",70)),
+            "aprendido_em":       TODAY,
+            "ultima_verificacao": TODAY,
             "ativo":              True,
-        }
-        s, r = _http(f"{SBU}/rest/v1/cerebro_knowledge",
-                     method="POST", body=row,
-                     headers={**H_SB, "Prefer": "resolution=merge-duplicates"})
-        if s in (200, 201):
-            saved += 1
-            log(f"  ✅ [{ins.get('category','')}|{ins.get('confidence',0):.0f}%] {ins['insight'][:60]}")
-        else:
-            log(f"  ⚠ {s}: {str(r)[:60]}")
+        })
+        if status in (200,201):
+            saved+=1; log("  OK ["+ins.get("category","")+"] "+ins["insight"][:55])
 
-    # 6. Guardar sumário na swarm memory
-    memory_store(f"analytics:weekly:{WEEK_ID}", json.dumps({
-        "summary":       summary,
-        "insights_added": saved,
-        "videos_analyzed": len(published),
-        "with_real_data":  len(with_views),
-    }))
-
-    log(f"\n📊 RESUMO SEMANAL: {summary}")
-    swarm_report({
-        "status": "done", "week_id": WEEK_ID,
-        "insights_saved": saved, "videos_analyzed": len(published),
-        "real_stats": len(with_views)
-    })
-    log(f"✅ Analytics concluído: {saved} insights → cerebro_knowledge")
+    memory_store("analytics:"+WEEK_ID, json.dumps({"summary":summary,"insights":saved}))
+    swarm_report({"status":"done","week_id":WEEK_ID,"insights_saved":saved,"videos":len(published)})
+    log("Resumo: "+summary[:100])
+    log("Analytics concluido: "+str(saved)+" insights -> cerebro_knowledge")
 
 if __name__ == "__main__":
     run()
