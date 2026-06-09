@@ -5,7 +5,9 @@ from datetime import datetime, timezone, timedelta
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from agents.agent_base import log, llm, memory_store, SBU, H_SB, MODEL_DEFAULT, MODEL_FAST
 
-YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY", "")
+YT_CLIENT_ID     = os.environ.get("YT_CLIENT_ID","")
+YT_CLIENT_SECRET  = os.environ.get("YT_CLIENT_SECRET","")
+YT_REFRESH_TOKEN  = os.environ.get("YT_REFRESH_TOKEN","")
 WEEK_ID = datetime.now(timezone.utc).strftime("%Y-W%V")
 TODAY   = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 SYSTEM  = ("Analista performance canal psicologia.doc. "
@@ -59,25 +61,38 @@ def clean_json(s):
     return s[i:j] if i >= 0 and j > i else s
 
 
+def yt_access_token():
+    """Obter access token via OAuth refresh (mesmas creds da live)."""
+    if not YT_CLIENT_ID or not YT_CLIENT_SECRET or not YT_REFRESH_TOKEN:
+        return ""
+    body = json.dumps({
+        "client_id": YT_CLIENT_ID, "client_secret": YT_CLIENT_SECRET,
+        "refresh_token": YT_REFRESH_TOKEN, "grant_type": "refresh_token"
+    }).encode()
+    req = urllib.request.Request("https://oauth2.googleapis.com/token",
+          data=body, headers={"Content-Type":"application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=15) as r:
+            return json.load(r).get("access_token","")
+    except Exception as e:
+        log("OAuth token fail: "+str(e)[:80]); return ""
+
 def yt_stats(ids):
-    if not YOUTUBE_API_KEY or not ids:
-        return {}
+    if not ids: return {}
+    at = yt_access_token()
+    if not at: log("YouTube OAuth nao configurado"); return {}
     url = ("https://www.googleapis.com/youtube/v3/videos"
-           "?part=statistics,snippet&id=" + ",".join(ids[:50]) +
-           "&key=" + YOUTUBE_API_KEY)
+           "?part=statistics,snippet&id="+",".join(ids[:50])+"&access_token="+at)
     try:
         with urllib.request.urlopen(url, timeout=15) as r:
             data = json.load(r)
     except Exception as e:
-        log("YouTube API: " + str(e)[:80])
-        return {}
+        log("YouTube API: "+str(e)[:80]); return {}
     return {item["id"]: {
-        "title": item.get("snippet", {}).get("title", ""),
-        "views": int(item.get("statistics", {}).get("viewCount", 0)),
-        "likes": int(item.get("statistics", {}).get("likeCount", 0)),
-    } for item in data.get("items", [])}
-
-
+        "title": item.get("snippet",{}).get("title",""),
+        "views": int(item.get("statistics",{}).get("viewCount",0)),
+        "likes": int(item.get("statistics",{}).get("likeCount",0)),
+    } for item in data.get("items",[])}
 def run():
     log("=== ANALYTICS AGENT | " + TODAY + " ===")
 
