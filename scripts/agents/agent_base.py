@@ -13,6 +13,7 @@ H_SB = {"apikey": SBK, "Authorization": f"Bearer {SBK}", "Content-Type": "applic
 
 GROQ_KEY   = os.environ.get("GROQ_API_KEY", "")
 NVIDIA_KEY = os.environ.get("NVIDIA_API_KEY", "")
+GEMINI_KEY = os.environ.get("GEMINI_API_KEY", "")
 
 # Roteamento de modelos — 100% grátis
 MODEL_FAST    = "llama-3.1-8b-instant"        # Groq: respostas simples, rápido
@@ -52,12 +53,17 @@ def _http(url, method="GET", body=None, headers=None, timeout=60):
 
 # ── LLM call (Groq → Nvidia fallback, ambos gratuitos) ──────────────────────
 def llm(prompt: str, system: str = "", model: str = MODEL_DEFAULT, max_tokens: int = 2000) -> str:
-    """Chama LLM grátis. Groq primeiro, Nvidia como fallback."""
+    """Chama LLM grátis. Groq → Nvidia → Gemini."""
     messages = []
     if system: messages.append({"role": "system", "content": system})
     messages.append({"role": "user", "content": prompt})
-    
-    # Tentativa 1: Groq
+
+    def strip_think(text):
+        """Remove <think>...</think> do DeepSeek R1."""
+        import re
+        return re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL).strip()
+
+    # 1. Groq
     if GROQ_KEY:
         s, r = _http("https://api.groq.com/openai/v1/chat/completions",
             method="POST",
@@ -65,19 +71,35 @@ def llm(prompt: str, system: str = "", model: str = MODEL_DEFAULT, max_tokens: i
             headers={"Authorization": f"Bearer {GROQ_KEY}"}, timeout=30)
         if s == 200:
             return r["choices"][0]["message"]["content"].strip()
-        log(f"Groq fail {s} — tentando Nvidia")
+        if s == 429:
+            log(f"Groq 429 rate limit — tentando Gemini")
+        else:
+            log(f"Groq fail {s} — tentando Gemini")
 
-    # Fallback 2: Nvidia DeepSeek (também grátis)
+    # 2. Gemini 2.0 Flash (grátis, 15 req/min)
+    if GEMINI_KEY:
+        gem_body = {"contents":[{"parts":[{"text": (system + "\n\n" if system else "") + prompt}]}],
+                    "generationConfig":{"maxOutputTokens": max_tokens, "temperature": 0.7}}
+        s, r = _http(f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_KEY}",
+            method="POST", body=gem_body, timeout=30)
+        if s == 200:
+            try:
+                return r["candidates"][0]["content"]["parts"][0]["text"].strip()
+            except: pass
+        log(f"Gemini fail {s} — tentando Nvidia")
+
+    # 3. Nvidia DeepSeek R1 (grátis)
     if NVIDIA_KEY:
         s, r = _http("https://integrate.api.nvidia.com/v1/chat/completions",
             method="POST",
             body={"model": "deepseek-ai/deepseek-r1", "messages": messages, "max_tokens": max_tokens},
             headers={"Authorization": f"Bearer {NVIDIA_KEY}"}, timeout=60)
         if s == 200:
-            return r["choices"][0]["message"]["content"].strip()
+            text = strip_think(r["choices"][0]["message"]["content"])
+            if text: return text
         log(f"Nvidia fail {s}")
 
-    raise RuntimeError("Todos os LLMs falharam — checar GROQ_API_KEY e NVIDIA_API_KEY")
+    raise RuntimeError("Todos os LLMs falharam — Groq/Gemini/Nvidia")
 
 # ── Memória compartilhada (Supabase como vector store) ────────────────────────
 def memory_store(key: str, value: str, metadata: dict = None):
