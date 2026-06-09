@@ -1,0 +1,103 @@
+name: Fix Broadcasts + Apply Thumbnail v16
+on:
+  workflow_dispatch:
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fix broadcasts + apply thumbnail
+        env:
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+        run: |
+          python3 << 'PY'
+          import json,urllib.request,urllib.parse,urllib.error,os,time
+
+          def token():
+              r=urllib.request.urlopen(urllib.request.Request("https://oauth2.googleapis.com/token",
+                  data=urllib.parse.urlencode({"client_id":os.environ["YT_CLIENT_ID"],
+                  "client_secret":os.environ["YT_CLIENT_SECRET"],
+                  "refresh_token":os.environ["YT_REFRESH_TOKEN"],"grant_type":"refresh_token"}).encode(),
+                  headers={"Content-Type":"application/x-www-form-urlencoded"}),timeout=15)
+              return json.loads(r.read())["access_token"]
+
+          def yt(method,ep,data=None,params=None,T=None):
+              url="https://www.googleapis.com/youtube/v3/"+ep
+              if params: url+="?"+urllib.parse.urlencode(params)
+              h={"Authorization":f"Bearer {T}"}; b=None
+              if data: b=json.dumps(data).encode(); h["Content-Type"]="application/json"
+              req=urllib.request.Request(url,data=b,headers=h,method=method)
+              try:
+                  with urllib.request.urlopen(req,timeout=30) as r:
+                      raw=r.read(); return (json.loads(raw) if raw else {}),r.status
+              except urllib.error.HTTPError as e:
+                  raw=e.read(); return (json.loads(raw) if raw else {}),e.code
+
+          T=token(); print("Token OK")
+          BID_ETERNO="5HqPWz058Qw"
+
+          # 1. Listar TODOS os broadcasts (todos os status)
+          print("\n1. Todos os broadcasts:")
+          all_b=[]; page=None
+          for status in ["all","active","upcoming","completed"]:
+              p={"part":"id,snippet,status","broadcastStatus":status,"maxResults":"50"}
+              res,_=yt("GET","liveBroadcasts",params=p,T=T)
+              for item in res.get("items",[]):
+                  bid=item["id"]; lc=item.get("status",{}).get("lifeCycleStatus","?")
+                  title=item.get("snippet",{}).get("title","?")[:60]
+                  desc=item.get("snippet",{}).get("description","")[:100]
+                  if bid not in [b["id"] for b in all_b]:
+                      all_b.append({"id":bid,"status":lc,"title":title,"desc":desc})
+                      has_dc="[DANIELA COELHO]" if "daniela" in (title+desc).lower() or "coelho" in (title+desc).lower() else ""
+                      print(f"  {bid} | {lc:12s} | {title[:50]} {has_dc}")
+          print(f"  Total: {len(all_b)}")
+
+          # 2. Deletar broadcasts com "Daniela Coelho" e outros indesejados (tudo menos o eterno)
+          print("\n2. Deletando broadcasts indesejados...")
+          for b in all_b:
+              if b["id"]==BID_ETERNO:
+                  print(f"  MANTENDO: {b['id']} (eterno)")
+                  continue
+              res,code=yt("DELETE","liveBroadcasts",params={"id":b["id"]},T=T)
+              tag="[DC]" if "daniela" in (b['title']+b['desc']).lower() or "coelho" in (b['title']+b['desc']).lower() else ""
+              print(f"  {'OK' if code in (200,204) else 'ERR '+str(code)} {b['id']} {tag}: {b['title'][:40]}")
+              time.sleep(0.3)
+
+          # 3. Verificar e atualizar título do broadcast eterno (sem "Daniela Coelho")
+          print("\n3. Verificando broadcast eterno...")
+          res,_=yt("GET","liveBroadcasts",params={"part":"id,snippet,status","id":BID_ETERNO},T=T)
+          items=res.get("items",[])
+          if items:
+              lc=items[0].get("status",{}).get("lifeCycleStatus","?")
+              title=items[0].get("snippet",{}).get("title","?")
+              print(f"  {BID_ETERNO}: {lc} | {title[:60]}")
+              if "daniela" in title.lower() or "coelho" in title.lower():
+                  print("  CORRIGINDO título...")
+                  yt("PUT","liveBroadcasts",T=T,params={"part":"snippet"},data={
+                      "id":BID_ETERNO,"snippet":{"title":"\U0001f534 WHITE NOISE & BROWN NOISE 24/7 | Black Screen | sleep | tinnitus relief | ADHD focus | baby sleep",
+                      "scheduledStartTime":"2026-01-01T00:00:00.000Z"}})
+              else:
+                  print("  Título OK (sem Daniela Coelho)")
+          else:
+              print("  Broadcast eterno não encontrado!")
+
+          # 4. Aplicar thumbnail v16
+          print("\n4. Thumbnail v16...")
+          with urllib.request.urlopen(urllib.request.Request(
+              "https://raw.githubusercontent.com/tafita81/Repovazio/main/assets/thumbnail_live.png",
+              headers={"User-Agent":"Mozilla/5.0"}),timeout=30) as r2: thumb=r2.read()
+          print(f"  {len(thumb)//1024}KB")
+          bnd=b"tv16bnd"
+          body=(b"--"+bnd+b"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n{}\r\n"
+                +b"--"+bnd+b"\r\nContent-Type: image/jpeg\r\n\r\n"+thumb+b"\r\n--"+bnd+b"--")
+          req_u=urllib.request.Request(
+              f"https://www.googleapis.com/upload/youtube/v3/thumbnails/set?videoId={BID_ETERNO}&uploadType=multipart",
+              data=body,method="POST",headers={"Authorization":f"Bearer {T}",
+              "Content-Type":f"multipart/related; boundary={bnd.decode()}","Content-Length":str(len(body))})
+          try:
+              with urllib.request.urlopen(req_u,timeout=30): print("  OK thumbnail v16!")
+          except urllib.error.HTTPError as e: print(f"  Warn {e.code}: {e.read()[:200]}")
+
+          print("\n===== FIX COMPLETO =====")
+          PY
