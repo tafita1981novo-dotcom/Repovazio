@@ -41,7 +41,7 @@ def smart_llm(prompt: str, max_tokens: int = 4000) -> str:
         return gemini_llm(prompt, max_tokens)
     except Exception as e:
         log(f"Gemini fail ({e}) — usando DeepSeek R1")
-        return llm(prompt, system=SYSTEM, model=MODEL_DEEP, max_tokens=max_tokens)
+        return llm(prompt, system=SYSTEM, model=MODEL_DEFAULT, max_tokens=max_tokens)
 
 def run():
     log(f"=== RESEARCH AGENT | Semana {WEEK_ID} ===")
