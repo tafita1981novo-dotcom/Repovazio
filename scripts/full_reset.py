@@ -24,7 +24,7 @@ def err(m):  print(f"[{datetime.now():%H:%M:%S}] ERR: {m}", flush=True)
 # ─────────────────────────────────────────────────────────────
 # TÍTULOS — só idiomas com alfabeto latino para o título do broadcast
 # JA/KO/ZH/AR/HI ficam SOMENTE na descrição (evita broadcast em japonês/chinês)
-TITULO = "🔴 BLACK SCREEN 24/7 | White Noise & Brown Noise for Sleep | Tela Preta | Pantalla Negra | 24h/Day"
+TITULO = "🔴 WHITE NOISE & BROWN NOISE 24/7 | Black Screen | Ruido Blanco | Ruído Branco | 白噪音 | Sleep"
 
 # Horário UTC → idioma dominante (CPM máximo)
 # DE: $14 | EN: $18 | PT: $8 | ES: $7 | FR: $12 | JA: $15
