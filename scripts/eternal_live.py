@@ -82,8 +82,7 @@ res, code = yt("POST","liveBroadcasts",token=TOKEN,
     params={"part":"snippet,status,contentDetails"},
     data={
         "snippet":{"title":TITLE,"scheduledStartTime":start,"description":DESC},
-        "status":{"privacyStatus":"public","selfDeclaredMadeForKids":False,
-                  "madeForKids":False},
+        "status":{"privacyStatus":"public","selfDeclaredMadeForKids":False},
         "contentDetails":{"enableAutoStart":True,"enableAutoStop":False,
             "monitorStream":{"enableMonitorStream":False},
             "latencyPreference":"ultraLow"}
