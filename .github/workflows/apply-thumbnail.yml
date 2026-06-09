@@ -1,0 +1,55 @@
+name: 🖼️ Apply Live Thumbnail
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'    # Tenta a cada 6h
+  workflow_dispatch:
+
+jobs:
+  apply-thumbnail:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Aplicar thumbnail nos broadcasts
+        env:
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+        run: |
+          python3 - << 'PYEOF'
+          import urllib.request, urllib.parse, json, time, os
+
+          CLIENT_ID = os.environ["YT_CLIENT_ID"]
+          CLIENT_SECRET = os.environ["YT_CLIENT_SECRET"]
+          REFRESH_TOKEN = os.environ["YT_REFRESH_TOKEN"]
+
+          data = urllib.parse.urlencode({"client_id":CLIENT_ID,"client_secret":CLIENT_SECRET,
+              "refresh_token":REFRESH_TOKEN,"grant_type":"refresh_token"}).encode()
+          req = urllib.request.Request("https://oauth2.googleapis.com/token",data=data)
+          req.add_header("Content-Type","application/x-www-form-urlencoded")
+          with urllib.request.urlopen(req,timeout=15) as r:
+              tok = json.loads(r.read())["access_token"]
+
+          with open("assets/thumbnail_live.png","rb") as f: thumb = f.read()
+
+          BROADCAST_IDS = ["4PkBn0T2XWU","49pTNl1Cws4","9Q94b_2dPuI","KDNRgaRZy10","Pa155x3F6tk"]
+          ok = 0
+          for bid in BROADCAST_IDS:
+              req_t = urllib.request.Request(
+                  f"https://www.googleapis.com/upload/youtube/v3/thumbnails/set?videoId={bid}&uploadType=media",
+                  data=thumb)
+              req_t.add_header("Authorization",f"Bearer {tok}")
+              req_t.add_header("Content-Type","image/png")
+              try:
+                  urllib.request.urlopen(req_t,timeout=30)
+                  print(f"✅ {bid}")
+                  ok += 1
+              except Exception as e:
+                  print(f"⚠️ {bid}: {e}")
+              time.sleep(3)
+          print(f"Resultado: {ok}/5")
+          PYEOF
