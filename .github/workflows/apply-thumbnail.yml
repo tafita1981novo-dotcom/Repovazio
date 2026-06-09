@@ -1,32 +1,39 @@
-name: Apply Thumbnail (retry)
+name: Apply Thumbnail Now
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 */6 * * *'
+    - cron: '0 */3 * * *'
 jobs:
-  thumb:
+  apply:
     runs-on: ubuntu-latest
     steps:
-      - name: Apply thumbnail v13 to eternal broadcast
+      - name: Apply thumbnail v14 emoji to broadcast
         env:
           YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
           YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
           YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
         run: |
           python3 << 'PY'
-          import json, urllib.request, urllib.parse, urllib.error, os
-          r = urllib.request.urlopen(urllib.request.Request(
-              "https://oauth2.googleapis.com/token",
-              data=urllib.parse.urlencode({"client_id":os.environ["YT_CLIENT_ID"],"client_secret":os.environ["YT_CLIENT_SECRET"],"refresh_token":os.environ["YT_REFRESH_TOKEN"],"grant_type":"refresh_token"}).encode(),
+          import json,urllib.request,urllib.parse,urllib.error,os
+          r=urllib.request.urlopen(urllib.request.Request("https://oauth2.googleapis.com/token",
+              data=urllib.parse.urlencode({"client_id":os.environ["YT_CLIENT_ID"],
+              "client_secret":os.environ["YT_CLIENT_SECRET"],
+              "refresh_token":os.environ["YT_REFRESH_TOKEN"],"grant_type":"refresh_token"}).encode(),
               headers={"Content-Type":"application/x-www-form-urlencoded"}),timeout=15)
-          TOKEN = json.loads(r.read())["access_token"]
-          with urllib.request.urlopen(urllib.request.Request("https://raw.githubusercontent.com/tafita81/Repovazio/main/assets/thumbnail_live.png",headers={"User-Agent":"Mozilla/5.0"}),timeout=30) as r2:
-              thumb = r2.read()
-          bid = "5HqPWz058Qw"
-          bnd = b"tv13"
-          body = b"--"+bnd+b"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n{}\r\n--"+bnd+b"\r\nContent-Type: image/jpeg\r\n\r\n"+thumb+b"\r\n--"+bnd+b"--"
-          req3 = urllib.request.Request(f"https://www.googleapis.com/upload/youtube/v3/thumbnails/set?videoId={bid}&uploadType=multipart",data=body,method="POST",headers={"Authorization":f"Bearer {TOKEN}","Content-Type":f"multipart/related; boundary={bnd.decode()}","Content-Length":str(len(body))})
+          T=json.loads(r.read())["access_token"]
+          with urllib.request.urlopen(urllib.request.Request(
+              "https://raw.githubusercontent.com/tafita81/Repovazio/main/assets/thumbnail_live.png",
+              headers={"User-Agent":"Mozilla/5.0"}),timeout=30) as r2: thumb=r2.read()
+          print(f"Thumb: {len(thumb)//1024}KB")
+          bid="5HqPWz058Qw"; bnd=b"tv14e"
+          body=(b"--"+bnd+b"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n{}\r\n"
+                +b"--"+bnd+b"\r\nContent-Type: image/jpeg\r\n\r\n"+thumb+b"\r\n--"+bnd+b"--")
+          req=urllib.request.Request(
+              f"https://www.googleapis.com/upload/youtube/v3/thumbnails/set?videoId={bid}&uploadType=multipart",
+              data=body,method="POST",headers={"Authorization":f"Bearer {T}",
+              "Content-Type":f"multipart/related; boundary={bnd.decode()}","Content-Length":str(len(body))})
           try:
-              with urllib.request.urlopen(req3,timeout=30): print("Thumbnail OK!")
-          except urllib.error.HTTPError as e: print(f"Erro {e.code}: {e.read()[:150]}")
+              with urllib.request.urlopen(req,timeout=30): print("OK thumbnail aplicada!")
+          except urllib.error.HTTPError as e:
+              print(f"Erro {e.code}: {e.read()[:200]}")
           PY
