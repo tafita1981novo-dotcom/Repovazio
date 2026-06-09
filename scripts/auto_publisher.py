@@ -66,7 +66,7 @@ def get_or_create_playlist(token, name, desc, serie_slug):
             return item["id"]
     # Criar nova playlist
     body = json.dumps({
-        "snippet": {"title": name, "description": desc, "defaultLanguage": "pt"},
+        "snippet": {"title": name, "description": desc, "defaultLanguage": "en"},
         "status": {"privacyStatus": "public"}
     }).encode()
     req2 = urllib.request.Request(
@@ -106,8 +106,8 @@ def upload_video(token, mp4_path, title, description, tags, category_id="22"):
             "description": description[:4900],
             "tags": tags[:500].split(",") if isinstance(tags, str) else (tags or []),
             "categoryId": category_id,
-            "defaultLanguage": "pt",
-            "defaultAudioLanguage": "pt"
+            "defaultLanguage": "en",
+            "defaultAudioLanguage": "en"
         },
         "status": {
             "privacyStatus": "public",
@@ -174,10 +174,15 @@ def main():
     log(f"Publicando ID {vid_id}: {v.get('youtube_title','(sem título)')[:60]}")
 
     # Título e descrição
-    title = v.get("youtube_title") or v.get("topic") or f"Psicologia Doc #{vid_id}"
-    title = title.replace("...", "").strip()[:100]
+    # EN tem CPM $18 vs PT $8 — priorizar título EN quando disponível
+    title_en = v.get("youtube_title_en") or ""
+    title_pt = v.get("youtube_title") or v.get("topic") or f"Psychology Doc #{vid_id}"
+    # Usar EN se tiver, senão PT (mas ainda publicar com defaultLanguage=en)
+    title = (title_en if title_en else title_pt).replace("...", "").strip()[:100]
 
-    desc_custom = v.get("youtube_description") or ""
+    desc_en = v.get("youtube_desc_en") or ""
+    desc_pt = v.get("youtube_description") or ""
+    desc_custom = desc_en if desc_en else desc_pt
     desc = (desc_custom + "\n\n" + DESC_PADRAO).strip()[:4900]
 
     # Tags
@@ -190,7 +195,7 @@ def main():
     all_tags = list(dict.fromkeys(raw_tags + default_tags))[:30]
 
     # Categoria: 22 = People & Blogs (melhor para psicologia/educação), 27 = Education
-    cat = "27"  # Education — CPM alto
+    cat = "27"  # Education — CPM alto, $15-25 EN — CPM alto
 
     # Download do MP4
     mp4_url = v.get("video_url") or v.get("mp4_url")
@@ -224,6 +229,22 @@ def main():
             pl_id = get_or_create_playlist(token, sname, sdesc, serie)
             add_to_playlist(token, pl_id, yt_id)
 
+        # Upload thumbnail customizada se disponível
+        thumb_url = v.get("thumbnail_url") or ""
+        if thumb_url:
+            try:
+                req_td = urllib.request.Request(thumb_url, headers={"User-Agent":"Mozilla/5.0"})
+                with urllib.request.urlopen(req_td, timeout=30) as rt:
+                    thumb_data = rt.read()
+                req_tu = urllib.request.Request(
+                    f"https://www.googleapis.com/upload/youtube/v3/thumbnails/set?videoId={yt_id}&uploadType=media",
+                    data=thumb_data)
+                req_tu.add_header("Authorization", f"Bearer {tok}")
+                req_tu.add_header("Content-Type","image/jpeg")
+                urllib.request.urlopen(req_tu, timeout=30)
+                log(f"✅ Thumbnail customizada aplicada")
+            except Exception as e:
+                log(f"  Thumbnail warn: {e}")
         # Atualizar Supabase
         sb_patch("content_pipeline", vid_id, {
             "status": "published",
