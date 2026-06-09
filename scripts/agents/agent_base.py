@@ -32,13 +32,23 @@ def _http(url, method="GET", body=None, headers=None, timeout=60):
     data = json.dumps(body).encode() if body is not None else None
     if data: h.setdefault("Content-Type", "application/json")
     req = urllib.request.Request(url, data=data, method=method, headers=h)
+    def _try_json(b):
+        if not b or not b.strip(): return {}
+        s = b.decode("utf-8", errors="replace") if isinstance(b, bytes) else b
+        try: return json.loads(s)
+        except json.JSONDecodeError:
+            # Tentar primeiro bloco JSON válido
+            start = s.find("{")
+            if start >= 0:
+                for end in range(len(s), start, -1):
+                    try: return json.loads(s[start:end])
+                    except: continue
+            return {"_raw": s[:200]}
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
-            raw = r.read()
-            return r.status, (json.loads(raw) if raw.strip() else {})
+            return r.status, _try_json(r.read())
     except urllib.error.HTTPError as e:
-        raw = e.read() or b"{}"
-        return e.code, (json.loads(raw) if raw.strip() else {})
+        return e.code, _try_json(e.read() or b"{}")
 
 # ── LLM call (Groq → Nvidia fallback, ambos gratuitos) ──────────────────────
 def llm(prompt: str, system: str = "", model: str = MODEL_DEFAULT, max_tokens: int = 2000) -> str:
