@@ -1,0 +1,22 @@
+name: 🎯 Strategy Agent — Top 5 da Semana
+on:
+  schedule:
+    - cron: '30 6 * * *'  # 6h30 UTC diário
+  workflow_dispatch:
+
+jobs:
+  strategy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - name: 🎯 Strategy Agent — escolhe Top 5 tópicos
+        env:
+          SUPABASE_URL:          ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY:  ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GROQ_API_KEY:          ${{ secrets.GROQ_API_KEY }}
+          NVIDIA_API_KEY:        ${{ secrets.NVIDIA_API_KEY }}
+          AGENT_TYPE: strategy-agent
+        run: python3 scripts/agents/strategy_agent.py
