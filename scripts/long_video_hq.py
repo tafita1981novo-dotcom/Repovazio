@@ -66,8 +66,9 @@ FORMATO DO SCRIPT:
 - Total: 15 cenas = ~15 minutos
 - Para cada cena, inclua: NARRAÇÃO + [PROMPT DE IMAGEM para FLUX]
 
-Escreva em Português do Brasil, tom científico mas acessível.
-Persona: pesquisadora de comportamento humano.
+Write in ENGLISH (US). Scientific but accessible tone.
+Persona: human behavior researcher. Use EN throughout — EN has 10x more revenue potential.
+IMPORTANT: Write in English for global audience. CPM EN = $18 vs PT = $8.
 """
     return llm_call(prompt, max_tokens=6000)
 
@@ -85,7 +86,7 @@ def tts_edge(texto, output_path):
     """TTS via edge-tts ThalitaMultilingualNeural"""
     subprocess.run([
         "edge-tts",
-        "--voice", "pt-BR-ThalitaMultilingualNeural",
+        "--voice", "en-US-JennyNeural"  # EN: CPM máximo, audiência global,
         "--rate", "+5%",
         "--text", texto[:4900],
         "--write-media", output_path
@@ -138,7 +139,7 @@ def upload_yt(token, mp4_path, title, desc, tags):
     metadata = json.dumps({
         "snippet":{"title":title[:100],"description":desc[:4900],
                    "tags":tags[:30],"categoryId":"27",
-                   "defaultLanguage":"pt","defaultAudioLanguage":"pt"},
+                   "defaultLanguage":"en","defaultAudioLanguage":"en"},
         "status":{"privacyStatus":"public","selfDeclaredMadeForKids":False}
     }).encode()
     boundary = b"frontier"
@@ -165,16 +166,16 @@ def main():
     if not videos:
         # Usar tópicos W24 da strategy
         topics_w24 = [
-            ("O impacto da tecnologia na saúde mental dos jovens",
-             "Por que usar o celular antes de dormir destrói sua saúde mental"),
-            ("O papel da empatia na construção de relacionamentos saudáveis",
-             "Por que pessoas sem empatia destroem relacionamentos sem perceber"),
-            ("O impacto da mídia social na autoestima dos adolescentes",
-             "Por que o Instagram está destruindo a autoestima de uma geração inteira"),
-            ("O poder da gratidão no relacionamento",
-             "Por que casais que praticam gratidão nunca se separam, segundo a ciência"),
-            ("O papel da resiliência na superação de obstáculos",
-             "Por que algumas pessoas superam qualquer adversidade enquanto outras quebram"),
+            ("The impact of technology on youth mental health",
+             "Why scrolling before bed is destroying your mental health — according to neuroscience"),
+            ("The role of empathy in building healthy relationships",
+             "Why people without empathy destroy every relationship without realizing it"),
+            ("The impact of social media on teenager self-esteem",
+             "Why Instagram is destroying an entire generation's self-worth — the science"),
+            ("The power of gratitude in relationships",
+             "Why couples who practice gratitude never break up — Harvard research explains"),
+            ("The role of resilience in overcoming life obstacles",
+             "Why some people survive anything while others break — the neuroscience of resilience"),
         ]
         # Inserir o primeiro que ainda não existe
         for topico, titulo in topics_w24:
