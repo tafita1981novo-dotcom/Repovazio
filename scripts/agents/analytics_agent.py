@@ -131,10 +131,10 @@ Responda em JSON válido (sem markdown):
   "insights": [
     {{
       "category": "title|format|topic|timing|thumbnail|engagement|algorithm",
-      "insight": "aprendizado específico e acionável (max 150 chars)",
+      "insight": "aprendizado específico e acionável (max 120 chars)",
       "confidence": 75,
-      "evidence": "o que nos dados justifica isso",
-      "action": "o que mudar na próxima semana"
+      "evidence": "o que nos dados justifica isso (1 frase)",
+      "action": "o que mudar na próxima semana (1 frase)"
     }}
   ],
   "weekly_summary": "resumo executivo da semana em 2-3 frases"
@@ -155,20 +155,28 @@ Responda em JSON válido (sem markdown):
 
     log(f"{len(insights)} novos insights extraídos")
 
-    # 5. Salvar em cerebro_knowledge (upsert por insight único)
+    # 5. Salvar em cerebro_knowledge (estrutura real da tabela)
+    # Colunas: categoria, subcategoria, titulo, conteudo(jsonb), fonte, confidence_score(int)
     saved = 0
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     for ins in insights:
         if not ins.get("insight"): continue
         row = {
-            "insight":    ins["insight"][:200],
-            "category":   ins.get("category", "general"),
-            "confidence": float(ins.get("confidence", 70)),
-            "evidence":   ins.get("evidence", ""),
-            "action":     ins.get("action", ""),
-            "source":     f"analytics-agent-{WEEK_ID}",
-            "created_at": datetime.now(timezone.utc).isoformat(),
+            "categoria":          ins.get("category", "performance"),
+            "subcategoria":       ins.get("category", "algorithm"),
+            "titulo":             ins["insight"][:120],
+            "conteudo": {
+                "insight":  ins["insight"],
+                "evidence": ins.get("evidence", ""),
+                "action":   ins.get("action", ""),
+                "week":     WEEK_ID,
+            },
+            "fonte":              f"analytics-agent-{WEEK_ID}",
+            "confidence_score":   int(ins.get("confidence", 70)),
+            "aprendido_em":       today,
+            "ultima_verificacao": today,
+            "ativo":              True,
         }
-        # Tentar upsert por insight
         s, r = _http(f"{SBU}/rest/v1/cerebro_knowledge",
                      method="POST", body=row,
                      headers={**H_SB, "Prefer": "resolution=merge-duplicates"})
