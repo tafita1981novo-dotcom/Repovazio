@@ -3,10 +3,25 @@
 import sys, os, json, time, urllib.request, urllib.error
 from datetime import datetime, timezone
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from agents.agent_base import log, llm, swarm_report, memory_store, SBU, H_SB, MODEL_DEFAULT, MODEL_FAST
+from agents.agent_base import log, llm, memory_store, SBU, H_SB, MODEL_DEFAULT, MODEL_FAST
 
 WEEK_ID = datetime.now(timezone.utc).strftime("%Y-W%V")
 SYSTEM  = "Estrategista YouTube psicologia.doc. TOP 5 topicos por potencial crescimento. JSON valido sem markdown."
+
+def report(result):
+    """swarm_report local — nao trava em timeout."""
+    log("RESULTADO: " + json.dumps(result))
+    try:
+        import sys, urllib.request as _ur, urllib.error as _ue
+        SWR_URL = SBU + "/rest/v1/swarm_runs"
+        from agents.agent_base import SWARM_ID, AGENT_ID
+        req = _ur.Request(SWR_URL + "?swarm_id=eq." + SWARM_ID,
+            data=json.dumps({"results": {AGENT_ID: result}}).encode(),
+            method="PATCH", headers=H_SB)
+        _ur.urlopen(req, timeout=10)
+    except Exception:
+        pass  # non-fatal
+
 
 def sb_get(table, qs, lim=20):
     """sb_select local com timeout curto e fallback seguro."""
@@ -61,14 +76,14 @@ def run():
     log("=== STRATEGY AGENT | Semana "+WEEK_ID+" ===")
 
     if sb_get("strategy_decisions","week_id=eq."+WEEK_ID+"&select=id",1):
-        log("Ja decidido"); swarm_report({"status":"already_done"}); return
+        log("Ja decidido"); report({"status":"already_done"}); return
 
     opps = sb_get("research_opportunities",
         "week_id=eq."+WEEK_ID+"&used=eq.false"
         "&select=id,topic,title_suggestion,trend_score,search_volume,competition,format"
         "&order=trend_score.desc",16)
     if not opps:
-        log("Sem oportunidades"); swarm_report({"status":"waiting_research"}); return
+        log("Sem oportunidades"); report({"status":"waiting_research"}); return
     log(str(len(opps))+" oportunidades")
 
     hist = sb_get("content_pipeline",
@@ -84,7 +99,7 @@ def run():
               '{"selected_topics":[{"rank":1,"topic":"...","title_suggestion":"...","format":"short|long","publish_day":"segunda|terca|quarta|quinta|sexta","reason":"1 frase"}],"rationale":"2 frases","expected_views":10000}')
     log("Consultando LLM...")
     try: data=json.loads(clean_json(smart_llm(prompt)))
-    except Exception as e: log("Erro: "+str(e)[:100]); swarm_report({"status":"error"}); return
+    except Exception as e: log("Erro: "+str(e)[:100]); report({"status":"error"}); return
 
     selected=data.get("selected_topics",[])
     log("Selecionados: "+str(len(selected)))
@@ -96,7 +111,7 @@ def run():
         "expected_views":int(data.get("expected_views",0)),
         "performance_data":json.dumps({"opps":len(opps),"hist":len(hist)})
     })
-    if status not in (200,201): log("DB error "+str(status)); swarm_report({"status":"db_error"}); return
+    if status not in (200,201): log("DB error "+str(status)); report({"status":"db_error"}); return
 
     strategy_id=resp.get("id","")
     for t in selected:
@@ -105,7 +120,7 @@ def run():
                 sb_patch("research_opportunities","id=eq."+o["id"],{"used":True})
 
     memory_store("strategy:"+WEEK_ID,json.dumps({"topics":[t["topic"] for t in selected],"id":strategy_id}))
-    swarm_report({"status":"done","week_id":WEEK_ID,"topics":len(selected)})
+    report({"status":"done","week_id":WEEK_ID,"topics":len(selected)})
     log("Strategy concluido: "+str(len(selected))+" topicos | id="+str(strategy_id)[:8])
 
 if __name__=="__main__": run()
