@@ -228,6 +228,15 @@ def deletar_broadcasts(token, max_seconds=90):
     return deleted
 
 def criar_broadcast(token):
+    # SEMPRE tenta reutilizar um broadcast existente ANTES de criar novo
+    # Evita múltiplos broadcasts/duplicatas
+    try:
+        existing = broadcast_ativo(token)
+        if existing and existing[0]:
+            log(f"Reutilizando broadcast existente: {existing[0]}")
+            return existing[0]
+    except Exception as e:
+        log(f"Verificação existente: {e}")
     # SEMPRE cria em EN — título rotaciona via atualizar_broadcast a cada hora
     # Evita broadcast em japonês/coreano/árabe que confunde o YouTube
     lang = "en"
