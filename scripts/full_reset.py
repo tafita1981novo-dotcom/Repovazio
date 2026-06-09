@@ -49,7 +49,8 @@ Daniela Coelho — Human Behavior Researcher | @psidanicoelho
 🤍 WHITE NOISE — covers all background sounds, perfect for sleep & concentration
 🟤 BROWN NOISE — deep, rumbling bass, loved by people with ADHD & anxiety
 🌙 Mix: 40% White + 60% Brown — scientifically proven for deep sleep
-😴 Deep sleep & insomnia | 🧠 ADHD focus | 📚 Study | 🏢 Productivity | 👶 Baby""",
+😴 Deep sleep & insomnia | 🧠 ADHD focus | 📚 Study | 🏢 Productivity | 👶 Baby
+🔔 SUBSCRIBE & click the 🔔 Bell — Never miss a 24/7 live! → @psidanicoelho""",
     "pt": """🔴 AO VIVO 24H | RUÍDO BRANCO & MARROM | Dormir · Focar · Estudar
 Daniela Coelho — Pesquisadora de Comportamento Humano | @psidanicoelho
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -57,7 +58,8 @@ Daniela Coelho — Pesquisadora de Comportamento Humano | @psidanicoelho
 🤍 RUÍDO BRANCO — cobre todos os barulhos externos, ideal para dormir
 🟤 RUÍDO MARROM — grave profundo, amado por pessoas com TDAH e ansiedade
 🌙 Mix: 40% Branco + 60% Marrom — comprovado cientificamente para sono profundo
-😴 Sono profundo | 🧠 TDAH/foco | 📚 Estudo | 🏢 Produtividade | 👶 Bebê""",
+😴 Sono profundo | 🧠 TDAH/foco | 📚 Estudo | 🏢 Produtividade | 👶 Bebê
+🔔 INSCREVA-SE e ative o 🔔 sininho — Ao vivo 24h todo dia! → @psidanicoelho""",
     "de": """🔴 LIVE 24H | WEISSES & BRAUNES RAUSCHEN | Schlafen · Lernen · ADHS
 Daniela Coelho — Verhaltensforscherin | @psidanicoelho
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -73,7 +75,8 @@ Daniela Coelho — Investigadora del Comportamiento Humano | @psidanicoelho
 🤍 RUIDO BLANCO — cubre todos los sonidos de fondo, perfecto para dormir
 🟤 RUIDO MARRÓN — graves profundos, amado por personas con TDAH y ansiedad
 🌙 Mix: 40% Blanco + 60% Marrón — científicamente probado para el sueño profundo
-😴 Sueño profundo | 🧠 TDAH foco | 📚 Estudio | 👶 Bebé""",
+😴 Sueño profundo | 🧠 TDAH foco | 📚 Estudio | 👶 Bebé
+🔔 SUSCRÍBETE y activa la 🔔 campana — ¡En vivo 24h todos los días! → @psidanicoelho""",
     "fr": """🔴 EN DIRECT 24H | BRUIT BLANC & BRUN | Dormir · Étudier · TDAH
 Daniela Coelho — Chercheuse en comportement humain | @psidanicoelho
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -136,11 +139,12 @@ Daniela Coelho — Peneliti Perilaku Manusia | @psidanicoelho
 
 _HASHTAGS = """
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Research: Harvard · van der Kolk · Ainsworth · Gottman · Siegel/UCLA
-#whitenoise #brownnoise #whitenoiseforsleep #brownnoiseforsleep
+#whitenoise #brownnoise #ASMR #blackscreen #sleep #lofi #meditation
+#whitenoiseforsleep #brownnoiseforsleep #tinnitus #babysleep
 #sleepmusic #studymusic #focusmusic #adhdfocus #adhdmusic
-#danielacoelho #psidanicoelho #ruïdobranco #ruidoblanco
-#weißesrauschen #whitenoisebaby #deepfocus #telapretaparaadormir"""
+#meditationmusic #ambientnoise #studywithme #concentrationmusic
+#danielacoelho #psidanicoelho #ruidobranco #ruidoblanco
+#白噪音 #백색소음 #ホワイトノイズ #telapreta #pantallanegra #live24hours"""
 
 def get_descricao(lang: str) -> str:
     """Descrição começa no idioma ativo, depois lista todos os outros"""
