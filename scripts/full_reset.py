@@ -25,6 +25,8 @@ def err(m):  print(f"[{datetime.now():%H:%M:%S}] ERR: {m}", flush=True)
 # TÍTULOS — só idiomas com alfabeto latino para o título do broadcast
 # JA/KO/ZH/AR/HI ficam SOMENTE na descrição (evita broadcast em japonês/chinês)
 TITULO = "🔴 WHITE NOISE & BROWN NOISE 24/7 | Black Screen | Ruido Blanco | Ruído Branco | 白噪音 | Sleep"
+# TITULOS: todos fixos em EN para máximo alcance global e CPM em dólar
+TITULOS = {lang: TITULO for lang in ["en","pt","de","es","fr","ja","ko","zh","it","nl","pl","tr","id","hi","ar"]}
 
 # Horário UTC → idioma dominante (CPM máximo)
 # DE: $14 | EN: $18 | PT: $8 | ES: $7 | FR: $12 | JA: $15
@@ -254,8 +256,25 @@ def criar_broadcast(token):
     }
     res = yt_call(token, "https://www.googleapis.com/youtube/v3/liveBroadcasts?part=id,snippet,status,contentDetails", body)
     if "id" in res:
-        log(f"Broadcast criado [{lang}]: {res['id']} → {titulo[:60]}")
-        return res["id"]
+        bc_id = res["id"]
+        log(f"Broadcast criado [{lang}]: {bc_id} → {titulo[:60]}")
+        # Definir categoria Music (categoryId=10) e defaultAudioLanguage=en
+        # para CPM máximo em dólar — sem categoria = CPM ~30% menor
+        try:
+            vid_body = {
+                "id": bc_id,
+                "snippet": {
+                    "title": titulo[:100],
+                    "description": get_descricao(lang)[:4900],
+                    "categoryId": "10",
+                    "defaultAudioLanguage": "en"
+                }
+            }
+            yt_call(token, "https://www.googleapis.com/youtube/v3/videos?part=snippet", vid_body, method="PUT")
+            log(f"✅ Categoria Music (10) + defaultAudioLanguage=en aplicados")
+        except Exception as e:
+            log(f"  Categoria ignorada (não crítico): {e}")
+        return bc_id
     err(f"Falha criar broadcast: {res}")
     return None
 
@@ -332,9 +351,9 @@ def gerar_noise_wav(path: str, duration_s: int = 10, sr: int = 44100):
 # ─────────────────────────────────────────────────────────────
 def _psi_pixels(w, h):
     """Coordenadas (x,y) do glifo ψ centralizado, discreto."""
-    cx, cy = w // 2, h // 2
-    GW, GH = 44, 56
-    x0, y0 = cx - GW // 2, cy - GH // 2
+    # Canto inferior direito — mais discreto para usuário dormindo
+    GW, GH = 28, 36
+    x0, y0 = w - GW - 8, h - GH - 8
     px = set()
     for y in range(0, 38):                       # haste esquerda
         for x in range(0, 4):           px.add((x0 + x, y0 + y))
@@ -475,7 +494,7 @@ def main():
 
     # Gerar assets — ψ embutido no vídeo (piscando) + noise
     wav = str(TMP / "white_brown_noise.wav")
-    gerar_noise_wav(wav, duration_s=10)
+    gerar_noise_wav(wav, duration_s=30)
     modo_v, fonte_v = preparar_fonte_video(ff)
     log(f"Fonte de vídeo: modo={modo_v}")
 
