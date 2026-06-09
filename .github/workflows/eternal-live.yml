@@ -1,0 +1,41 @@
+name: 🔴 Eternal Live — Cleanup + Create
+
+on:
+  workflow_dispatch:
+
+jobs:
+  eternal_live:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: pip install requests
+
+      - name: Download thumbnail v13
+        run: |
+          curl -sL https://raw.githubusercontent.com/tafita81/Repovazio/main/assets/thumbnail_live.png \
+               -o /tmp/thumbnail_live.png
+          ls -lh /tmp/thumbnail_live.png
+
+      - name: Run Eternal Live Setup
+        id: setup
+        env:
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+          YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python scripts/eternal_live.py
+
+      - name: Trigger Live Stream
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.GH_PAT }}
+          event-type: start-live
