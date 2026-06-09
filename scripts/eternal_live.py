@@ -1,265 +1,151 @@
 #!/usr/bin/env python3
-"""
-Workflow: Criar live eterna, deletar histórico, aplicar thumbnail v13
-"""
+"""Live Eterna: deletar histórico + criar broadcast perfeito + thumbnail v13"""
 import json, os, sys, time, urllib.request, urllib.parse, urllib.error
 
-# ── Credenciais ────────────────────────────────────────────────
-CLIENT_ID     = os.environ['YT_CLIENT_ID']
-CLIENT_SECRET = os.environ['YT_CLIENT_SECRET']
-REFRESH_TOKEN = os.environ['YT_REFRESH_TOKEN']
-STREAM_KEY    = os.environ.get('YOUTUBE_STREAM_KEY', '')
-SUPABASE_URL  = os.environ['SUPABASE_URL']
-SUPABASE_KEY  = os.environ['SUPABASE_SERVICE_KEY']
+CLIENT_ID     = os.environ["YT_CLIENT_ID"]
+CLIENT_SECRET = os.environ["YT_CLIENT_SECRET"]
+REFRESH_TOKEN = os.environ["YT_REFRESH_TOKEN"]
+STREAM_KEY    = os.environ.get("YOUTUBE_STREAM_KEY", "")
+SUPABASE_URL  = os.environ["SUPABASE_URL"]
+SUPABASE_KEY  = os.environ["SUPABASE_SERVICE_KEY"]
 
-def yt(method, endpoint, data=None, params=None, token=None, files=None):
-    base = "https://www.googleapis.com/youtube/v3"
-    url  = f"{base}/{endpoint}"
+def yt(method, endpoint, data=None, params=None, token=None):
+    url = "https://www.googleapis.com/youtube/v3/" + endpoint
     if params:
         url += "?" + urllib.parse.urlencode(params)
     headers = {"Authorization": f"Bearer {token}"}
-    if data is not None and files is None:
+    if data is not None:
         body = json.dumps(data).encode()
         headers["Content-Type"] = "application/json"
-    elif files:
-        body = files
     else:
         body = None
     req = urllib.request.Request(url, data=body, headers=headers, method=method)
     try:
         with urllib.request.urlopen(req, timeout=30) as r:
-            return json.loads(r.read()), r.status
+            raw = r.read()
+            return (json.loads(raw) if raw else {}), r.status
     except urllib.error.HTTPError as e:
-        err = e.read()
-        try: return json.loads(err), e.code
-        except: return {"error": str(err)}, e.code
+        raw = e.read()
+        return (json.loads(raw) if raw else {}), e.code
 
-# ── 1. Obter access token ───────────────────────────────────────
-print("1. Obtendo access token...")
-data = urllib.parse.urlencode({
-    "client_id": CLIENT_ID, "client_secret": CLIENT_SECRET,
-    "refresh_token": REFRESH_TOKEN, "grant_type": "refresh_token"
-}).encode()
-req = urllib.request.Request("https://oauth2.googleapis.com/token",
-    data=data, headers={"Content-Type": "application/x-www-form-urlencoded"})
-with urllib.request.urlopen(req, timeout=15) as r:
-    tok = json.loads(r.read())
-TOKEN = tok["access_token"]
-print(f"   ✅ Token obtido")
+# 1. Access token
+print("1. Access token...")
+resp = urllib.request.urlopen(urllib.request.Request(
+    "https://oauth2.googleapis.com/token",
+    data=urllib.parse.urlencode({
+        "client_id": CLIENT_ID, "client_secret": CLIENT_SECRET,
+        "refresh_token": REFRESH_TOKEN, "grant_type": "refresh_token"
+    }).encode(),
+    headers={"Content-Type": "application/x-www-form-urlencoded"}
+), timeout=15)
+TOKEN = json.loads(resp.read())["access_token"]
+print("   OK")
 
-# ── 2. Listar TODOS os broadcasts ──────────────────────────────
-print("\n2. Listando broadcasts existentes...")
+# 2. Listar todos broadcasts
+print("\n2. Broadcasts existentes:")
 all_ids = []
-page = None
-for status in ["active", "all", "completed", "upcoming"]:
-    params = {"part":"id,snippet,status","broadcastStatus":status,"maxResults":"50"}
-    if page: params["pageToken"] = page
-    res, code = yt("GET", "liveBroadcasts", params=params, token=TOKEN)
-    items = res.get("items", [])
-    for item in items:
+for status in ["active","all","completed","upcoming"]:
+    res, _ = yt("GET","liveBroadcasts",params={"part":"id,snippet,status",
+                 "broadcastStatus":status,"maxResults":"50"},token=TOKEN)
+    for item in res.get("items",[]):
         bid = item["id"]
-        title = item.get("snippet",{}).get("title","?")[:40]
-        lstatus = item.get("status",{}).get("lifeCycleStatus","?")
         if bid not in all_ids:
             all_ids.append(bid)
-            print(f"   {bid} | {lstatus:15s} | {title}")
+            t = item.get("snippet",{}).get("title","?")[:45]
+            s = item.get("status",{}).get("lifeCycleStatus","?")
+            print(f"   {bid} | {s:12s} | {t}")
+print(f"   Total: {len(all_ids)}")
 
-print(f"\n   Total encontrado: {len(all_ids)} broadcasts")
-
-# ── 3. Deletar TODOS os broadcasts ─────────────────────────────
-print("\n3. Deletando todos os broadcasts...")
-deleted = 0
+# 3. Deletar todos
+print("\n3. Deletando...")
 for bid in all_ids:
-    res, code = yt("DELETE", "liveBroadcasts", params={"id": bid}, token=TOKEN)
-    if code in (200, 204):
-        print(f"   ✅ Deletado: {bid}")
-        deleted += 1
-    elif code == 403:
-        print(f"   ⚠️  Não deletável (em andamento?): {bid}")
-    else:
-        print(f"   ❌ Erro {code}: {bid}")
-    time.sleep(0.3)
+    res, code = yt("DELETE","liveBroadcasts",params={"id":bid},token=TOKEN)
+    print(f"   {'OK' if code in (200,204) else 'ERR '+str(code)} {bid}")
+    time.sleep(0.4)
 
-print(f"\n   Deletados: {deleted}/{len(all_ids)}")
-
-# ── 4. Criar broadcast eterno ─────────────────────────────────
+# 4. Criar broadcast eterno
 print("\n4. Criando broadcast eterno...")
 from datetime import datetime, timezone, timedelta
-start = (datetime.now(timezone.utc) + timedelta(minutes=2)).strftime("%Y-%m-%dT%H:%M:%S.000Z")
-
-TITLE = "🔴 WHITE NOISE & BROWN NOISE 24/7 | Black Screen | Ruido Blanco | Ruído Branco | 白噪音 | Sleep"
-
-broadcast_body = {
-    "snippet": {
-        "title": TITLE,
-        "scheduledStartTime": start,
-        "description": """🌙 WHITE NOISE & BROWN NOISE 24/7 — Always LIVE, Never Recorded
-
-Use headphones for the best experience | Utilize fones de ouvido para a melhor experiência
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🇺🇸 SLEEP • 🇪🇸 SUEÑO • 🇧🇷 DORMIR • 🇩🇪 SCHLAFEN • 🇫🇷 SOMMEIL • 🇮🇹 DORMIRE
-🇯🇵 眠る • 🇰🇷 수면 • 🇨🇳 睡觉 • 🇸🇦 نوم • 🇷🇺 СОН • 🇮🇳 नींद
-🇮🇩 TIDUR • 🇳🇱 SLAPEN • 🇹🇷 UYKU • 🇵🇱 SEN • 🇻🇳 NGỦ
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-✅ White Noise — Scientifically proven for sleep, concentration & baby calming
-✅ Brown Noise — Deep bass frequency for ADHD, anxiety & tinnitus relief
-✅ Mix 40% White + 60% Brown — Optimal balance for deep sleep
-
-🔔 Subscribe and never miss a session | Inscreva-se e nunca perca uma sessão
-
-#whitenoise #brownnoise #sleep #ASMR #blackscreen #lofi #tinnitus #babysleep
-#백색소음 #白噪音 #ホワイトノイズ #ruidoblanco #ruidobranco #sommeil #schlaf""",
-    },
-    "status": {
-        "privacyStatus": "public",
-        "selfDeclaredMadeForKids": False,
-        "madeForKids": False,
-    },
-    "contentDetails": {
-        "enableAutoStart": True,
-        "enableAutoStop": False,
-        "enableDvr": False,
-        "recordFromStart": False,
-        "startWithSlate": False,
-        "monitorStream": {"enableMonitorStream": False},
-        "latencyPreference": "ultraLow",
-    },
-}
-
-res, code = yt("POST", "liveBroadcasts", data=broadcast_body,
-               params={"part": "snippet,status,contentDetails"}, token=TOKEN)
-if code not in (200, 201):
-    print(f"   ❌ Erro ao criar broadcast: {code} → {res}")
+start = (datetime.now(timezone.utc)+timedelta(minutes=3)).strftime("%Y-%m-%dT%H:%M:%S.000Z")
+TITLE = "\U0001f534 WHITE NOISE & BROWN NOISE 24/7 | Black Screen | Ruido Blanco | Ru\u00eddo Branco | \u767d\u566a\u97f3 | Sleep"
+res, code = yt("POST","liveBroadcasts",token=TOKEN,
+    params={"part":"snippet,status,contentDetails"},
+    data={
+        "snippet":{"title":TITLE,"scheduledStartTime":start,
+            "description":"\U0001f319 WHITE NOISE & BROWN NOISE 24/7 — Always LIVE, Never Recorded\n\nSleep | Sue\u00f1o | Dormir | Schlafen | Sommeil | Dormire\n\u7720\u308b | \uc218\uba74 | \u7761\u89c9 | \u0646\u0648\u0645 | \u0421\u043e\u043d | \u0928\u0940\u0902\u0926\n\nTidur | Slapen | Uyku | Sen | Ng\u1ee7\n\n#whitenoise #brownnoise #sleep #ASMR #blackscreen #lofi"},
+        "status":{"privacyStatus":"public","selfDeclaredMadeForKids":False},
+        "contentDetails":{"enableAutoStart":True,"enableAutoStop":False,
+            "enableDvr":False,"recordFromStart":False,"startWithSlate":False,
+            "monitorStream":{"enableMonitorStream":False},"latencyPreference":"ultraLow"}
+    })
+if code not in (200,201):
+    print(f"   ERRO {code}: {res}")
     sys.exit(1)
-
 BROADCAST_ID = res["id"]
-print(f"   ✅ Broadcast criado: {BROADCAST_ID}")
+print(f"   OK: {BROADCAST_ID}")
 
-# ── 5. Buscar live stream existente ou criar ──────────────────
-print("\n5. Buscando/criando live stream...")
-res, code = yt("GET", "liveStreams", params={
-    "part":"id,snippet,cdn,status","mine":"true","maxResults":"10"
-}, token=TOKEN)
-streams = res.get("items",[])
-STREAM_ID = None
-for s in streams:
-    skey = s.get("cdn",{}).get("ingestionInfo",{}).get("streamName","")
-    if STREAM_KEY and STREAM_KEY in skey:
-        STREAM_ID = s["id"]
-        print(f"   ✅ Stream existente: {STREAM_ID}")
-        break
-    elif streams:
-        STREAM_ID = streams[0]["id"]
-        print(f"   ✅ Usando primeiro stream: {STREAM_ID}")
-        break
+# 5. Stream existente
+print("\n5. Stream ID...")
+res2, _ = yt("GET","liveStreams",token=TOKEN,
+    params={"part":"id,cdn,status","mine":"true","maxResults":"5"})
+STREAM_ID = res2.get("items",[{}])[0].get("id","") if res2.get("items") else ""
+print(f"   {STREAM_ID or 'nenhum'}")
 
-if not STREAM_ID:
-    print("   Criando novo live stream...")
-    stream_body = {
-        "snippet": {"title": "White/Brown Noise Live Stream"},
-        "cdn": {
-            "frameRate": "30fps",
-            "ingestionType": "rtmp",
-            "resolution": "1080p",
-        },
-        "contentDetails": {"isReusable": True},
-    }
-    res, code = yt("POST", "liveStreams", data=stream_body,
-                   params={"part":"snippet,cdn,contentDetails,status"}, token=TOKEN)
-    if code in (200,201):
-        STREAM_ID = res["id"]
-        print(f"   ✅ Stream criado: {STREAM_ID}")
-    else:
-        print(f"   ❌ {code}: {res}")
-
-# ── 6. Bind broadcast ao stream ────────────────────────────────
+# 6. Bind
 if STREAM_ID:
-    print(f"\n6. Binding broadcast {BROADCAST_ID} ao stream {STREAM_ID}...")
-    res, code = yt("POST", "liveBroadcasts/bind", params={
-        "id": BROADCAST_ID,
-        "part": "id,contentDetails",
-        "streamId": STREAM_ID
-    }, token=TOKEN)
-    if code == 200:
-        print(f"   ✅ Bound!")
-    else:
-        print(f"   ⚠️  {code}: {res}")
+    yt("POST","liveBroadcasts/bind",token=TOKEN,
+       params={"id":BROADCAST_ID,"part":"id","streamId":STREAM_ID})
+    print(f"6. Bound {BROADCAST_ID} -> {STREAM_ID}")
 
-# ── 7. Aplicar thumbnail ───────────────────────────────────────
-print("\n7. Aplicando thumbnail v13...")
-# Baixar thumbnail do GitHub
-thumb_url = "https://raw.githubusercontent.com/tafita81/Repovazio/main/assets/thumbnail_live.png"
-req = urllib.request.Request(thumb_url, headers={"User-Agent":"Mozilla/5.0"})
-with urllib.request.urlopen(req, timeout=30) as r:
-    thumb_data = r.read()
-print(f"   Thumbnail baixada: {len(thumb_data)//1024}KB")
-
-# Upload para YouTube (multipart)
-import email.mime.multipart, email.mime.base, email.mime.application
-boundary = b"--livestream_boundary_v13--"
-body = (
-    b"--" + boundary + b"\r\n" +
-    b"Content-Type: application/json; charset=UTF-8\r\n\r\n" +
-    b"{}\r\n" +
-    b"--" + boundary + b"\r\n" +
-    b"Content-Type: image/jpeg\r\n\r\n" +
-    thumb_data + b"\r\n" +
-    b"--" + boundary + b"--"
-)
-upload_url = (f"https://www.googleapis.com/upload/youtube/v3/thumbnails/set"
-              f"?videoId={BROADCAST_ID}&uploadType=multipart")
-req2 = urllib.request.Request(upload_url, data=body, method="POST", headers={
-    "Authorization": f"Bearer {TOKEN}",
-    "Content-Type": f"multipart/related; boundary={boundary.decode()}",
-    "Content-Length": str(len(body)),
-})
+# 7. Thumbnail
+print("\n7. Thumbnail...")
+req_t = urllib.request.Request(
+    "https://raw.githubusercontent.com/tafita81/Repovazio/main/assets/thumbnail_live.png",
+    headers={"User-Agent":"Mozilla/5.0"})
+with urllib.request.urlopen(req_t, timeout=30) as r:
+    thumb = r.read()
+print(f"   {len(thumb)//1024}KB baixada")
+boundary = b"thumb_boundary_v13"
+body = (b"--"+boundary+b"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n{}\r\n"
+        +b"--"+boundary+b"\r\nContent-Type: image/jpeg\r\n\r\n"+thumb+b"\r\n"
+        +b"--"+boundary+b"--")
+req_u = urllib.request.Request(
+    f"https://www.googleapis.com/upload/youtube/v3/thumbnails/set?videoId={BROADCAST_ID}&uploadType=multipart",
+    data=body, method="POST",
+    headers={"Authorization":f"Bearer {TOKEN}",
+             "Content-Type":f"multipart/related; boundary={boundary.decode()}",
+             "Content-Length":str(len(body))})
 try:
-    with urllib.request.urlopen(req2, timeout=30) as r:
-        res2 = json.loads(r.read())
-    print(f"   ✅ Thumbnail aplicada!")
+    with urllib.request.urlopen(req_u, timeout=30) as r:
+        print("   OK thumbnail aplicada!")
 except urllib.error.HTTPError as e:
-    print(f"   ⚠️  Thumbnail: {e.code} — {e.read()[:200]}")
+    print(f"   WARN {e.code}: {e.read()[:150]}")
 
-# ── 8. Salvar broadcast_id no Supabase ────────────────────────
-print("\n8. Salvando broadcast_id no Supabase...")
-sb_data = json.dumps({
-    "cache_key": "secret:live_broadcast_eternal",
-    "value": json.dumps({
-        "broadcast_id": BROADCAST_ID,
-        "stream_id": STREAM_ID,
-        "title": TITLE,
-        "created": start,
-        "thumbnail": "v13"
-    }),
-    "expires_at": "2099-12-31 23:59:59"
-}).encode()
-
-sb_req = urllib.request.Request(
-    f"{SUPABASE_URL}/rest/v1/ia_cache",
-    data=sb_data,
-    headers={
-        "apikey": SUPABASE_KEY,
-        "Authorization": f"Bearer {SUPABASE_KEY}",
-        "Content-Type": "application/json",
-        "Prefer": "resolution=merge-duplicates"
-    },
-    method="POST"
-)
+# 8. Salvar no Supabase
+print("\n8. Supabase...")
+sb_body = json.dumps({"cache_key":"secret:live_broadcast_eternal",
+    "value":json.dumps({"broadcast_id":BROADCAST_ID,"stream_id":STREAM_ID,
+        "title":TITLE,"thumbnail":"v13","created":start}),
+    "expires_at":"2099-12-31 23:59:59"}).encode()
+req_sb = urllib.request.Request(f"{SUPABASE_URL}/rest/v1/ia_cache",
+    data=sb_body, method="POST",
+    headers={"apikey":SUPABASE_KEY,"Authorization":f"Bearer {SUPABASE_KEY}",
+             "Content-Type":"application/json","Prefer":"resolution=merge-duplicates"})
 try:
-    with urllib.request.urlopen(sb_req, timeout=15) as r:
-        print(f"   ✅ Salvo no Supabase (HTTP {r.status})")
+    with urllib.request.urlopen(req_sb, timeout=15) as r:
+        print(f"   OK HTTP {r.status}")
 except urllib.error.HTTPError as e:
-    print(f"   ⚠️  Supabase: {e.code}")
+    print(f"   WARN {e.code}")
 
 print(f"\n{'='*50}")
-print(f"✅ BROADCAST_ID={BROADCAST_ID}")
-print(f"✅ STREAM_ID={STREAM_ID}")
-print(f"✅ Live eterna configurada!")
+print(f"BROADCAST_ID={BROADCAST_ID}")
+print(f"STREAM_ID={STREAM_ID}")
+print("LIVE ETERNA CONFIGURADA!")
 print(f"{'='*50}")
 
-# Output para o workflow
-with open(os.environ.get('GITHUB_OUTPUT','//dev/null'), 'a') as f:
-    f.write(f"broadcast_id={BROADCAST_ID}\n")
-    f.write(f"stream_id={STREAM_ID}\n")
+# Output
+gho = os.environ.get("GITHUB_OUTPUT","")
+if gho:
+    with open(gho,"a") as f:
+        f.write(f"broadcast_id={BROADCAST_ID}\n")
+        f.write(f"stream_id={STREAM_ID}\n")
