@@ -1,0 +1,167 @@
+name: db-first-responder
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '*/5 * * * *'   # A cada 5 minutos
+
+jobs:
+  responder:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Desabilitar crons + disparar pipeline quando banco voltar
+        env:
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GH_PAT:               ${{ secrets.GH_PAT }}
+        run: |
+          python3 << 'PYEOF'
+          import os, urllib.request, urllib.error, json, time, sys
+
+          SBU  = os.environ["SUPABASE_URL"].rstrip("/")
+          SBK  = os.environ["SUPABASE_SERVICE_KEY"]
+          GHP  = os.environ.get("GH_PAT","")
+          H    = {"apikey": SBK, "Authorization": "Bearer " + SBK, "Content-Type": "application/json"}
+          REPO = "tafita81/Repovazio"
+
+          def sb_ok():
+              req = urllib.request.Request(
+                  SBU + "/rest/v1/content_pipeline?select=id&limit=1", headers=H)
+              try:
+                  with urllib.request.urlopen(req, timeout=20) as r:
+                      print("Supabase resp: " + str(r.status))
+                      return r.status == 200
+              except urllib.error.HTTPError as e:
+                  body = e.read().decode()[:80]
+                  print("HTTP " + str(e.code) + ": " + body)
+                  return False
+              except Exception as e:
+                  print("FAIL: " + str(e)[:80])
+                  return False
+
+          def disable_crons_via_rpc():
+              """Desabilitar crons via RPC do Supabase."""
+              body = json.dumps({"query": """
+                  UPDATE cron.job SET active = false
+                  WHERE command ILIKE ANY(ARRAY[
+                    '%eternal_optimizer%','%cerebro_ciclo_completo%',
+                    '%llm_process_queue%','%intelligence-engine%',
+                    '%quantum_gate%','%optimize_brain%','%llm_collect%',
+                    '%assemble_multipart%','%visual_quality%',
+                    '%run_quantum%','%auto_enqueue%','%apply_completed%'
+                  ]);
+              """}).encode()
+              req = urllib.request.Request(
+                  SBU + "/rest/v1/rpc/exec_sql",
+                  data=body, method="POST", headers=H)
+              try:
+                  with urllib.request.urlopen(req, timeout=15) as r:
+                      print("RPC disable_crons: " + str(r.status))
+                      return True
+              except Exception as e:
+                  print("RPC fail: " + str(e)[:60])
+                  return False
+
+          def dispatch(wf):
+              if not GHP: return
+              req = urllib.request.Request(
+                  "https://api.github.com/repos/" + REPO + "/actions/workflows/" + wf + "/dispatches",
+                  data=json.dumps({"ref":"main"}).encode(),
+                  headers={"Authorization":"token "+GHP,"Content-Type":"application/json"},
+                  method="POST")
+              try: urllib.request.urlopen(req, timeout=10); print("Dispatch: " + wf)
+              except: pass
+
+          def get_yt_key_from_cache():
+              req = urllib.request.Request(
+                  SBU + "/rest/v1/ia_cache?cache_key=eq.secret:YOUTUBE_API_KEY&select=value,cache_value&limit=1",
+                  headers=H)
+              try:
+                  with urllib.request.urlopen(req, timeout=10) as r:
+                      rows = json.loads(r.read())
+                      if rows:
+                          val = rows[0].get("value") or rows[0].get("cache_value","")
+                          if isinstance(val, dict): val = val.get("value","")
+                          return str(val).strip()
+              except: pass
+              return ""
+
+          def set_github_secret(name, value):
+              if not GHP or not value: return
+              req = urllib.request.Request(
+                  "https://api.github.com/repos/"+REPO+"/actions/secrets/public-key",
+                  headers={"Authorization":"token "+GHP})
+              try:
+                  with urllib.request.urlopen(req, timeout=10) as r:
+                      pk_data = json.load(r)
+              except: return
+              import base64
+              try:
+                  from nacl import encoding, public
+                  pk = public.PublicKey(pk_data["key"].encode(), encoding.Base64Encoder())
+                  encrypted = base64.b64encode(public.SealedBox(pk).encrypt(value.encode())).decode()
+              except ImportError:
+                  import subprocess as sp
+                  sp.run(["pip","install","PyNaCl","-q"], capture_output=True)
+                  from nacl import encoding, public
+                  pk = public.PublicKey(pk_data["key"].encode(), encoding.Base64Encoder())
+                  encrypted = base64.b64encode(public.SealedBox(pk).encrypt(value.encode())).decode()
+              req = urllib.request.Request(
+                  "https://api.github.com/repos/"+REPO+"/actions/secrets/"+name,
+                  data=json.dumps({"encrypted_value":encrypted,"key_id":pk_data["key_id"]}).encode(),
+                  headers={"Authorization":"token "+GHP,"Content-Type":"application/json"},
+                  method="PUT")
+              try: urllib.request.urlopen(req, timeout=10); print("Secret " + name + " configurado")
+              except Exception as e: print("Secret fail: " + str(e)[:60])
+
+          print("=== DB FIRST RESPONDER ===")
+          if not sb_ok():
+              print("Banco indisponivel — nada a fazer")
+              sys.exit(0)
+
+          print("Banco OK!")
+          disable_crons_via_rpc()
+
+          # Recuperar e configurar YOUTUBE_API_KEY
+          yt_key = get_yt_key_from_cache()
+          if yt_key and len(yt_key) > 10:
+              print("YOUTUBE_API_KEY encontrada: " + yt_key[:12] + "..." + yt_key[-4:])
+              set_github_secret("YOUTUBE_API_KEY", yt_key)
+          else:
+              print("YOUTUBE_API_KEY nao encontrada no ia_cache")
+
+          # Disparar pipeline completo
+          from datetime import datetime, timezone
+          week_id = datetime.now(timezone.utc).strftime("%Y-W%V")
+          req2 = urllib.request.Request(
+              SBU+"/rest/v1/strategy_decisions?week_id=eq."+week_id+"&select=id&limit=1",
+              headers=H)
+          try:
+              has_strategy = len(json.loads(urllib.request.urlopen(req2, timeout=10).read())) > 0
+          except: has_strategy = False
+
+          if not has_strategy:
+              print("Disparando pipeline completo...")
+              dispatch("research-agent.yml")
+              time.sleep(180)
+              dispatch("strategy-agent.yml")
+              time.sleep(180)
+              dispatch("seo-agent.yml")
+              time.sleep(5)
+          dispatch("analytics-agent.yml")
+          print("Pipeline disparado!")
+
+          # Auto-desabilitar este workflow
+          req3 = urllib.request.Request(
+              "https://api.github.com/repos/"+REPO+"/actions/workflows/db-first-responder.yml/disable",
+              data=b"{}",
+              headers={"Authorization":"token "+GHP,"Content-Type":"application/json"},
+              method="PUT")
+          try: urllib.request.urlopen(req3, timeout=10); print("Workflow desabilitado")
+          except: pass
+          PYEOF
