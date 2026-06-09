@@ -14,8 +14,14 @@ def sb_ok():
     req = urllib.request.Request(
         SBU + "/rest/v1/content_pipeline?select=id&limit=1", headers=H)
     try:
-        with urllib.request.urlopen(req, timeout=20) as r:
+        with urllib.request.urlopen(req, timeout=25) as r:
+            print("Supabase resp: " + str(r.status))
             return r.status == 200
+    except urllib.error.HTTPError as e:
+        body = e.read().decode()[:120]
+        print("sb_ok HTTP " + str(e.code) + ": " + body)
+        # PGRST002 = PostgREST recarregando schema (aguardar)
+        return False
     except Exception as e:
         print("sb_ok fail: " + str(e)[:80])
         return False
