@@ -92,7 +92,7 @@ def llm(prompt: str, system: str = "", model: str = MODEL_DEFAULT, max_tokens: i
     if NVIDIA_KEY:
         s, r = _http("https://integrate.api.nvidia.com/v1/chat/completions",
             method="POST",
-            body={"model": "deepseek-ai/deepseek-r1", "messages": messages, "max_tokens": max_tokens},
+            body={"model": "meta/llama-3.3-70b-instruct", "messages": messages, "max_tokens": max_tokens},
             headers={"Authorization": f"Bearer {NVIDIA_KEY}"}, timeout=60)
         if s == 200:
             text = strip_think(r["choices"][0]["message"]["content"])
