@@ -24,15 +24,7 @@ def err(m):  print(f"[{datetime.now():%H:%M:%S}] ERR: {m}", flush=True)
 # ─────────────────────────────────────────────────────────────
 # TÍTULOS — só idiomas com alfabeto latino para o título do broadcast
 # JA/KO/ZH/AR/HI ficam SOMENTE na descrição (evita broadcast em japonês/chinês)
-TITULOS = {
-    "en": "🔴 LIVE 24/7 | White Noise & Brown Noise for Sleep, Focus & Study | Daniela Coelho",
-    "pt": "🔴 AO VIVO 24H | Ruído Branco e Marrom para Dormir e Concentrar | Daniela Coelho",
-    "de": "🔴 LIVE 24/7 | Weißes & Braunes Rauschen zum Schlafen & Lernen | Daniela Coelho",
-    "es": "🔴 EN VIVO 24H | Ruido Blanco y Marrón para Dormir y Estudiar | Daniela Coelho",
-    "fr": "🔴 EN DIRECT 24H | Bruit Blanc & Brun pour Dormir et Étudier | Daniela Coelho",
-    "it": "🔴 LIVE 24H | Rumore Bianco e Marrone per Dormire e Studiare | Daniela Coelho",
-    "nl": "🔴 LIVE 24H | Witte & Bruine Ruis voor Slapen en Studeren | Daniela Coelho",
-}
+TITULO = "🔴 BLACK SCREEN 24/7 | White Noise & Brown Noise for Sleep | Tela Preta | Pantalla Negra | 24h/Day"
 
 # Horário UTC → idioma dominante (CPM máximo)
 # DE: $14 | EN: $18 | PT: $8 | ES: $7 | FR: $12 | JA: $15
