@@ -1,0 +1,16 @@
+name: fix-and-run-pipeline
+on:
+  workflow_dispatch:
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Aguardar banco + disparar pipeline
+        env:
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GH_PAT:               ${{ secrets.GH_PAT }}
+        run: python3 scripts/agents/fix_crons.py
