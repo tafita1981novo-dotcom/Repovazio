@@ -32,6 +32,7 @@ jobs:
           OCIEOF
           chmod 600 ~/.oci/config
           ssh-keygen -t rsa -b 2048 -f ~/.ssh/oracle_stream -N '' -q
+          echo "OCI_TENANCY: $OCI_TENANCY_OCID"
           echo 'OCI OK'
 
       - name: Conectar VMs e iniciar stream
@@ -52,77 +53,37 @@ jobs:
             [ "$CALLMEBOT_APIKEY" != "PENDING_ACTIVATION" ] &&               curl -s "https://api.callmebot.com/whatsapp.php?phone=${CALLMEBOT_PHONE}&text=${ENC}&apikey=${CALLMEBOT_APIKEY}" -o /dev/null
           }
 
-          echo "=== Buscando todas as VMs RUNNING ==="
-          # Buscar IDs dinamicamente — sem hardcode
-          VM_IDS=$(oci compute instance list             --compartment-id "$OCI_TENANCY_OCID"             --lifecycle-state RUNNING             --query 'data[*].id'             -o json 2>/dev/null | python3 -c "
+          echo "=== Listando instancias (JSON bruto) ==="
+          oci compute instance list             --compartment-id "$OCI_TENANCY_OCID"             --all 2>/dev/null | python3 -c "
 import sys, json
 data = json.load(sys.stdin)
-for x in data:
-    print(x)
-" 2>/dev/null)
+instances = data.get('data', [])
+print(f'Total instancias: {len(instances)}')
+for inst in instances:
+    print(f'  ID={inst["id"]}')
+    print(f'  Name={inst["display-name"]}')
+    print(f'  Shape={inst["shape"]}')
+    print(f'  State={inst["lifecycle-state"]}')
+    print()
+" 2>/dev/null || echo "Falha ao listar instancias"
 
-          echo "VMs encontradas:"
-          echo "$VM_IDS"
+          echo "=== Buscando IPs via VNIC ==="
+          # Listar todas as VNICs diretamente — independe de compartimento
+          oci network vnic-attachment list             --compartment-id "$OCI_TENANCY_OCID"             --all 2>/dev/null | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+vnics = data.get('data', [])
+print(f'VNICs encontradas: {len(vnics)}')
+for v in vnics:
+    print(f'  InstanceID={v.get("instance-id","?")} VnicID={v.get("vnic-id","?")} State={v.get("lifecycle-state","?")}')
+" 2>/dev/null || echo "Falha ao listar VNICs"
 
-          if [ -z "$VM_IDS" ]; then
-            echo "Nenhuma VM RUNNING encontrada."
-            exit 0
-          fi
-
-          # Processar cada VM
-          while IFS= read -r ID; do
-            [ -z "$ID" ] && continue
-            echo ""
-            echo "--- VM: $ID ---"
-
-            NAME=$(oci compute instance get --instance-id "$ID"               --query 'data."display-name"' --raw-output 2>/dev/null)
-            SHAPE=$(oci compute instance get --instance-id "$ID"               --query 'data.shape' --raw-output 2>/dev/null)
-            echo "Nome: $NAME | Shape: $SHAPE"
-
-            IP=$(oci compute instance list-vnics --instance-id "$ID"               --query 'data[0]."public-ip"' --raw-output 2>/dev/null)
-            echo "IP publico: $IP"
-
-            if [ -z "$IP" ] || [ "$IP" = "null" ]; then
-              echo "Sem IP publico — pulando"
-              continue
-            fi
-
-            # Salvar IP no Supabase
-            curl -s -X POST "${SUPABASE_URL}/rest/v1/ia_cache"               -H "apikey: ${SUPABASE_ANON_KEY}"               -H "Authorization: Bearer ${SUPABASE_ANON_KEY}"               -H "Content-Type: application/json"               -H "Prefer: resolution=merge-duplicates"               -d "{"cache_key":"oracle_vm_ip","value":"${IP}","expires_at":null}"               && echo "IP $IP salvo no Supabase" || echo "Supabase indisponivel (pausado)"
-
-            # Testar SSH
-            echo "Testando SSH em $IP..."
-            SSH_RESULT=$(ssh -o StrictHostKeyChecking=accept-new               -o ConnectTimeout=15               -o BatchMode=yes               -i ~/.ssh/oracle_stream ubuntu@$IP               "echo SSH_OK && uname -a" 2>&1)
-            echo "SSH result: $SSH_RESULT"
-
-            if echo "$SSH_RESULT" | grep -q "SSH_OK"; then
-              echo "SSH OK em $IP!"
-
-              # Verificar ffmpeg rodando
-              FFPID=$(ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15                 -o BatchMode=yes -i ~/.ssh/oracle_stream ubuntu@$IP                 "pgrep -f ffmpeg | head -1" 2>/dev/null)
-
-              if [ -n "$FFPID" ]; then
-                echo "Stream JA RODANDO em $IP (ffmpeg pid=$FFPID)"
-                notify_whatsapp "VM Oracle ativa! IP=${IP} Stream ffmpeg PID=${FFPID} - psidoc 24/7!"
-              else
-                echo "Stream nao ativo — instalando ffmpeg e iniciando stream..."
-                ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=60                     -o BatchMode=yes -i ~/.ssh/oracle_stream ubuntu@$IP << SSHEOF
-                  sudo apt-get update -q
-                  sudo apt-get install -y ffmpeg wget python3-pip -q
-                  wget -qO /tmp/setup.sh https://raw.githubusercontent.com/tafita81/Repovazio/main/scripts/oracle-forever-live-setup.sh
-                  chmod +x /tmp/setup.sh
-                  export STREAM_KEY='$YOUTUBE_STREAM_KEY'
-                  bash /tmp/setup.sh
-                  echo STREAM_CONFIGURADO
-SSHEOF
-                notify_whatsapp "Stream iniciado na VM Oracle! IP=${IP} | psidoc 24/7 no ar!"
-              fi
-            else
-              echo "SSH falhou em $IP — chave diferente ou VM inacessivel"
-              echo "Detalhe: $SSH_RESULT"
-              notify_whatsapp "VM Oracle IP=${IP} encontrada mas SSH falhou. Chave pode ser diferente."
-            fi
-          done <<< "$VM_IDS"
-
-          echo ""
-          echo "=== Concluido ==="
+          echo "=== Buscando IPs publicos ==="
+          oci network public-ip list             --compartment-id "$OCI_TENANCY_OCID"             --scope REGION             --all 2>/dev/null | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+ips = data.get('data', [])
+print(f'IPs publicos encontrados: {len(ips)}')
+for ip in ips:
+    print(f'  IP={ip.get("ip-address","?")} AssignedTo={ip.get("assigned-entity-id","?")} State={ip.get("lifecycle-state","?")}')
+" 2>/dev/null || echo "Falha ao listar IPs publicos"
