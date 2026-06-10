@@ -73,7 +73,7 @@ jobs:
           INSTANCE_ID=""
           SHAPE_USADO=""
 
-          for i in $(seq 1 500); do
+          for i in $(seq 1 2000); do
 
             for SIZE in "${ARM_SIZES[@]}"; do
               OCPU="${SIZE%%:*}"; MEM="${SIZE##*:}"
@@ -131,7 +131,7 @@ jobs:
               echo "sem imagem x86"
             fi
 
-            [ "$i" -lt 10 ] && sleep 30 || sleep 60
+            sleep 10
           done
 
           if [ "$CRIADO" -eq 0 ]; then
