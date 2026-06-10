@@ -26,10 +26,10 @@ jobs:
           chmod 600 ~/.oci/config
           ssh-keygen -t rsa -b 2048 -f ~/.ssh/oracle_stream -N '' -q
           PUB=$(cat ~/.ssh/oracle_stream.pub)
-          echo "Chave publica gerada: ${PUB:0:50}..."
+          echo "SSH pub key: $PUB"
           oci iam availability-domain list --compartment-id "$OCI_TENANCY_OCID" --query 'data[*].name' --raw-output && echo OCI_OK
 
-      - name: Atualizar SSH key e conectar
+      - name: Criar Console Connection e injetar chave
         env:
           OCI_TENANCY_OCID: ${{ secrets.OCI_TENANCY_OCID }}
           YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
@@ -43,40 +43,40 @@ jobs:
           PUB_KEY=$(cat ~/.ssh/oracle_stream.pub)
 
           INST_IDS=$(oci compute instance list --compartment-id "$OCI_TENANCY_OCID" --lifecycle-state RUNNING 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); [print(i['id']) for i in d.get('data',[])]" 2>/dev/null)
-          echo "Instancias RUNNING: $INST_IDS"
+          echo "VMs RUNNING: $(echo $INST_IDS | wc -w)"
 
           for INST_ID in $INST_IDS; do
-            echo "--- Atualizando chave SSH na instancia $INST_ID ---"
-            oci compute instance update --instance-id "$INST_ID" \
-              --metadata "{\"ssh_authorized_keys\":\"$PUB_KEY\"}" \
-              --force 2>/dev/null && echo "Chave atualizada" || echo "Update metadata falhou"
-
+            echo "--- VM $INST_ID ---"
             IP=$(oci compute instance list-vnics --instance-id "$INST_ID" --query 'data[0]."public-ip"' --raw-output 2>/dev/null)
             echo "IP: $IP"
 
-            if [ -n "$IP" ] && [ "$IP" != 'null' ]; then
-              echo "Aguardando 30s para chave ser aplicada..."
-              sleep 30
-              echo "Testando SSH em $IP..."
-              for attempt in 1 2 3; do
-                R=$(ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 -o BatchMode=yes -i ~/.ssh/oracle_stream ubuntu@$IP 'echo SSH_OK && uname -r' 2>&1)
-                echo "Tentativa $attempt: ${R:0:80}"
-                if echo "$R" | grep -q SSH_OK; then
-                  echo "ACESSO OK em $IP!"
-                  curl -s -X POST "$SUPA/rest/v1/ia_cache" -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $SUPABASE_ANON_KEY" -H 'Content-Type: application/json' -H 'Prefer: resolution=merge-duplicates' -d "{\"cache_key\":\"oracle_vm_ip\",\"value\":\"$IP\",\"expires_at\":null}" && echo IP_SALVO
-                  FP=$(ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=10 -o BatchMode=yes -i ~/.ssh/oracle_stream ubuntu@$IP 'pgrep -f ffmpeg | head -1' 2>/dev/null)
-                  if [ -n "$FP" ]; then
-                    echo "Stream JA ATIVO pid=$FP"
-                  else
-                    echo "Instalando e iniciando stream..."
-                    ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=90 -o BatchMode=yes -i ~/.ssh/oracle_stream ubuntu@$IP "sudo apt-get update -q && sudo apt-get install -y ffmpeg wget -q && wget -qO /tmp/s.sh https://raw.githubusercontent.com/tafita81/Repovazio/main/scripts/oracle-forever-live-setup.sh && chmod +x /tmp/s.sh && STREAM_KEY=$YOUTUBE_STREAM_KEY bash /tmp/s.sh && echo STREAM_OK"
-                  fi
-                  ENC=$(python3 -c "import urllib.parse; print(urllib.parse.quote('Oracle VM $IP stream psidoc 24h ativo!'))" 2>/dev/null)
-                  [ "$CALLMEBOT_APIKEY" != 'PENDING_ACTIVATION' ] && curl -s "https://api.callmebot.com/whatsapp.php?phone=${CALLMEBOT_PHONE}&text=${ENC}&apikey=${CALLMEBOT_APIKEY}" -o /dev/null
-                  break
-                fi
-                sleep 15
-              done
+            echo "Criando Instance Console Connection..."
+            CONN=$(oci compute instance-console-connection create \
+              --instance-id "$INST_ID" \
+              --ssh-public-key-file ~/.ssh/oracle_stream.pub \
+              --query 'data.id' --raw-output 2>&1)
+            echo "Console connection: $CONN"
+
+            if echo "$CONN" | grep -q 'ocid1'; then
+              echo "Console connection criada! ID: $CONN"
+              CONN_STR=$(oci compute instance-console-connection get \
+                --instance-console-connection-id "$CONN" \
+                --query 'data."connection-string"' --raw-output 2>/dev/null)
+              echo "Connection string disponivel: $(echo $CONN_STR | cut -c1-80)"
+              oci compute instance-console-connection delete \
+                --instance-console-connection-id "$CONN" --force 2>/dev/null
             fi
+
+            echo "Tentando update SSH key via instance update..."
+            oci compute instance update \
+              --instance-id "$INST_ID" \
+              --ssh-authorized-keys-file ~/.ssh/oracle_stream.pub \
+              --force 2>&1 | head -5
+
+            echo "Salvando IPs e info no Supabase independente do SSH..."
+            curl -s -X POST "$SUPA/rest/v1/ia_cache" -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $SUPABASE_ANON_KEY" -H 'Content-Type: application/json' -H 'Prefer: resolution=merge-duplicates' -d "{\"cache_key\":\"oracle_vm_ip\",\"value\":\"$IP\",\"expires_at\":null}" 2>/dev/null && echo IP_SALVO
+            curl -s -X POST "$SUPA/rest/v1/ia_cache" -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $SUPABASE_ANON_KEY" -H 'Content-Type: application/json' -H 'Prefer: resolution=merge-duplicates' -d "{\"cache_key\":\"oracle_vm_id\",\"value\":\"$INST_ID\",\"expires_at\":null}" 2>/dev/null && echo ID_SALVO
           done
+          echo "VMs ativas: 147.15.108.199 e 163.176.50.71"
+          echo "ACAO MANUAL NECESSARIA: Acesse console.oracle.com e resete a chave SSH"
           echo === Fim ===
