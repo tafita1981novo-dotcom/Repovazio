@@ -1,4 +1,3 @@
-# oracle-provisioner v1
 name: oracle-provisioner
 on:
   schedule:
@@ -53,14 +52,10 @@ jobs:
           set +e
 
           wa() {
-            python3 -c "
-import urllib.parse,sys,subprocess,os
-enc=urllib.parse.quote(sys.argv[1])
-ph=os.environ.get('CALLMEBOT_PHONE','')
-ky=os.environ.get('CALLMEBOT_APIKEY','')
-if ky and ky!='PENDING_ACTIVATION':
-    subprocess.run(['curl','-s',f'https://api.callmebot.com/whatsapp.php?phone={ph}&text={enc}&apikey={ky}','-o','/dev/null'])
-" "$1" 2>/dev/null || true
+            MSG="$1"
+            ENC=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))" "$MSG" 2>/dev/null || echo "$MSG")
+            [ "$CALLMEBOT_APIKEY" != "PENDING_ACTIVATION" ] && \
+              curl -s "https://api.callmebot.com/whatsapp.php?phone=${CALLMEBOT_PHONE}&text=${ENC}&apikey=${CALLMEBOT_APIKEY}" -o /dev/null || true
           }
 
           echo "Buscando imagem Ubuntu 22.04 x86 para E2.1.Micro..."
@@ -97,9 +92,9 @@ if ky and ky!='PENDING_ACTIVATION':
                 --query 'data.id' --raw-output 2>&1)
               if echo "$R" | grep -q 'ocid1.instance'; then
                 echo "CRIADA"
-                INSTANCE_ID="$R"; SHAPE_USADO="A1.Flex ${OCPU}OCPU/${MEM}GB"; CRIADO=1; break 2
+                INSTANCE_ID="$R"; SHAPE_USADO="A1Flex-${OCPU}cpu"; CRIADO=1; break 2
               elif echo "$R" | grep -q 'LimitExceeded'; then
-                echo "ja existe ARM"
+                echo "ja existe"
               elif echo "$R" | grep -q 'Out of host capacity'; then
                 echo "sem capacidade"
               else
@@ -124,31 +119,30 @@ if ky and ky!='PENDING_ACTIVATION':
                 --query 'data.id' --raw-output 2>&1)
               if echo "$R" | grep -q 'ocid1.instance'; then
                 echo "CRIADA"
-                INSTANCE_ID="$R"; SHAPE_USADO="E2.1.Micro x86"; CRIADO=1; break
+                INSTANCE_ID="$R"; SHAPE_USADO="E2-Micro-x86"; CRIADO=1; break
               elif echo "$R" | grep -q 'LimitExceeded'; then
-                echo "ja existe Micro"
+                echo "ja existe"
               elif echo "$R" | grep -q 'Out of host capacity'; then
                 echo "sem capacidade"
               else
                 echo "erro: ${R:0:60}"
               fi
             else
-              echo "imagem x86 nao encontrada"
+              echo "sem imagem x86"
             fi
 
             [ "$i" -lt 10 ] && sleep 30 || sleep 60
           done
 
           if [ "$CRIADO" -eq 0 ]; then
-            echo "Sem VM — relay 6h"
+            echo "Sem VM neste ciclo — relay 6h"
             curl -s -X POST -H "Authorization: Bearer $GH_PAT" \
               -H "Accept: application/vnd.github+json" \
-              "https://api.github.com/repos/tafita81/Repovazio/actions/workflows/oracle-provisioner.yml/dispatches" \
-              -d '{"ref":"main"}' && echo "Relay OK"
+              "https://api.github.com/repos/tafita81/Repovazio/dispatches" \
+              -d '{"event_type":"oracle-provisioner"}' && echo "Relay OK"
             exit 0
           fi
 
-          echo ""
           echo "=== VM CRIADA: $INSTANCE_ID ($SHAPE_USADO) ==="
           wa "Oracle VM criada $SHAPE_USADO aguardando IP"
           sleep 240
@@ -163,20 +157,17 @@ if ky and ky!='PENDING_ACTIVATION':
           done
           echo "IP: $IP"
 
-          for KV in "oracle_vm_ip:${IP}" "oracle_vm_id:${INSTANCE_ID}"; do
-            K="${KV%%:*}"; V="${KV#*:}"
-            curl -s -X POST "${SUPABASE_URL}/rest/v1/ia_cache" \
-              -H "apikey: ${SUPABASE_ANON_KEY}" \
-              -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
-              -H "Content-Type: application/json" \
-              -H "Prefer: resolution=merge-duplicates" \
-              -d "{\"cache_key\":\"${K}\",\"value\":\"${V}\",\"expires_at\":null}" \
-              && echo "${K} salvo" || echo "${K} falhou"
-          done
+          curl -s -X POST "${SUPABASE_URL}/rest/v1/ia_cache" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: resolution=merge-duplicates" \
+            -d "{\"cache_key\":\"oracle_vm_ip\",\"value\":\"${IP}\",\"expires_at\":null}" \
+            && echo "IP salvo" || echo "IP falhou"
 
-          wa "Oracle VM IP ${IP} shape ${SHAPE_USADO} configurando stream"
+          wa "Oracle IP ${IP} shape ${SHAPE_USADO} configurando stream"
 
-          [ -z "$IP" ] || [ "$IP" = "null" ] && { wa "ERRO sem IP verifique console.oracle.com"; exit 1; }
+          [ -z "$IP" ] || [ "$IP" = "null" ] && { wa "ERRO sem IP"; exit 1; }
 
           STREAM_OK=0
           for t in $(seq 1 5); do
@@ -184,7 +175,7 @@ if ky and ky!='PENDING_ACTIVATION':
                 -o ConnectTimeout=30 -o ServerAliveInterval=15 \
                 -i ~/.ssh/oracle_stream ubuntu@$IP \
                 "sudo apt-get update -q && \
-                 sudo apt-get install -y ffmpeg wget python3-pip -q && \
+                 sudo apt-get install -y ffmpeg wget -q && \
                  wget -qO /tmp/s.sh https://raw.githubusercontent.com/tafita81/Repovazio/main/scripts/oracle-forever-live-setup.sh && \
                  chmod +x /tmp/s.sh && \
                  STREAM_KEY='$YOUTUBE_STREAM_KEY' bash /tmp/s.sh && \
@@ -193,8 +184,8 @@ if ky and ky!='PENDING_ACTIVATION':
           done
 
           if [ "$STREAM_OK" -eq 1 ]; then
-            wa "STREAM ATIVO IP ${IP} shape ${SHAPE_USADO} psidanicoelho 24h"
+            wa "STREAM ATIVO IP ${IP} ${SHAPE_USADO} psidanicoelho 24h"
           else
-            wa "VM OK IP ${IP} SSH falhou acesse manualmente"
+            wa "VM OK IP ${IP} SSH falhou ssh ubuntu@${IP}"
           fi
           echo "=== FIM ==="
