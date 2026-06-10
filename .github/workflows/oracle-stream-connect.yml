@@ -25,9 +25,11 @@ jobs:
           printf '[DEFAULT]\nuser=%s\nfingerprint=%s\ntenancy=%s\nregion=%s\nkey_file=%s\n' "$OCI_USER_OCID" "$OCI_FINGERPRINT" "$OCI_TENANCY_OCID" "$OCI_REGION" "$HOME/.oci/oci_api_key.pem" > ~/.oci/config
           chmod 600 ~/.oci/config
           ssh-keygen -t rsa -b 2048 -f ~/.ssh/oracle_stream -N '' -q
+          PUB=$(cat ~/.ssh/oracle_stream.pub)
+          echo "Chave publica gerada: ${PUB:0:50}..."
           oci iam availability-domain list --compartment-id "$OCI_TENANCY_OCID" --query 'data[*].name' --raw-output && echo OCI_OK
 
-      - name: Buscar IPs via VNIC e conectar
+      - name: Atualizar SSH key e conectar
         env:
           OCI_TENANCY_OCID: ${{ secrets.OCI_TENANCY_OCID }}
           YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
@@ -38,42 +40,43 @@ jobs:
         run: |
           set +e
           SUPA=https://tpjvalzwkqwttvmszvie.supabase.co
+          PUB_KEY=$(cat ~/.ssh/oracle_stream.pub)
 
-          echo === Instancias RUNNING ===
-          oci compute instance list --compartment-id "$OCI_TENANCY_OCID" --lifecycle-state RUNNING 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); [print(i['id']+'|'+i['display-name']+'|'+i['shape']) for i in d.get('data',[])]"
-
-          echo === Buscando IPs via list-vnics para cada instancia ===
           INST_IDS=$(oci compute instance list --compartment-id "$OCI_TENANCY_OCID" --lifecycle-state RUNNING 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); [print(i['id']) for i in d.get('data',[])]" 2>/dev/null)
-          echo "IDs: $INST_IDS"
+          echo "Instancias RUNNING: $INST_IDS"
 
           for INST_ID in $INST_IDS; do
-            echo "--- Instancia $INST_ID ---"
+            echo "--- Atualizando chave SSH na instancia $INST_ID ---"
+            oci compute instance update --instance-id "$INST_ID" \
+              --metadata "{\"ssh_authorized_keys\":\"$PUB_KEY\"}" \
+              --force 2>/dev/null && echo "Chave atualizada" || echo "Update metadata falhou"
+
             IP=$(oci compute instance list-vnics --instance-id "$INST_ID" --query 'data[0]."public-ip"' --raw-output 2>/dev/null)
             echo "IP: $IP"
-            if [ -z "$IP" ] || [ "$IP" = 'null' ]; then
-              echo "Sem IP publico, tentando VNIC attachment..."
-              VNIC_ID=$(oci compute vnic-attachment list --compartment-id "$OCI_TENANCY_OCID" --instance-id "$INST_ID" --query 'data[0]."vnic-id"' --raw-output 2>/dev/null)
-              echo "VNIC ID: $VNIC_ID"
-              IP=$(oci network vnic get --vnic-id "$VNIC_ID" --query 'data."public-ip"' --raw-output 2>/dev/null)
-              echo "IP via VNIC: $IP"
-            fi
+
             if [ -n "$IP" ] && [ "$IP" != 'null' ]; then
+              echo "Aguardando 30s para chave ser aplicada..."
+              sleep 30
               echo "Testando SSH em $IP..."
-              R=$(ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=12 -o BatchMode=yes -i ~/.ssh/oracle_stream ubuntu@$IP 'echo SSH_OK && uname -r' 2>&1)
-              echo "SSH: ${R:0:80}"
-              if echo "$R" | grep -q SSH_OK; then
-                echo "ACESSO CONFIRMADO em $IP!"
-                curl -s -X POST "$SUPA/rest/v1/ia_cache" -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $SUPABASE_ANON_KEY" -H 'Content-Type: application/json' -H 'Prefer: resolution=merge-duplicates' -d "{\"cache_key\":\"oracle_vm_ip\",\"value\":\"$IP\",\"expires_at\":null}" && echo IP_SALVO
-                FP=$(ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=10 -o BatchMode=yes -i ~/.ssh/oracle_stream ubuntu@$IP 'pgrep -f ffmpeg | head -1' 2>/dev/null)
-                if [ -n "$FP" ]; then
-                  echo "Stream JA ATIVO pid=$FP"
-                else
-                  echo "Instalando e iniciando stream..."
-                  ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=90 -o BatchMode=yes -i ~/.ssh/oracle_stream ubuntu@$IP "sudo apt-get update -q && sudo apt-get install -y ffmpeg wget -q && wget -qO /tmp/s.sh https://raw.githubusercontent.com/tafita81/Repovazio/main/scripts/oracle-forever-live-setup.sh && chmod +x /tmp/s.sh && STREAM_KEY=$YOUTUBE_STREAM_KEY bash /tmp/s.sh && echo STREAM_OK"
+              for attempt in 1 2 3; do
+                R=$(ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 -o BatchMode=yes -i ~/.ssh/oracle_stream ubuntu@$IP 'echo SSH_OK && uname -r' 2>&1)
+                echo "Tentativa $attempt: ${R:0:80}"
+                if echo "$R" | grep -q SSH_OK; then
+                  echo "ACESSO OK em $IP!"
+                  curl -s -X POST "$SUPA/rest/v1/ia_cache" -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $SUPABASE_ANON_KEY" -H 'Content-Type: application/json' -H 'Prefer: resolution=merge-duplicates' -d "{\"cache_key\":\"oracle_vm_ip\",\"value\":\"$IP\",\"expires_at\":null}" && echo IP_SALVO
+                  FP=$(ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=10 -o BatchMode=yes -i ~/.ssh/oracle_stream ubuntu@$IP 'pgrep -f ffmpeg | head -1' 2>/dev/null)
+                  if [ -n "$FP" ]; then
+                    echo "Stream JA ATIVO pid=$FP"
+                  else
+                    echo "Instalando e iniciando stream..."
+                    ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=90 -o BatchMode=yes -i ~/.ssh/oracle_stream ubuntu@$IP "sudo apt-get update -q && sudo apt-get install -y ffmpeg wget -q && wget -qO /tmp/s.sh https://raw.githubusercontent.com/tafita81/Repovazio/main/scripts/oracle-forever-live-setup.sh && chmod +x /tmp/s.sh && STREAM_KEY=$YOUTUBE_STREAM_KEY bash /tmp/s.sh && echo STREAM_OK"
+                  fi
+                  ENC=$(python3 -c "import urllib.parse; print(urllib.parse.quote('Oracle VM $IP stream psidoc 24h ativo!'))" 2>/dev/null)
+                  [ "$CALLMEBOT_APIKEY" != 'PENDING_ACTIVATION' ] && curl -s "https://api.callmebot.com/whatsapp.php?phone=${CALLMEBOT_PHONE}&text=${ENC}&apikey=${CALLMEBOT_APIKEY}" -o /dev/null
+                  break
                 fi
-                ENC=$(python3 -c "import urllib.parse; print(urllib.parse.quote('Oracle VM OK IP=" + "$IP" + " stream psidoc 24h'))" 2>/dev/null)
-                [ "$CALLMEBOT_APIKEY" != 'PENDING_ACTIVATION' ] && curl -s "https://api.callmebot.com/whatsapp.php?phone=${CALLMEBOT_PHONE}&text=${ENC}&apikey=${CALLMEBOT_APIKEY}" -o /dev/null
-              fi
+                sleep 15
+              done
             fi
           done
           echo === Fim ===
