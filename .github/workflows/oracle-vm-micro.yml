@@ -16,30 +16,28 @@ jobs:
           OCI_REGION: ${{ secrets.OCI_REGION }}
           OCI_FINGERPRINT: ${{ secrets.OCI_FINGERPRINT }}
           OCI_PRIVATE_KEY: ${{ secrets.OCI_PRIVATE_KEY }}
+          OCI_CLI_SUPPRESS_FILE_PERMISSIONS_WARNING: "True"
         run: |
           pip3 install oci-cli -q
           mkdir -p ~/.oci ~/.ssh
           printf '%s' "$OCI_PRIVATE_KEY" > ~/.oci/oci_api_key.pem
           chmod 600 ~/.oci/oci_api_key.pem
-          cat > ~/.oci/config << EOF
+          cat > ~/.oci/config << OCIEOF
           [DEFAULT]
           user=$OCI_USER_OCID
           fingerprint=$OCI_FINGERPRINT
           tenancy=$OCI_TENANCY_OCID
           region=$OCI_REGION
           key_file=$HOME/.oci/oci_api_key.pem
-          EOF
+          OCIEOF
           chmod 600 ~/.oci/config
-          export OCI_CLI_SUPPRESS_FILE_PERMISSIONS_WARNING=True
           ssh-keygen -t rsa -b 2048 -f ~/.ssh/oracle_stream -N '' -q
-          echo "Regiao configurada: $OCI_REGION"
-          oci iam availability-domain list --compartment-id "$OCI_TENANCY_OCID" --query 'data[*].name' --raw-output && echo 'OCI OK'
+          oci iam availability-domain list --compartment-id "$OCI_TENANCY_OCID" \
+            --query 'data[*].name' --raw-output && echo 'OCI OK'
 
-      - name: Criar E2.1.Micro
+      - name: Inventariar e conectar VM existente
         env:
           OCI_TENANCY_OCID: ${{ secrets.OCI_TENANCY_OCID }}
-          OCI_REGION: ${{ secrets.OCI_REGION }}
-          GH_PAT: ${{ secrets.GH_PAT }}
           YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
           SUPABASE_URL: https://tpjvalzwkqwttvmszvie.supabase.co
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
@@ -56,97 +54,36 @@ jobs:
               curl -s "https://api.callmebot.com/whatsapp.php?phone=${CALLMEBOT_PHONE}&text=${ENC}&apikey=${CALLMEBOT_APIKEY}" -o /dev/null
           }
 
-          # Descobrir AD real da regiao
-          echo "Buscando Availability Domains em $OCI_REGION..."
-          AD=$(oci iam availability-domain list \
+          echo "=== Listando TODAS as instâncias na conta ==="
+          oci compute instance list \
             --compartment-id "$OCI_TENANCY_OCID" \
-            --query 'data[0].name' --raw-output 2>/dev/null)
-          echo "AD encontrado: $AD"
-
-          # Buscar subnet automaticamente
-          echo "Buscando subnet disponivel..."
-          SUBNET=$(oci network subnet list \
+            --lifecycle-state RUNNING \
+            --query 'data[*].{id:id,name:"display-name",shape:shape,state:"lifecycle-state"}' \
+            --output table 2>/dev/null || \
+          oci compute instance list \
             --compartment-id "$OCI_TENANCY_OCID" \
-            --query 'data[0].id' --raw-output 2>/dev/null)
-          echo "Subnet: $SUBNET"
+            --query 'data[*].{id:id,name:"display-name",shape:shape,state:"lifecycle-state"}' \
+            --output table
 
-          # Buscar imagem Ubuntu 22.04 x86
-          IMG=$(oci compute image list \
+          echo ""
+          echo "=== Todas (incluindo stopped/terminated) ==="
+          oci compute instance list \
             --compartment-id "$OCI_TENANCY_OCID" \
-            --operating-system 'Canonical Ubuntu' \
-            --operating-system-version '22.04' \
-            --shape VM.Standard.E2.1.Micro \
-            --sort-by TIMECREATED --sort-order DESC \
-            --query 'data[0].id' --raw-output 2>/dev/null)
-          echo "Imagem x86: $IMG"
+            --query 'data[*].{id:id,name:"display-name",shape:shape,state:"lifecycle-state"}' \
+            --output table
 
-          if [ -z "$AD" ] || [ "$AD" = "null" ]; then
-            echo "ERRO: AD nao encontrado"
-            exit 1
-          fi
-          if [ -z "$SUBNET" ] || [ "$SUBNET" = "null" ]; then
-            echo "ERRO: Subnet nao encontrada"
-            exit 1
-          fi
-          if [ -z "$IMG" ] || [ "$IMG" = "null" ]; then
-            echo "ERRO: Imagem nao encontrada"
-            exit 1
-          fi
-
-          echo "Tentando criar E2.1.Micro..."
-          R=$(oci compute instance launch \
+          echo ""
+          echo "=== IPs públicos de todas as instâncias ==="
+          for ID in $(oci compute instance list \
             --compartment-id "$OCI_TENANCY_OCID" \
-            --availability-domain "$AD" \
-            --shape VM.Standard.E2.1.Micro \
-            --image-id "$IMG" \
-            --subnet-id "$SUBNET" \
-            --assign-public-ip true \
-            --ssh-authorized-keys-file ~/.ssh/oracle_stream.pub \
-            --display-name "psidoc-micro-x86" \
-            --boot-volume-size-in-gbs 50 \
-            --query 'data.id' --raw-output 2>&1)
-
-          echo "Resultado: $R"
-
-          if echo "$R" | grep -q 'ocid1.instance'; then
-            INSTANCE_ID="$R"
-            echo "=== E2.1.MICRO CRIADA: $INSTANCE_ID ==="
-            notify_whatsapp "Oracle Micro criada! Aguardando IP..."
-            sleep 120
-
-            IP=""
-            for t in $(seq 1 8); do
-              IP=$(oci compute instance list-vnics --instance-id "$INSTANCE_ID" \
-                --query 'data[0]."public-ip"' --raw-output 2>/dev/null)
-              [ -n "$IP" ] && [ "$IP" != "null" ] && break
-              sleep 20
-            done
-            echo "IP publico: $IP"
-
-            curl -s -X POST "${SUPABASE_URL}/rest/v1/ia_cache" \
-              -H "apikey: ${SUPABASE_ANON_KEY}" \
-              -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
-              -H "Content-Type: application/json" \
-              -H "Prefer: resolution=merge-duplicates" \
-              -d "{\"cache_key\":\"oracle_vm_ip\",\"value\":\"${IP}\",\"expires_at\":null}" && echo "IP salvo"
-
-            notify_whatsapp "Oracle Micro ATIVA! IP: ${IP} | E2.1.Micro x86 | psidoc stream!"
-
-            if [ -n "$IP" ] && [ "$IP" != "null" ]; then
-              for t in $(seq 1 5); do
-                ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=30 \
-                    -i ~/.ssh/oracle_stream ubuntu@$IP \
-                    "sudo apt-get update -q && sudo apt-get install -y ffmpeg wget -q && \
-                     wget -qO /tmp/s.sh https://raw.githubusercontent.com/tafita81/Repovazio/main/scripts/oracle-forever-live-setup.sh && \
-                     chmod +x /tmp/s.sh && STREAM_KEY='$YOUTUBE_STREAM_KEY' bash /tmp/s.sh && \
-                     echo MICRO_STREAM_OK" && break || sleep 30
-              done
-            fi
-          elif echo "$R" | grep -q 'LimitExceeded'; then
-            echo "LimitExceeded — VM ja existe na conta!"
-            notify_whatsapp "Oracle: LimitExceeded — verifique se VM ja existe no console."
-          elif echo "$R" | grep -q 'Out of host capacity'; then
-            echo "Sem capacidade para E2.1.Micro"
-          else
-            echo "Erro inesperado: $R"
-          fi
+            --query 'data[*].id' -o json 2>/dev/null | python3 -c "import sys,json; [print(x) for x in json.load(sys.stdin)]" 2>/dev/null); do
+            NAME=$(oci compute instance get --instance-id "$ID" \
+              --query 'data."display-name"' --raw-output 2>/dev/null)
+            SHAPE=$(oci compute instance get --instance-id "$ID" \
+              --query 'data.shape' --raw-output 2>/dev/null)
+            STATE=$(oci compute instance get --instance-id "$ID" \
+              --query 'data."lifecycle-state"' --raw-output 2>/dev/null)
+            IP=$(oci compute instance list-vnics --instance-id "$ID" \
+              --query 'data[0]."public-ip"' --raw-output 2>/dev/null)
+            echo "  $NAME | $SHAPE | $STATE | IP=$IP | ID=$ID"
+          done
