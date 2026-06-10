@@ -34,7 +34,7 @@ jobs:
           ssh-keygen -t rsa -b 2048 -f ~/.ssh/oracle_stream -N '' -q
           echo 'OCI OK'
 
-      - name: Pegar IP e configurar VMs existentes
+      - name: Conectar VMs e iniciar stream
         env:
           OCI_TENANCY_OCID: ${{ secrets.OCI_TENANCY_OCID }}
           YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
@@ -52,42 +52,77 @@ jobs:
             [ "$CALLMEBOT_APIKEY" != "PENDING_ACTIVATION" ] &&               curl -s "https://api.callmebot.com/whatsapp.php?phone=${CALLMEBOT_PHONE}&text=${ENC}&apikey=${CALLMEBOT_APIKEY}" -o /dev/null
           }
 
-          VM_IDS=("ocid1.instance.oc1.***.antxeljrpwfc5uyc2lae2goubu5vc25kgqh7r47pfoi7u2ft3r2yogjanauq" "ocid1.instance.oc1.***.antxeljrpwfc5uyc2y5xbzy4i3672pigdhjv3l6m6lbwb4sfe7yx4kuc4tqq")
+          echo "=== Buscando todas as VMs RUNNING ==="
+          # Buscar IDs dinamicamente — sem hardcode
+          VM_IDS=$(oci compute instance list             --compartment-id "$OCI_TENANCY_OCID"             --lifecycle-state RUNNING             --query 'data[*].id'             -o json 2>/dev/null | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+for x in data:
+    print(x)
+" 2>/dev/null)
 
-          for ID in "${VM_IDS[@]}"; do
-            echo "=== Processando VM: $ID ==="
-            STATE=$(oci compute instance get --instance-id "$ID"               --query 'data."lifecycle-state"' --raw-output 2>/dev/null)
+          echo "VMs encontradas:"
+          echo "$VM_IDS"
+
+          if [ -z "$VM_IDS" ]; then
+            echo "Nenhuma VM RUNNING encontrada."
+            exit 0
+          fi
+
+          # Processar cada VM
+          while IFS= read -r ID; do
+            [ -z "$ID" ] && continue
+            echo ""
+            echo "--- VM: $ID ---"
+
             NAME=$(oci compute instance get --instance-id "$ID"               --query 'data."display-name"' --raw-output 2>/dev/null)
-            echo "Nome: $NAME | Estado: $STATE"
+            SHAPE=$(oci compute instance get --instance-id "$ID"               --query 'data.shape' --raw-output 2>/dev/null)
+            echo "Nome: $NAME | Shape: $SHAPE"
 
             IP=$(oci compute instance list-vnics --instance-id "$ID"               --query 'data[0]."public-ip"' --raw-output 2>/dev/null)
             echo "IP publico: $IP"
 
-            if [ -n "$IP" ] && [ "$IP" != "null" ]; then
-              echo "Salvando IP $IP no Supabase..."
-              curl -s -X POST "${SUPABASE_URL}/rest/v1/ia_cache"                 -H "apikey: ${SUPABASE_ANON_KEY}"                 -H "Authorization: Bearer ${SUPABASE_ANON_KEY}"                 -H "Content-Type: application/json"                 -H "Prefer: resolution=merge-duplicates"                 -d "{\"cache_key\":\"oracle_vm_ip\",\"value\":\"${IP}\",\"expires_at\":null}" && echo "IP salvo"
+            if [ -z "$IP" ] || [ "$IP" = "null" ]; then
+              echo "Sem IP publico — pulando"
+              continue
+            fi
 
-              echo "Tentando SSH na VM $IP..."
-              ssh -o StrictHostKeyChecking=accept-new                   -o ConnectTimeout=20                   -i ~/.ssh/oracle_stream ubuntu@$IP                   "echo SSH_OK && uname -a && df -h / && ps aux | grep ffmpeg | head -3" && SSH_OK=1 || SSH_OK=0
+            # Salvar IP no Supabase
+            curl -s -X POST "${SUPABASE_URL}/rest/v1/ia_cache"               -H "apikey: ${SUPABASE_ANON_KEY}"               -H "Authorization: Bearer ${SUPABASE_ANON_KEY}"               -H "Content-Type: application/json"               -H "Prefer: resolution=merge-duplicates"               -d "{"cache_key":"oracle_vm_ip","value":"${IP}","expires_at":null}"               && echo "IP $IP salvo no Supabase" || echo "Supabase indisponivel (pausado)"
 
-              if [ "$SSH_OK" -eq 1 ]; then
-                echo "SSH funcionou! Verificando se stream esta rodando..."
-                STREAM_PID=$(ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=20                   -i ~/.ssh/oracle_stream ubuntu@$IP                   "pgrep -f ffmpeg || echo NENHUM" 2>/dev/null)
-                echo "FFmpeg PID: $STREAM_PID"
+            # Testar SSH
+            echo "Testando SSH em $IP..."
+            SSH_RESULT=$(ssh -o StrictHostKeyChecking=accept-new               -o ConnectTimeout=15               -o BatchMode=yes               -i ~/.ssh/oracle_stream ubuntu@$IP               "echo SSH_OK && uname -a" 2>&1)
+            echo "SSH result: $SSH_RESULT"
 
-                if [ "$STREAM_PID" = "NENHUM" ] || [ -z "$STREAM_PID" ]; then
-                  echo "Stream nao ativo — instalando e iniciando..."
-                  ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=30                       -i ~/.ssh/oracle_stream ubuntu@$IP                       "sudo apt-get update -q &&                        sudo apt-get install -y ffmpeg wget python3-pip -q &&                        wget -qO /tmp/s.sh https://raw.githubusercontent.com/tafita81/Repovazio/main/scripts/oracle-forever-live-setup.sh &&                        chmod +x /tmp/s.sh &&                        STREAM_KEY='$YOUTUBE_STREAM_KEY' bash /tmp/s.sh &&                        echo STREAM_INICIADO" &&                   notify_whatsapp "Stream ATIVO na VM Oracle! IP: ${IP} | psidoc 24/7 no ar!" ||                   echo "Setup falhou — IP=$IP acessivel via SSH"
-                else
-                  echo "Stream JA RODANDO! PID=$STREAM_PID"
-                  notify_whatsapp "VM Oracle ativa! IP: ${IP} | Stream ffmpeg PID=$STREAM_PID"
-                fi
+            if echo "$SSH_RESULT" | grep -q "SSH_OK"; then
+              echo "SSH OK em $IP!"
+
+              # Verificar ffmpeg rodando
+              FFPID=$(ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15                 -o BatchMode=yes -i ~/.ssh/oracle_stream ubuntu@$IP                 "pgrep -f ffmpeg | head -1" 2>/dev/null)
+
+              if [ -n "$FFPID" ]; then
+                echo "Stream JA RODANDO em $IP (ffmpeg pid=$FFPID)"
+                notify_whatsapp "VM Oracle ativa! IP=${IP} Stream ffmpeg PID=${FFPID} - psidoc 24/7!"
               else
-                echo "SSH falhou em $IP — VM pode estar com chave diferente"
-                notify_whatsapp "VM Oracle encontrada IP=${IP} mas SSH falhou. Acesse o console Oracle."
+                echo "Stream nao ativo — instalando ffmpeg e iniciando stream..."
+                ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=60                     -o BatchMode=yes -i ~/.ssh/oracle_stream ubuntu@$IP << SSHEOF
+                  sudo apt-get update -q
+                  sudo apt-get install -y ffmpeg wget python3-pip -q
+                  wget -qO /tmp/setup.sh https://raw.githubusercontent.com/tafita81/Repovazio/main/scripts/oracle-forever-live-setup.sh
+                  chmod +x /tmp/setup.sh
+                  export STREAM_KEY='$YOUTUBE_STREAM_KEY'
+                  bash /tmp/setup.sh
+                  echo STREAM_CONFIGURADO
+SSHEOF
+                notify_whatsapp "Stream iniciado na VM Oracle! IP=${IP} | psidoc 24/7 no ar!"
               fi
             else
-              echo "VM $ID sem IP publico"
+              echo "SSH falhou em $IP — chave diferente ou VM inacessivel"
+              echo "Detalhe: $SSH_RESULT"
+              notify_whatsapp "VM Oracle IP=${IP} encontrada mas SSH falhou. Chave pode ser diferente."
             fi
-            echo ""
-          done
+          done <<< "$VM_IDS"
+
+          echo ""
+          echo "=== Concluido ==="
