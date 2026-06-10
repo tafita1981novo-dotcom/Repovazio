@@ -32,10 +32,9 @@ jobs:
           OCIEOF
           chmod 600 ~/.oci/config
           ssh-keygen -t rsa -b 2048 -f ~/.ssh/oracle_stream -N '' -q
-          oci iam availability-domain list --compartment-id "$OCI_TENANCY_OCID" \
-            --query 'data[*].name' --raw-output && echo 'OCI OK'
+          echo 'OCI OK'
 
-      - name: Inventariar e conectar VM existente
+      - name: Pegar IP e configurar VMs existentes
         env:
           OCI_TENANCY_OCID: ${{ secrets.OCI_TENANCY_OCID }}
           YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
@@ -49,41 +48,46 @@ jobs:
 
           notify_whatsapp() {
             MSG="$1"
-            ENC=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))" "$MSG" 2>/dev/null || echo "$MSG")
-            [ "$CALLMEBOT_APIKEY" != "PENDING_ACTIVATION" ] && \
-              curl -s "https://api.callmebot.com/whatsapp.php?phone=${CALLMEBOT_PHONE}&text=${ENC}&apikey=${CALLMEBOT_APIKEY}" -o /dev/null
+            ENC=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))" "$MSG" 2>/dev/null)
+            [ "$CALLMEBOT_APIKEY" != "PENDING_ACTIVATION" ] &&               curl -s "https://api.callmebot.com/whatsapp.php?phone=${CALLMEBOT_PHONE}&text=${ENC}&apikey=${CALLMEBOT_APIKEY}" -o /dev/null
           }
 
-          echo "=== Listando TODAS as instâncias na conta ==="
-          oci compute instance list \
-            --compartment-id "$OCI_TENANCY_OCID" \
-            --lifecycle-state RUNNING \
-            --query 'data[*].{id:id,name:"display-name",shape:shape,state:"lifecycle-state"}' \
-            --output table 2>/dev/null || \
-          oci compute instance list \
-            --compartment-id "$OCI_TENANCY_OCID" \
-            --query 'data[*].{id:id,name:"display-name",shape:shape,state:"lifecycle-state"}' \
-            --output table
+          VM_IDS=("ocid1.instance.oc1.***.antxeljrpwfc5uyc2lae2goubu5vc25kgqh7r47pfoi7u2ft3r2yogjanauq" "ocid1.instance.oc1.***.antxeljrpwfc5uyc2y5xbzy4i3672pigdhjv3l6m6lbwb4sfe7yx4kuc4tqq")
 
-          echo ""
-          echo "=== Todas (incluindo stopped/terminated) ==="
-          oci compute instance list \
-            --compartment-id "$OCI_TENANCY_OCID" \
-            --query 'data[*].{id:id,name:"display-name",shape:shape,state:"lifecycle-state"}' \
-            --output table
+          for ID in "${VM_IDS[@]}"; do
+            echo "=== Processando VM: $ID ==="
+            STATE=$(oci compute instance get --instance-id "$ID"               --query 'data."lifecycle-state"' --raw-output 2>/dev/null)
+            NAME=$(oci compute instance get --instance-id "$ID"               --query 'data."display-name"' --raw-output 2>/dev/null)
+            echo "Nome: $NAME | Estado: $STATE"
 
-          echo ""
-          echo "=== IPs públicos de todas as instâncias ==="
-          for ID in $(oci compute instance list \
-            --compartment-id "$OCI_TENANCY_OCID" \
-            --query 'data[*].id' -o json 2>/dev/null | python3 -c "import sys,json; [print(x) for x in json.load(sys.stdin)]" 2>/dev/null); do
-            NAME=$(oci compute instance get --instance-id "$ID" \
-              --query 'data."display-name"' --raw-output 2>/dev/null)
-            SHAPE=$(oci compute instance get --instance-id "$ID" \
-              --query 'data.shape' --raw-output 2>/dev/null)
-            STATE=$(oci compute instance get --instance-id "$ID" \
-              --query 'data."lifecycle-state"' --raw-output 2>/dev/null)
-            IP=$(oci compute instance list-vnics --instance-id "$ID" \
-              --query 'data[0]."public-ip"' --raw-output 2>/dev/null)
-            echo "  $NAME | $SHAPE | $STATE | IP=$IP | ID=$ID"
+            IP=$(oci compute instance list-vnics --instance-id "$ID"               --query 'data[0]."public-ip"' --raw-output 2>/dev/null)
+            echo "IP publico: $IP"
+
+            if [ -n "$IP" ] && [ "$IP" != "null" ]; then
+              echo "Salvando IP $IP no Supabase..."
+              curl -s -X POST "${SUPABASE_URL}/rest/v1/ia_cache"                 -H "apikey: ${SUPABASE_ANON_KEY}"                 -H "Authorization: Bearer ${SUPABASE_ANON_KEY}"                 -H "Content-Type: application/json"                 -H "Prefer: resolution=merge-duplicates"                 -d "{\"cache_key\":\"oracle_vm_ip\",\"value\":\"${IP}\",\"expires_at\":null}" && echo "IP salvo"
+
+              echo "Tentando SSH na VM $IP..."
+              ssh -o StrictHostKeyChecking=accept-new                   -o ConnectTimeout=20                   -i ~/.ssh/oracle_stream ubuntu@$IP                   "echo SSH_OK && uname -a && df -h / && ps aux | grep ffmpeg | head -3" && SSH_OK=1 || SSH_OK=0
+
+              if [ "$SSH_OK" -eq 1 ]; then
+                echo "SSH funcionou! Verificando se stream esta rodando..."
+                STREAM_PID=$(ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=20                   -i ~/.ssh/oracle_stream ubuntu@$IP                   "pgrep -f ffmpeg || echo NENHUM" 2>/dev/null)
+                echo "FFmpeg PID: $STREAM_PID"
+
+                if [ "$STREAM_PID" = "NENHUM" ] || [ -z "$STREAM_PID" ]; then
+                  echo "Stream nao ativo — instalando e iniciando..."
+                  ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=30                       -i ~/.ssh/oracle_stream ubuntu@$IP                       "sudo apt-get update -q &&                        sudo apt-get install -y ffmpeg wget python3-pip -q &&                        wget -qO /tmp/s.sh https://raw.githubusercontent.com/tafita81/Repovazio/main/scripts/oracle-forever-live-setup.sh &&                        chmod +x /tmp/s.sh &&                        STREAM_KEY='$YOUTUBE_STREAM_KEY' bash /tmp/s.sh &&                        echo STREAM_INICIADO" &&                   notify_whatsapp "Stream ATIVO na VM Oracle! IP: ${IP} | psidoc 24/7 no ar!" ||                   echo "Setup falhou — IP=$IP acessivel via SSH"
+                else
+                  echo "Stream JA RODANDO! PID=$STREAM_PID"
+                  notify_whatsapp "VM Oracle ativa! IP: ${IP} | Stream ffmpeg PID=$STREAM_PID"
+                fi
+              else
+                echo "SSH falhou em $IP — VM pode estar com chave diferente"
+                notify_whatsapp "VM Oracle encontrada IP=${IP} mas SSH falhou. Acesse o console Oracle."
+              fi
+            else
+              echo "VM $ID sem IP publico"
+            fi
+            echo ""
           done
