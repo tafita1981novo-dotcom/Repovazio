@@ -22,18 +22,11 @@ jobs:
           mkdir -p ~/.oci ~/.ssh
           printf '%s' "$OCI_PRIVATE_KEY" > ~/.oci/oci_api_key.pem
           chmod 600 ~/.oci/oci_api_key.pem
-          cat > ~/.oci/config << OCIEOF
-          [DEFAULT]
-          user=$OCI_USER_OCID
-          fingerprint=$OCI_FINGERPRINT
-          tenancy=$OCI_TENANCY_OCID
-          region=$OCI_REGION
-          key_file=$HOME/.oci/oci_api_key.pem
-          OCIEOF
+          printf '[DEFAULT]\nuser=%s\nfingerprint=%s\ntenancy=%s\nregion=%s\nkey_file=%s\n'             "$OCI_USER_OCID" "$OCI_FINGERPRINT" "$OCI_TENANCY_OCID" "$OCI_REGION"             "$HOME/.oci/oci_api_key.pem" > ~/.oci/config
           chmod 600 ~/.oci/config
           ssh-keygen -t rsa -b 2048 -f ~/.ssh/oracle_stream -N '' -q
-          echo "OCI_TENANCY: $OCI_TENANCY_OCID"
-          echo 'OCI OK'
+          echo "Tenant: $OCI_TENANCY_OCID"
+          oci iam availability-domain list --compartment-id "$OCI_TENANCY_OCID"             --query 'data[*].name' --raw-output && echo 'OCI OK'
 
       - name: Conectar VMs e iniciar stream
         env:
@@ -47,43 +40,67 @@ jobs:
         run: |
           set +e
 
-          notify_whatsapp() {
-            MSG="$1"
-            ENC=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))" "$MSG" 2>/dev/null)
+          notify_wa() {
+            ENC=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))" "$1" 2>/dev/null)
             [ "$CALLMEBOT_APIKEY" != "PENDING_ACTIVATION" ] &&               curl -s "https://api.callmebot.com/whatsapp.php?phone=${CALLMEBOT_PHONE}&text=${ENC}&apikey=${CALLMEBOT_APIKEY}" -o /dev/null
           }
 
-          echo "=== Listando instancias (JSON bruto) ==="
-          oci compute instance list             --compartment-id "$OCI_TENANCY_OCID"             --all 2>/dev/null | python3 -c "
+          echo "=== Listando instancias (JSON) ==="
+          RAW=$(oci compute instance list --compartment-id "$OCI_TENANCY_OCID" --all 2>/dev/null)
+          echo "$RAW" | python3 - << 'PYEOF2'
 import sys, json
-data = json.load(sys.stdin)
-instances = data.get('data', [])
-print(f'Total instancias: {len(instances)}')
-for inst in instances:
-    print(f'  ID={inst["id"]}')
-    print(f'  Name={inst["display-name"]}')
-    print(f'  Shape={inst["shape"]}')
-    print(f'  State={inst["lifecycle-state"]}')
-    print()
-" 2>/dev/null || echo "Falha ao listar instancias"
-
-          echo "=== Buscando IPs via VNIC ==="
-          # Listar todas as VNICs diretamente — independe de compartimento
-          oci network vnic-attachment list             --compartment-id "$OCI_TENANCY_OCID"             --all 2>/dev/null | python3 -c "
-import sys, json
-data = json.load(sys.stdin)
-vnics = data.get('data', [])
-print(f'VNICs encontradas: {len(vnics)}')
-for v in vnics:
-    print(f'  InstanceID={v.get("instance-id","?")} VnicID={v.get("vnic-id","?")} State={v.get("lifecycle-state","?")}')
-" 2>/dev/null || echo "Falha ao listar VNICs"
-
-          echo "=== Buscando IPs publicos ==="
-          oci network public-ip list             --compartment-id "$OCI_TENANCY_OCID"             --scope REGION             --all 2>/dev/null | python3 -c "
-import sys, json
-data = json.load(sys.stdin)
-ips = data.get('data', [])
-print(f'IPs publicos encontrados: {len(ips)}')
+try:
+    import subprocess
+    raw = subprocess.check_output(['cat'], input=sys.stdin.buffer.read()).decode()
+except:
+    raw = sys.stdin.read()
+PYEOF2
+          echo "$RAW" | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+insts=d.get('data',[])
+print(f'Instancias: {len(insts)}')
+for i in insts:
+    print(f'  {i["display-name"]} | {i["shape"]} | {i["lifecycle-state"]} | {i["id"]}')
+"
+          echo ""
+          echo "=== IPs publicos na regiao ==="
+          oci network public-ip list             --compartment-id "$OCI_TENANCY_OCID"             --scope REGION --all 2>/dev/null | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+ips=d.get('data',[])
+print(f'IPs publicos: {len(ips)}')
 for ip in ips:
-    print(f'  IP={ip.get("ip-address","?")} AssignedTo={ip.get("assigned-entity-id","?")} State={ip.get("lifecycle-state","?")}')
-" 2>/dev/null || echo "Falha ao listar IPs publicos"
+    print(f'  {ip.get("ip-address")} | state={ip.get("lifecycle-state")} | entity={ip.get("assigned-entity-id","livre")}')
+"
+          echo ""
+          echo "=== Tentando SSH direto nos IPs publicos encontrados ==="
+          for IP in $(oci network public-ip list             --compartment-id "$OCI_TENANCY_OCID"             --scope REGION --all 2>/dev/null | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+for ip in d.get('data',[]):
+    if ip.get('lifecycle-state') == 'ASSIGNED':
+        print(ip.get('ip-address',''))
+" 2>/dev/null); do
+            echo "Testando SSH em $IP..."
+            R=$(ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=10               -o BatchMode=yes -i ~/.ssh/oracle_stream ubuntu@$IP               "echo SSH_OK && uname -a" 2>&1)
+            echo "  $IP -> ${R:0:80}"
+            if echo "$R" | grep -q "SSH_OK"; then
+              echo "  ACESSO OK em $IP!"
+
+              # Salvar IP
+              curl -s -X POST "${SUPABASE_URL}/rest/v1/ia_cache"                 -H "apikey: ${SUPABASE_ANON_KEY}"                 -H "Authorization: Bearer ${SUPABASE_ANON_KEY}"                 -H "Content-Type: application/json"                 -H "Prefer: resolution=merge-duplicates"                 -d "{"cache_key":"oracle_vm_ip","value":"${IP}","expires_at":null}" && echo "  IP salvo"
+
+              # Verificar/iniciar ffmpeg
+              FFPID=$(ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=10                 -o BatchMode=yes -i ~/.ssh/oracle_stream ubuntu@$IP                 "pgrep -f ffmpeg | head -1" 2>/dev/null)
+              if [ -n "$FFPID" ]; then
+                echo "  Stream JA RODANDO (pid=$FFPID)"
+                notify_wa "Oracle VM ${IP} stream ATIVO pid=${FFPID} psidoc 24/7!"
+              else
+                echo "  Instalando ffmpeg e iniciando stream..."
+                ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=60                     -o BatchMode=yes -i ~/.ssh/oracle_stream ubuntu@$IP                     "sudo apt-get update -q && sudo apt-get install -y ffmpeg wget -q &&                      wget -qO /tmp/s.sh https://raw.githubusercontent.com/tafita81/Repovazio/main/scripts/oracle-forever-live-setup.sh &&                      chmod +x /tmp/s.sh && STREAM_KEY='$YOUTUBE_STREAM_KEY' bash /tmp/s.sh && echo STREAM_OK"
+                notify_wa "Oracle VM ${IP} stream iniciado! psidoc 24/7 no ar!"
+              fi
+            fi
+          done
+          echo "=== Fim ==="
