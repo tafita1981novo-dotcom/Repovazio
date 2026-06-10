@@ -1,0 +1,50 @@
+name: 🧠 Quantum Brain — Pipeline Diário
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🐍 Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📦 Instalar dependências
+        run: pip install requests gtts moviepy Pillow
+
+      - name: 🧠 Pipeline de conteúdo
+        env:
+          NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY2 }}
+          GROQ_API_KEY:   ${{ secrets.GROQ_API_KEY2 }}
+          SUPABASE_URL:   ${{ secrets.SUPABASE_URL2 }}
+          SUPABASE_KEY:   ${{ secrets.SUPABASE_KEY2 }}
+        run: |
+          cd quantum-brain/scripts
+          python quantum_brain.py
+
+      - name: 📤 Distribuir plataformas
+        env:
+          BUFFER_ACCESS_TOKEN: ${{ secrets.BUFFER_ACCESS_TOKEN2 }}
+          NVIDIA_API_KEY:      ${{ secrets.NVIDIA_API_KEY2 }}
+          GROQ_API_KEY:        ${{ secrets.GROQ_API_KEY2 }}
+        run: |
+          cd quantum-brain/scripts
+          python distribuidor.py
+
+      - name: 📊 Relatório de ganhos
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL2 }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY2 }}
+        run: |
+          cd quantum-brain/scripts
+          python earnings_reporter.py
