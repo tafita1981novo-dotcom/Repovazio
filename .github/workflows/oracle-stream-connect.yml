@@ -1,0 +1,60 @@
+name: oracle-stream-connect
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '30 */6 * * *'
+
+jobs:
+  connect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Setup OCI
+        env:
+          OCI_USER_OCID: ${{ secrets.OCI_USER_OCID }}
+          OCI_TENANCY_OCID: ${{ secrets.OCI_TENANCY_OCID }}
+          OCI_REGION: ${{ secrets.OCI_REGION }}
+          OCI_FINGERPRINT: ${{ secrets.OCI_FINGERPRINT }}
+          OCI_PRIVATE_KEY: ${{ secrets.OCI_PRIVATE_KEY }}
+          OCI_CLI_SUPPRESS_FILE_PERMISSIONS_WARNING: 'True'
+        run: |
+          pip3 install oci-cli -q
+          mkdir -p ~/.oci ~/.ssh
+          printf '%s' "$OCI_PRIVATE_KEY" > ~/.oci/oci_api_key.pem
+          chmod 600 ~/.oci/oci_api_key.pem
+          printf '[DEFAULT]\nuser=%s\nfingerprint=%s\ntenancy=%s\nregion=%s\nkey_file=%s\n' "$OCI_USER_OCID" "$OCI_FINGERPRINT" "$OCI_TENANCY_OCID" "$OCI_REGION" "$HOME/.oci/oci_api_key.pem" > ~/.oci/config
+          chmod 600 ~/.oci/config
+          ssh-keygen -t rsa -b 2048 -f ~/.ssh/oracle_stream -N '' -q
+          oci iam availability-domain list --compartment-id "$OCI_TENANCY_OCID" --query 'data[*].name' --raw-output && echo OCI_OK
+
+      - name: Conectar e iniciar stream
+        env:
+          OCI_TENANCY_OCID: ${{ secrets.OCI_TENANCY_OCID }}
+          YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          CALLMEBOT_PHONE: ${{ secrets.CALLMEBOT_PHONE }}
+          CALLMEBOT_APIKEY: ${{ secrets.CALLMEBOT_APIKEY }}
+          OCI_CLI_SUPPRESS_FILE_PERMISSIONS_WARNING: 'True'
+        run: |
+          set +e
+          SUPA=https://tpjvalzwkqwttvmszvie.supabase.co
+          echo === IPs publicos ASSIGNED ===
+          IPS=$(oci network public-ip list --compartment-id "$OCI_TENANCY_OCID" --scope REGION --all 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); [print(x['ip-address']) for x in d.get('data',[]) if x.get('lifecycle-state')=='ASSIGNED']" 2>/dev/null)
+          echo "IPs: $IPS"
+          for IP in $IPS; do
+            echo "SSH $IP..."
+            R=$(ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=12 -o BatchMode=yes -i ~/.ssh/oracle_stream ubuntu@$IP 'echo SSH_OK' 2>&1)
+            if echo "$R" | grep -q SSH_OK; then
+              echo "Acesso OK em $IP"
+              curl -s -X POST "$SUPA/rest/v1/ia_cache" -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $SUPABASE_ANON_KEY" -H 'Content-Type: application/json' -H 'Prefer: resolution=merge-duplicates' -d "{\"cache_key\":\"oracle_vm_ip\",\"value\":\"$IP\",\"expires_at\":null}"
+              FP=$(ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=10 -o BatchMode=yes -i ~/.ssh/oracle_stream ubuntu@$IP 'pgrep -f ffmpeg | head -1' 2>/dev/null)
+              if [ -n "$FP" ]; then
+                echo "Stream JA ATIVO pid=$FP em $IP"
+              else
+                ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=60 -o BatchMode=yes -i ~/.ssh/oracle_stream ubuntu@$IP "sudo apt-get install -y ffmpeg wget -q && wget -qO /tmp/s.sh https://raw.githubusercontent.com/tafita81/Repovazio/main/scripts/oracle-forever-live-setup.sh && chmod +x /tmp/s.sh && STREAM_KEY=$YOUTUBE_STREAM_KEY bash /tmp/s.sh && echo STREAM_OK"
+              fi
+            else
+              echo "SSH falhou $IP: ${R:0:60}"
+            fi
+          done
+          echo === Fim ===
