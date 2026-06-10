@@ -1,0 +1,67 @@
+name: oracle-notify-email
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  repository_dispatch:
+    types: [oracle-notify-email]
+
+jobs:
+  check-and-notify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verificar VM e enviar email
+        env:
+          SUPABASE_URL: https://tpjvalzwkqwttvmszvie.supabase.co
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          GH_PAT: ${{ secrets.GH_PAT }}
+          GMAIL_REFRESH_TOKEN: ${{ secrets.GMAIL_REFRESH_TOKEN }}
+          GMAIL_CLIENT_ID: ${{ secrets.GMAIL_CLIENT_ID }}
+          GMAIL_CLIENT_SECRET: ${{ secrets.GMAIL_CLIENT_SECRET }}
+        run: |
+          set +e
+
+          # Verificar se VM foi criada (IP no Supabase)
+          IP=$(curl -s "${SUPABASE_URL}/rest/v1/ia_cache?cache_key=eq.oracle_vm_ip&select=value" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+            | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['value'] if d else '')" 2>/dev/null)
+
+          echo "IP encontrado: ${IP:-nenhum}"
+
+          # Verificar se ja notificamos (evitar spam)
+          NOTIFIED=$(curl -s "${SUPABASE_URL}/rest/v1/ia_cache?cache_key=eq.oracle_notified_ip&select=value" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+            | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['value'] if d else '')" 2>/dev/null)
+
+          if [ -z "$IP" ] || [ "$IP" = "null" ]; then
+            echo "Sem VM ainda — aguardando"
+            exit 0
+          fi
+
+          if [ "$IP" = "$NOTIFIED" ]; then
+            echo "Ja notificado para IP $IP"
+            exit 0
+          fi
+
+          echo "NOVA VM DETECTADA: $IP — enviando email..."
+
+          # Enviar email via ntfy.sh (sem auth, instantaneo)
+          curl -s \
+            -H "Title: Oracle VM Criada!" \
+            -H "Priority: urgent" \
+            -H "Tags: white_check_mark,computer" \
+            -d "Oracle VM criada com sucesso! IP: ${IP} | Stream psidanicoelho configurando... | Acesse: ssh ubuntu@${IP}" \
+            https://ntfy.sh/psidoc-oracle-rafael
+
+          echo "Notificacao ntfy.sh enviada"
+
+          # Marcar como notificado
+          curl -s -X POST "${SUPABASE_URL}/rest/v1/ia_cache" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: resolution=merge-duplicates" \
+            -d "{\"cache_key\":\"oracle_notified_ip\",\"value\":\"${IP}\",\"expires_at\":null}" \
+            && echo "Marcado como notificado"
