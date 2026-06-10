@@ -1,9 +1,9 @@
 # oracle-provisioner v1
 name: oracle-provisioner
 on:
-  workflow_dispatch:
   schedule:
     - cron: '0 */6 * * *'
+  workflow_dispatch:
 
 jobs:
   create-vm:
