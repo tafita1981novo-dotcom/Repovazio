@@ -1,0 +1,67 @@
+name: New Life 2Day — Master System
+
+on:
+  schedule:
+    - cron: "0 * * * *"       # toda hora: LIVE 24/7 + monitor
+    - cron: "0 3 * * *"       # 3h UTC: vídeo diário
+    - cron: "0 6 * * *"       # 6h UTC: otimizar canal
+  workflow_dispatch:           # manual
+
+jobs:
+
+  # ── LIVE 24/7 ──────────────────────────────────────────────────────────────
+  live_24_7:
+    name: "🎙️ LIVE 24/7 Streaming"
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - name: Install ffmpeg
+        run: sudo apt-get install -y ffmpeg
+      - name: Run LIVE 24/7
+        env:
+          YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
+          TIKTOK_STREAM_KEY:  ${{ secrets.TIKTOK_STREAM_KEY }}
+        run: python growth-system/live_24_7.py
+
+  # ── Vídeo diário (3h UTC) ──────────────────────────────────────────────────
+  video_diario:
+    name: "🎬 Vídeo Diário"
+    runs-on: ubuntu-latest
+    if: github.event.schedule == '0 3 * * *' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - name: Install deps
+        run: |
+          sudo apt-get install -y ffmpeg
+          pip install requests gtts moviepy pillow
+      - name: Run Quantum Brain
+        env:
+          NVIDIA_API_KEY2:        ${{ secrets.NVIDIA_API_KEY2 }}
+          GROQ_API_KEY2:          ${{ secrets.GROQ_API_KEY2 }}
+          ELEVENLABS_API_KEY2:    ${{ secrets.ELEVENLABS_API_KEY2 }}
+          YOUTUBE_REFRESH_TOKEN2: ${{ secrets.YOUTUBE_REFRESH_TOKEN2 }}
+          YOUTUBE_CLIENT_ID2:     ${{ secrets.YOUTUBE_CLIENT_ID2 }}
+          YOUTUBE_CLIENT_SECRET2: ${{ secrets.YOUTUBE_CLIENT_SECRET2 }}
+        run: python quantum-brain/scripts/quantum_brain.py
+
+  # ── Monitor + Otimização (toda hora / 6h UTC) ───────────────────────────────
+  monitor:
+    name: "📈 Monitor & Otimizar"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - name: Install deps
+        run: pip install requests
+      - name: Run Monitor
+        env:
+          YOUTUBE_REFRESH_TOKEN2: ${{ secrets.YOUTUBE_REFRESH_TOKEN2 }}
+          YOUTUBE_CLIENT_ID2:     ${{ secrets.YOUTUBE_CLIENT_ID2 }}
+          YOUTUBE_CLIENT_SECRET2: ${{ secrets.YOUTUBE_CLIENT_SECRET2 }}
+        run: python growth-system/growth_monitor.py
