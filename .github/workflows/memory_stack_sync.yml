@@ -1,0 +1,93 @@
+name: Quantum Memory Stack Sync
+
+on:
+  schedule:
+    # Sync vault GitHub → Oracle VM a cada 6h
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+    inputs:
+      cmd:
+        description: "Comando (sync_vault / rebuild_graphiti / status)"
+        default: "sync_vault"
+
+jobs:
+  memory-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: pip install requests
+
+      - name: Sync vault to Oracle VM
+        if: ${{ github.event.inputs.cmd == 'sync_vault' || github.event.schedule != '' }}
+        env:
+          ORACLE_VM_IP: ${{ secrets.ORACLE_VM_IP }}
+          ORACLE_SSH_KEY: ${{ secrets.ORACLE_SSH_KEY }}
+        run: |
+          echo "$ORACLE_SSH_KEY" > /tmp/oracle_key
+          chmod 600 /tmp/oracle_key
+          # Sincronizar vault/ do Repovazio para a VM
+          rsync -avz --delete \
+            -e "ssh -i /tmp/oracle_key -o StrictHostKeyChecking=no" \
+            vault/ \
+            ubuntu@${ORACLE_VM_IP}:/home/ubuntu/vault/
+          echo "✅ Vault sincronizado"
+
+      - name: Check memory stack status
+        if: ${{ github.event.inputs.cmd == 'status' }}
+        env:
+          GRAPHITI_MCP_URL: ${{ secrets.GRAPHITI_MCP_URL }}
+          OBSIDIAN_MCP_URL: ${{ secrets.OBSIDIAN_MCP_URL }}
+        run: |
+          python3 << 'PYEOF'
+          import requests, os
+          for name, url in [
+            ("Graphiti MCP", os.environ.get("GRAPHITI_MCP_URL", "").replace("/sse","/health")),
+            ("Obsidian MCP", os.environ.get("OBSIDIAN_MCP_URL", "").replace("/sse","/health")),
+          ]:
+            try:
+              r = requests.get(url, timeout=5)
+              print(f"✅ {name}: {r.status_code}")
+            except Exception as e:
+              print(f"❌ {name}: {e}")
+          PYEOF
+
+      - name: Rebuild Graphiti indexes
+        if: ${{ github.event.inputs.cmd == 'rebuild_graphiti' }}
+        env:
+          GRAPHITI_MCP_URL: ${{ secrets.GRAPHITI_MCP_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          python3 << 'PYEOF'
+          import requests, os, json
+
+          GRAPHITI = os.environ.get("GRAPHITI_MCP_URL", "").replace("/sse", "")
+
+          # Reingerir regras críticas no Graphiti
+          rules = [
+            ("YouTube não monetiza tela preta como único formato de canal — rejeição YPP em massa", "rules"),
+            ("YouTube Shopping Affiliate disponível no Brasil desde março 2026 — requisito 500 subs + 3000h", "milestones"),
+            ("Billionaire Brain Wave comissão $63.73 EPC $1.68 conversão 3% — melhor afiliado tier 1", "affiliates"),
+            ("Short diário publicar às 17h UTC via Quantum Master — verificar no Graphiti antes", "channels"),
+            ("Proibido usar psicóloga no canal Daniela Coelho até janeiro 2027 — usar pesquisadora de comportamento humano", "rules"),
+          ]
+
+          for content, group_id in rules:
+            payload = {
+              "jsonrpc": "2.0", "id": 1,
+              "method": "tools/call",
+              "params": {"name": "add_memory", "arguments": {"content": content, "group_id": group_id}}
+            }
+            try:
+              r = requests.post(f"{GRAPHITI}/mcp", json=payload, timeout=10)
+              print(f"✅ [{group_id}] {content[:60]}...")
+            except Exception as e:
+              print(f"❌ {e}")
+          PYEOF
