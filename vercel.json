@@ -2,6 +2,10 @@
   "version": 2,
   "rewrites": [
     {
+      "source": "/flowiq",
+      "destination": "/flowiq-v3/preview.html"
+    },
+    {
       "source": "/psicologia-para-dormir",
       "destination": "/public/psicologia-para-dormir.html"
     },
