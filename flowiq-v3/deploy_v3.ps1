@@ -1,5 +1,5 @@
 # ============================================
-#   FlowIQ v3 - Deploy completo (Build 3)
+#   FlowIQ v3 - Deploy completo (Build 4)
 #   Icone FLOWIQ + bgs 4K + audio premium
 # ============================================
 $ErrorActionPreference = "Stop"
@@ -40,7 +40,7 @@ Invoke-WebRequest -Headers $H "$RAW/flowiq-v2/src/Theme.ts" -OutFile "src\Theme.
 
 Write-Host "[4/5] buildNumber -> 3..." -ForegroundColor Yellow
 $app = Get-Content "app.json" -Raw | ConvertFrom-Json
-$app.expo.ios | Add-Member -NotePropertyName buildNumber -NotePropertyValue "3" -Force
+$app.expo.ios | Add-Member -NotePropertyName buildNumber -NotePropertyValue "4" -Force
 $app | ConvertTo-Json -Depth 32 | Set-Content "app.json" -Encoding UTF8
 
 Write-Host "[5/5] EAS Build + Submit (aguarde ~15 min)..." -ForegroundColor Yellow
@@ -48,5 +48,5 @@ $env:EAS_SKIP_AUTO_FINGERPRINT = "1"
 eas build --platform ios --profile production --non-interactive
 eas submit --platform ios --latest --non-interactive
 
-Write-Host "`n=== PRONTO! Build 3 enviado ao App Store Connect ===" -ForegroundColor Green
-Write-Host "Aguarde ~10 min e selecione o Build 3 na versao 1.0 do ASC." -ForegroundColor Green
+Write-Host "`n=== PRONTO! Build 4 enviado ao App Store Connect ===" -ForegroundColor Green
+Write-Host "Aguarde ~10 min e selecione o Build 4 na versao 1.0 do ASC." -ForegroundColor Green
