@@ -3,7 +3,7 @@
   "rewrites": [
     {
       "source": "/flowiq",
-      "destination": "/flowiq-v3/preview.html"
+      "destination": "/flowiq/index.html"
     },
     {
       "source": "/psicologia-para-dormir",
