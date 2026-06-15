@@ -6,6 +6,10 @@
       "destination": "/flowiq/index.html"
     },
     {
+      "source": "/flowiq/",
+      "destination": "/flowiq/index.html"
+    },
+    {
       "source": "/psicologia-para-dormir",
       "destination": "/public/psicologia-para-dormir.html"
     },
