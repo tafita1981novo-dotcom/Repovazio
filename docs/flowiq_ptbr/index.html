@@ -68,7 +68,7 @@ footer.site{padding:36px 0 56px;text-align:center;color:var(--mut);font-size:13.
 
 /* ── 4K BRAIN BACKGROUND (sincronizado app + screenshots) ── */
 .brain-bg{
-  position:absolute;inset:0;z-index:0;overflow:hidden;
+  position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none;
   background:linear-gradient(170deg,#141a45 0%,#0A0E27 45%,#090c22 100%);
 }
 .brain-bg img{
@@ -244,7 +244,7 @@ h3.h{font-size:27px;margin:6px 0 14px;text-align:center;position:relative;z-inde
 .plan small{display:block;color:var(--mut);font-size:13px;margin-top:4px}
 /* Onboarding */
 #ob{position:absolute;inset:0;z-index:40;border-radius:0;overflow:hidden;display:flex;flex-direction:column}
-.ob-bg{position:absolute;inset:0}
+.ob-bg{position:absolute;inset:0;pointer-events:none;z-index:0}
 .ob-bg img{width:100%;height:100%;object-fit:cover;opacity:.2;animation:float 8s ease-in-out infinite}
 .ob-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(170deg,rgba(27,20,82,.95),rgba(10,14,39,.95))}
 .obslides{flex:1;overflow:hidden;position:relative;z-index:2}
@@ -253,10 +253,10 @@ h3.h{font-size:27px;margin:6px 0 14px;text-align:center;position:relative;z-inde
 .obart{font-size:82px;margin-bottom:20px;animation:float 3s ease-in-out infinite}
 .obslide h3{font-size:26px;margin-bottom:10px}
 .obslide p{color:var(--mut);font-size:17px}
-.obdots{display:flex;gap:8px;justify-content:center;padding:10px;position:relative;z-index:2}
+.obdots{display:flex;gap:8px;justify-content:center;padding:10px;position:relative;z-index:50}
 .obdots i{width:9px;height:9px;border-radius:50%;background:#2c3263;transition:all .3s}
 .obdots i.on{background:var(--gold);width:24px;border-radius:5px}
-.obbtns{padding:14px 24px 32px;position:relative;z-index:2}
+.obbtns{padding:14px 24px 32px;position:relative;z-index:50}
 .bigbtn{display:block;width:100%;padding:18px;border:0;border-radius:18px;background:linear-gradient(135deg,var(--violet),#9d5cff);color:#fff;font-size:19px;font-weight:800;cursor:pointer;box-shadow:0 8px 24px rgba(124,58,237,.4);transition:transform .15s}
 .bigbtn:active{transform:scale(.97)}
 .skip{display:block;text-align:center;color:var(--mut);font-size:15px;margin-top:12px;cursor:pointer;background:none;border:none;width:100%}
@@ -721,7 +721,7 @@ function openSocial(mode){
   if(mode==='dna') renderDNA(sh);
   else if(mode==='circle') renderCircle(sh);
   else if(mode==='challenge') renderChallenge(sh);
-  else if(mode==='invite'){sh.classList.remove('on');ov.classList.remove('on');showToast('Link de convite copiado! Compartilhe com um amigo 🔗');}
+  else if(mode==='invite'){ renderInvite(sh); }
   else renderSocialMenu(sh);
 }
 
@@ -784,6 +784,24 @@ function closeSocial(){
   sTap();
   document.getElementById('socialSh').classList.remove('on');
   document.getElementById('sheetOv').classList.remove('on');
+}
+
+function renderInvite(sh){
+  var link = typeof getInviteLink==='function' ? getInviteLink() : window.location.href;
+  var nome = localStorage.getItem('flowiq_name')||'FlowIQ';
+  sh.innerHTML =
+    '<div class="sh-handle"></div>'+
+    '<div class="sh-title">Convidar Amigo ➕</div>'+
+    '<div class="sh-sub">Adicione alguém ao seu Círculo Cerebral</div>'+
+    '<div style="background:rgba(124,58,237,.12);border:1px solid rgba(124,58,237,.3);border-radius:16px;padding:14px;margin-bottom:12px">'+
+      '<div style="font-size:12px;color:var(--mut);margin-bottom:6px">Seu link de convite:</div>'+
+      '<div style="font-size:11px;word-break:break-all;color:#cfc8f5;margin-bottom:10px">'+link+'</div>'+
+      '<div style="display:flex;gap:8px">'+
+        '<button onclick="shareInviteWhatsApp()" style="flex:1;background:rgba(29,158,117,.2);border:1px solid rgba(29,158,117,.4);border-radius:11px;padding:10px;cursor:pointer;color:#6ee7b7;font-size:13px;font-weight:700">💬 WhatsApp</button>'+
+        '<button onclick="copyInviteLink()" style="flex:1;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:11px;padding:10px;cursor:pointer;color:var(--mut);font-size:13px">📋 Copiar</button>'+
+      '</div>'+
+    '</div>'+
+    '<button class="bigbtn" onclick="closeSocial()" style="background:rgba(255,255,255,.06);color:var(--mut)">Fechar</button>';
 }
 function renderSocialMenu(sh){
   sh.innerHTML='<div class="sh-handle"></div>'+
@@ -1551,11 +1569,36 @@ function sciIQPanel(ok) {
 /* END SCIENCE ENGINE */
 
 /* ── NAV ── */
-const scrs=['today','partidas','tests','prog','social','pro'];
+var scrs=['today','partidas','tests','prog','social','pro'];
 function go(s){sTap();scrs.forEach(x=>document.getElementById('s-'+x).classList.toggle('on',x===s));document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.s===s));document.querySelector('.appbody').scrollTop=0;}
-let obi=0;
-document.getElementById('obnext').onclick=()=>{sTap();if(obi<3){obi++;document.getElementById('obtrack').style.transform='translateX('+(-25*obi)+'%)';[...document.getElementById('obdots').children].forEach((d,i)=>d.classList.toggle('on',i===obi));if(obi===3)document.getElementById('obnext').textContent='Começar';}else endOb();};
-function endOb(){sOk();document.getElementById('ob').style.display='none';}
+window.obi=0;
+var obi=window.obi;
+function obNext(){
+  sTap();
+  var track=document.getElementById('obtrack');
+  var dots=document.getElementById('obdots');
+  var btn=document.getElementById('obnext');
+  obi=window.obi||0;
+  if(obi<3){
+    obi++;
+    window.obi=obi;
+    if(track) track.style.transform='translateX('+(-25*obi)+'%)';
+    if(dots){[].slice.call(dots.children).forEach(function(d,i){d.classList.toggle('on',i===obi);});}
+    if(obi===3 && btn) btn.textContent='Começar';
+  } else {
+    endOb();
+  }
+}
+function endOb(){
+  sOk();
+  var ob=document.getElementById('ob');
+  if(ob) ob.style.display='none';
+}
+(function attachObnext(){
+  var btn=document.getElementById('obnext');
+  if(btn){ btn.onclick=obNext; }
+  else{ setTimeout(attachObnext,100); }
+})();
 
 /* ═══ SOCIAL ENGINE PT-BR v10 ═══ */
 
@@ -1975,7 +2018,7 @@ function openSocial(mode){
   if(mode==='dna') renderDNA(sh);
   else if(mode==='circle') renderCircle(sh);
   else if(mode==='challenge') renderChallenge(sh);
-  else if(mode==='invite'){sh.classList.remove('on');ov.classList.remove('on');showToast('Link de convite copiado! Compartilhe com um amigo 🔗');}
+  else if(mode==='invite'){ renderInvite(sh); }
   else renderSocialMenu(sh);
 }
 function closeSocial(){
@@ -2376,7 +2419,7 @@ function updateGreeting(){
   
   var days = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
   var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  var dateStr = days[now.getDay()] + ' \u00B7 ' + months[now.getSegth()] + ' ' + now.getDate();
+  var dateStr = days[now.getDay()] + ' \u00B7 ' + months[now.getMonth()] + ' ' + now.getDate();
   
   var grEl = document.getElementById('greetingText');
   var dateEl = document.getElementById('dateText');
@@ -2423,6 +2466,21 @@ function challengeJogarNow(){
   openGame(gid);
   showToast('Jogue para definir sua score de desafio! \u26A1');
 }
+
+function applyMuteState(){
+  var ico=document.getElementById('muteIco');
+  var txt=document.getElementById('muteTxt');
+  var ov=document.getElementById('muteOverlay');
+  if(ico) ico.textContent=_isMuted?'🔇':'🔊';
+  if(txt) txt.textContent=_isMuted?'Ativar Som':'Silenciar Som';
+  if(ov) ov.style.display=_isMuted?'flex':'none';
+}
+function toggleMute(){
+  _isMuted=!_isMuted;
+  localStorage.setItem('flowiq_muted',_isMuted?'1':'0');
+  applyMuteState();
+}
+
 </script>
 </body>
 </html>
