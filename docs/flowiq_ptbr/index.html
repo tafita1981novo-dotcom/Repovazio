@@ -799,15 +799,15 @@ function renderSocialMenu(sh){
 }
 function getDNAData(){
   const bs=parseInt((document.querySelector('.bs-num')||{}).textContent)||742;
-  const iq=window._epqPontuaçãos&&_epqPontuaçãos.iq?Math.round(86+_epqPontuaçãos.iq*0.41):103;
+  const iq=window._epqScores&&_epqScores.iq?Math.round(86+_epqScores.iq*0.41):103;
   const traits=[];
-  if(window._epqPontuaçãos){
-    if(_epqPontuaçãos.eq>70) traits.push('High EQ');
-    if(_epqPontuaçãos.stroop>75) traits.push('Sharp Focus');
-    if(_epqPontuaçãos.nback>75) traits.push('Working Memory+');
-    if(_epqPontuaçãos.react&&_epqPontuaçãos.react<70) traits.push('Fast Reactions');
-    if(_epqPontuaçãos.big5) traits.push('OCEAN Perfild');
-    if(_epqPontuaçãos.autism!==undefined) traits.push('AQ Assessed');
+  if(window._epqScores){
+    if(_epqScores.eq>70) traits.push('High EQ');
+    if(_epqScores.stroop>75) traits.push('Sharp Focus');
+    if(_epqScores.nback>75) traits.push('Working Memory+');
+    if(_epqScores.react&&_epqScores.react<70) traits.push('Fast Reactions');
+    if(_epqScores.big5) traits.push('OCEAN Perfild');
+    if(_epqScores.autism!==undefined) traits.push('AQ Assessed');
   }
   if(!traits.length) traits.push('Brain Trained','Self-Aware','Science-Voltared');
   const streak=23;
@@ -896,7 +896,7 @@ function saveDNACard() {
   ctx.font = 'bold 80px -apple-system, sans-serif';
   ctx.fillStyle = '#F59E0B';
   ctx.textAlign = 'center';
-  ctx.fillText(PROFILE.brainPontuação, 400, 210);
+  ctx.fillText(PROFILE.brainScore, 400, 210);
   
   ctx.font = 'bold 20px -apple-system, sans-serif';
   ctx.fillStyle = 'rgba(255,255,255,0.7)';
@@ -952,7 +952,7 @@ function saveDNACard() {
       const file = new File([blob], 'brain-dna-card.png', {type:'image/png'});
       navigator.share({
         title: 'My Cartão DNA Cerebral — FlowIQ',
-        text: 'Pontuação Cerebral ' + PROFILE.brainPontuação + ' · ' + (PROFILE.streak||1) + ' day streak! Check my cognitive profile on FlowIQ',
+        text: 'Pontuação Cerebral ' + PROFILE.brainScore + ' · ' + (PROFILE.streak||1) + ' day streak! Check my cognitive profile on FlowIQ',
         files: [file]
       }).catch(()=>{
         // Fallback: download
@@ -964,7 +964,7 @@ function saveDNACard() {
       // Compartilhar sem arquivo (texto apenas)
       navigator.share({
         title: 'My Cartão DNA Cerebral — FlowIQ',
-        text: 'My Pontuação Cerebral: ' + PROFILE.brainPontuação + ' · ' + (PROFILE.streak||1) + ' day streak! 🧠 Train your brain on FlowIQ'
+        text: 'My Pontuação Cerebral: ' + PROFILE.brainScore + ' · ' + (PROFILE.streak||1) + ' day streak! 🧠 Train your brain on FlowIQ'
       }).catch(()=>showToast('Card saved! 📸'));
     } else {
       // Fallback: download direto
@@ -978,7 +978,7 @@ function saveDNACard() {
 /* Compartilhar geral melhorado com Web Compartilhar API real */
 function socialCompartilhar(type){
   sTap();
-  var score = PROFILE.brainPontuação || 742;
+  var score = PROFILE.brainScore || 742;
   var streak = PROFILE.streak || 0;
   var link = (typeof getInviteLink === 'function') ? getInviteLink() : 'https://flowiq.app';
   
@@ -999,7 +999,7 @@ function socialCompartilhar(type){
     whatsapp: '\uD83E\uDDE0 My Pontuação Cerebral: '+score+' pts! Train your brain with FlowIQ \u2014 51 partidas & 10 cognitive tests. '+link,
     challenge: '\uD83C\uDFC6 Te desafio a superar minha Pontuação Cerebral of '+score+' on FlowIQ! \uD83E\uDDE0\u26A1 '+link,
     'challenge-wa': '\uD83C\uDFC6 I challenge you to beat '+score+' pts on FlowIQ! Can you top it? '+link,
-    invite: '\uD83D\uDC65 Join my Círculo Cerebral on FlowIQ! Minha pontuação: '+score+' \uD83E\uDDE0 '+link
+    invite: '\uD83D\uDC65 Join my Círculo Cerebral on FlowIQ! Minha score: '+score+' \uD83E\uDDE0 '+link
   };
   
   var txt2 = msgs[type] || msgs.whatsapp;
@@ -1035,11 +1035,11 @@ var FIQ_KEY = 'fiq_profile_v1';
 var PROFILE = {
   uid: null,
   name: 'You',
-  brainPontuação: 700,
+  brainScore: 700,
   streak: 0,
   lastDate: null,
   sessions: 0,
-  gamePontuaçãos: {},      // {game: {best, last, count}}
+  gameScores: {},      // {game: {best, last, count}}
   testResults: {},     // {test: {result, date}}
   history: [],         // [{date, game, pct, score}]  últimas 50
   circle: [            // membros do grupo
@@ -1084,19 +1084,19 @@ function savePerfil() {
   } catch(e) { console.warn('Perfil save error', e); }
 }
 
-function recordGamePontuação(game, pct, rawPontuação) {
-  if (!PROFILE.gamePontuaçãos[game]) PROFILE.gamePontuaçãos[game] = {best:0, last:0, count:0};
-  const gs = PROFILE.gamePontuaçãos[game];
+function recordGameScore(game, pct, rawScore) {
+  if (!PROFILE.gameScores[game]) PROFILE.gameScores[game] = {best:0, last:0, count:0};
+  const gs = PROFILE.gameScores[game];
   gs.last = pct;
   gs.count++;
   if (pct > gs.best) gs.best = pct;
-  PROFILE.history.push({date:new Date().toISOString().slice(0,10), game, pct, score:rawPontuação});
+  PROFILE.history.push({date:new Date().toISOString().slice(0,10), game, pct, score:rawScore});
   PROFILE.sessions = (PROFILE.sessions||0)+1;
   // Recalcular Pontuação Cerebral (média dos últimos scores de cada jogo, escala 100-999)
-  const recent = Object.values(PROFILE.gamePontuaçãos).map(g=>g.last).filter(v=>v>0);
+  const recent = Object.values(PROFILE.gameScores).map(g=>g.last).filter(v=>v>0);
   if (recent.length > 0) {
     const avg = recent.reduce((a,b)=>a+b,0)/recent.length;
-    PROFILE.brainPontuação = Math.round(400 + avg*6); // 400 (0th pct) to 1000 (100th pct)
+    PROFILE.brainScore = Math.round(400 + avg*6); // 400 (0th pct) to 1000 (100th pct)
   }
   savePerfil();
   updateUI();
@@ -1110,7 +1110,7 @@ function recordTestResult(testKey, result, score) {
 function updateUI() {
   // Pontuação Cerebral card
   const bsEl = document.querySelector('.bs-num');
-  if (bsEl) bsEl.innerHTML = PROFILE.brainPontuação + ' <small style="color:var(--ok)">▲</small>';
+  if (bsEl) bsEl.innerHTML = PROFILE.brainScore + ' <small style="color:var(--ok)">▲</small>';
   // Streak
   const strEl = document.querySelector('.streak');
   if (strEl) strEl.textContent = '🔥 ' + (PROFILE.streak||1);
@@ -1119,16 +1119,16 @@ function updateUI() {
   if (uqEl) uqEl.textContent = PROFILE.sessions||0;
   // Social IQ label
   const siq = document.getElementById('socialIQLabel');
-  if (siq) siq.textContent = 'Pontuação ' + PROFILE.brainPontuação + ' · ' + (PROFILE.sessions||0) + ' sessions';
+  if (siq) siq.textContent = 'Pontuação ' + PROFILE.brainScore + ' · ' + (PROFILE.sessions||0) + ' sessions';
   // Circle my score
-  const cms = document.getElementById('circleMyPontuação');
-  if (cms) cms.textContent = PROFILE.brainPontuação;
+  const cms = document.getElementById('circleMyScore');
+  if (cms) cms.textContent = PROFILE.brainScore;
   // SVG ring no brain score
   const ringText = document.querySelector('.ring text');
-  if (ringText) ringText.textContent = PROFILE.brainPontuação;
+  if (ringText) ringText.textContent = PROFILE.brainScore;
   const ringArc = document.querySelector('.ring circle:nth-child(2)');
   if (ringArc) {
-    const pct = Math.min(99, Math.max(1, (PROFILE.brainPontuação-400)/6));
+    const pct = Math.min(99, Math.max(1, (PROFILE.brainScore-400)/6));
     ringArc.setAttribute('stroke-dasharray', Math.round(pct*2.64)+' 264');
   }
   // Progresso bars
@@ -1138,12 +1138,12 @@ function updateUI() {
 function renderProgressoHistory() {
   const barsEl = document.querySelector('.bars');
   // Atualizar label de sessões
-  const weekSessões = PROFILE.history ? PROFILE.history.filter(h => {
+  const weekSessions = PROFILE.history ? PROFILE.history.filter(h => {
     const d = new Date(h.date); const now = new Date();
     return (now - d) < 7*24*60*60*1000;
   }).length : 0;
   const hlEl = document.getElementById('histWeekLabel');
-  if(hlEl) hlEl.textContent = weekSessões + ' session' + (weekSessões===1?'':'s') + ' this week';
+  if(hlEl) hlEl.textContent = weekSessions + ' session' + (weekSessions===1?'':'s') + ' this week';
   if (!barsEl) return;
   const days = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
   const history = PROFILE.history.slice(-7);
@@ -1186,7 +1186,7 @@ function showResult(stage, emoji, big, title, sub, replay) {
     else if (stage==='word') pct = S.pct(parseInt(big)||0);
     else if (stage==='pairs') pct = S.pct(parseInt(big)||0);
     else if (stage==='color') pct = S.pct(parseInt(big)||0);
-    recordGamePontuação(stage, pct, big);
+    recordGameScore(stage, pct, big);
   }
 }
 
@@ -1363,15 +1363,15 @@ function renderSocialMenu(sh) {
 }
 function getDNAData() {
   const traits = [];
-  if (window._epqPontuaçãos) {
-    if (_epqPontuaçãos.eq > 70) traits.push('High EQ');
-    if (_epqPontuaçãos.stroop > 75) traits.push('Sharp Focus');
-    if (_epqPontuaçãos.nback > 75) traits.push('Working Memory+');
-    if (_epqPontuaçãos.big5) traits.push('OCEAN Perfild');
-    if (_epqPontuaçãos.autism !== undefined) traits.push('AQ Assessed');
+  if (window._epqScores) {
+    if (_epqScores.eq > 70) traits.push('High EQ');
+    if (_epqScores.stroop > 75) traits.push('Sharp Focus');
+    if (_epqScores.nback > 75) traits.push('Working Memory+');
+    if (_epqScores.big5) traits.push('OCEAN Perfild');
+    if (_epqScores.autism !== undefined) traits.push('AQ Assessed');
   }
   if (!traits.length) traits.push('Brain Trained','Self-Aware','Science-Voltared');
-  return { bs: PROFILE.brainPontuação, streak: PROFILE.streak||1,
+  return { bs: PROFILE.brainScore, streak: PROFILE.streak||1,
            sessions: PROFILE.sessions||0, traits: traits.slice(0,4) };
 }
 function renderDNA(sh) {
@@ -1411,7 +1411,7 @@ function pickChallenge(id, name, el) {
   el.style.background='rgba(124,58,237,.2)';el.style.borderColor='rgba(124,58,237,.4)';
   document.getElementById('chGameName').textContent=name;
   document.getElementById('chPreview').style.display='block';
-  setTimeout(()=>{closeSocial();openGame(id);showToast('Jogue para definir sua pontuação de desafio! ⚡');},600);
+  setTimeout(()=>{closeSocial();openGame(id);showToast('Jogue para definir sua score de desafio! ⚡');},600);
 }
 /* socialCompartilhar removida (duplicata) */
 /* ── INIT ────────────────────────────────────────────── */
@@ -1497,7 +1497,7 @@ const SCIENCE_REFS = {
   color: {inst:'Color-Word Speed — Stroop (1935) / Farnsworth-Munsell',pct:(ok)=>[0,20,40,60,80,95,99][Math.min(6,Math.max(0,Math.floor(ok/2)))],neuro:'Retinal cones → V4 color-opponent cells; Stroop variant adds inhibition',fact:'Color-word conflict adds ~50ms per trial in healthy adults'}
 };
 
-function sciPanel(key, rawPontuação, percentile, label) {
+function sciPanel(key, rawScore, percentile, label) {
   const S = SCIENCE_REFS[key];
   if (!S) return '';
   const col = percentile>=90?'#22c55e':percentile>=75?'#F59E0B':percentile>=50?'#7C3AED':'#a39ec4';
@@ -1511,7 +1511,7 @@ function sciPanel(key, rawPontuação, percentile, label) {
         <text x="50" y="46" text-anchor="middle" fill="#fff" font-size="19" font-weight="800">${percentile}</text>
         <text x="50" y="62" text-anchor="middle" fill="#a39ec4" font-size="10">%ile</text>
       </svg>
-      <div><div style="font-size:22px;font-weight:900;color:#fff">${rawPontuação}</div>
+      <div><div style="font-size:22px;font-weight:900;color:#fff">${rawScore}</div>
         <div style="font-size:15px;font-weight:700;color:${col}">${label}</div></div>
     </div>
     <div class="sci-box">
@@ -1585,7 +1585,7 @@ function saveDNACard() {
   ctx.font = '18px system-ui, sans-serif';
   ctx.fillStyle = 'rgba(255,255,255,0.5)';
   ctx.fillText(nome + ' · FlowIQ', 130, 98);
-  /* pontuação */
+  /* score */
   ctx.font = 'bold 96px system-ui, sans-serif';
   ctx.fillStyle = '#F59E0B';
   ctx.textAlign = 'center';
@@ -1739,10 +1739,10 @@ function showResult(stage,emoji,big,title,sub,replay){
 }
 
 // EPQ (Elevate Proficiency Quotient) — Pontuação Cerebral científico
-const _epqPontuaçãos={};
+const _epqScores={};
 function updateEPQ(game,pct){
-  _epqPontuaçãos[game]=pct;
-  const vals=Object.values(_epqPontuaçãos);
+  _epqScores[game]=pct;
+  const vals=Object.values(_epqScores);
   const avg=Math.round(vals.reduce((a,b)=>a+b,0)/vals.length);
   // EPQ 0-1000 scale (like Elevate)
   const epq=Math.round(avg*10);
@@ -1821,9 +1821,9 @@ renderJogos();
 /* ════ ALL 16 JOGARABLE GAMES ════ */
 /* MEMORY MATRIX */
 let mem={};
-function memStart(){const dim=pick([4,4,5]);mem={dim,round:0,score:0};const g=document.getElementById('mmgrid');const sz=dim===4?'64px':'52px';g.style.gridTemplateColumns='repeat('+dim+','+sz+')';g.innerHTML='';for(let i=0;i<dim*dim;i++){const c=document.createElement('div');c.className='mm';c.style.width=c.style.height=sz;c.onclick=()=>memTap(i,c);g.appendChild(c);}document.getElementById('memscore').textContent='0';document.getElementById('memtitle').textContent='🧠 Memory '+(dim+'×'+dim);memPróximo();}
-function memPróximo(){mem.round++;if(mem.round>4){showResult('mem','🧠',mem.score+' pts','Memory complete!',mem.score>=16?'Elite tier! 🏆':'Train daily to improve.','memStart');return;}document.getElementById('memmsg').textContent='Rodada '+mem.round+'/4 — memorize!';const n=mem.round+2;const N=mem.dim*mem.dim;const g=genUnique('memrnd',()=>{const s=[];while(s.length<n){const r=R(N);if(!s.includes(r))s.push(r);}return{sig:mem.dim+'-'+s.slice().sort((a,b)=>a-b).join(','),s};});mem.seq=g.s;mem.pick=[];const cells=[...document.getElementById('mmgrid').children];cells.forEach(c=>c.className='mm');mem.lock=true;mem.seq.forEach(i=>cells[i].classList.add('lit'));setTimeout(()=>{cells.forEach(c=>c.classList.remove('lit'));mem.lock=false;document.getElementById('memmsg').textContent='Your turn — tap the tiles';},900+n*130);}
-function memTap(i,c){if(mem.lock||mem.pick.includes(i))return;mem.pick.push(i);if(mem.seq.includes(i)){c.classList.add('ok');sOk();mem.score++;document.getElementById('memscore').textContent=mem.score;if(mem.seq.every(s=>mem.pick.includes(s))){mem.lock=true;setTimeout(memPróximo,650);}}else{c.classList.add('bad');sBad();mem.lock=true;const cells=[...document.getElementById('mmgrid').children];mem.seq.forEach(s=>{if(!mem.pick.includes(s))cells[s].classList.add('lit');});setTimeout(memPróximo,950);}}
+function memStart(){const dim=pick([4,4,5]);mem={dim,round:0,score:0};const g=document.getElementById('mmgrid');const sz=dim===4?'64px':'52px';g.style.gridTemplateColumns='repeat('+dim+','+sz+')';g.innerHTML='';for(let i=0;i<dim*dim;i++){const c=document.createElement('div');c.className='mm';c.style.width=c.style.height=sz;c.onclick=()=>memTap(i,c);g.appendChild(c);}document.getElementById('memscore').textContent='0';document.getElementById('memtitle').textContent='🧠 Memory '+(dim+'×'+dim);memNext();}
+function memNext(){mem.round++;if(mem.round>4){showResult('mem','🧠',mem.score+' pts','Memory complete!',mem.score>=16?'Elite tier! 🏆':'Train daily to improve.','memStart');return;}document.getElementById('memmsg').textContent='Rodada '+mem.round+'/4 — memorize!';const n=mem.round+2;const N=mem.dim*mem.dim;const g=genUnique('memrnd',()=>{const s=[];while(s.length<n){const r=R(N);if(!s.includes(r))s.push(r);}return{sig:mem.dim+'-'+s.slice().sort((a,b)=>a-b).join(','),s};});mem.seq=g.s;mem.pick=[];const cells=[...document.getElementById('mmgrid').children];cells.forEach(c=>c.className='mm');mem.lock=true;mem.seq.forEach(i=>cells[i].classList.add('lit'));setTimeout(()=>{cells.forEach(c=>c.classList.remove('lit'));mem.lock=false;document.getElementById('memmsg').textContent='Your turn — tap the tiles';},900+n*130);}
+function memTap(i,c){if(mem.lock||mem.pick.includes(i))return;mem.pick.push(i);if(mem.seq.includes(i)){c.classList.add('ok');sOk();mem.score++;document.getElementById('memscore').textContent=mem.score;if(mem.seq.every(s=>mem.pick.includes(s))){mem.lock=true;setTimeout(memNext,650);}}else{c.classList.add('bad');sBad();mem.lock=true;const cells=[...document.getElementById('mmgrid').children];mem.seq.forEach(s=>{if(!mem.pick.includes(s))cells[s].classList.add('lit');});setTimeout(memNext,950);}}
 /* CARD MATCH */
 let cm={};
 const EMOJIS=['🌟','🎯','🚀','💎','🦁','🌊','🔥','🎪','🎭','🎸','🌈','🍀','🦋','🎯','🏆','🌙'];
@@ -1832,20 +1832,20 @@ function cmFlip(i){if(cm.lock||cm.matched.has(i)||cm.flipped.includes(i))return;
 /* SIMON */
 const SIMON_COLORS=['#ef4444','#22c55e','#3b82f6','#eab308'];
 let sv={};
-function simonStart(){sv={seq:[],player:[],round:0,ok:0};document.getElementById('simonmain').innerHTML='<div class="simongrid" id="sgrid">'+SIMON_COLORS.map((c,i)=>'<div id="sc'+i+'" onclick="svTap('+i+')" class="simoncell" style="background:'+c+'"></div>').join('')+'</div>';simonPróximo();}
-function simonPróximo(){sv.round++;if(sv.round>6){showResult('simon','🔔',sv.ok+'/6','Simon complete!',sv.ok>=5?'Phenomenal!':'Keep training.','simonStart');return;}document.getElementById('simonscore').textContent='R'+sv.round+'/6';sv.seq.push(R(4));sv.player=[];document.getElementById('simonmsg').textContent='Watch...';sv.locked=true;let t=0;sv.seq.forEach((c,i)=>{setTimeout(()=>{const el=document.getElementById('sc'+c);if(!el)return;el.style.opacity='.3';tone(300+c*100,.2);setTimeout(()=>{el.style.opacity='1';if(i===sv.seq.length-1){sv.locked=false;document.getElementById('simonmsg').textContent='Your turn!';}},350);},t+=600);});}
-function svTap(i){if(sv.locked)return;sTap();sv.player.push(i);const n=sv.player.length-1;if(sv.player[n]!==sv.seq[n]){sBad();sv.locked=true;setTimeout(simonPróximo,800);}else if(sv.player.length===sv.seq.length){sv.ok++;sOk();sv.locked=true;setTimeout(simonPróximo,600);}}
+function simonStart(){sv={seq:[],player:[],round:0,ok:0};document.getElementById('simonmain').innerHTML='<div class="simongrid" id="sgrid">'+SIMON_COLORS.map((c,i)=>'<div id="sc'+i+'" onclick="svTap('+i+')" class="simoncell" style="background:'+c+'"></div>').join('')+'</div>';simonNext();}
+function simonNext(){sv.round++;if(sv.round>6){showResult('simon','🔔',sv.ok+'/6','Simon complete!',sv.ok>=5?'Phenomenal!':'Keep training.','simonStart');return;}document.getElementById('simonscore').textContent='R'+sv.round+'/6';sv.seq.push(R(4));sv.player=[];document.getElementById('simonmsg').textContent='Watch...';sv.locked=true;let t=0;sv.seq.forEach((c,i)=>{setTimeout(()=>{const el=document.getElementById('sc'+c);if(!el)return;el.style.opacity='.3';tone(300+c*100,.2);setTimeout(()=>{el.style.opacity='1';if(i===sv.seq.length-1){sv.locked=false;document.getElementById('simonmsg').textContent='Your turn!';}},350);},t+=600);});}
+function svTap(i){if(sv.locked)return;sTap();sv.player.push(i);const n=sv.player.length-1;if(sv.player[n]!==sv.seq[n]){sBad();sv.locked=true;setTimeout(simonNext,800);}else if(sv.player.length===sv.seq.length){sv.ok++;sOk();sv.locked=true;setTimeout(simonNext,600);}}
 /* MATH */
 let math={};
-function mathStart(){math={q:0,ok:0};document.getElementById('mathscore').textContent='0/10';mathPróximo();}
-function mathPróximo(){clearInterval(mathInt);math.q++;if(math.q>10){showResult('math','➗',math.ok+'/10','Math complete!',math.ok>=8?'Sharp! ⚡':'Speed grows with practice.','mathStart');return;}const hard=math.q>5;const g=genUnique('mathq',()=>{const a=R(hard?13:21)+(hard?3:5),b=R(hard?12:21)+(hard?3:4);const op=hard?pick(['×','×','−']):pick(['+','−','+']);const ans=op==='×'?a*b:op==='+'?a+b:a-b;return{sig:a+op+b,a,b,op,ans};});let opts=[g.ans];while(opts.length<4){const d=g.ans+pick([-12,-9,-7,-3,-2,-1,1,2,3,7,9,12]);if(!opts.includes(d))opts.push(d);}opts=shuffle(opts);document.getElementById('mathmain').innerHTML='<div class="qbig">'+g.a+' '+g.op+' '+g.b+' = ?</div><div class="opts">'+opts.map(o=>'<button class="opt" onclick="mathPick(this,'+o+','+g.ans+')">'+o+'</button>').join('')+'</div>';let t=100;const bar=document.getElementById('mathtimer');bar.style.width='100%';mathInt=setInterval(()=>{t-=2;bar.style.width=t+'%';if(t<=0){clearInterval(mathInt);sBad();mathPróximo();}},130);}
-function mathPick(el,v,ans){clearInterval(mathInt);if(v===ans){el.classList.add('ok');sOk();math.ok++;}else{el.classList.add('bad');sBad();}document.getElementById('mathscore').textContent=math.ok+'/10';setTimeout(mathPróximo,520);}
+function mathStart(){math={q:0,ok:0};document.getElementById('mathscore').textContent='0/10';mathNext();}
+function mathNext(){clearInterval(mathInt);math.q++;if(math.q>10){showResult('math','➗',math.ok+'/10','Math complete!',math.ok>=8?'Sharp! ⚡':'Speed grows with practice.','mathStart');return;}const hard=math.q>5;const g=genUnique('mathq',()=>{const a=R(hard?13:21)+(hard?3:5),b=R(hard?12:21)+(hard?3:4);const op=hard?pick(['×','×','−']):pick(['+','−','+']);const ans=op==='×'?a*b:op==='+'?a+b:a-b;return{sig:a+op+b,a,b,op,ans};});let opts=[g.ans];while(opts.length<4){const d=g.ans+pick([-12,-9,-7,-3,-2,-1,1,2,3,7,9,12]);if(!opts.includes(d))opts.push(d);}opts=shuffle(opts);document.getElementById('mathmain').innerHTML='<div class="qbig">'+g.a+' '+g.op+' '+g.b+' = ?</div><div class="opts">'+opts.map(o=>'<button class="opt" onclick="mathPick(this,'+o+','+g.ans+')">'+o+'</button>').join('')+'</div>';let t=100;const bar=document.getElementById('mathtimer');bar.style.width='100%';mathInt=setInterval(()=>{t-=2;bar.style.width=t+'%';if(t<=0){clearInterval(mathInt);sBad();mathNext();}},130);}
+function mathPick(el,v,ans){clearInterval(mathInt);if(v===ans){el.classList.add('ok');sOk();math.ok++;}else{el.classList.add('bad');sBad();}document.getElementById('mathscore').textContent=math.ok+'/10';setTimeout(mathNext,520);}
 /* STROOP */
 const COLORS=[['RED','#ef4444'],['BLUE','#3b82f6'],['GREEN','#22c55e'],['YELLOW','#eab308'],['PURPLE','#a855f7'],['ORANGE','#f97316']];
 let st={};
-function stroopStart(){st={q:0,ok:0};document.getElementById('stroopscore').textContent='0/12';stroopPróximo();}
-function stroopPróximo(){st.q++;if(st.q>12){showResult('stroop','🎨',st.ok+'/12','Focus master!',st.ok>=10?'Incredible inhibition!':'The Stroop effect is tough.','stroopStart');return;}const g=genUnique('stq',()=>{const w=pick(COLORS);const match=Math.random()<.5;const ink=match?w:pick(COLORS.filter(c=>c!==w));return{sig:w[0]+ink[0]+match+st.q,w,ink,match};});st.match=g.match;document.getElementById('stroopmain').innerHTML='<div class="stroopword" style="color:'+g.ink[1]+'">'+g.w[0]+'</div><div class="yn"><button class="yes" onclick="stPick(true)">MATCH ✓</button><button class="no" onclick="stPick(false)">NO ✗</button></div>';}
-function stPick(v){if(v===st.match){st.ok++;sOk();}else sBad();document.getElementById('stroopscore').textContent=st.ok+'/12';setTimeout(stroopPróximo,260);}
+function stroopStart(){st={q:0,ok:0};document.getElementById('stroopscore').textContent='0/12';stroopNext();}
+function stroopNext(){st.q++;if(st.q>12){showResult('stroop','🎨',st.ok+'/12','Focus master!',st.ok>=10?'Incredible inhibition!':'The Stroop effect is tough.','stroopStart');return;}const g=genUnique('stq',()=>{const w=pick(COLORS);const match=Math.random()<.5;const ink=match?w:pick(COLORS.filter(c=>c!==w));return{sig:w[0]+ink[0]+match+st.q,w,ink,match};});st.match=g.match;document.getElementById('stroopmain').innerHTML='<div class="stroopword" style="color:'+g.ink[1]+'">'+g.w[0]+'</div><div class="yn"><button class="yes" onclick="stPick(true)">MATCH ✓</button><button class="no" onclick="stPick(false)">NO ✗</button></div>';}
+function stPick(v){if(v===st.match){st.ok++;sOk();}else sBad();document.getElementById('stroopscore').textContent=st.ok+'/12';setTimeout(stroopNext,260);}
 /* REACTION */
 let rt={};
 function reactStart(){rt={r:0,ms:[],timer:null,armed:false,t0:0};document.getElementById('reactmain').innerHTML='<div class="rzone" id="rzone" style="width:100%;height:200px;border-radius:20px;background:#7a1f3d;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;transition:all .3s" onclick="reactTap()">Get ready...</div>';rt.r=0;setTimeout(reactRodada,600);}
@@ -1855,9 +1855,9 @@ function reactTap(){sTap();if(!rt.armed){clearTimeout(rt.timer);sBad();rt.ms.pus
 const CRUSH_COLORS=['RED','BLUE','GREEN','YELLOW','PURPLE','ORANGE'];
 const CRUSH_HEX={RED:'#ef4444',BLUE:'#3b82f6',GREEN:'#22c55e',YELLOW:'#eab308',PURPLE:'#a855f7',ORANGE:'#f97316'};
 let cr={};
-function colorStart(){cr={q:0,ok:0};document.getElementById('colorscore').textContent='0/12';colorPróximo();}
-function colorPróximo(){cr.q++;if(cr.q>12){showResult('color','🌈',cr.ok+'/12','Cor Rápida!',cr.ok>=10?'Blazing fast!':'Color-word speed grows.','colorStart');return;}const target=pick(CRUSH_COLORS);cr.target=target;const opts=shuffle([target,...sampleN(CRUSH_COLORS.filter(c=>c!==target),3)]);document.getElementById('colormsg').textContent='Tap: '+target;document.getElementById('colormain').innerHTML='<div class="opts">'+opts.map(o=>'<button class="opt" onclick="crPick(this,\''+o+'\',\''+target+'\')" style="background:'+CRUSH_HEX[o]+';color:#fff;border:none">'+o+'</button>').join('')+'</div>';}
-function crPick(el,v,ans){if(v===ans){el.style.outline='4px solid #fff';sOk();cr.ok++;}else{el.style.outline='4px solid var(--bad)';sBad();}document.getElementById('colorscore').textContent=cr.ok+'/12';setTimeout(colorPróximo,300);}
+function colorStart(){cr={q:0,ok:0};document.getElementById('colorscore').textContent='0/12';colorNext();}
+function colorNext(){cr.q++;if(cr.q>12){showResult('color','🌈',cr.ok+'/12','Cor Rápida!',cr.ok>=10?'Blazing fast!':'Color-word speed grows.','colorStart');return;}const target=pick(CRUSH_COLORS);cr.target=target;const opts=shuffle([target,...sampleN(CRUSH_COLORS.filter(c=>c!==target),3)]);document.getElementById('colormsg').textContent='Tap: '+target;document.getElementById('colormain').innerHTML='<div class="opts">'+opts.map(o=>'<button class="opt" onclick="crPick(this,\''+o+'\',\''+target+'\')" style="background:'+CRUSH_HEX[o]+';color:#fff;border:none">'+o+'</button>').join('')+'</div>';}
+function crPick(el,v,ans){if(v===ans){el.style.outline='4px solid #fff';sOk();cr.ok++;}else{el.style.outline='4px solid var(--bad)';sBad();}document.getElementById('colorscore').textContent=cr.ok+'/12';setTimeout(colorNext,300);}
 /* NUMBER MEMORY */
 let rc={};
 function recallStart(){rc={lv:1,best:0};recallRodada();}
@@ -1867,25 +1867,25 @@ function rcKey(k){sTap();if(k==='⌫'){rc.typed=rc.typed.slice(0,-1);}else if(k=
 const OSH=['circle','square','tri','diamond'];
 function shSVG(shape,fill,rot,scale){rot=rot||0;scale=scale||1;const inner={circle:'<circle cx="50" cy="50" r="'+(30*scale)+'" fill="'+fill+'"/>',square:'<rect x="'+(50-30*scale)+'" y="'+(50-30*scale)+'" width="'+(60*scale)+'" height="'+(60*scale)+'" fill="'+fill+'"/>',tri:'<polygon points="50,'+(50-34*scale)+' '+(50+32*scale)+','+(50+28*scale)+' '+(50-32*scale)+','+(50+28*scale)+'" fill="'+fill+'"/>',diamond:'<polygon points="50,'+(50-34*scale)+' '+(50+34*scale)+',50 50,'+(50+34*scale)+' '+(50-34*scale)+',50" fill="'+fill+'"/>'}[shape];return '<svg viewBox="0 0 100 100" width="78%" height="78%"><g transform="rotate('+rot+' 50 50)">'+inner+'</g></svg>';}
 let od={};
-function oddStart(){od={q:0,ok:0};document.getElementById('oddscore').textContent='0/8';oddPróximo();}
-function oddPróximo(){od.q++;if(od.q>8){showResult('odd','👁',od.ok+'/8','Eagle eye!',od.ok>=7?'Outstanding attention!':'Visual scanning sharpens.','oddStart');return;}const dim=od.q<4?3:4;const N=dim*dim;const g=genUnique('odd',()=>{const shape=pick(OSH);const hue=R(360);const mode=pick(['color','rot','size']);const oddIdx=R(N);const base={color:'hsl('+hue+',70%,45%)',rot:R(4)*15,scale:1};const odd={color:base.color,rot:base.rot,scale:base.scale};if(mode==='color')odd.color='hsl('+((hue+25)%360)+',70%,45%)';if(mode==='rot')odd.rot=base.rot+pick([30,45,60]);if(mode==='size')odd.scale=0.72;return{sig:[shape,hue,mode,oddIdx,dim].join('-'),shape,base,odd,oddIdx,dim};});document.getElementById('oddmain').innerHTML='<div class="oddgrid" style="grid-template-columns:repeat('+g.dim+','+(g.dim===3?'88px':'70px')+')">'+Array.from({length:N},(_,i)=>{const p=i===g.oddIdx?g.odd:g.base;return '<div class="oddcell" onclick="oddPick('+(i===g.oddIdx)+',this)">'+shSVG(g.shape,p.color,p.rot,p.scale)+'</div>';}).join('')+'</div>';}
-function oddPick(ok,el){if(ok){od.ok++;sOk();el.style.outline='4px solid var(--ok)';}else{sBad();el.style.outline='4px solid var(--bad)';}document.getElementById('oddscore').textContent=od.ok+'/8';setTimeout(oddPróximo,420);}
+function oddStart(){od={q:0,ok:0};document.getElementById('oddscore').textContent='0/8';oddNext();}
+function oddNext(){od.q++;if(od.q>8){showResult('odd','👁',od.ok+'/8','Eagle eye!',od.ok>=7?'Outstanding attention!':'Visual scanning sharpens.','oddStart');return;}const dim=od.q<4?3:4;const N=dim*dim;const g=genUnique('odd',()=>{const shape=pick(OSH);const hue=R(360);const mode=pick(['color','rot','size']);const oddIdx=R(N);const base={color:'hsl('+hue+',70%,45%)',rot:R(4)*15,scale:1};const odd={color:base.color,rot:base.rot,scale:base.scale};if(mode==='color')odd.color='hsl('+((hue+25)%360)+',70%,45%)';if(mode==='rot')odd.rot=base.rot+pick([30,45,60]);if(mode==='size')odd.scale=0.72;return{sig:[shape,hue,mode,oddIdx,dim].join('-'),shape,base,odd,oddIdx,dim};});document.getElementById('oddmain').innerHTML='<div class="oddgrid" style="grid-template-columns:repeat('+g.dim+','+(g.dim===3?'88px':'70px')+')">'+Array.from({length:N},(_,i)=>{const p=i===g.oddIdx?g.odd:g.base;return '<div class="oddcell" onclick="oddPick('+(i===g.oddIdx)+',this)">'+shSVG(g.shape,p.color,p.rot,p.scale)+'</div>';}).join('')+'</div>';}
+function oddPick(ok,el){if(ok){od.ok++;sOk();el.style.outline='4px solid var(--ok)';}else{sBad();el.style.outline='4px solid var(--bad)';}document.getElementById('oddscore').textContent=od.ok+'/8';setTimeout(oddNext,420);}
 /* SEQUENCE */
 let sq={};
-function seqStart(){sq={q:0,ok:0};document.getElementById('seqscore').textContent='0/8';seqPróximo();}
-function seqPróximo(){sq.q++;if(sq.q>8){showResult('seq','🔢',sq.ok+'/8','Logic complete!',sq.ok>=7?'Pattern genius!':'Sequences train fluid IQ.','seqStart');return;}const g=genUnique('seq',()=>{const kind=pick(['add','mul','alt','sqr','fib']);let s=[],ans;if(kind==='add'){const a=R(15)+2,k=R(9)+2;s=[a,a+k,a+2*k,a+3*k];ans=a+4*k;}else if(kind==='mul'){const a=R(4)+1,k=R(3)+2;s=[a,a*k,a*k*k,a*k*k*k];ans=a*k*k*k*k;}else if(kind==='alt'){const a=R(12)+3,p=R(6)+2,q=R(4)+1;s=[a,a+p,a+p-q,a+2*p-q];ans=a+2*p-2*q;}else if(kind==='sqr'){const o=R(4);s=[(1+o)**2,(2+o)**2,(3+o)**2,(4+o)**2];ans=(5+o)**2;}else{let a=R(4)+1,b=R(5)+2;s=[a,b,a+b,a+2*b];ans=2*a+3*b;}return{sig:kind+s.join(','),s,ans};});let opts=[g.ans];while(opts.length<4){const d=g.ans+pick([-10,-6,-4,-2,-1,1,2,3,5,8,12]);if(!opts.includes(d)&&d>0)opts.push(d);}opts=shuffle(opts);document.getElementById('seqmain').innerHTML='<div class="qbig" style="font-size:38px">'+g.s.join(' · ')+' · <span style="color:var(--gold)">?</span></div><div class="opts">'+opts.map(o=>'<button class="opt" onclick="seqPick(this,'+o+','+g.ans+')">'+o+'</button>').join('')+'</div>';}
-function seqPick(el,v,ans){if(v===ans){el.classList.add('ok');sOk();sq.ok++;}else{el.classList.add('bad');sBad();}document.getElementById('seqscore').textContent=sq.ok+'/8';setTimeout(seqPróximo,520);}
+function seqStart(){sq={q:0,ok:0};document.getElementById('seqscore').textContent='0/8';seqNext();}
+function seqNext(){sq.q++;if(sq.q>8){showResult('seq','🔢',sq.ok+'/8','Logic complete!',sq.ok>=7?'Pattern genius!':'Sequences train fluid IQ.','seqStart');return;}const g=genUnique('seq',()=>{const kind=pick(['add','mul','alt','sqr','fib']);let s=[],ans;if(kind==='add'){const a=R(15)+2,k=R(9)+2;s=[a,a+k,a+2*k,a+3*k];ans=a+4*k;}else if(kind==='mul'){const a=R(4)+1,k=R(3)+2;s=[a,a*k,a*k*k,a*k*k*k];ans=a*k*k*k*k;}else if(kind==='alt'){const a=R(12)+3,p=R(6)+2,q=R(4)+1;s=[a,a+p,a+p-q,a+2*p-q];ans=a+2*p-2*q;}else if(kind==='sqr'){const o=R(4);s=[(1+o)**2,(2+o)**2,(3+o)**2,(4+o)**2];ans=(5+o)**2;}else{let a=R(4)+1,b=R(5)+2;s=[a,b,a+b,a+2*b];ans=2*a+3*b;}return{sig:kind+s.join(','),s,ans};});let opts=[g.ans];while(opts.length<4){const d=g.ans+pick([-10,-6,-4,-2,-1,1,2,3,5,8,12]);if(!opts.includes(d)&&d>0)opts.push(d);}opts=shuffle(opts);document.getElementById('seqmain').innerHTML='<div class="qbig" style="font-size:38px">'+g.s.join(' · ')+' · <span style="color:var(--gold)">?</span></div><div class="opts">'+opts.map(o=>'<button class="opt" onclick="seqPick(this,'+o+','+g.ans+')">'+o+'</button>').join('')+'</div>';}
+function seqPick(el,v,ans){if(v===ans){el.classList.add('ok');sOk();sq.ok++;}else{el.classList.add('bad');sBad();}document.getElementById('seqscore').textContent=sq.ok+'/8';setTimeout(seqNext,520);}
 /* FLASH COUNT */
 let fl={};
-function flashStart(){fl={q:0,ok:0};document.getElementById('flashscore').textContent='0/8';flashPróximo();}
-function flashPróximo(){fl.q++;if(fl.q>8){showResult('flash','✨',fl.ok+'/8','Subitizing pro!',fl.ok>=7?'Elite visual sense!':'Counting at a glance.','flashStart');return;}const n=R(5)+4+Math.floor(fl.q/3);const g=genUnique('flash',()=>{const pos=[];let guard=0;while(pos.length<n&&guard++<400){const p=[R(230)+8,R(230)+8];if(pos.every(q=>Math.hypot(q[0]-p[0],q[1]-p[1])>32))pos.push(p);}return{sig:pos.map(p=>p.join(',')).join(';'),pos};});document.getElementById('flashmsg').textContent='Watch closely...';document.getElementById('flashmain').innerHTML='<div class="flashdots">'+g.pos.map(p=>'<div class="fdot" style="left:'+p[0]+'px;top:'+p[1]+'px"></div>').join('')+'</div>';setTimeout(()=>{let opts=[g.pos.length];while(opts.length<4){const d=g.pos.length+pick([-3,-2,-1,1,2,3]);if(!opts.includes(d)&&d>0)opts.push(d);}opts=shuffle(opts);document.getElementById('flashmsg').textContent='How many did you see?';document.getElementById('flashmain').innerHTML='<div class="opts">'+opts.map(o=>'<button class="opt" onclick="flPick(this,'+o+','+g.pos.length+')">'+o+'</button>').join('')+'</div>';},750);}
-function flPick(el,v,ans){if(v===ans){el.classList.add('ok');sOk();fl.ok++;}else{el.classList.add('bad');sBad();}document.getElementById('flashscore').textContent=fl.ok+'/8';setTimeout(flashPróximo,520);}
+function flashStart(){fl={q:0,ok:0};document.getElementById('flashscore').textContent='0/8';flashNext();}
+function flashNext(){fl.q++;if(fl.q>8){showResult('flash','✨',fl.ok+'/8','Subitizing pro!',fl.ok>=7?'Elite visual sense!':'Counting at a glance.','flashStart');return;}const n=R(5)+4+Math.floor(fl.q/3);const g=genUnique('flash',()=>{const pos=[];let guard=0;while(pos.length<n&&guard++<400){const p=[R(230)+8,R(230)+8];if(pos.every(q=>Math.hypot(q[0]-p[0],q[1]-p[1])>32))pos.push(p);}return{sig:pos.map(p=>p.join(',')).join(';'),pos};});document.getElementById('flashmsg').textContent='Watch closely...';document.getElementById('flashmain').innerHTML='<div class="flashdots">'+g.pos.map(p=>'<div class="fdot" style="left:'+p[0]+'px;top:'+p[1]+'px"></div>').join('')+'</div>';setTimeout(()=>{let opts=[g.pos.length];while(opts.length<4){const d=g.pos.length+pick([-3,-2,-1,1,2,3]);if(!opts.includes(d)&&d>0)opts.push(d);}opts=shuffle(opts);document.getElementById('flashmsg').textContent='How many did you see?';document.getElementById('flashmain').innerHTML='<div class="opts">'+opts.map(o=>'<button class="opt" onclick="flPick(this,'+o+','+g.pos.length+')">'+o+'</button>').join('')+'</div>';},750);}
+function flPick(el,v,ans){if(v===ans){el.classList.add('ok');sOk();fl.ok++;}else{el.classList.add('bad');sBad();}document.getElementById('flashscore').textContent=fl.ok+'/8';setTimeout(flashNext,520);}
 /* WORD SCRAMBLE */
 const WORDBANK=['BRAIN','FOCUS','LOGIC','MEMORY','SPEED','LEARN','SHARP','THINK','SMART','QUICK','AGILE','ALERT','AWARE','CLEAR','FLUID','GRASP','HASTE','IDEAS','JUDGE','KNACK','LIGHT','MIGHT','NERVE','ORDER','PRIME','QUEST','REACH','SENSE','TRAIN','ULTRA','VIVID','WORDS','EXCEL','YIELD','ZONES','ADAPT','BLEND','CRAFT','DRIVE','EXACT','FORGE','GROWN','HEART','INNER','JOINT','KEYED','LINKS','MINDS'];
 let wr={};
-function wordStart(){wr={q:0,ok:0};document.getElementById('wordscore').textContent='0/8';wordPróximo();}
-function wordPróximo(){wr.q++;if(wr.q>8){showResult('word','🔤',wr.ok+'/8','Word master!',wr.ok>=7?'Elite vocabulary!':'Language training pays off.','wordStart');return;}const g=genUnique('word',()=>{const w=pick(WORDBANK);const sc=shuffle([...w]).join('');return{sig:w+wr.q,w,sc};});wr.ans=g.w;wr.typed='';document.getElementById('wordmain').innerHTML='<div class="qbig" style="font-size:34px;letter-spacing:5px">'+g.sc+'</div><div class="typed" id="wrt">_</div><div class="opts" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">'+[...new Set([...g.w])].sort().map(l=>'<button class="opt" style="padding:14px;font-size:22px;min-width:46px" onclick="wrKey(\''+l+'\')">'+l+'</button>').join('')+'<button class="opt bad" style="padding:14px;font-size:22px" onclick="wrKey(\'\u232b\')">⌫</button></div>';}
-function wrKey(k){sTap();if(k==='⌫'){wr.typed=wr.typed.slice(0,-1);}else{wr.typed+=k;if(wr.typed===wr.ans){sOk();wr.ok++;document.getElementById('wordscore').textContent=wr.ok+'/8';setTimeout(wordPróximo,600);return;}if(wr.typed.length>=wr.ans.length){sBad();wr.typed='';}}const el=document.getElementById('wrt');if(el)el.textContent=wr.typed||'_';}
+function wordStart(){wr={q:0,ok:0};document.getElementById('wordscore').textContent='0/8';wordNext();}
+function wordNext(){wr.q++;if(wr.q>8){showResult('word','🔤',wr.ok+'/8','Word master!',wr.ok>=7?'Elite vocabulary!':'Language training pays off.','wordStart');return;}const g=genUnique('word',()=>{const w=pick(WORDBANK);const sc=shuffle([...w]).join('');return{sig:w+wr.q,w,sc};});wr.ans=g.w;wr.typed='';document.getElementById('wordmain').innerHTML='<div class="qbig" style="font-size:34px;letter-spacing:5px">'+g.sc+'</div><div class="typed" id="wrt">_</div><div class="opts" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">'+[...new Set([...g.w])].sort().map(l=>'<button class="opt" style="padding:14px;font-size:22px;min-width:46px" onclick="wrKey(\''+l+'\')">'+l+'</button>').join('')+'<button class="opt bad" style="padding:14px;font-size:22px" onclick="wrKey(\'\u232b\')">⌫</button></div>';}
+function wrKey(k){sTap();if(k==='⌫'){wr.typed=wr.typed.slice(0,-1);}else{wr.typed+=k;if(wr.typed===wr.ans){sOk();wr.ok++;document.getElementById('wordscore').textContent=wr.ok+'/8';setTimeout(wordNext,600);return;}if(wr.typed.length>=wr.ans.length){sBad();wr.typed='';}}const el=document.getElementById('wrt');if(el)el.textContent=wr.typed||'_';}
 /* N-BACK */
 const NBS=['🍎','🌙','⭐','🔷','🎵','🌸','🔥','💎'];
 let nb={};
@@ -1899,19 +1899,19 @@ function spawn(){if(spStop)return;const z=document.getElementById('tapzone');z.i
 /* WORD PAIRS */
 const WBANK=['MOON','RIVER','TIGER','PIANO','CLOUD','STONE','LEMON','ROBOT','OCEAN','CANDLE','FOREST','MIRROR','THUNDER','GARDEN','SILVER','ROCKET','BRIDGE','WINTER','COFFEE','ISLAND','DRAGON','VELVET','MARBLE','FALCON','CRYSTAL'];
 let wp={};
-function pairsStart(){wp={q:0,ok:0};document.getElementById('pairsscore').textContent='0/6';pairsPróximo();}
-function pairsPróximo(){wp.q++;if(wp.q>6){showResult('pairs','🔗',wp.ok+'/6','Association memory!',wp.ok>=5?'Outstanding recall!':'Linking words builds memory.','pairsStart');return;}const g=genUnique('pairs',()=>{const w=sampleN(WBANK,8);const P=[[w[0],w[1]],[w[2],w[3]],[w[4],w[5]],[w[6],w[7]]];return{sig:P.map(p=>p.join('-')).join(';'),P};});document.getElementById('pairsmsg').textContent='Memorize 4 pairs (5s)...';document.getElementById('pairsmain').innerHTML='<div style="font-size:26px;font-weight:800;display:flex;flex-direction:column;gap:10px;align-items:center">'+g.P.map(p=>'<div>'+p[0]+' <span style="color:var(--gold)">↔</span> '+p[1]+'</div>').join('')+'</div>';setTimeout(()=>{const t=pick(g.P);const ask=Math.random()<.5?0:1;const word=t[ask],ans=t[1-ask];let opts=[ans];const others=g.P.filter(p=>p!==t).flat();while(opts.length<4){const c=pick(others);if(!opts.includes(c))opts.push(c);}opts=shuffle(opts);document.getElementById('pairsmsg').textContent='Which word was paired with it?';document.getElementById('pairsmain').innerHTML='<div class="qbig" style="font-size:38px;color:var(--gold)">'+word+'</div><div class="opts">'+opts.map(o=>'<button class="opt" onclick="wpPick(this,\''+o+'\',\''+ans+'\')">'+o+'</button>').join('')+'</div>';},5000);}
-function wpPick(el,v,ans){if(v===ans){el.classList.add('ok');sOk();wp.ok++;}else{el.classList.add('bad');sBad();}document.getElementById('pairsscore').textContent=wp.ok+'/6';setTimeout(pairsPróximo,560);}
+function pairsStart(){wp={q:0,ok:0};document.getElementById('pairsscore').textContent='0/6';pairsNext();}
+function pairsNext(){wp.q++;if(wp.q>6){showResult('pairs','🔗',wp.ok+'/6','Association memory!',wp.ok>=5?'Outstanding recall!':'Linking words builds memory.','pairsStart');return;}const g=genUnique('pairs',()=>{const w=sampleN(WBANK,8);const P=[[w[0],w[1]],[w[2],w[3]],[w[4],w[5]],[w[6],w[7]]];return{sig:P.map(p=>p.join('-')).join(';'),P};});document.getElementById('pairsmsg').textContent='Memorize 4 pairs (5s)...';document.getElementById('pairsmain').innerHTML='<div style="font-size:26px;font-weight:800;display:flex;flex-direction:column;gap:10px;align-items:center">'+g.P.map(p=>'<div>'+p[0]+' <span style="color:var(--gold)">↔</span> '+p[1]+'</div>').join('')+'</div>';setTimeout(()=>{const t=pick(g.P);const ask=Math.random()<.5?0:1;const word=t[ask],ans=t[1-ask];let opts=[ans];const others=g.P.filter(p=>p!==t).flat();while(opts.length<4){const c=pick(others);if(!opts.includes(c))opts.push(c);}opts=shuffle(opts);document.getElementById('pairsmsg').textContent='Which word was paired with it?';document.getElementById('pairsmain').innerHTML='<div class="qbig" style="font-size:38px;color:var(--gold)">'+word+'</div><div class="opts">'+opts.map(o=>'<button class="opt" onclick="wpPick(this,\''+o+'\',\''+ans+'\')">'+o+'</button>').join('')+'</div>';},5000);}
+function wpPick(el,v,ans){if(v===ans){el.classList.add('ok');sOk();wp.ok++;}else{el.classList.add('bad');sBad();}document.getElementById('pairsscore').textContent=wp.ok+'/6';setTimeout(pairsNext,560);}
 /* VISUAL SEARCH */
 const VSP=[['6','9'],['E','F'],['O','Q'],['b','d'],['M','W'],['Z','N'],['C','G'],['p','q'],['1','7'],['S','5']];
 let vs={};
-function vsStart(){vs={q:0,ok:0};document.getElementById('vsscore').textContent='0/8';vsPróximo();}
-function vsPróximo(){vs.q++;if(vs.q>8){showResult('vsearch','🔍',vs.ok+'/8','Visual attention!',vs.ok>=7?'Eagle eyes!':'Scanning speed grows.','vsStart');return;}const dim=5+Math.floor((vs.q-1)/3);const g=genUnique('vsearch',()=>{const pr=pick(VSP);const flip=Math.random()<.5;const target=flip?pr[0]:pr[1],dis=flip?pr[1]:pr[0];const idx=R(dim*dim);return{sig:[pr.join(''),flip?1:0,idx,dim].join('-'),target,dis,idx,dim};});document.getElementById('vsmsg').innerHTML='Find: <b style="color:var(--gold);font-size:26px">'+g.target+'</b>';let cells='';for(let i=0;i<g.dim*g.dim;i++)cells+='<button onclick="vsPick(this,'+(i===g.idx)+')" style="background:'+(i===g.idx?'rgba(29,36,85,.9)':'rgba(20,26,56,.8)')+'">'+( i===g.idx?g.target:g.dis)+'</button>';document.getElementById('vsmain').innerHTML='<div class="vsgrid" style="grid-template-columns:repeat('+g.dim+',46px)">'+cells+'</div>';}
-function vsPick(el,hit){if(hit){el.style.background='#0f8a4c';sOk();vs.ok++;document.getElementById('vsscore').textContent=vs.ok+'/8';setTimeout(vsPróximo,400);}else{el.style.background='#7a1f3d';sBad();}}
+function vsStart(){vs={q:0,ok:0};document.getElementById('vsscore').textContent='0/8';vsNext();}
+function vsNext(){vs.q++;if(vs.q>8){showResult('vsearch','🔍',vs.ok+'/8','Visual attention!',vs.ok>=7?'Eagle eyes!':'Scanning speed grows.','vsStart');return;}const dim=5+Math.floor((vs.q-1)/3);const g=genUnique('vsearch',()=>{const pr=pick(VSP);const flip=Math.random()<.5;const target=flip?pr[0]:pr[1],dis=flip?pr[1]:pr[0];const idx=R(dim*dim);return{sig:[pr.join(''),flip?1:0,idx,dim].join('-'),target,dis,idx,dim};});document.getElementById('vsmsg').innerHTML='Find: <b style="color:var(--gold);font-size:26px">'+g.target+'</b>';let cells='';for(let i=0;i<g.dim*g.dim;i++)cells+='<button onclick="vsPick(this,'+(i===g.idx)+')" style="background:'+(i===g.idx?'rgba(29,36,85,.9)':'rgba(20,26,56,.8)')+'">'+( i===g.idx?g.target:g.dis)+'</button>';document.getElementById('vsmain').innerHTML='<div class="vsgrid" style="grid-template-columns:repeat('+g.dim+',46px)">'+cells+'</div>';}
+function vsPick(el,hit){if(hit){el.style.background='#0f8a4c';sOk();vs.ok++;document.getElementById('vsscore').textContent=vs.ok+'/8';setTimeout(vsNext,400);}else{el.style.background='#7a1f3d';sBad();}}
 
 /* ════ 10 ASSESSMENTS ════ */
 const BANK={
-  autism:{title:'🧩 Autism Traits',n:10,scale:['Definitely agree','Slightly agree','Slightly disagree','Definitely disagree'],items:['I often notice small sounds when others do not','I usually concentrate more on the whole picture rather than small details','I find it easy to do more than one thing at once','If there is an interruption I can switch back quickly','I find it easy to read between the lines','I know how to tell if someone is getting bored','When reading a story I find it difficult to work out characters\' intentions','I like to collect detailed information about categories','I find it easy to work out what someone is thinking by their face','I find it difficult to work out people\'s intentions','New situations make me anxious unless I can prepare','I notice patterns in things all the time','Social events drain my energy','I prefer to do things the same way over and over','Eye contact during conversation feels uncomfortable','I take things very literally and sometimes miss jokes'],agreePontuaçãos:[1,0,0,0,0,0,1,1,0,1,1,1,1,1,1,1],result:function(s,n){const p=Math.round(s/n*100);return{big:s+'/'+n,title:'Trait signals: '+(p>=60?'elevated':p>=30?'moderate':'low'),sub:p>=60?'Several autism spectrum traits marked. Many strengths come with this profile.':p>=30?'You share some traits with the spectrum.':'Few autism-associated traits marked.'}}},
+  autism:{title:'🧩 Autism Traits',n:10,scale:['Definitely agree','Slightly agree','Slightly disagree','Definitely disagree'],items:['I often notice small sounds when others do not','I usually concentrate more on the whole picture rather than small details','I find it easy to do more than one thing at once','If there is an interruption I can switch back quickly','I find it easy to read between the lines','I know how to tell if someone is getting bored','When reading a story I find it difficult to work out characters\' intentions','I like to collect detailed information about categories','I find it easy to work out what someone is thinking by their face','I find it difficult to work out people\'s intentions','New situations make me anxious unless I can prepare','I notice patterns in things all the time','Social events drain my energy','I prefer to do things the same way over and over','Eye contact during conversation feels uncomfortable','I take things very literally and sometimes miss jokes'],agreeScores:[1,0,0,0,0,0,1,1,0,1,1,1,1,1,1,1],result:function(s,n){const p=Math.round(s/n*100);return{big:s+'/'+n,title:'Trait signals: '+(p>=60?'elevated':p>=30?'moderate':'low'),sub:p>=60?'Several autism spectrum traits marked. Many strengths come with this profile.':p>=30?'You share some traits with the spectrum.':'Few autism-associated traits marked.'}}},
   adhd:{title:'🎯 ADHD Screening',n:8,scale:['Never','Rarely','Sometimes','Often','Very often'],items:['Trouble wrapping up the final details of a project','Difficulty getting things in order for a task','Problems remembering appointments','Avoiding getting started on tasks requiring thought','Fidgeting or squirming when sitting for a long time','Feeling overly active and compelled to do things','Distracted by activity or noise around you','Interrupting others when they are busy','Misplacing things like keys or phone','Mind feels like a browser with 30 tabs open','Hyperfocusing on something interesting and losing time','Starting many projects but struggling to finish'],freq:true,result:function(s,n){const max=n*4,p=Math.round(s/max*100);return{big:p+'%',title:'Attention profile: '+(p>=65?'high signals':p>=40?'some signals':'typical range'),sub:p>=65?'Frequent attention-regulation patterns. These minds are often creative and fast-thinking.':'Your patterns are within typical range.'}}},
   gifted:{title:'🌟 Giftedness',n:10,scale:['Strongly agree','Agree','Disagree','Strongly disagree'],items:['I learned to read or calculate earlier than most peers','I get deeply absorbed in topics and research them exhaustively','People say my questions are unusually deep','I see connections between unrelated fields','I feel different from people my age in how I think','Boredom in slow-paced settings is physically uncomfortable','I have an unusually large vocabulary','I prefer complex conversations with older people','I am highly sensitive to injustice or emotions','My mind races with multiple parallel thoughts','I taught myself skills without formal instruction','Perfectionism sometimes blocks me from finishing things'],agreeHigh:true,result:function(s,n){const max=n*3,p=Math.round(s/max*100);return{big:'Top '+(p>=70?'2%':p>=50?'10%':'30%'),title:p>=70?'Strong giftedness profile':p>=50?'Several high-ability markers':'Some markers present',sub:p>=70?'Your profile matches gifted individuals: intensity, precocity and complexity.':'A few markers present — ability grows where curiosity is fed.'}}},
   mi:{title:'🎨 8 Intelligences',scale:['Very true of me','Somewhat true','Not really','Not at all'],mi:true,items:[['Linguistic','Words, stories and languages come naturally to me'],['Logical','I love puzzles, numbers and how systems work'],['Spatial','I think in images, maps and 3D mental pictures'],['Musical','I notice rhythm, melody and sound patterns everywhere'],['Bodily','I learn best by moving, building and doing with hands'],['Interpersonal','I easily read people\'s moods and motivations'],['Intrapersonal','I deeply understand my own emotions and goals'],['Naturalist','I notice patterns in nature, animals and ecosystems']]},
@@ -1925,7 +1925,7 @@ const BANK={
 let T={};
 function openTest(key){sTap();document.getElementById('st-test').classList.add('on');if(key==='iq'){document.getElementById('testtitle').textContent='🎓 Teste de QI';iqStart();return;}const B=BANK[key];if(!B)return;document.getElementById('testtitle').textContent=B.title;let items;if(B.mi||B.big5){items=shuffle(B.items.map((it,i)=>({i,trait:it[0],text:it[1]})));}else{const g=genUnique('test-'+key,()=>{const ix=sampleN(B.items.map((_,i)=>i),B.n);return{sig:ix.slice().sort((a,b)=>a-b).join(','),ix};});items=shuffle(g.ix.map(i=>({i,text:B.items[i]})));}T={key,B,items,at:0,score:0,traits:{}};renderQ();}
 function renderQ(){const B=T.B,it=T.items[T.at];document.getElementById('testprog').textContent=(T.at+1)+'/'+T.items.length;document.getElementById('testbar').style.width=Math.round(T.at/T.items.length*100)+'%';const l5=B.scale.length===5;document.getElementById('testmain').innerHTML='<div class="qcard"><p>'+it.text+'</p></div><div class="likert '+(l5?'l5':'')+'">'+B.scale.map((s,si)=>'<button onclick="ansQ('+si+')">'+s+'</button>').join('')+'</div>';}
-function ansQ(si){sTap();const B=T.B,it=T.items[T.at];if(B.mi||B.big5){T.traits[it.trait]=(T.traits[it.trait]||0)+(B.scale.length-1-si);}else if(B.freq||B.mixed){T.score+=si;}else if(B.agreeHigh){T.score+=(B.scale.length-1-si);}else if(B.agreePontuaçãos){const agree=si<=1;if((B.agreePontuaçãos[it.i]===1)===agree)T.score++;}T.at++;if(T.at<T.items.length)renderQ();else finishTest();}
+function ansQ(si){sTap();const B=T.B,it=T.items[T.at];if(B.mi||B.big5){T.traits[it.trait]=(T.traits[it.trait]||0)+(B.scale.length-1-si);}else if(B.freq||B.mixed){T.score+=si;}else if(B.agreeHigh){T.score+=(B.scale.length-1-si);}else if(B.agreeScores){const agree=si<=1;if((B.agreeScores[it.i]===1)===agree)T.score++;}T.at++;if(T.at<T.items.length)renderQ();else finishTest();}
 function finishTest(){document.getElementById('testbar').style.width='100%';sWin();const main=document.getElementById('testmain');if(T.B.mi){const tr=Object.entries(T.traits);const best=tr.slice().sort((a,b)=>b[1]-a[1])[0];main.innerHTML='<div class="result"><div style="font-size:50px;animation:float 2s infinite">🎨</div><h3>Your top: <span style="color:var(--gold)">'+best[0]+'</span></h3><div style="width:100%;margin-top:8px">'+tr.map(e=>'<div class="scorebar"><b>'+e[0]+'</b><div class="bg"><i style="width:'+Math.round(e[1]/3*100)+'%"></i></div></div>').join('')+'</div><p class="disc">Based on Gardner\'s Multiple Intelligences. Educational only.</p><button class="bigbtn" onclick="openTest(\'mi\')">Retake (new order)</button></div>';return;}if(T.B.big5){const lbl={O:'Openness',C:'Conscientious',E:'Extraversion',A:'Agreeableness',N:'Neuroticism'};main.innerHTML='<div class="result"><div style="font-size:50px;animation:float 2s infinite">🪞</div><h3>Your OCEAN profile</h3><div style="width:100%;margin-top:8px">'+Object.entries(T.traits).map(e=>'<div class="scorebar"><b>'+lbl[e[0]]+'</b><div class="bg"><i style="width:'+Math.round(e[1]/8*100)+'%"></i></div></div>').join('')+'</div><p class="disc">Mini Big Five — educational only.</p><button class="bigbtn" onclick="openTest(\'big5\')">Retake</button></div>';return;}
 const r=T.B.result(T.score,T.items.length);
 const SCI_TESTS_MAP={
@@ -1997,15 +1997,15 @@ function renderSocialMenu(sh){
 }
 function getDNAData(){
   const bs=parseInt((document.querySelector('.bs-num')||{}).textContent)||742;
-  const iq=window._epqPontuaçãos&&_epqPontuaçãos.iq?Math.round(86+_epqPontuaçãos.iq*0.41):103;
+  const iq=window._epqScores&&_epqScores.iq?Math.round(86+_epqScores.iq*0.41):103;
   const traits=[];
-  if(window._epqPontuaçãos){
-    if(_epqPontuaçãos.eq>70) traits.push('High EQ');
-    if(_epqPontuaçãos.stroop>75) traits.push('Sharp Focus');
-    if(_epqPontuaçãos.nback>75) traits.push('Working Memory+');
-    if(_epqPontuaçãos.react&&_epqPontuaçãos.react<70) traits.push('Fast Reactions');
-    if(_epqPontuaçãos.big5) traits.push('OCEAN Perfild');
-    if(_epqPontuaçãos.autism!==undefined) traits.push('AQ Assessed');
+  if(window._epqScores){
+    if(_epqScores.eq>70) traits.push('High EQ');
+    if(_epqScores.stroop>75) traits.push('Sharp Focus');
+    if(_epqScores.nback>75) traits.push('Working Memory+');
+    if(_epqScores.react&&_epqScores.react<70) traits.push('Fast Reactions');
+    if(_epqScores.big5) traits.push('OCEAN Perfild');
+    if(_epqScores.autism!==undefined) traits.push('AQ Assessed');
   }
   if(!traits.length) traits.push('Brain Trained','Self-Aware','Science-Voltared');
   const streak=23;
@@ -2046,7 +2046,7 @@ function renderCircle(sh){
   var myName = (localStorage.getItem('flowiq_name')||'You').trim() || 'You';
   // Membros demo + dados normalizados por nº de partidas e jogos iguais
   var membros = [
-    {n: myName, s: PROFILE.brainPontuação||742, partidas: PROFILE.sessions||12, em:'\uD83E\uDDE0', c:'#7C3AED'},
+    {n: myName, s: PROFILE.brainScore||742, partidas: PROFILE.sessions||12, em:'\uD83E\uDDE0', c:'#7C3AED'},
     {n:'Sarah',  s:698, partidas:10, em:'\uD83D\uDC69', c:'#1D9E75'},
     {n:'Lucas',  s:671, partidas:14, em:'\uD83D\uDC66', c:'#F59E0B'},
     {n:'Mom',    s:543, partidas:8,  em:'\uD83D\uDC69\u200D\uD83D\uDCBC', c:'#ef4444'}
@@ -2057,8 +2057,8 @@ function renderCircle(sh){
   var normalized = membros.map(function(m){
     // score normalizado = score * (minJogos / totalJogos do membro)
     var norm = Math.round(m.s * (minJogos / m.partidas));
-    return Object.assign({}, m, {normPontuação: norm, normJogos: minJogos});
-  }).sort(function(a,b){return b.normPontuação - a.normPontuação;});
+    return Object.assign({}, m, {normScore: norm, normJogos: minJogos});
+  }).sort(function(a,b){return b.normScore - a.normScore;});
   
   // Grupos criados pelo usuário
   var gr = groups.map(function(g){
@@ -2086,7 +2086,7 @@ function renderCircle(sh){
       '<div style="width:26px;height:26px;border-radius:50%;background:'+m.c+';display:flex;align-items:center;justify-content:center;font-size:13px;flex:none">'+m.em+'</div>'+
       '<div style="flex:1"><div style="font-size:13px;font-weight:700">'+m.n+'</div>'+
       '<div style="font-size:10px;color:var(--mut)">'+m.partidas+' partidas total</div></div>'+
-      '<div style="text-align:right"><div style="font-size:14px;font-weight:900;color:var(--gold)">'+m.normPontuação+'</div>'+
+      '<div style="text-align:right"><div style="font-size:14px;font-weight:900;color:var(--gold)">'+m.normScore+'</div>'+
       '<div style="font-size:10px;color:var(--mut)">per '+minJogos+' partidas</div></div>'+
     '</div>';
   }).join('');
@@ -2100,12 +2100,12 @@ function renderCircle(sh){
     
     // Tabs
     '<div style="display:flex;gap:6px;margin-bottom:12px">'+
-      '<button id="tabClassificação" onclick="showCircleTab(\'rank\')" style="flex:1;background:var(--violet);border:none;border-radius:9px;padding:7px;cursor:pointer;color:#fff;font-size:12px;font-weight:700">Classificaçãoing</button>'+
+      '<button id="tabRank" onclick="showCircleTab(\'rank\')" style="flex:1;background:var(--violet);border:none;border-radius:9px;padding:7px;cursor:pointer;color:#fff;font-size:12px;font-weight:700">Classificaçãoing</button>'+
       '<button id="tabNorm" onclick="showCircleTab(\'norm\')" style="flex:1;background:rgba(255,255,255,.07);border:none;border-radius:9px;padding:7px;cursor:pointer;color:var(--mut);font-size:12px;font-weight:700">Fair (\u2605 same partidas)</button>'+
     '</div>'+
     
     // Painel ranking normal
-    '<div id="panelClassificação" style="background:rgba(22,27,68,.9);border:1px solid var(--line);border-radius:16px;padding:12px;margin-bottom:10px">'+
+    '<div id="panelRank" style="background:rgba(22,27,68,.9);border:1px solid var(--line);border-radius:16px;padding:12px;margin-bottom:10px">'+
       '<div style="font-size:12px;color:var(--mut);margin-bottom:8px">Total score, all partidas played</div>'+
       boardNormal+
     '</div>'+
@@ -2130,9 +2130,9 @@ function renderCircle(sh){
     '</div>';
 }
 function showCircleTab(tab){
-  var r = document.getElementById('panelClassificação');
+  var r = document.getElementById('panelRank');
   var n = document.getElementById('panelNorm');
-  var tR = document.getElementById('tabClassificação');
+  var tR = document.getElementById('tabRank');
   var tN = document.getElementById('tabNorm');
   if(!r||!n) return;
   if(tab==='rank'){
@@ -2149,7 +2149,7 @@ function showCircleTab(tab){
 function renderChallenge(sh){
   sTap();
   var freeJogos = GAMES.filter(function(g){return g.free;}).slice(0,6);
-  var score = (typeof PROFILE !== 'undefined' && PROFILE) ? (PROFILE.brainPontuação || 742) : 742;
+  var score = (typeof PROFILE !== 'undefined' && PROFILE) ? (PROFILE.brainScore || 742) : 742;
   window._chJogos = freeJogos;
 
   var gameButtons = freeJogos.map(function(g, i){
@@ -2233,7 +2233,7 @@ function pickChallenge(id, name, el){
   el.style.background='rgba(124,58,237,.2)';el.style.borderColor='rgba(124,58,237,.4)';
   document.getElementById('chGameName').textContent=name;
   document.getElementById('chPreview').style.display='block';
-  setTimeout(()=>{closeSocial();openGame(id);showToast('Jogue para definir sua pontuação de desafio! ⚡');},600);
+  setTimeout(()=>{closeSocial();openGame(id);showToast('Jogue para definir sua score de desafio! ⚡');},600);
 }
 /* socialCompartilhar removida */setTimeout(applyMuteState, 200);
 
@@ -2242,7 +2242,7 @@ function saveGroups(g){ localStorage.setItem('flowiq_groups', JSON.stringify(g))
 function getInviteLink(){
   var id = localStorage.getItem('flowiq_uid');
   if(!id){ id='U'+Math.random().toString(36).slice(2,9).toUpperCase(); localStorage.setItem('flowiq_uid',id); }
-  return 'https://flowiq.app/join?ref='+id+'&score='+(PROFILE.brainPontuação||0);
+  return 'https://flowiq.app/join?ref='+id+'&score='+(PROFILE.brainScore||0);
 }
 function _fallbackCopy(txt){
   var ta=document.createElement('textarea'); ta.value=txt;
@@ -2259,7 +2259,7 @@ function copyInviteLink(){
 }
 function whatsappInvite(){
   sTap();
-  var txt=encodeURIComponent('\uD83E\uDDE0 Teste seu cérebro no FlowIQ! Minha Pontuação: '+(PROFILE.brainPontuação||742)+' pts\n'+getInviteLink());
+  var txt=encodeURIComponent('\uD83E\uDDE0 Teste seu cérebro no FlowIQ! Minha Pontuação: '+(PROFILE.brainScore||742)+' pts\n'+getInviteLink());
   window.open('https://wa.me/?text='+txt,'_blank');
 }
 function createBrainGroup(){
@@ -2267,7 +2267,7 @@ function createBrainGroup(){
   var name=prompt('Nome do grupo (ex: Família, Amigos, Trabalho):');
   if(!name||!name.trim()) return;
   var groups=loadGroups();
-  groups.push({id:'G'+Date.now().toString(36).toUpperCase(), name:name.trim(), membros:[{name:'You',score:PROFILE.brainPontuação||742,em:'\uD83E\uDDE0'}], created:Date.now()});
+  groups.push({id:'G'+Date.now().toString(36).toUpperCase(), name:name.trim(), membros:[{name:'You',score:PROFILE.brainScore||742,em:'\uD83E\uDDE0'}], created:Date.now()});
   saveGroups(groups);
   showToast('Group "'+name.trim()+'" created! \uD83C\uDF89');
   var sh=document.getElementById('socialSh');
@@ -2283,7 +2283,7 @@ function joinGroup(){
 
 function shareChallenge(platform){
   sTap();
-  var score = PROFILE.brainPontuação || 742;
+  var score = PROFILE.brainScore || 742;
   var link = getInviteLink();
   var msg = '\uD83C\uDFC6 Beat my Pontuação Cerebral ' + score + ' pts on FlowIQ! I dare you! ' + link;
   if(platform === 'whatsapp'){
@@ -2390,7 +2390,7 @@ function updateGreeting(){
 function shareRanking(){
   sTap();
   var myName = (localStorage.getItem('flowiq_name')||'Me').trim() || 'Me';
-  var score = PROFILE.brainPontuação || 742;
+  var score = PROFILE.brainScore || 742;
   var msg = '\uD83C\uDFC6 Círculo Cerebral Ranking\n\uD83E\uDDE0 ' + myName + ': ' + score + ' pts\n\uD83D\uDC69 Sarah: 698\n\uD83D\uDC66 Lucas: 671\n\uD83D\uDC69\u200D\uD83D\uDCBC Mom: 543\n\nTrain your brain with FlowIQ! \u2192 ' + getInviteLink();
   if(navigator.clipboard){
     navigator.clipboard.writeText(msg).then(function(){ showToast('Ranking copied! \uD83D\uDCCB Compartilhar with your group'); }).catch(function(){_fallbackCopy(msg);});
@@ -2401,7 +2401,7 @@ function challengeCompartilhar(platform){
   sTap();
   var el = document.getElementById('chActions');
   var gname = el ? el.getAttribute('data-game-name') : 'a brain game';
-  var score = PROFILE.brainPontuação || 742;
+  var score = PROFILE.brainScore || 742;
   var link = getInviteLink();
   var msg = '\uD83C\uDFC6 Te desafio a superar minha Pontuação Cerebral (' + score + ' pts) in FlowIQ! Jogar: ' + gname + ' \u2014 can you top me? ' + link;
   if(platform === 'whatsapp'){
@@ -2421,7 +2421,7 @@ function challengeJogarNow(){
   if(!gid){ showToast('Selecione um jogo primeiro!'); return; }
   closeSocial();
   openGame(gid);
-  showToast('Jogue para definir sua pontuação de desafio! \u26A1');
+  showToast('Jogue para definir sua score de desafio! \u26A1');
 }
 </script>
 </body>
