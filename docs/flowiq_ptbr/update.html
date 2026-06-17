@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>FlowIQ — Carregando...</title>
+<style>
+  body { background: #0A0E27; color: #fff; font-family: sans-serif; 
+         display: flex; align-items: center; justify-content: center; 
+         height: 100vh; margin: 0; flex-direction: column; gap: 20px; }
+  .spin { width: 60px; height: 60px; border: 4px solid rgba(124,58,237,.3);
+          border-top-color: #7C3AED; border-radius: 50%; animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  h2 { font-size: 28px; font-weight: 900; }
+  p { color: rgba(255,255,255,.6); font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="spin"></div>
+<h2>🧠 FlowIQ</h2>
+<p>Atualizando para a versão mais recente...</p>
+<script>
+// Forçar bypass de cache com timestamp
+const ts = Date.now();
+window.location.replace('/Repovazio/flowiq_ptbr/?nocache=' + ts + '&v=10');
+</script>
+</body>
+</html>
