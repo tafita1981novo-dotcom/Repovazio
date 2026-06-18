@@ -1,0 +1,117 @@
+name: Generate Noise Channel Videos 10h
+
+on:
+  workflow_dispatch:
+    inputs:
+      canal:
+        description: 'Canal a gerar (all = todos, ou nome específico)'
+        default: 'all'
+        required: true
+
+jobs:
+  generate-audio:
+    runs-on: ubuntu-latest
+    timeout-minutes: 480  # 8 horas máximo
+
+    steps:
+      - name: Install ffmpeg
+        run: sudo apt-get install -y ffmpeg
+
+      - name: Create output directory
+        run: mkdir -p /tmp/noise_videos
+
+      - name: Generate White Noise Vault (10h)
+        if: ${{ github.event.inputs.canal == 'all' || github.event.inputs.canal == 'white_noise_vault' }}
+        run: |
+          ffmpeg -y -f lavfi \
+            -i "anoisesrc=color=white:sample_rate=48000:amplitude=0.45" \
+            -t 36000 -c:a libmp3lame -b:a 320k \
+            /tmp/noise_videos/white_noise_vault_10h.mp3
+          echo "WNV done: $(ls -lh /tmp/noise_videos/white_noise_vault_10h.mp3)"
+
+      - name: Generate Pure Pink Noise (10h)
+        if: ${{ github.event.inputs.canal == 'all' || github.event.inputs.canal == 'pure_pink_noise' }}
+        run: |
+          ffmpeg -y -f lavfi \
+            -i "anoisesrc=color=pink:sample_rate=48000:amplitude=0.60" \
+            -t 36000 -c:a libmp3lame -b:a 320k \
+            /tmp/noise_videos/pure_pink_noise_10h.mp3
+
+      - name: Generate Rain Black Screen (10h)
+        if: ${{ github.event.inputs.canal == 'all' || github.event.inputs.canal == 'rain_black_screen' }}
+        run: |
+          ffmpeg -y -f lavfi \
+            -i "anoisesrc=color=brown:sample_rate=48000:amplitude=0.65" \
+            -t 36000 -c:a libmp3lame -b:a 320k \
+            /tmp/noise_videos/rain_black_screen_10h.mp3
+
+      - name: Generate ADHD Focus Noise (10h)
+        if: ${{ github.event.inputs.canal == 'all' || github.event.inputs.canal == 'adhd_focus_noise' }}
+        run: |
+          ffmpeg -y -f lavfi \
+            -i "anoisesrc=color=brown:sample_rate=48000:amplitude=0.70" \
+            -t 36000 -c:a libmp3lame -b:a 320k \
+            /tmp/noise_videos/adhd_focus_noise_10h.mp3
+
+      - name: Generate Tinnitus Relief (10h)
+        if: ${{ github.event.inputs.canal == 'all' || github.event.inputs.canal == 'tinnitus_relief' }}
+        run: |
+          ffmpeg -y -f lavfi \
+            -i "anoisesrc=color=pink:sample_rate=48000:amplitude=0.55" \
+            -t 36000 -c:a libmp3lame -b:a 320k \
+            /tmp/noise_videos/tinnitus_relief_10h.mp3
+
+      - name: Generate Baby Sleep Now (10h)
+        if: ${{ github.event.inputs.canal == 'all' || github.event.inputs.canal == 'baby_sleep_now' }}
+        run: |
+          ffmpeg -y -f lavfi \
+            -i "anoisesrc=color=pink:sample_rate=48000:amplitude=0.50" \
+            -t 36000 -c:a libmp3lame -b:a 320k \
+            /tmp/noise_videos/baby_sleep_now_10h.mp3
+
+      - name: Generate Ruido Marrom (10h)
+        if: ${{ github.event.inputs.canal == 'all' || github.event.inputs.canal == 'ruido_marrom' }}
+        run: |
+          ffmpeg -y -f lavfi \
+            -i "anoisesrc=color=brown:sample_rate=48000:amplitude=0.72" \
+            -t 36000 -c:a libmp3lame -b:a 320k \
+            /tmp/noise_videos/ruido_marrom_10h.mp3
+
+  generate-video:
+    needs: generate-audio
+    runs-on: ubuntu-latest
+    timeout-minutes: 480
+
+    steps:
+      - name: Install ffmpeg
+        run: sudo apt-get install -y ffmpeg
+
+      - name: Convert all MP3 to MP4 black screen
+        run: |
+          mkdir -p /tmp/noise_videos/mp4
+          
+          for CANAL in white_noise_vault pure_pink_noise rain_black_screen adhd_focus_noise tinnitus_relief baby_sleep_now ruido_marrom; do
+            MP3="/tmp/noise_videos/${CANAL}_10h.mp3"
+            MP4="/tmp/noise_videos/mp4/${CANAL}_10h_BLACK.mp4"
+            
+            if [ -f "$MP3" ]; then
+              echo "Converting $CANAL to MP4..."
+              ffmpeg -y \
+                -f lavfi -i "color=c=black:s=1920x1080:r=1" \
+                -i "$MP3" \
+                -t 36000 \
+                -c:v libx264 -preset ultrafast -crf 51 \
+                -c:a aac -b:a 192k \
+                -pix_fmt yuv420p \
+                -shortest \
+                "$MP4" 2>/dev/null
+              echo "$CANAL MP4: $(ls -lh $MP4 | awk '{print $5}')"
+            fi
+          done
+          
+          ls -lh /tmp/noise_videos/mp4/
+
+      - name: Upload to Google Drive or GCS
+        run: |
+          echo "Upload manual necessário — arquivos em /tmp/noise_videos/mp4/"
+          echo "Ou usar: gsutil cp /tmp/noise_videos/mp4/*.mp4 gs://noise-channels-videos/"
