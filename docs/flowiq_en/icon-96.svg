@@ -1,0 +1,23 @@
+<svg width="96" height="96" viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7C3AED"/>
+      <stop offset="50%" stop-color="#5B21B6"/>
+      <stop offset="100%" stop-color="#1a0a3d"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a78bfa" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#F59E0B" stop-opacity="0.4"/>
+    </linearGradient>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="1.92" stdDeviation="3.84" flood-color="#000" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+  <rect width="96" height="96" rx="21.12" fill="url(#bg)"/>
+  <rect width="96" height="96" rx="21.12" fill="url(#glow)" opacity="0.5"/>
+  <!-- Brain icon simplified -->
+  <text x="48.0" y="61.44" text-anchor="middle" font-size="48.0" filter="url(#shadow)">🧠</text>
+  <!-- IQ text bottom -->
+  <text x="48.0" y="84.48" text-anchor="middle" font-family="-apple-system,Helvetica Neue,sans-serif" 
+        font-size="13.440000000000001" font-weight="900" fill="white" opacity="0.9" letter-spacing="0.96">FlowIQ</text>
+</svg>

@@ -1,0 +1,19 @@
+<svg width="1080" height="2340" viewBox="0 0 1080 2340" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="bgr" cx="50%" cy="40%" r="70%">
+      <stop offset="0%" stop-color="#1a0a3d"/>
+      <stop offset="100%" stop-color="#06060F"/>
+    </radialGradient>
+    <radialGradient id="glow" cx="50%" cy="40%" r="40%">
+      <stop offset="0%" stop-color="#7C3AED" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#7C3AED" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1080" height="2340" fill="url(#bgr)"/>
+  <circle cx="540" cy="982" r="378" fill="url(#glow)"/>
+  <text x="540" y="1029" text-anchor="middle" font-size="194" opacity="0.9">🧠</text>
+  <text x="540" y="1263" text-anchor="middle" font-family="-apple-system,Helvetica Neue,sans-serif" 
+        font-size="75" font-weight="900" fill="white" letter-spacing="2">FlowIQ</text>
+  <text x="540" y="1404" text-anchor="middle" font-family="-apple-system,Helvetica Neue,sans-serif" 
+        font-size="32" font-weight="400" fill="rgba(255,255,255,0.4)" letter-spacing="1">Treine seu cérebro</text>
+</svg>
