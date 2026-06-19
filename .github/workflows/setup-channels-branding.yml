@@ -1,0 +1,76 @@
+name: Setup All Noise Channels Branding
+
+on:
+  workflow_dispatch:
+    inputs:
+      access_token:
+        description: 'YouTube OAuth Access Token (válido por 1h)'
+        required: true
+        type: string
+
+jobs:
+  setup-channels:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup channel branding via YouTube API
+        run: |
+          python3 << 'PYEOF'
+          import urllib.request, json
+
+          TOKEN = "${{ github.event.inputs.access_token }}"
+          BASE = "https://www.googleapis.com/youtube/v3"
+          GITHUB_RAW = "https://raw.githubusercontent.com/tafita1981novo-dotcom/Repovazio/main/noise_assets"
+
+          CANAIS = {
+            "UCD4LLFnsiVzA-DeSN6oaUzg": {
+              "name": "Deep Brown Noise",
+              "description": "Deep brown noise for sleep, ADHD focus, and relaxation. 24/7 live stream + 10-hour black screen videos. Brown noise sounds exactly like a fan — perfect for ADHD and falling asleep fast.\n\n🧠 ADHD • 🛌 Sleep Fast • 🖤 Black Screen • 🌬️ Fan Sound\nNo ads interrupting your sleep. New videos every week.\n\n📺 PT-BR: @RuidoMarrom-p4f | 🧠 @ADHDFocusNoise-v2r | 🤍 @WhiteNoiseVault-j5t",
+              "keywords": "\"brown noise\" \"ADHD\" \"sleep fast\" \"fan sound\" \"fall asleep fast\" \"black screen\" \"10 hours\" \"tela preta\" \"TDAH\" \"dormir rápido\""
+            },
+            "UC0mFKp42jfL0ZobYEj7uwUA": {
+              "name": "White Noise Vault",
+              "description": "Pure white noise for sleep, focus, and blocking distractions. 10-hour black screen videos. No ads. No interruptions.\n\n🛌 Sleep Fast • 📚 Study • 🖤 Black Screen • 👶 Baby Sleep\nNew 10-hour white noise videos every week.",
+              "keywords": "\"white noise\" \"sleep sounds\" \"fall asleep fast\" \"black screen\" \"study sounds\" \"baby sleep\" \"10 hours\" \"no ads\""
+            },
+            "UCXQ_-FOGTJk17T06gy0bYqQ": {
+              "name": "Baby Sleep Now",
+              "description": "White and pink noise to help babies and newborns sleep fast. 10-hour black screen videos — your nursery stays dark all night.\n\n👶 Newborn Sleep • 🛌 Sleep Fast • 🖤 Black Screen • 🍼 Colic Relief",
+              "keywords": "\"baby sleep\" \"newborn sleep\" \"white noise baby\" \"fall asleep fast\" \"pink noise baby\" \"colic relief\" \"black screen\" \"10 hours\""
+            },
+            "UCZ5pmYA2ESO1vIhtE86l3_Q": {
+              "name": "Tinnitus Relief 24h",
+              "description": "White and pink noise to help you sleep despite tinnitus ear ringing. 24-hour relief on a pure black screen. No ads.\n\n👂 Tinnitus Relief • 🛌 Sleep Fast • 🖤 Black Screen",
+              "keywords": "\"tinnitus relief\" \"tinnitus white noise\" \"ear ringing\" \"tinnitus sleep\" \"tinnitus masking\" \"black screen\" \"10 hours\""
+            },
+            "UCK3xZDFY84ffNrLEAI1Qmyw": {
+              "name": "ADHD Focus Noise",
+              "description": "Brown noise for ADHD focus and sleep. Brown noise works like a fan sound — helps ADHD brains focus and fall asleep fast.\n\n🧠 ADHD • 🎯 Hyperfocus • 🛌 Sleep Fast • 🖤 Black Screen",
+              "keywords": "\"ADHD\" \"brown noise ADHD\" \"ADHD sleep\" \"ADHD study\" \"focus noise\" \"black screen\" \"fall asleep fast\" \"TDAH\" \"10 hours\""
+            }
+          }
+
+          for channel_id, cfg in CANAIS.items():
+            body = {
+              "id": channel_id,
+              "brandingSettings": {
+                "channel": {
+                  "description": cfg["description"],
+                  "keywords": cfg["keywords"],
+                  "country": "US",
+                  "defaultLanguage": "en"
+                }
+              }
+            }
+            req = urllib.request.Request(
+              f"{BASE}/channels?part=brandingSettings",
+              data=json.dumps(body).encode(),
+              method='PUT'
+            )
+            req.add_header('Authorization', f'Bearer {TOKEN}')
+            req.add_header('Content-Type', 'application/json')
+            try:
+              with urllib.request.urlopen(req) as r:
+                print(f"✅ {cfg['name']}: branding atualizado")
+            except Exception as e:
+              print(f"❌ {cfg['name']}: {e}")
+          PYEOF
