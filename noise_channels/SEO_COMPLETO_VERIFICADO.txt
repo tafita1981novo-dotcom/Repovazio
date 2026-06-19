@@ -1,0 +1,397 @@
+
+╔══════════════════════════════════════════════════════════════════════╗
+║   NOISE CHANNELS — SEO COMPLETO VERIFICADO                          ║
+║   10 Idiomas | Limites Respeitados | Assets Corretos por Canal      ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+LIMITES DO YOUTUBE:
+- Título vídeo: 100 chars max
+- Descrição canal: 1000 chars max
+- Keywords canal: 500 chars max
+- Tags vídeo: 500 chars total max
+
+═══════════════════════════════════════════════════════════════════════
+MAPA DE CANAIS E ASSETS
+═══════════════════════════════════════════════════════════════════════
+
+Canal               | ID                        | Handle             | Banner          | Logo          | Thumb
+--------------------|---------------------------|---------------------|-----------------|---------------|-------------
+Deep Brown Noise    | UCD4LLFnsiVzA-DeSN6oaUzg | @DeepBrownNoise-j6b | dbn_banner.jpg  | dbn_logo.jpg  | dbn_thumb.jpg
+White Noise Vault   | UC0mFKp42jfL0ZobYEj7uwUA | @WhiteNoiseVault-j5t| wnv_banner.jpg  | wnv_logo.jpg  | wnv_thumb.jpg
+Baby Sleep Now      | UCXQ_-FOGTJk17T06gy0bYqQ*| @BabySleepNow-g7c   | bsn_banner.jpg  | bsn_logo.jpg  | bsn_thumb.jpg
+Pure Pink Noise     | (verificar Studio)        | @PurePinkNoise      | pink_banner.jpg | pink_logo.jpg | pink_thumb.jpg
+ADHD Focus Noise    | UCK3xZDFY84ffNrLEAI1Qmyw | @ADHDFocusNoise-v2r | adhd_banner.jpg | adhd_logo.jpg | adhd_thumb.jpg
+Tinnitus Relief 24h | UCZ5pmYA2ESO1vIhtE86l3_Q | @TinnitusRelief24h  | tinnitus_banner | tinnitus_logo | tinnitus_thumb
+Rain Black Screen   | A CRIAR                  | @RainBlackScreen-l3t| rain_banner.jpg | rain_logo.jpg | rain_thumb.jpg
+Ruído Marrom        | A CRIAR                  | @RuidoMarrom-p4f    | ruido_banner.jpg| ruido_logo.jpg| ruido_thumb.jpg
+
+* Baby Sleep Now e Pure Pink Noise DEVEM ter IDs diferentes
+
+BASE URL ASSETS: https://raw.githubusercontent.com/tafita1981novo-dotcom/Repovazio/main/noise_assets/
+
+═══════════════════════════════════════════════════════════════════════
+SCRIPT JS PARA CONFIGURAR CADA CANAL NO STUDIO
+═══════════════════════════════════════════════════════════════════════
+
+// Cole no DevTools Console → studio.youtube.com → Personalização → Perfil
+// SUBSTITUA [CANAL_KEY] pelo código do canal (dbn, wnv, bsn, pink, adhd, tinnitus, rain, ruido)
+
+const CANAL_KEY = 'dbn'; // MUDAR AQUI
+const BASE = 'https://raw.githubusercontent.com/tafita1981novo-dotcom/Repovazio/main/noise_assets';
+
+async function upload(idx, url, fname, mime) {
+  const r = await fetch(url), b = await r.blob();
+  const f = new File([b], fname, {type: mime || b.type || 'image/jpeg'});
+  const dt = new DataTransfer(); dt.items.add(f);
+  const inp = document.querySelectorAll('input[type="file"]');
+  if (!inp[idx]) return 'ERR:no_input_' + idx;
+  Object.defineProperty(inp[idx], 'files', {value: dt.files, writable: false});
+  inp[idx].dispatchEvent(new Event('change', {bubbles: true}));
+  await new Promise(r => setTimeout(r, 2000));
+  return 'OK:' + fname;
+}
+
+// Upload banner (idx=0), logo (idx=1), watermark (idx=2)
+const r1 = await upload(0, `${BASE}/${CANAL_KEY}_banner.jpg`, 'banner.jpg');
+const r2 = await upload(1, `${BASE}/${CANAL_KEY}_logo.jpg`, 'logo.jpg');
+const r3 = await upload(2, `${BASE}/watermark.png`, 'watermark.png', 'image/png');
+
+console.log('Banner:', r1, '| Logo:', r2, '| Watermark:', r3);
+// Depois clicar Done em cada modal e então Publish
+
+═══════════════════════════════════════════════════════════════════════
+① DEEP BROWN NOISE | ID: UCD4LLFnsiVzA-DeSN6oaUzg
+═══════════════════════════════════════════════════════════════════════
+
+DESCRIÇÃO DO CANAL (560/1000):
+Brown noise for ADHD, sleep & fan sound. 10h black screen. No ads.
+🧠ADHD • 🛌Sleep Fast • 🖤Black Screen • 🌬Fan Sound
+
+🇺🇸Brown noise ADHD sleep fast fan sound 10 hours
+🇧🇷Ruído marrom TDAH dormir rápido ventilador 10h
+🇩🇪Braunes Rauschen ADHS schlafen Ventilator 10h
+🇫🇷Bruit brun TDAH dormir vite ventilateur 10h
+🇪🇸Ruido marrón TDAH dormir rápido ventilador 10h
+🇯🇵ブラウンノイズ ADHD すぐ眠れる 10時間
+🇰🇷갈색소음 ADHD 빠르게잠들기 10시간
+🇨🇳棕色噪音 ADHD 快速入睡 10小时
+🇸🇦ضجيج بني ADHD نوم سريع 10ساعات
+🇮🇳ब्राउन नॉइज़ ADHD जल्दी सोना 10घंटे
+
+📺@WhiteNoiseVault-j5t @ADHDFocusNoise-v2r @RuidoMarrom-p4f
+
+KEYWORDS (137/500):
+brown noise ADHD sleep fast black screen fan sound 10 hours TDAH dormir rápido tela preta ruido marrón braunes Rauschen ブラウンノイズ 갈색소음 棕色噪音
+
+TAGS (117/500):
+brown noise,brown noise ADHD,brown noise sleep,black screen,fan sound,fall asleep fast,ADHD,TDAH,10 hours,focus noise
+
+TÍTULOS DE VÍDEO (todos <100 chars ✅):
+🇺🇸 Deep Brown Noise Black Screen 🖤 ADHD Focus & Sleep Like Fan | 10 Hours
+🇧🇷 Ruído Marrom Tela Preta 🖤 TDAH Foco e Dormir Como Ventilador | 10 Horas
+🇩🇪 Tiefes Braunes Rauschen Schwarzer Bildschirm 🖤 ADHS Fokus | 10 Stunden
+🇫🇷 Bruit Brun Profond Écran Noir 🖤 TDAH Focus Dormir Vite | 10 Heures
+🇪🇸 Ruido Marrón Profundo Pantalla Negra 🖤 TDAH Foco Dormir | 10 Horas
+🇯🇵 ディープブラウンノイズ 黒画面 🖤 ADHD集中 すぐ眠れる | 10時間
+🇰🇷 딥 브라운 노이즈 블랙 스크린 🖤 ADHD집중 빠르게잠들기 | 10시간
+🇨🇳 深棕色噪音 黑屏 🖤 ADHD专注 快速入睡 | 10小时
+🇸🇦 ضجيج بني عميق شاشة سوداء 🖤 ADHD تركيز نوم سريع | 10 ساعات
+🇮🇳 डीप ब्राउन नॉइज़ ब्लैक स्क्रीन 🖤 ADHD फोकस जल्दी सोना | 10 घंटे
+
+═══════════════════════════════════════════════════════════════════════
+② WHITE NOISE VAULT | ID: UC0mFKp42jfL0ZobYEj7uwUA
+═══════════════════════════════════════════════════════════════════════
+
+DESCRIÇÃO DO CANAL (626/1000):
+Pure white noise for sleep, study & blocking distractions. 10h black screen.
+🛌Sleep Fast • 📚Study • 🖤Black Screen • 👶Baby Sleep
+
+🇺🇸White noise black screen sleep fast study 10 hours
+🇧🇷Ruído branco tela preta dormir rápido estudar 10h
+🇩🇪Weißes Rauschen schwarzer Bildschirm schlafen lernen 10h
+🇫🇷Bruit blanc écran noir dormir vite étude 10h
+🇪🇸Ruido blanco pantalla negra dormir rápido estudiar 10h
+🇯🇵ホワイトノイズ 黒画面 すぐ眠れる 勉強 10時間
+🇰🇷백색소음 블랙스크린 빠르게잠들기 공부 10시간
+🇨🇳白噪音 黑屏 快速入睡 学习 10小时
+🇸🇦ضجيج أبيض شاشة سوداء نوم سريع دراسة 10ساعات
+🇮🇳व्हाइट नॉइज़ ब्लैक स्क्रीन जल्दी सोना 10घंटे
+
+📺@DeepBrownNoise-j6b @BabySleepNow-g7c @TinnitusRelief24h
+
+KEYWORDS (131/500):
+white noise sleep study baby black screen 10 hours ruído branco bruit blanc ruido blanco weißes Rauschen ホワイトノイズ 백색소음 白噪音 ضجيج أبيض
+
+TAGS (130/500):
+white noise,white noise sleep,black screen,study sounds,baby sleep,fall asleep fast,10 hours,focus sounds,ruído branco,bruit blanc
+
+TÍTULOS:
+🇺🇸 White Noise Black Screen 🖤 Sleep Fast, Study Focus & Block Noise | 10 Hours
+🇧🇷 Ruído Branco Tela Preta 🖤 Dormir Rápido, Estudar e Foco | 10 Horas
+🇩🇪 Weißes Rauschen Schwarzer Bildschirm 🖤 Schlafen Lernen Fokus | 10 Stunden
+🇫🇷 Bruit Blanc Écran Noir 🖤 S'endormir Vite, Étude, Concentration | 10 Heures
+🇪🇸 Ruido Blanco Pantalla Negra 🖤 Dormir Rápido, Estudiar, Foco | 10 Horas
+🇯🇵 ホワイトノイズ 黒画面 🖤 すぐ眠れる 勉強 集中力 | 10時間
+🇰🇷 백색소음 블랙스크린 🖤 빠르게잠들기 공부 집중 | 10시간
+🇨🇳 白噪音 黑屏 🖤 快速入睡 学习 专注力 | 10小时
+🇸🇦 ضجيج أبيض شاشة سوداء 🖤 نوم سريع دراسة تركيز | 10 ساعات
+🇮🇳 व्हाइट नॉइज़ ब्लैक स्क्रीन 🖤 जल्दी सोना पढ़ाई ध्यान | 10 घंटे
+
+═══════════════════════════════════════════════════════════════════════
+③ BABY SLEEP NOW | ID: UCXQ_-FOGTJk17T06gy0bYqQ (verificar)
+═══════════════════════════════════════════════════════════════════════
+
+DESCRIÇÃO DO CANAL (677/1000):
+White & pink noise to help babies and newborns sleep fast. 10h black screen.
+👶Newborn • 🛌Sleep Fast • 🖤Black Screen • 🍼Colic Relief
+
+🇺🇸Baby white noise newborn sleep fast colic black screen 10 hours
+🇧🇷Ruído branco bebê recém-nascido dormir cólica tela preta 10h
+🇩🇪Baby Rauschen Neugeborenes schlafen Koliken schwarzer Bildschirm 10h
+🇫🇷Bruit bébé nouveau-né dormir coliques écran noir 10h
+🇪🇸Ruido bebé recién nacido dormir cólicos pantalla negra 10h
+🇯🇵赤ちゃんノイズ 新生児 すぐ眠れる 黒画面 10時間
+🇰🇷아기소음 신생아잠들기 블랙스크린 10시간
+🇨🇳婴儿白噪音 新生儿入睡 黑屏 10小时
+🇸🇦ضجيج أبيض طفل مولود نوم شاشة سوداء 10ساعات
+🇮🇳बेबी नॉइज़ नवजात जल्दी सोना ब्लैक स्क्रीन 10घंटे
+
+📺@WhiteNoiseVault-j5t @PurePinkNoise @TinnitusRelief24h
+
+KEYWORDS (142/500):
+baby sleep white noise newborn pink noise colic black screen 10 hours ruído branco bebê bruit bébé ruido bebé Baby Rauschen 赤ちゃんノイズ 아기소음 婴儿白噪音
+
+TAGS (134/500):
+baby sleep,newborn sleep,white noise baby,pink noise baby,colic relief,black screen,fall asleep fast,10 hours,infant sleep,baby sounds
+
+TÍTULOS:
+🇺🇸 Baby White Noise Black Screen 🖤 Newborn Sleep Fast, Colic Relief | 10 Hours
+🇧🇷 Ruído Branco Bebê Tela Preta 🖤 Recém-Nascido Dormir, Cólica | 10 Horas
+🇩🇪 Baby Rauschen Schwarzer Bildschirm 🖤 Neugeborenes Schlafen Koliken | 10h
+🇫🇷 Bruit Bébé Écran Noir 🖤 Nouveau-Né Dormir Vite Coliques | 10 Heures
+🇪🇸 Ruido Bebé Pantalla Negra 🖤 Recién Nacido Dormir Cólicos | 10 Horas
+🇯🇵 赤ちゃんホワイトノイズ 黒画面 🖤 新生児すぐ眠れる コリック | 10時間
+🇰🇷 아기 백색소음 블랙스크린 🖤 신생아 빠르게 잠들기 산통 | 10시간
+🇨🇳 婴儿白噪音 黑屏 🖤 新生儿快速入睡 肠绞痛 | 10小时
+🇸🇦 ضجيج أبيض طفل شاشة سوداء 🖤 مولود نوم سريع مغص | 10 ساعات
+🇮🇳 बेबी व्हाइट नॉइज़ ब्लैक स्क्रीन 🖤 नवजात जल्दी सोना पेट दर्द | 10 घंटे
+
+═══════════════════════════════════════════════════════════════════════
+④ PURE PINK NOISE | ID: (verificar no Studio - deve ser diferente do BSN)
+═══════════════════════════════════════════════════════════════════════
+
+DESCRIÇÃO DO CANAL (694/1000):
+Science-based pink noise for deep sleep, memory & tinnitus. 10h black screen.
+🔬Science • 🛌Deep Sleep • 🖤Black Screen • 🧠Memory Boost
+
+🇺🇸Pink noise deep sleep black screen science memory tinnitus 10 hours
+🇧🇷Ruído rosa sono profundo tela preta científico memória 10h
+🇩🇪Rosa Rauschen Tiefschlaf schwarzer Bildschirm Wissenschaft 10h
+🇫🇷Bruit rose sommeil profond écran noir science mémoire 10h
+🇪🇸Ruido rosa sueño profundo pantalla negra ciencia 10h
+🇯🇵ピンクノイズ 深い睡眠 黒画面 科学 記憶力 10時間
+🇰🇷핑크노이즈 깊은수면 블랙스크린 과학 기억력 10시간
+🇨🇳粉红噪音 深度睡眠 黑屏 科学 记忆力 10小时
+🇸🇦ضجيج وردي نوم عميق شاشة سوداء علم ذاكرة 10ساعات
+🇮🇳पिंक नॉइज़ गहरी नींद ब्लैक स्क्रीन विज्ञान 10घंटे
+
+📺@WhiteNoiseVault-j5t @TinnitusRelief24h @BabySleepNow-g7c
+
+KEYWORDS (132/500):
+pink noise deep sleep science memory black screen tinnitus 10 hours ruído rosa bruit rose ruido rosa Rosa Rauschen ピンクノイズ 핑크노이즈 粉红噪音
+
+TAGS (136/500):
+pink noise,pink noise deep sleep,black screen,tinnitus relief,memory boost,science sleep,10 hours,pink noise study,ruído rosa,bruit rose
+
+TÍTULOS:
+🇺🇸 Pure Pink Noise Black Screen 🖤 Deep Sleep, Memory Boost & Tinnitus | 10 Hours
+🇧🇷 Ruído Rosa Puro Tela Preta 🖤 Sono Profundo, Memória e Zumbido | 10 Horas
+🇩🇪 Reines Rosa Rauschen Schwarzer Bildschirm 🖤 Tiefschlaf Gedächtnis | 10h
+🇫🇷 Bruit Rose Pur Écran Noir 🖤 Sommeil Profond, Mémoire, Acouphènes | 10h
+🇪🇸 Ruido Rosa Puro Pantalla Negra 🖤 Sueño Profundo, Memoria, Tinnitus | 10h
+🇯🇵 ピュアピンクノイズ 黒画面 🖤 深い睡眠 記憶力 耳鳴り | 10時間
+🇰🇷 순수 핑크노이즈 블랙스크린 🖤 깊은수면 기억력 이명 | 10시간
+🇨🇳 纯粉红噪音 黑屏 🖤 深度睡眠 记忆力 耳鸣 | 10小时
+🇸🇦 ضجيج وردي نقي شاشة سوداء 🖤 نوم عميق ذاكرة طنين | 10 ساعات
+🇮🇳 शुद्ध पिंक नॉइज़ ब्लैक स्क्रीन 🖤 गहरी नींद स्मृति टिनिटस | 10 घंटे
+
+═══════════════════════════════════════════════════════════════════════
+⑤ ADHD FOCUS NOISE | ID: UCK3xZDFY84ffNrLEAI1Qmyw
+═══════════════════════════════════════════════════════════════════════
+
+DESCRIÇÃO DO CANAL (656/1000):
+Brown noise for ADHD focus, hyperfocus & sleep. Like a fan. 10h black screen.
+🧠ADHD • 🎯Hyperfocus • 🛌Sleep Fast • 🖤Black Screen
+
+🇺🇸ADHD brown noise focus hyperfocus sleep fast black screen 10 hours
+🇧🇷TDAH ruído marrom foco hiperfoco dormir rápido tela preta 10h
+🇩🇪ADHS braunes Rauschen Fokus Hyperfokus schlafen 10h
+🇫🇷TDAH bruit brun focus hyperfocus dormir vite 10h
+🇪🇸TDAH ruido marrón foco hiperfoco dormir rápido 10h
+🇯🇵ADHD ブラウンノイズ 集中 過集中 すぐ眠れる 10時間
+🇰🇷ADHD 갈색소음 집중 과집중 빠르게잠들기 10시간
+🇨🇳ADHD 棕色噪音 专注 过度专注 快速入睡 10小时
+🇸🇦ADHD ضجيج بني تركيز نوم سريع 10ساعات
+🇮🇳ADHD ब्राउन नॉइज़ ध्यान जल्दी सोना 10घंटे
+
+📺@DeepBrownNoise-j6b @RuidoMarrom-p4f @WhiteNoiseVault-j5t
+
+KEYWORDS (148/500):
+ADHD brown noise focus hyperfocus sleep black screen 10 hours TDAH ruído marrom TDAH bruit brun TDAH ruido marrón ADHS braunes Rauschen ADHD ブラウンノイズ
+
+TAGS (122/500):
+ADHD brown noise,ADHD focus,ADHD sleep,ADHD study,TDAH,hyperfocus noise,black screen,fall asleep fast,brown noise,10 hours
+
+TÍTULOS:
+🇺🇸 Brown Noise ADHD Focus Black Screen 🖤 Hyperfocus & Sleep Fast | 10 Hours
+🇧🇷 Ruído Marrom TDAH Foco Tela Preta 🖤 Hiperfoco e Dormir Rápido | 10 Horas
+🇩🇪 Braunes Rauschen ADHS Fokus Schwarzer Bildschirm 🖤 Hyperfokus | 10 Stunden
+🇫🇷 Bruit Brun TDAH Focus Écran Noir 🖤 Hyperfocus Dormir Vite | 10 Heures
+🇪🇸 Ruido Marrón TDAH Foco Pantalla Negra 🖤 Hiperfoco Dormir | 10 Horas
+🇯🇵 ブラウンノイズ ADHD フォーカス 黒画面 🖤 過集中 すぐ眠れる | 10時間
+🇰🇷 갈색소음 ADHD 집중 블랙스크린 🖤 과집중 빠르게잠들기 | 10시간
+🇨🇳 棕色噪音 ADHD 专注 黑屏 🖤 过度专注 快速入睡 | 10小时
+🇸🇦 ضجيج بني ADHD تركيز شاشة سوداء 🖤 فرط تركيز نوم سريع | 10 ساعات
+🇮🇳 ब्राउन नॉइज़ ADHD फोकस ब्लैक स्क्रीन 🖤 हाइपरफोकस जल्दी सोना | 10 घंटे
+
+═══════════════════════════════════════════════════════════════════════
+⑥ TINNITUS RELIEF 24H | ID: UCZ5pmYA2ESO1vIhtE86l3_Q
+═══════════════════════════════════════════════════════════════════════
+
+DESCRIÇÃO DO CANAL (684/1000):
+White & pink noise to mask tinnitus & help you sleep fast. 10h black screen.
+👂Tinnitus • 🛌Sleep Fast • 🖤Black Screen • 🔇Ear Ringing
+
+🇺🇸Tinnitus relief white noise sleep fast black screen ear ringing 10 hours
+🇧🇷Alívio zumbido ruído branco dormir rápido tela preta 10h
+🇩🇪Tinnitus Linderung weißes Rauschen Ohrgeräusche schlafen 10h
+🇫🇷Acouphènes bruit blanc dormir vite écran noir 10h
+🇪🇸Tinnitus alivio ruido blanco dormir rápido pantalla negra 10h
+🇯🇵耳鳴り緩和 ホワイトノイズ すぐ眠れる 黒画面 10時間
+🇰🇷이명완화 백색소음 빠르게잠들기 블랙스크린 10시간
+🇨🇳耳鸣缓解 白噪音 快速入睡 黑屏 10小时
+🇸🇦طنين الأذن ضجيج أبيض نوم سريع شاشة سوداء 10ساعات
+🇮🇳टिनिटस राहत व्हाइट नॉइज़ जल्दी सोना 10घंटे
+
+📺@PurePinkNoise @WhiteNoiseVault-j5t @DeepBrownNoise-j6b
+
+KEYWORDS (135/500):
+tinnitus relief white noise sleep fast black screen ear ringing 10 hours zumbido alívio acouphènes Tinnitus 耳鳴り 이명 耳鸣 طنين الأذن टिनिटस
+
+TAGS (142/500):
+tinnitus relief,white noise tinnitus,ear ringing,tinnitus sleep,black screen,10 hours,tinnitus masking,pink noise tinnitus,hyperacusis,zumbido
+
+TÍTULOS:
+🇺🇸 Tinnitus Relief White Noise Black Screen 🖤 Sleep Fast, Mask Ear Ringing | 10h
+🇧🇷 Alívio Zumbido Ruído Branco Tela Preta 🖤 Dormir Rápido, Mascarar | 10h
+🇩🇪 Tinnitus Linderung Rauschen Schwarzer Bildschirm 🖤 Ohrgeräusche Schlafen | 10h
+🇫🇷 Soulagement Acouphènes Bruit Blanc Écran Noir 🖤 Dormir Vite | 10 Heures
+🇪🇸 Alivio Tinnitus Ruido Blanco Pantalla Negra 🖤 Dormir Rápido | 10 Horas
+🇯🇵 耳鳴り緩和 ホワイトノイズ 黒画面 🖤 すぐ眠れる マスキング | 10時間
+🇰🇷 이명완화 백색소음 블랙스크린 🖤 빠르게잠들기 마스킹 | 10시간
+🇨🇳 耳鸣缓解 白噪音 黑屏 🖤 快速入睡 遮蔽 | 10小时
+🇸🇦 تخفيف طنين ضجيج أبيض شاشة سوداء 🖤 نوم سريع | 10 ساعات
+🇮🇳 टिनिटस राहत व्हाइट नॉइज़ ब्लैक स्क्रीन 🖤 जल्दी सोना | 10 घंटे
+
+═══════════════════════════════════════════════════════════════════════
+⑦ RAIN BLACK SCREEN | A CRIAR (@RainBlackScreen-l3t)
+═══════════════════════════════════════════════════════════════════════
+
+DESCRIÇÃO DO CANAL (630/1000):
+Rain sounds on a pure black screen for sleep & relaxation. 10h. No ads.
+🌧Rain Sounds • 🛌Sleep Fast • 🖤Black Screen • 📚Study
+
+🇺🇸Rain sounds black screen sleep fast study relax 10 hours
+🇧🇷Som de chuva tela preta dormir rápido estudar relaxar 10h
+🇩🇪Regengeräusche schwarzer Bildschirm schlafen lernen 10h
+🇫🇷Son de pluie écran noir dormir vite étude 10h
+🇪🇸Sonido lluvia pantalla negra dormir rápido estudio 10h
+🇯🇵雨音 黒画面 すぐ眠れる 勉強 10時間
+🇰🇷빗소리 블랙스크린 빠르게잠들기 공부 10시간
+🇨🇳雨声 黑屏 快速入睡 学习 10小时
+🇸🇦صوت المطر شاشة سوداء نوم سريع دراسة 10ساعات
+🇮🇳बारिश की आवाज़ ब्लैक स्क्रीन जल्दी सोना 10घंटे
+
+📺@WhiteNoiseVault-j5t @DeepBrownNoise-j6b @PurePinkNoise
+
+KEYWORDS (131/500):
+rain sounds black screen sleep fast study relax 10 hours som de chuva son de pluie sonido lluvia Regengeräusche 雨音 빗소리 雨声 صوت المطر
+
+TAGS (125/500):
+rain sounds,rain sleep,black screen,fall asleep rain,rain 10 hours,gentle rain,heavy rain,study rain,dark screen,sleep sounds
+
+TÍTULOS:
+🇺🇸 Rain Sounds Black Screen 🖤 Sleep Fast All Night, No Thunder | 10 Hours
+🇧🇷 Som de Chuva Tela Preta 🖤 Dormir Rápido a Noite Toda, Sem Trovão | 10h
+🇩🇪 Regengeräusche Schwarzer Bildschirm 🖤 Schnell Schlafen Die Nacht | 10h
+🇫🇷 Son de Pluie Écran Noir 🖤 S'Endormir Vite Toute la Nuit | 10 Heures
+🇪🇸 Sonido Lluvia Pantalla Negra 🖤 Dormir Rápido Toda la Noche | 10 Horas
+🇯🇵 雨音 黒画面 🖤 すぐ眠れる 一晩中 雷なし | 10時間
+🇰🇷 빗소리 블랙스크린 🖤 빠르게잠들기 밤새 천둥없음 | 10시간
+🇨🇳 雨声 黑屏 🖤 快速入睡 整夜 无雷声 | 10小时
+🇸🇦 صوت المطر شاشة سوداء 🖤 نوم سريع طوال الليل | 10 ساعات
+🇮🇳 बारिश की आवाज़ ब्लैक स्क्रीन 🖤 जल्दी सोना रात भर | 10 घंटे
+
+═══════════════════════════════════════════════════════════════════════
+⑧ RUÍDO MARROM | A CRIAR (@RuidoMarrom-p4f)
+═══════════════════════════════════════════════════════════════════════
+
+DESCRIÇÃO DO CANAL (715/1000):
+Ruído marrom para TDAH, dormir rápido e foco. Som de ventilador. Tela preta.
+🧠TDAH • 🛌Dormir Rápido • 🖤Tela Preta • 🌬Som de Ventilador
+
+🇧🇷Ruído marrom TDAH dormir rápido tela preta ventilador 10h
+🇺🇸Brown noise ADHD sleep fast black screen fan sound 10 hours
+🇩🇪Braunes Rauschen ADHS schlafen Ventilator schwarzer Bildschirm 10h
+🇫🇷Bruit brun TDAH dormir vite ventilateur écran noir 10h
+🇪🇸Ruido marrón TDAH dormir rápido ventilador pantalla negra 10h
+🇯🇵ブラウンノイズ ADHD すぐ眠れる 扇風機 黒画面 10時間
+🇰🇷갈색소음 ADHD 빠르게잠들기 선풍기 블랙스크린 10시간
+🇨🇳棕色噪音 ADHD 快速入睡 风扇声音 黑屏 10小时
+🇸🇦ضجيج بني ADHD نوم سريع مروحة شاشة سوداء 10ساعات
+🇮🇳ब्राउन नॉइज़ ADHD जल्दी सोना पंखा ब्लैक स्क्रीन 10घंटे
+
+📺@DeepBrownNoise-j6b @ADHDFocusNoise-v2r @WhiteNoiseVault-j5t
+
+KEYWORDS (139/500):
+ruído marrom TDAH dormir rápido tela preta ventilador brown noise ADHD sleep fast black screen fan sound braunes Rauschen ブラウンノイズ 갈색소음 棕色噪音
+
+TAGS (111/500):
+ruído marrom,TDAH,dormir rápido,tela preta,som de ventilador,brown noise,ADHD,sleep fast,black screen,fan sound
+
+TÍTULOS:
+🇧🇷 Ruído Marrom Tela Preta 🖤 TDAH, Dormir Rápido Como Ventilador | 10 Horas
+🇺🇸 Brown Noise Black Screen 🖤 ADHD, Sleep Fast Like Fan Sound | 10 Hours
+🇩🇪 Braunes Rauschen Schwarzer Bildschirm 🖤 ADHS Schlafen Ventilator | 10h
+🇫🇷 Bruit Brun Écran Noir 🖤 TDAH Dormir Vite Comme Ventilateur | 10 Heures
+🇪🇸 Ruido Marrón Pantalla Negra 🖤 TDAH Dormir Rápido Como Ventilador | 10h
+🇯🇵 ブラウンノイズ 黒画面 🖤 ADHD すぐ眠れる 扇風機の音 | 10時間
+🇰🇷 갈색소음 블랙스크린 🖤 ADHD 빠르게잠들기 선풍기소리 | 10시간
+🇨🇳 棕色噪音 黑屏 🖤 ADHD 快速入睡 风扇声音 | 10小时
+🇸🇦 ضجيج بني شاشة سوداء 🖤 ADHD نوم سريع صوت مروحة | 10 ساعات
+🇮🇳 ब्राउन नॉइज़ ब्लैक स्क्रीन 🖤 ADHD जल्दी सोना पंखे की आवाज़ | 10 घंटे
+
+═══════════════════════════════════════════════════════════════════════
+MONETIZAÇÃO MÁXIMA - DICAS PREMIUM
+═══════════════════════════════════════════════════════════════════════
+
+1. CONTA PREMIUM: youtube.com/premium → monetiza watch time integral
+   - Com Premium, o YouTube paga por TODO o tempo assistido (não só por anúncio)
+   - Vídeos 10h = ~8-10h watch time por view → RPM Premium muito maior
+
+2. MID-ROLL ADS: ativar para vídeos >8 min
+   - Para vídeos de 10h: colocar mid-rolls a cada 8-10 minutos
+   - Potencial: até 60-70 mid-rolls por vídeo
+
+3. MEMBERSHIPS: ativar assim que tiver 500 subs
+   - Badge exclusivo + emotes + conteúdo especial
+
+4. MERCH: adicionar loja assim que qualificado
+
+5. SUPER THANKS: ativar em todos os vídeos
+
+NOTA IMPORTANTE - 2 CANAIS FALTANTES:
+Para criar Rain Black Screen e Ruído Marrom:
+→ youtube.com/account → Create a channel
+→ Usar handle: @RainBlackScreen-l3t e @RuidoMarrom-p4f
+→ Após criar: configurar com script JS usando rain_ e ruido_ assets
