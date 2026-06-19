@@ -1,0 +1,59 @@
+name: Generate Noise Video
+
+on:
+  workflow_dispatch:
+    inputs:
+      canal:
+        description: 'Canal (dbn/wnv/adhd/tinnitus/bsn/pink)'
+        required: true
+        type: choice
+        options: [dbn, wnv, adhd, tinnitus, bsn, pink]
+      duracao:
+        description: 'Duracao em segundos (3600=1h, 36000=10h)'
+        required: true
+        default: '36000'
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+    - name: Install ffmpeg
+      run: sudo apt-get install -y ffmpeg
+
+    - name: Set noise config
+      id: config
+      run: |
+        case "${{ inputs.canal }}" in
+          dbn)      COLOR="brown"; TITULO="Deep Brown Noise ADHD Focus Sleep Fan 10 Hours Black Screen" ;;
+          wnv)      COLOR="white"; TITULO="White Noise Sleep Fast Study Baby 10 Hours Black Screen" ;;
+          adhd)     COLOR="brown"; TITULO="ADHD Focus Brown Noise Hyperfocus Sleep 10 Hours Black Screen" ;;
+          tinnitus) COLOR="pink";  TITULO="Tinnitus Relief White Pink Noise Sleep Ear Ringing 10 Hours" ;;
+          bsn)      COLOR="white"; TITULO="Baby Sleep White Noise Newborn Colic Relief 10 Hours Black Screen" ;;
+          pink)     COLOR="pink";  TITULO="Pure Pink Noise Deep Sleep Memory Science 10 Hours Black Screen" ;;
+        esac
+        echo "color=$COLOR" >> $GITHUB_OUTPUT
+        echo "titulo=$TITULO" >> $GITHUB_OUTPUT
+
+    - name: Generate video
+      run: |
+        DURACAO=${{ inputs.duracao }}
+        CANAL=${{ inputs.canal }}
+        COLOR=${{ steps.config.outputs.color }}
+        
+        ffmpeg -y \
+          -f lavfi -i "color=color=black:size=1920x1080:rate=30:duration=${DURACAO}" \
+          -f lavfi -i "anoisesrc=color=${COLOR}:amplitude=0.15:sample_rate=44100:duration=${DURACAO}" \
+          -c:v libx264 -preset ultrafast -crf 30 \
+          -pix_fmt yuv420p -c:a aac -b:a 128k -ar 44100 \
+          -t ${DURACAO} -movflags +faststart \
+          "${CANAL}_${DURACAO}s.mp4"
+        
+        ls -lh ${CANAL}_${DURACAO}s.mp4
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: noise-video-${{ inputs.canal }}-${{ inputs.duracao }}s
+        path: ${{ inputs.canal }}_${{ inputs.duracao }}s.mp4
+        retention-days: 7
