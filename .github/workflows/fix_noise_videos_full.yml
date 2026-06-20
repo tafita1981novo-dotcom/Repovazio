@@ -1,0 +1,157 @@
+name: Fix Noise Videos Full
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      YT_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID_NEW }}
+      YT_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET_NEW }}
+      YT_RT_DBN: ${{ secrets.YOUTUBE_RT_DBN }}
+      YT_RT_ADHD: ${{ secrets.YOUTUBE_RT_ADHD }}
+      YT_RT_WNV: ${{ secrets.YOUTUBE_RT_WNV }}
+      YT_RT_BSN: ${{ secrets.YOUTUBE_RT_BSN }}
+      YT_RT_PINK: ${{ secrets.YOUTUBE_RT_PINK }}
+      YT_RT_TINNITUS: ${{ secrets.YOUTUBE_RT_TINNITUS }}
+      YT_RT_RAIN: ${{ secrets.YOUTUBE_RT_RAIN }}
+      GH_PAT: ${{ secrets.GH_PAT }}
+    steps:
+      - name: Install deps
+        run: pip install requests
+
+      - name: Fix videos
+        run: |
+          python3 << 'PY'
+          import requests, os, json, time
+
+          CI = os.environ["YT_CLIENT_ID"]
+          CS = os.environ["YT_CLIENT_SECRET"]
+          GH = os.environ["GH_PAT"]
+          REPO = "tafita1981novo-dotcom/Repovazio"
+
+          CANAIS = {
+            "dbn":      {"rt": os.environ["YT_RT_DBN"],      "vid": "R7yXx0eXaMA", "lives": ["NQSWz7-kcIA", "iyA2CnXEk3k"]},
+            "adhd":     {"rt": os.environ["YT_RT_ADHD"],     "vid": "_quJc1kuCQQ", "lives": ["YJ2BW03q9eY"]},
+            "wnv":      {"rt": os.environ["YT_RT_WNV"],      "vid": "0Er9oW4iikQ", "lives": []},
+            "bsn":      {"rt": os.environ["YT_RT_BSN"],      "vid": "PuahLOdzyzA", "lives": []},
+            "pink":     {"rt": os.environ["YT_RT_PINK"],     "vid": "TADyBfu6xek", "lives": []},
+            "tinnitus": {"rt": os.environ["YT_RT_TINNITUS"], "vid": "O_47JhFDCHk", "lives": []},
+            "rain":     {"rt": os.environ["YT_RT_RAIN"],     "vid": "RMmDchkV5UA", "lives": []},
+          }
+
+          TITLES = {
+            "dbn":      "Deep Brown Noise 10 Hours | Black Screen Sleep ADHD Focus",
+            "adhd":     "ADHD Focus Brown Noise 10 Hours | Black Screen Concentration",
+            "wnv":      "White Noise 10 Hours | Black Screen Sleep & Study",
+            "bsn":      "Baby White Noise 10 Hours | Black Screen Newborn Sleep",
+            "pink":     "Pink Noise 10 Hours | Black Screen Sleep Therapy",
+            "tinnitus": "Tinnitus Relief Pink Noise 10 Hours | Black Screen",
+            "rain":     "Rain & Thunder Sounds 10 Hours | Black Screen Sleep",
+          }
+
+          TAGS = {
+            "dbn":      ["brown noise","sleep sounds","adhd focus","black screen","deep sleep","noise","ambient"],
+            "adhd":     ["adhd focus","brown noise","concentration","black screen","focus music","study"],
+            "wnv":      ["white noise","sleep","study","black screen","ambient","relaxing"],
+            "bsn":      ["baby sleep","white noise","newborn","infant","black screen","lullaby"],
+            "pink":     ["pink noise","sleep therapy","relaxation","black screen","deep sleep"],
+            "tinnitus": ["tinnitus relief","pink noise","ear ringing","sound therapy","black screen"],
+            "rain":     ["rain sounds","thunder","sleep sounds","black screen","relaxing rain","asmr"],
+          }
+
+          def get_at(rt):
+              r = requests.post("https://oauth2.googleapis.com/token", data={
+                  "client_id": CI, "client_secret": CS,
+                  "refresh_token": rt, "grant_type": "refresh_token"
+              })
+              d = r.json()
+              if "access_token" not in d:
+                  raise RuntimeError(f"Token error: {d}")
+              return d["access_token"]
+
+          def yt(method, path, at, **kwargs):
+              url = f"https://www.googleapis.com/youtube/v3/{path}"
+              headers = {"Authorization": f"Bearer {at}"}
+              if method == "GET":
+                  r = requests.get(url, headers=headers, params=kwargs.get("params"))
+              elif method == "DELETE":
+                  r = requests.delete(url, headers=headers, params=kwargs.get("params"))
+              elif method == "PUT":
+                  headers["Content-Type"] = "application/json"
+                  r = requests.put(url, headers=headers, params=kwargs.get("params"), json=kwargs.get("json"))
+              return r
+
+          results = {}
+          new_rts = {}
+
+          for canal, info in CANAIS.items():
+              print(f"\n=== [{canal.upper()}] ===", flush=True)
+              try:
+                  at = get_at(info["rt"])
+                  print(f"  ✅ AT OK", flush=True)
+
+                  # 1. Deletar lives antigas
+                  for live_id in info["lives"]:
+                      r = yt("DELETE", "videos", at, params={"id": live_id})
+                      print(f"  🗑️ DELETE {live_id}: {r.status_code}", flush=True)
+                      time.sleep(1)
+
+                  # 2. GET video atual
+                  vid = info["vid"]
+                  r = yt("GET", "videos", at, params={"id": vid, "part": "snippet,status,contentDetails"})
+                  data = r.json()
+                  
+                  if not data.get("items"):
+                      print(f"  ❌ Video {vid} não encontrado", flush=True)
+                      results[canal] = "VIDEO_NOT_FOUND"
+                      continue
+
+                  item = data["items"][0]
+                  snippet = item["snippet"]
+                  status = item["status"]
+                  print(f"  Título atual: {snippet.get('title','?')[:60]}", flush=True)
+                  print(f"  madeForKids: {status.get('madeForKids')}", flush=True)
+                  print(f"  selfDeclaredMadeForKids: {status.get('selfDeclaredMadeForKids')}", flush=True)
+                  print(f"  privacy: {status.get('privacyStatus')}", flush=True)
+
+                  # 3. UPDATE
+                  update_body = {
+                      "id": vid,
+                      "snippet": {
+                          "title": TITLES[canal],
+                          "description": snippet.get("description", ""),
+                          "categoryId": "22",
+                          "tags": TAGS[canal],
+                          "defaultLanguage": "en",
+                      },
+                      "status": {
+                          "privacyStatus": "public",
+                          "selfDeclaredMadeForKids": False,
+                          "embeddable": True,
+                          "publicStatsViewable": True,
+                          "madeForKids": False,
+                      }
+                  }
+
+                  r2 = yt("PUT", "videos", at, params={"part": "snippet,status"}, json=update_body)
+                  if r2.status_code == 200:
+                      result = r2.json()
+                      mkids = result.get("status",{}).get("selfDeclaredMadeForKids")
+                      print(f"  ✅ UPDATE OK | madeForKids={mkids}", flush=True)
+                      results[canal] = f"OK - madeForKids={mkids}"
+                  else:
+                      print(f"  ❌ UPDATE FAIL {r2.status_code}: {r2.text[:200]}", flush=True)
+                      results[canal] = f"ERR {r2.status_code}"
+
+              except Exception as e:
+                  print(f"  ❌ EXCEPTION: {e}", flush=True)
+                  results[canal] = f"EXC: {e}"
+
+          print("\n=== RESULTADO FINAL ===")
+          for canal, r in results.items():
+              icon = "✅" if r.startswith("OK") else "❌"
+              print(f"  {icon} [{canal}]: {r}")
+          PY
