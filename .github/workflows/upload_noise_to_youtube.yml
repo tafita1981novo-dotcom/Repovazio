@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       canal:
-        description: 'Canal (dbn/adhd/wnv/bsn/pink/tinnitus/rain/all)'
+        description: 'Canal para upload'
         required: true
         default: 'all'
         type: choice
@@ -28,29 +28,34 @@ jobs:
       - name: Upload videos
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
-          YT_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN_NEW }}
           YT_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID_NEW }}
           YT_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET_NEW }}
+          YT_RT_DBN: ${{ secrets.YOUTUBE_RT_DBN }}
+          YT_RT_ADHD: ${{ secrets.YOUTUBE_RT_ADHD }}
+          YT_RT_WNV: ${{ secrets.YOUTUBE_RT_WNV }}
+          YT_RT_BSN: ${{ secrets.YOUTUBE_RT_BSN }}
+          YT_RT_PINK: ${{ secrets.YOUTUBE_RT_PINK }}
+          YT_RT_TINNITUS: ${{ secrets.YOUTUBE_RT_TINNITUS }}
+          YT_RT_RAIN: ${{ secrets.YOUTUBE_RT_RAIN }}
           CANAL: ${{ inputs.canal }}
         run: |
           python3 << 'PYEOF'
           import json, os, time, zipfile, urllib.request, urllib.parse
 
           GH_TOKEN = os.environ["GH_PAT"]
-          REFRESH_TOKEN = os.environ["YT_REFRESH_TOKEN"]
           CLIENT_ID = os.environ["YT_CLIENT_ID"]
           CLIENT_SECRET = os.environ["YT_CLIENT_SECRET"]
           CANAL_INPUT = os.environ["CANAL"]
           REPO = "tafita1981novo-dotcom/Repovazio"
 
           CANAIS = {
-            "dbn":      {"id": "UCD4LLFnsiVzA-DeSN6oaUzg", "artifact": "noise-dbn-36000s"},
-            "adhd":     {"id": "UCK3xZDFY84ffNrLEAI1Qmyw", "artifact": "noise-adhd-36000s"},
-            "wnv":      {"id": "UC0mFKp42jfL0ZobYEj7uwUA", "artifact": "noise-wnv-36000s"},
-            "bsn":      {"id": "UCy4d2yt8eRywJS7PMTDX3xA", "artifact": "noise-bsn-36000s"},
-            "pink":     {"id": "UCXQ_-FOGTJk17T06gy0bYqQ", "artifact": "noise-pink-36000s"},
-            "tinnitus": {"id": "UCZ5pmYA2ESO1vIhtE86l3_Q", "artifact": "noise-tinnitus-36000s"},
-            "rain":     {"id": "UCSW8cGz1OcT1v90Vwc2-UPA", "artifact": "noise-rain-36000s"},
+            "dbn":      {"artifact": "noise-dbn-36000s",      "rt_env": "YT_RT_DBN"},
+            "adhd":     {"artifact": "noise-adhd-36000s",     "rt_env": "YT_RT_ADHD"},
+            "wnv":      {"artifact": "noise-wnv-36000s",      "rt_env": "YT_RT_WNV"},
+            "bsn":      {"artifact": "noise-bsn-36000s",      "rt_env": "YT_RT_BSN"},
+            "pink":     {"artifact": "noise-pink-36000s",     "rt_env": "YT_RT_PINK"},
+            "tinnitus": {"artifact": "noise-tinnitus-36000s", "rt_env": "YT_RT_TINNITUS"},
+            "rain":     {"artifact": "noise-rain-36000s",     "rt_env": "YT_RT_RAIN"},
           }
 
           TITULOS = {
@@ -64,13 +69,13 @@ jobs:
           }
 
           DESCRICOES = {
-            "dbn": "Deep brown noise for sleep, ADHD focus and tinnitus masking. Pure black screen 10 hours.\n\n#BrownNoise #DeepSleep #ADHDFocus #BlackScreen #SleepSounds",
-            "adhd": "Brown noise scientifically shown to improve ADHD focus. Pure black screen 10 hours.\n\n#ADHDFocus #BrownNoise #BlackScreen #FocusMusic #ADHD",
-            "wnv": "Classic white noise for deep sleep and office noise blocking. Pure black screen 10 hours.\n\n#WhiteNoise #SleepSounds #BlackScreen #DeepSleep",
-            "bsn": "White noise that mimics womb sounds to soothe babies to sleep. Pure black screen 10 hours.\n\n#BabySleep #WhiteNoise #InfantSleep #BlackScreen",
-            "pink": "Pink noise reduces stress and improves sleep quality. Pure black screen 10 hours.\n\n#PinkNoise #SleepSounds #BlackScreen #SleepTherapy",
+            "dbn":      "Deep brown noise for sleep, ADHD focus and tinnitus masking. Pure black screen 10 hours.\n\n#BrownNoise #DeepSleep #ADHDFocus #BlackScreen #SleepSounds",
+            "adhd":     "Brown noise scientifically shown to improve ADHD focus. Pure black screen 10 hours.\n\n#ADHDFocus #BrownNoise #BlackScreen #FocusMusic #ADHD",
+            "wnv":      "Classic white noise for deep sleep and office noise blocking. Pure black screen 10 hours.\n\n#WhiteNoise #SleepSounds #BlackScreen #DeepSleep",
+            "bsn":      "White noise that mimics womb sounds to soothe babies to sleep. Pure black screen 10 hours.\n\n#BabySleep #WhiteNoise #InfantSleep #BlackScreen",
+            "pink":     "Pink noise reduces stress and improves sleep quality. Pure black screen 10 hours.\n\n#PinkNoise #SleepSounds #BlackScreen #SleepTherapy",
             "tinnitus": "Pink noise for tinnitus masking and sound therapy. Pure black screen 10 hours.\n\n#TinnitusRelief #PinkNoise #SoundTherapy #BlackScreen",
-            "rain": "Pure rain and thunder sounds for deep sleep. Pure black screen 10 hours.\n\n#RainSounds #SleepSounds #BlackScreen #RelaxingRain",
+            "rain":     "Pure rain and thunder sounds for deep sleep. Pure black screen 10 hours.\n\n#RainSounds #SleepSounds #BlackScreen #RelaxingRain",
           }
 
           TAGS = {
@@ -83,37 +88,30 @@ jobs:
             "rain":     ["rain sounds","thunder sounds","sleep sounds","black screen","rain ASMR","sleep aid","relaxing rain"],
           }
 
-          def get_access_token():
+          def get_at(refresh_token):
               data = urllib.parse.urlencode({
-                  "client_id": CLIENT_ID,
-                  "client_secret": CLIENT_SECRET,
-                  "refresh_token": REFRESH_TOKEN,
-                  "grant_type": "refresh_token"
+                  "client_id": CLIENT_ID, "client_secret": CLIENT_SECRET,
+                  "refresh_token": refresh_token, "grant_type": "refresh_token"
               }).encode()
-              req = urllib.request.Request(
-                  "https://oauth2.googleapis.com/token",
-                  data=data, method="POST",
-                  headers={"Content-Type": "application/x-www-form-urlencoded"}
-              )
+              req = urllib.request.Request("https://oauth2.googleapis.com/token", data=data, method="POST",
+                  headers={"Content-Type": "application/x-www-form-urlencoded"})
               with urllib.request.urlopen(req, timeout=30) as r:
                   return json.loads(r.read())["access_token"]
 
-          def get_latest_artifact_id(name):
+          def get_artifact_id(name):
               url = f"https://api.github.com/repos/{REPO}/actions/artifacts?per_page=10&name={name}"
               req = urllib.request.Request(url, headers={
-                  "Authorization": f"token {GH_TOKEN}",
-                  "Accept": "application/vnd.github.v3+json"
+                  "Authorization": f"token {GH_TOKEN}", "Accept": "application/vnd.github.v3+json"
               })
               with urllib.request.urlopen(req, timeout=30) as r:
                   arts = [a for a in json.loads(r.read()).get("artifacts",[]) if not a.get("expired")]
               return arts[0]["id"] if arts else None
 
-          def download_artifact(artifact_id, canal):
-              print(f"[{canal}] Baixando {artifact_id}...")
-              url = f"https://api.github.com/repos/{REPO}/actions/artifacts/{artifact_id}/zip"
+          def download_artifact(art_id, canal):
+              print(f"[{canal}] Baixando artifact {art_id}...")
+              url = f"https://api.github.com/repos/{REPO}/actions/artifacts/{art_id}/zip"
               req = urllib.request.Request(url, headers={
-                  "Authorization": f"token {GH_TOKEN}",
-                  "Accept": "application/vnd.github.v3+json"
+                  "Authorization": f"token {GH_TOKEN}", "Accept": "application/vnd.github.v3+json"
               })
               zip_path = f"/tmp/noise_{canal}.zip"
               mp4_path = f"/tmp/noise_{canal}.mp4"
@@ -123,7 +121,6 @@ jobs:
                           chunk = r.read(65536)
                           if not chunk: break
                           f.write(chunk)
-              print(f"[{canal}] Extraindo...")
               with zipfile.ZipFile(zip_path) as z:
                   for name in z.namelist():
                       if name.endswith(".mp4"):
@@ -139,7 +136,7 @@ jobs:
               return mp4_path
 
           def upload_youtube(mp4_path, canal, access_token):
-              print(f"[{canal}] Iniciando upload...")
+              print(f"[{canal}] Iniciando upload YouTube...")
               body = {
                   "snippet": {
                       "title": TITULOS[canal],
@@ -156,8 +153,7 @@ jobs:
               file_size = os.path.getsize(mp4_path)
               init_req = urllib.request.Request(
                   "https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status",
-                  data=json.dumps(body).encode(),
-                  method="POST",
+                  data=json.dumps(body).encode(), method="POST",
                   headers={
                       "Authorization": f"Bearer {access_token}",
                       "Content-Type": "application/json; charset=UTF-8",
@@ -167,7 +163,7 @@ jobs:
               )
               with urllib.request.urlopen(init_req, timeout=30) as r:
                   upload_url = r.headers.get("Location")
-              print(f"[{canal}] Upload URL ok, enviando {file_size/1024**3:.2f}GB...")
+              print(f"[{canal}] Upload URL ok. Enviando {file_size/1024**3:.2f}GB...")
               CHUNK = 50 * 1024 * 1024
               uploaded = 0
               video_id = None
@@ -185,7 +181,7 @@ jobs:
                           with urllib.request.urlopen(req2, timeout=600) as r2:
                               if r2.status in [200, 201]:
                                   video_id = json.loads(r2.read()).get("id")
-                                  print(f"[{canal}] ✅ Upload completo! ID: {video_id}")
+                                  print(f"[{canal}] ✅ Upload completo! Video ID: {video_id}")
                       except urllib.error.HTTPError as e:
                           if e.code == 308:
                               rng = e.headers.get("Range", "")
@@ -197,24 +193,22 @@ jobs:
                       uploaded += len(chunk)
               return video_id
 
-          # Obter token
-          print("Obtendo access token...")
-          access_token = get_access_token()
-          print(f"Token ok: {access_token[:20]}...")
-
-          # Canais a processar
+          # Processar canais
           to_process = list(CANAIS.keys()) if CANAL_INPUT == "all" else [CANAL_INPUT]
           print(f"Processando: {to_process}")
 
           results = {}
           for canal in to_process:
               try:
-                  art_id = get_latest_artifact_id(CANAIS[canal]["artifact"])
-                  print(f"[{canal}] Artifact: {art_id}")
+                  rt = os.environ[CANAIS[canal]["rt_env"]]
+                  at = get_at(rt)
+                  print(f"[{canal}] Token OK: {at[:20]}...")
+                  art_id = get_artifact_id(CANAIS[canal]["artifact"])
+                  if not art_id:
+                      raise Exception(f"Artifact {CANAIS[canal]['artifact']} não encontrado")
                   mp4 = download_artifact(art_id, canal)
-                  # Refresh token a cada upload (1h limit)
-                  access_token = get_access_token()
-                  vid = upload_youtube(mp4, canal, access_token)
+                  at = get_at(rt)  # refresh antes do upload longo
+                  vid = upload_youtube(mp4, canal, at)
                   results[canal] = {"ok": True, "video_id": vid}
                   os.remove(mp4)
                   print(f"[{canal}] ✅ https://youtu.be/{vid}")
@@ -222,9 +216,9 @@ jobs:
                   print(f"[{canal}] ❌ {e}")
                   results[canal] = {"ok": False, "error": str(e)}
 
-          print("\n=== RESULTADO ===")
+          print("\n=== RESULTADO FINAL ===")
           for c, r in results.items():
-              status = "✅" if r.get("ok") else "❌"
+              s = "✅" if r.get("ok") else "❌"
               info = r.get("video_id") or r.get("error","")
-              print(f"  {status} {c}: {info}")
+              print(f"  {s} {c}: {info}")
           PYEOF
