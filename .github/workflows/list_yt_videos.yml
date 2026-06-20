@@ -19,25 +19,23 @@ jobs:
           YT_RT_PINK: ${{ secrets.YOUTUBE_RT_PINK }}
           YT_RT_TINNITUS: ${{ secrets.YOUTUBE_RT_TINNITUS }}
           YT_RT_RAIN: ${{ secrets.YOUTUBE_RT_RAIN }}
-          SUPABASE_URL: https://tpjvalzwkqwttvmszvie.supabase.co
-          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: |
           python3 << 'PYEOF2'
           import json, os, urllib.request, urllib.parse
 
           CID = os.environ["YT_CLIENT_ID"]
           CSC = os.environ["YT_CLIENT_SECRET"]
-          SUPA_URL = os.environ["SUPABASE_URL"]
-          SUPA_KEY = os.environ.get("SUPABASE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwanZhbHp3a3F3dHR2bXN6dmllIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcxMzk4MDkyNCwiZXhwIjoyMDI5NTU2OTI0fQ.RgYBGalHZy8a8PnlKCvF1mQr6BhVDGNv4j9OzomBCaA")
+          SUPA_URL = "https://tpjvalzwkqwttvmszvie.supabase.co"
+          SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwanZhbHp3a3F3dHR2bXN6dmllIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcxMzk4MDkyNCwiZXhwIjoyMDI5NTU2OTI0fQ.RgYBGalHZy8a8PnlKCvF1mQr6BhVDGNv4j9OzomBCaA"
 
           CANAIS = {
-            "dbn":      {"rt_env": "YT_RT_DBN",      "channel_id": "UCD4LLFnsiVzA-DeSN6oaUzg", "key": "dbn"},
-            "adhd":     {"rt_env": "YT_RT_ADHD",     "channel_id": "UCK3xZDFY84ffNrLEAI1Qmyw", "key": "adhd"},
-            "wnv":      {"rt_env": "YT_RT_WNV",      "channel_id": "UC0mFKp42jfL0ZobYEj7uwUA", "key": "wnv"},
-            "bsn":      {"rt_env": "YT_RT_BSN",      "channel_id": "UCy4d2yt8eRywJS7PMTDX3xA", "key": "bsn"},
-            "pink":     {"rt_env": "YT_RT_PINK",     "channel_id": "UCXQ_-FOGTJk17T06gy0bYqQ", "key": "pink"},
-            "tinnitus": {"rt_env": "YT_RT_TINNITUS", "channel_id": "UCZ5pmYA2ESO1vIhtE86l3_Q", "key": "tinnitus"},
-            "rain":     {"rt_env": "YT_RT_RAIN",     "channel_id": "UCSW8cGz1OcT1v90Vwc2-UPA", "key": "rain"},
+            "dbn":      {"rt_env": "YT_RT_DBN",      "channel_id": "UCD4LLFnsiVzA-DeSN6oaUzg"},
+            "adhd":     {"rt_env": "YT_RT_ADHD",     "channel_id": "UCK3xZDFY84ffNrLEAI1Qmyw"},
+            "wnv":      {"rt_env": "YT_RT_WNV",      "channel_id": "UC0mFKp42jfL0ZobYEj7uwUA"},
+            "bsn":      {"rt_env": "YT_RT_BSN",      "channel_id": "UCy4d2yt8eRywJS7PMTDX3xA"},
+            "pink":     {"rt_env": "YT_RT_PINK",     "channel_id": "UCXQ_-FOGTJk17T06gy0bYqQ"},
+            "tinnitus": {"rt_env": "YT_RT_TINNITUS", "channel_id": "UCZ5pmYA2ESO1vIhtE86l3_Q"},
+            "rain":     {"rt_env": "YT_RT_RAIN",     "channel_id": "UCSW8cGz1OcT1v90Vwc2-UPA"},
           }
 
           def get_at(rt):
@@ -59,35 +57,40 @@ jobs:
                   token_data = get_at(rt)
                   at = token_data.get("access_token")
                   if not at:
-                      results[canal] = {"error": f"No access token: {token_data}"}
+                      results[canal] = {"error": f"No AT: {token_data.get('error','?')} {token_data.get('error_description','')}"}
+                      print(f"❌ {canal}: No AT - {token_data}", flush=True)
                       continue
 
-                  # Buscar uploads playlist ID
-                  ch = yt_get(at, f"https://www.googleapis.com/youtube/v3/channels?part=contentDetails&mine=true")
+                  # Listar vídeos do canal autenticado
+                  ch = yt_get(at, "https://www.googleapis.com/youtube/v3/channels?part=contentDetails,snippet&mine=true")
+                  ch_name = ch.get("items", [{}])[0].get("snippet", {}).get("title", "?")
                   uploads_id = ch.get("items", [{}])[0].get("contentDetails", {}).get("relatedPlaylists", {}).get("uploads")
-                  
+
                   if not uploads_id:
-                      results[canal] = {"error": "No uploads playlist", "ch_response": ch}
+                      results[canal] = {"error": "No uploads playlist", "channel_name": ch_name}
+                      print(f"❌ {canal}: No uploads playlist (channel: {ch_name})", flush=True)
                       continue
 
-                  # Listar vídeos
-                  pl = yt_get(at, f"https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&playlistId={uploads_id}&maxResults=5")
+                  pl = yt_get(at, f"https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&playlistId={uploads_id}&maxResults=10")
                   videos = []
                   for item in pl.get("items", []):
                       vid_id = item["contentDetails"]["videoId"]
                       title = item["snippet"]["title"]
-                      published = item["snippet"]["publishedAt"]
+                      published = item["snippet"]["publishedAt"][:10]
                       videos.append({"id": vid_id, "title": title, "published": published})
 
-                  results[canal] = {"ok": True, "uploads_playlist": uploads_id, "videos": videos}
-                  print(f"✅ {canal}: {len(videos)} video(s) - {[v['id'] for v in videos]}", flush=True)
+                  results[canal] = {"ok": True, "channel_name": ch_name, "uploads_playlist": uploads_id, "videos": videos, "count": len(videos)}
+                  print(f"✅ {canal} ({ch_name}): {len(videos)} video(s)", flush=True)
+                  for v in videos:
+                      print(f"   [{v['published']}] {v['id']} - {v['title'][:60]}", flush=True)
 
               except Exception as e:
                   results[canal] = {"error": str(e)}
                   print(f"❌ {canal}: {e}", flush=True)
 
-          # Salvar resultado no Supabase ia_cache
-          payload = json.dumps({"key": "noise_channels_video_ids", "value": json.dumps(results)}).encode()
+          # Salvar no Supabase usando cache_key (campo correto)
+          import urllib.error
+          payload = json.dumps({"cache_key": "noise_channels_video_ids", "value": json.dumps(results)}).encode()
           req = urllib.request.Request(
               f"{SUPA_URL}/rest/v1/ia_cache",
               data=payload, method="POST",
@@ -100,10 +103,14 @@ jobs:
           )
           try:
               with urllib.request.urlopen(req, timeout=10) as r:
-                  print(f"Supabase saved: {r.status}", flush=True)
-          except Exception as e:
-              print(f"Supabase error: {e}", flush=True)
+                  print(f"\nSupabase saved: {r.status}", flush=True)
+          except urllib.error.HTTPError as e:
+              print(f"\nSupabase error: {e.code} {e.read()}", flush=True)
 
           print("\n=== RESULTADO FINAL ===", flush=True)
-          print(json.dumps(results, indent=2), flush=True)
+          for c, r in results.items():
+              if r.get("ok"):
+                  print(f"  ✅ {c}: {r['count']} vídeo(s) [{r['channel_name']}]", flush=True)
+              else:
+                  print(f"  ❌ {c}: {r.get('error','?')}", flush=True)
           PYEOF2
