@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: List videos from all 7 channels
+      - name: Fetch video IDs and update Supabase noise_channels
         env:
           YT_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID_NEW }}
           YT_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET_NEW }}
@@ -21,63 +21,81 @@ jobs:
           YT_RT_RAIN: ${{ secrets.YOUTUBE_RT_RAIN }}
         run: |
           python3 - << 'PYEOF2'
-          import json, os, urllib.request, urllib.parse
+          import json, os, urllib.request, urllib.parse, urllib.error
 
           CID = os.environ["YT_CLIENT_ID"]
           CSC = os.environ["YT_CLIENT_SECRET"]
+          SUPA = "https://tpjvalzwkqwttvmszvie.supabase.co"
+          SK = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwanZhbHp3a3F3dHR2bXN6dmllIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcxMzk4MDkyNCwiZXhwIjoyMDI5NTU2OTI0fQ.RgYBGalHZy8a8PnlKCvF1mQr6BhVDGNv4j9OzomBCaA"
 
           CANAIS = {
-            "dbn":      "YT_RT_DBN",
-            "adhd":     "YT_RT_ADHD",
-            "wnv":      "YT_RT_WNV",
-            "bsn":      "YT_RT_BSN",
-            "pink":     "YT_RT_PINK",
-            "tinnitus": "YT_RT_TINNITUS",
-            "rain":     "YT_RT_RAIN",
+            "dbn":      {"rt":"YT_RT_DBN",      "ch":"UCD4LLFnsiVzA-DeSN6oaUzg"},
+            "adhd":     {"rt":"YT_RT_ADHD",     "ch":"UCK3xZDFY84ffNrLEAI1Qmyw"},
+            "wnv":      {"rt":"YT_RT_WNV",      "ch":"UC0mFKp42jfL0ZobYEj7uwUA"},
+            "bsn":      {"rt":"YT_RT_BSN",      "ch":"UCy4d2yt8eRywJS7PMTDX3xA"},
+            "pink":     {"rt":"YT_RT_PINK",     "ch":"UCXQ_-FOGTJk17T06gy0bYqQ"},
+            "tinnitus": {"rt":"YT_RT_TINNITUS", "ch":"UCZ5pmYA2ESO1vIhtE86l3_Q"},
+            "rain":     {"rt":"YT_RT_RAIN",     "ch":"UCSW8cGz1OcT1v90Vwc2-UPA"},
           }
 
           def get_at(rt):
               d = urllib.parse.urlencode({"client_id":CID,"client_secret":CSC,"refresh_token":rt,"grant_type":"refresh_token"}).encode()
-              r = urllib.request.urlopen(urllib.request.Request("https://oauth2.googleapis.com/token", data=d, method="POST", headers={"Content-Type":"application/x-www-form-urlencoded"}), timeout=15)
-              return json.loads(r.read())
+              with urllib.request.urlopen(urllib.request.Request("https://oauth2.googleapis.com/token",data=d,method="POST",headers={"Content-Type":"application/x-www-form-urlencoded"}),timeout=15) as r:
+                  return json.loads(r.read())
 
-          def yt(at, url):
-              r = urllib.request.urlopen(urllib.request.Request(url, headers={"Authorization":f"Bearer {at}"}), timeout=15)
-              return json.loads(r.read())
+          def yt(at,url):
+              with urllib.request.urlopen(urllib.request.Request(url,headers={"Authorization":f"Bearer {at}"}),timeout=15) as r:
+                  return json.loads(r.read())
 
-          results = {}
-          for canal, rt_env in CANAIS.items():
+          def supa_patch(ch_id, payload):
+              body = json.dumps(payload).encode()
+              req = urllib.request.Request(
+                  f"{SUPA}/rest/v1/noise_channels?channel_id=eq.{ch_id}",
+                  data=body, method="PATCH",
+                  headers={"apikey":SK,"Authorization":f"Bearer {SK}","Content-Type":"application/json","Prefer":"return=minimal"}
+              )
+              with urllib.request.urlopen(req, timeout=10) as r:
+                  return r.status
+
+          for canal, info in CANAIS.items():
               try:
-                  rt = os.environ[rt_env]
+                  rt = os.environ[info["rt"]]
                   td = get_at(rt)
                   at = td.get("access_token")
                   if not at:
-                      print(f"NO_AT {canal}: {td.get('error','')} {td.get('error_description','')}", flush=True)
-                      results[canal] = {"error": td.get('error','')}
+                      print(f"NO_AT {canal}: {td.get('error','')} — {td.get('error_description','')}", flush=True)
                       continue
-                  ch = yt(at, "https://www.googleapis.com/youtube/v3/channels?part=contentDetails,snippet&mine=true")
+                  ch = yt(at,"https://www.googleapis.com/youtube/v3/channels?part=contentDetails,snippet&mine=true")
                   name = ch.get("items",[{}])[0].get("snippet",{}).get("title","?")
                   upl = ch.get("items",[{}])[0].get("contentDetails",{}).get("relatedPlaylists",{}).get("uploads")
                   if not upl:
-                      print(f"NO_UPLOADS {canal} ({name})", flush=True)
-                      results[canal] = {"channel": name, "error": "no uploads"}
+                      print(f"NO_UPLOADS {canal} channel={name}", flush=True)
                       continue
-                  pl = yt(at, f"https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&playlistId={upl}&maxResults=5")
-                  vids = [{"id":i["contentDetails"]["videoId"],"title":i["snippet"]["title"],"date":i["snippet"]["publishedAt"][:10]} for i in pl.get("items",[])]
-                  results[canal] = {"channel": name, "videos": vids}
-                  print(f"OK {canal} ({name}): {len(vids)} vids {[v['id'] for v in vids]}", flush=True)
+                  pl = yt(at,f"https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&playlistId={upl}&maxResults=5")
+                  items = pl.get("items",[])
+                  if not items:
+                      print(f"NO_VIDEOS {canal} ({name})", flush=True)
+                      status = supa_patch(info["ch"], {"video_uploaded": False, "video_id": None})
+                      continue
+                  vid = items[0]["contentDetails"]["videoId"]
+                  title = items[0]["snippet"]["title"]
+                  pub = items[0]["snippet"]["publishedAt"][:10]
+                  # Verificar monetização do vídeo
+                  vdetails = yt(at,f"https://www.googleapis.com/youtube/v3/videos?part=monetizationDetails,status,contentDetails&id={vid}")
+                  vd = vdetails.get("items",[{}])[0]
+                  monetized = vd.get("monetizationDetails",{}).get("access",{}).get("allowed","?")
+                  duration = vd.get("contentDetails",{}).get("duration","?")
+                  mfk = vd.get("status",{}).get("madeForKids","?")
+                  # Update Supabase
+                  patch_status = supa_patch(info["ch"], {
+                      "video_uploaded": True,
+                      "video_id": vid,
+                      "video_title": title,
+                      "video_published": pub
+                  })
+                  print(f"OK {canal} ({name}): video={vid} | title={title[:50]} | pub={pub} | monetized={monetized} | dur={duration} | mfk={mfk} | supa={patch_status}", flush=True)
               except Exception as e:
-                  results[canal] = {"error": str(e)}
+                  import traceback
                   print(f"ERR {canal}: {e}", flush=True)
-
-          print("JSON_RESULT:" + json.dumps(results), flush=True)
-          with open("/tmp/results.json","w") as f:
-              json.dump(results, f)
+                  traceback.print_exc()
           PYEOF2
-
-      - name: Upload results
-        uses: actions/upload-artifact@v4
-        with:
-          name: yt-video-ids
-          path: /tmp/results.json
-          retention-days: 1
