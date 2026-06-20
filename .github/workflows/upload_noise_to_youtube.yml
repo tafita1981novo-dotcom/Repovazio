@@ -25,7 +25,17 @@ jobs:
       - name: Install deps
         run: pip install requests
 
-      - name: Upload videos (zero disk - stream zip->youtube)
+      - name: Check disk space (initial)
+        run: |
+          echo "=== DISCO INICIAL ==="
+          df -h
+          echo "=== /tmp ==="
+          du -sh /tmp 2>/dev/null || true
+          echo "=== RAM ==="
+          free -h
+          echo "=== Artefatos esperados: ~1GB por canal (ZIP) ==="
+
+      - name: Upload videos (stream zip->youtube, zero extra disk)
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
           YT_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID_NEW }}
@@ -40,7 +50,7 @@ jobs:
           CANAL: ${{ inputs.canal }}
         run: |
           python3 << 'PYEOF'
-          import json, os, time, zipfile, urllib.request, urllib.parse, urllib.error
+          import json, os, time, zipfile, shutil, urllib.request, urllib.parse, urllib.error
 
           GH_TOKEN = os.environ["GH_PAT"]
           CLIENT_ID = os.environ["YT_CLIENT_ID"]
@@ -88,60 +98,102 @@ jobs:
             "rain":     ["rain sounds","thunder sounds","sleep sounds","black screen","rain ASMR","sleep aid"],
           }
 
+          # ── HELPERS ──────────────────────────────────────────────
+
+          def disk_info(label=""):
+              """Imprime espaço em disco atual."""
+              disk = shutil.disk_usage("/")
+              free_gb  = disk.free  / 1024**3
+              used_gb  = disk.used  / 1024**3
+              total_gb = disk.total / 1024**3
+              pct = (disk.used / disk.total) * 100
+              tmp_mb = sum(
+                  os.path.getsize(os.path.join(d, f))
+                  for d, _, files in os.walk("/tmp")
+                  for f in files
+                  if os.path.exists(os.path.join(d, f))
+              ) / 1024**2
+              tag = f" [{label}]" if label else ""
+              print(
+                  f"[DISCO{tag}] total={total_gb:.1f}GB  "
+                  f"usado={used_gb:.1f}GB ({pct:.0f}%)  "
+                  f"livre={free_gb:.1f}GB  "
+                  f"/tmp={tmp_mb:.0f}MB",
+                  flush=True
+              )
+              return free_gb
+
+          def require_free(gb_needed, label=""):
+              free = disk_info(label)
+              if free < gb_needed:
+                  raise RuntimeError(
+                      f"Espaço insuficiente: {free:.2f}GB livre, "
+                      f"precisava de {gb_needed:.1f}GB"
+                  )
+              return free
+
           def get_at(refresh_token):
               data = urllib.parse.urlencode({
                   "client_id": CLIENT_ID, "client_secret": CLIENT_SECRET,
                   "refresh_token": refresh_token, "grant_type": "refresh_token"
               }).encode()
-              req = urllib.request.Request("https://oauth2.googleapis.com/token", data=data, method="POST",
+              req = urllib.request.Request("https://oauth2.googleapis.com/token",
+                  data=data, method="POST",
                   headers={"Content-Type": "application/x-www-form-urlencoded"})
               with urllib.request.urlopen(req, timeout=30) as r:
                   return json.loads(r.read())["access_token"]
 
-          def get_artifact_id(name):
+          def get_artifact(name):
               url = f"https://api.github.com/repos/{REPO}/actions/artifacts?per_page=10&name={name}"
               req = urllib.request.Request(url, headers={
-                  "Authorization": f"token {GH_TOKEN}", "Accept": "application/vnd.github.v3+json"
+                  "Authorization": f"token {GH_TOKEN}",
+                  "Accept": "application/vnd.github.v3+json"
               })
               with urllib.request.urlopen(req, timeout=30) as r:
-                  arts = [a for a in json.loads(r.read()).get("artifacts",[]) if not a.get("expired")]
-              return (arts[0]["id"], arts[0]["size_in_bytes"]) if arts else (None, None)
+                  arts = [a for a in json.loads(r.read()).get("artifacts", [])
+                          if not a.get("expired")]
+              if not arts:
+                  return None, None
+              a = arts[0]
+              return a["id"], a["size_in_bytes"]
 
-          def download_zip_stream(artifact_id, canal, zip_path):
-              """Baixa ZIP do artifact com redirect handling."""
+          def download_zip(artifact_id, canal, zip_path):
+              """Baixa ZIP do artifact em chunks de 10MB."""
               url = f"https://api.github.com/repos/{REPO}/actions/artifacts/{artifact_id}/zip"
               req = urllib.request.Request(url, headers={
-                  "Authorization": f"token {GH_TOKEN}", "Accept": "application/vnd.github.v3+json"
+                  "Authorization": f"token {GH_TOKEN}",
+                  "Accept": "application/vnd.github.v3+json"
               })
-              print(f"[{canal}] Baixando ZIP...")
-              CHUNK = 10 * 1024 * 1024  # 10MB chunks
+              CHUNK = 10 * 1024 * 1024  # 10MB
+              downloaded = 0
+              last_log = 0
               with urllib.request.urlopen(req, timeout=600) as r, open(zip_path, "wb") as f:
-                  downloaded = 0
                   while True:
                       chunk = r.read(CHUNK)
-                      if not chunk: break
+                      if not chunk:
+                          break
                       f.write(chunk)
                       downloaded += len(chunk)
-                      print(f"[{canal}] Download: {downloaded/1024**3:.2f}GB", flush=True)
-              size = os.path.getsize(zip_path)
-              print(f"[{canal}] ZIP pronto: {size/1024**3:.2f}GB")
+                      if downloaded - last_log >= 100 * 1024 * 1024:  # log a cada 100MB
+                          disk_info(f"{canal} baixando")
+                          last_log = downloaded
+              size_gb = os.path.getsize(zip_path) / 1024**3
+              print(f"[{canal}] ZIP baixado: {size_gb:.2f}GB", flush=True)
+              disk_info(f"{canal} pós-download")
 
-          def stream_zip_to_youtube(zip_path, canal, access_token):
+          def stream_to_youtube(zip_path, canal, access_token):
               """
-              ZERO DISK EXTRA: abre o ZIP, encontra o MP4, 
-              faz upload resumable sem extrair para disco.
-              Peak de disco = apenas o ZIP (~1GB).
+              Abre o ZIP, lê o MP4 em chunks e faz upload resumable para YouTube.
+              Zero extração para disco — pico = tamanho do ZIP.
               """
-              # Encontrar o MP4 dentro do ZIP e seu tamanho real
               with zipfile.ZipFile(zip_path) as zf:
-                  mp4_entries = [info for info in zf.infolist() if info.filename.endswith(".mp4")]
-                  if not mp4_entries:
-                      raise Exception("MP4 não encontrado no ZIP")
-                  mp4_info = mp4_entries[0]
-                  file_size = mp4_info.file_size  # tamanho descomprimido real
-                  print(f"[{canal}] MP4: {mp4_info.filename} ({file_size/1024**3:.2f}GB)")
+                  mp4s = [i for i in zf.infolist() if i.filename.endswith(".mp4")]
+                  if not mp4s:
+                      raise RuntimeError("MP4 não encontrado no ZIP")
+                  mp4_info = mp4s[0]
+                  file_size = mp4_info.file_size
+              print(f"[{canal}] MP4 no ZIP: {mp4_info.filename} ({file_size/1024**3:.2f}GB)", flush=True)
 
-              # Iniciar upload resumable no YouTube
               body = {
                   "snippet": {
                       "title": TITULOS[canal],
@@ -156,7 +208,8 @@ jobs:
                   }
               }
               init_req = urllib.request.Request(
-                  "https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status",
+                  "https://www.googleapis.com/upload/youtube/v3/videos"
+                  "?uploadType=resumable&part=snippet,status",
                   data=json.dumps(body).encode(), method="POST",
                   headers={
                       "Authorization": f"Bearer {access_token}",
@@ -167,36 +220,44 @@ jobs:
               )
               with urllib.request.urlopen(init_req, timeout=30) as r:
                   upload_url = r.headers.get("Location")
-              print(f"[{canal}] Upload URL ok. Iniciando stream {file_size/1024**3:.2f}GB...")
+              print(f"[{canal}] Upload URL obtida. Iniciando stream...", flush=True)
 
-              # Stream ZIP entry → YouTube sem extrair para disco
               CHUNK = 50 * 1024 * 1024  # 50MB por chunk
               uploaded = 0
               video_id = None
+              last_log = 0
 
               with zipfile.ZipFile(zip_path) as zf:
                   with zf.open(mp4_info) as mp4_stream:
                       while uploaded < file_size:
                           chunk = mp4_stream.read(CHUNK)
-                          if not chunk: break
+                          if not chunk:
+                              break
                           end = uploaded + len(chunk) - 1
-                          req2 = urllib.request.Request(upload_url, data=chunk, method="PUT", headers={
-                              "Authorization": f"Bearer {access_token}",
-                              "Content-Length": str(len(chunk)),
-                              "Content-Range": f"bytes {uploaded}-{end}/{file_size}",
-                              "Content-Type": "video/mp4"
-                          })
+                          req2 = urllib.request.Request(
+                              upload_url, data=chunk, method="PUT",
+                              headers={
+                                  "Authorization": f"Bearer {access_token}",
+                                  "Content-Length": str(len(chunk)),
+                                  "Content-Range": f"bytes {uploaded}-{end}/{file_size}",
+                                  "Content-Type": "video/mp4"
+                              }
+                          )
                           try:
                               with urllib.request.urlopen(req2, timeout=300) as r2:
                                   if r2.status in [200, 201]:
                                       video_id = json.loads(r2.read()).get("id")
-                                      print(f"[{canal}] ✅ Upload completo! Video: {video_id}")
+                                      print(f"[{canal}] ✅ Upload completo! Video: {video_id}", flush=True)
                           except urllib.error.HTTPError as e:
-                              if e.code == 308:
+                              if e.code == 308:  # Resume Incomplete — normal
                                   rng = e.headers.get("Range", "")
-                                  if rng: uploaded = int(rng.split("-")[1]) + 1
-                                  pct = (uploaded/file_size)*100
-                                  print(f"[{canal}] {pct:.1f}% ({uploaded/1024**2:.0f}MB/{file_size/1024**2:.0f}MB)", flush=True)
+                                  if rng:
+                                      uploaded = int(rng.split("-")[1]) + 1
+                                  pct = (uploaded / file_size) * 100
+                                  if uploaded - last_log >= 200 * 1024 * 1024:
+                                      print(f"[{canal}] {pct:.1f}% ({uploaded/1024**2:.0f}MB/{file_size/1024**2:.0f}MB)", flush=True)
+                                      disk_info(f"{canal} uploading")
+                                      last_log = uploaded
                                   continue
                               else:
                                   raise
@@ -204,48 +265,61 @@ jobs:
 
               return video_id
 
-          # Processar canais
-          to_process = list(CANAIS.keys()) if CANAL_INPUT == "all" else [CANAL_INPUT]
-          print(f"Processando: {to_process}")
-          print(f"Disco disponível em /tmp: apenas para o ZIP (~1GB por vez)")
+          # ── MAIN ─────────────────────────────────────────────────
 
-          results = {}
+          to_process = list(CANAIS.keys()) if CANAL_INPUT == "all" else [CANAL_INPUT]
+          print(f"Canais a processar: {to_process}", flush=True)
+          disk_info("início do script")
+
           ZIP_PATH = "/tmp/noise_current.zip"
+          results = {}
 
           for canal in to_process:
+              print(f"\n{'='*50}", flush=True)
+              print(f"[{canal}] INICIANDO", flush=True)
+              disk_info(f"{canal} início")
+
               try:
+                  # Garantir pelo menos 1.5GB livres antes de baixar
+                  require_free(1.5, f"{canal} pré-download")
+
                   rt = os.environ[CANAIS[canal]["rt_env"]]
                   at = get_at(rt)
-                  print(f"[{canal}] Token OK")
+                  print(f"[{canal}] Access token OK", flush=True)
 
-                  art_id, art_size = get_artifact_id(CANAIS[canal]["artifact"])
+                  art_id, art_size = get_artifact(CANAIS[canal]["artifact"])
                   if not art_id:
-                      raise Exception(f"Artifact {CANAIS[canal]['artifact']} não encontrado")
-                  print(f"[{canal}] Artifact: {art_id} ({art_size/1024**3:.2f}GB)")
+                      raise RuntimeError(f"Artifact não encontrado: {CANAIS[canal]['artifact']}")
+                  print(f"[{canal}] Artifact: {art_id} ({art_size/1024**3:.2f}GB no GitHub)", flush=True)
 
-                  # Baixar ZIP para /tmp (único arquivo em disco)
-                  download_zip_stream(art_id, canal, ZIP_PATH)
+                  # Download ZIP
+                  download_zip(art_id, canal, ZIP_PATH)
+
+                  # Verifica espaço após download
+                  disk_info(f"{canal} pós-download")
 
                   # Refresh token antes do upload longo
                   at = get_at(rt)
 
-                  # Stream ZIP → YouTube SEM extrair o MP4
-                  vid = stream_zip_to_youtube(ZIP_PATH, canal, at)
+                  # Stream ZIP → YouTube
+                  vid = stream_to_youtube(ZIP_PATH, canal, at)
                   results[canal] = {"ok": True, "video_id": vid}
 
-                  # Deletar ZIP imediatamente para liberar espaço para o próximo
-                  os.remove(ZIP_PATH)
-                  print(f"[{canal}] ✅ https://youtu.be/{vid} | ZIP deletado")
-
               except Exception as e:
-                  print(f"[{canal}] ❌ {e}")
+                  print(f"[{canal}] ❌ ERRO: {e}", flush=True)
                   results[canal] = {"ok": False, "error": str(e)}
+              finally:
+                  # Sempre limpa o ZIP, mesmo em caso de erro
                   if os.path.exists(ZIP_PATH):
                       os.remove(ZIP_PATH)
+                      print(f"[{canal}] ZIP removido", flush=True)
+                  disk_info(f"{canal} pós-limpeza")
 
-          print("\n=== RESULTADO FINAL ===")
+          print(f"\n{'='*50}", flush=True)
+          print("=== RESULTADO FINAL ===", flush=True)
+          disk_info("fim do script")
           for c, r in results.items():
               s = "✅" if r.get("ok") else "❌"
-              info = r.get("video_id") or r.get("error","")
-              print(f"  {s} {c}: {info}")
+              info = r.get("video_id") or r.get("error", "")
+              print(f"  {s} {c}: {info}", flush=True)
           PYEOF
