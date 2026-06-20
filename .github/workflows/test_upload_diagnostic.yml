@@ -8,122 +8,90 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - name: Install deps
-        run: pip install requests
-
-      - name: Test rain channel upload with full logging
+      - name: Test rain token and upload init
         env:
           YT_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID_NEW }}
           YT_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET_NEW }}
           YT_RT_RAIN: ${{ secrets.YOUTUBE_RT_RAIN }}
+          YT_RT_BSN: ${{ secrets.YOUTUBE_RT_BSN }}
+          YT_RT_PINK: ${{ secrets.YOUTUBE_RT_PINK }}
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
           python3 - << 'PYEOF2'
-          import json, os, urllib.request, urllib.parse, urllib.error, zipfile, io
+          import json, os, urllib.request, urllib.parse, urllib.error, zipfile
 
           CID = os.environ["YT_CLIENT_ID"]
           CSC = os.environ["YT_CLIENT_SECRET"]
-          RT = os.environ["YT_RT_RAIN"]
           GH_TOKEN = os.environ["GH_PAT"]
           REPO = "tafita1981novo-dotcom/Repovazio"
 
-          print("=== STEP 1: Obter Access Token ===", flush=True)
-          data = urllib.parse.urlencode({"client_id":CID,"client_secret":CSC,"refresh_token":RT,"grant_type":"refresh_token"}).encode()
-          req = urllib.request.Request("https://oauth2.googleapis.com/token", data=data, method="POST",
-              headers={"Content-Type":"application/x-www-form-urlencoded"})
-          with urllib.request.urlopen(req, timeout=15) as r:
-              td = json.loads(r.read())
-          at = td.get("access_token")
-          print(f"AT obtido: {bool(at)} (len={len(at) if at else 0})", flush=True)
-          if not at:
-              print(f"ERRO TOKEN: {td}", flush=True)
-              exit(1)
-
-          print("\n=== STEP 2: Verificar channel info ===", flush=True)
-          req = urllib.request.Request(
-              "https://www.googleapis.com/youtube/v3/channels?part=snippet,contentDetails&mine=true",
-              headers={"Authorization":f"Bearer {at}"}
-          )
-          with urllib.request.urlopen(req, timeout=15) as r:
-              ch = json.loads(r.read())
-          name = ch.get("items",[{}])[0].get("snippet",{}).get("title","?")
-          ch_id = ch.get("items",[{}])[0].get("id","?")
-          uploads = ch.get("items",[{}])[0].get("contentDetails",{}).get("relatedPlaylists",{}).get("uploads","?")
-          print(f"Canal: {name} | ID: {ch_id} | uploads: {uploads}", flush=True)
-
-          print("\n=== STEP 3: Buscar artifact noise-rain-36000s ===", flush=True)
-          gh_headers = {"Authorization":f"token {GH_TOKEN}","Accept":"application/vnd.github.v3+json","User-Agent":"noise-bot"}
-          req = urllib.request.Request(
-              f"https://api.github.com/repos/{REPO}/actions/artifacts?per_page=20&name=noise-rain-36000s",
-              headers=gh_headers
-          )
-          with urllib.request.urlopen(req, timeout=15) as r:
-              arts = json.loads(r.read()).get("artifacts",[])
-          active = [a for a in arts if not a.get("expired")]
-          print(f"Artifacts ativos: {len(active)}", flush=True)
-          if not active:
-              print("ERRO: Nenhum artifact ativo para rain!", flush=True)
-              exit(1)
-          art = active[0]
-          art_size = art["size_in_bytes"]
-          print(f"Artifact: {art['id']} | size={art_size/1024**3:.2f}GB | expires={art.get('expires_at','?')[:10]}", flush=True)
-
-          print("\n=== STEP 4: Baixar ZIP (primeiros 50MB para testar) ===", flush=True)
-          req = urllib.request.Request(
-              f"https://api.github.com/repos/{REPO}/actions/artifacts/{art['id']}/zip",
-              headers=gh_headers
-          )
-          zip_path = "/tmp/rain_test.zip"
-          downloaded = 0
-          with urllib.request.urlopen(req, timeout=600) as r, open(zip_path, "wb") as f:
-              while downloaded < 50*1024*1024:  # só 50MB para testar
-                  chunk = r.read(5*1024*1024)
-                  if not chunk: break
-                  f.write(chunk)
-                  downloaded += len(chunk)
-                  print(f"  baixado: {downloaded/1024**2:.0f}MB", flush=True)
-          print(f"ZIP parcial: {downloaded/1024**2:.1f}MB baixados", flush=True)
-
-          # Verificar se é um ZIP válido e tem MP4
-          try:
-              with zipfile.ZipFile(zip_path) as zf:
-                  names = zf.namelist()
-                  print(f"ZIP conteúdo: {names[:5]}", flush=True)
-                  mp4s = [n for n in names if n.endswith('.mp4')]
-                  print(f"MP4s no ZIP: {mp4s}", flush=True)
-                  if mp4s:
-                      mp4_info = zf.getinfo(mp4s[0])
-                      print(f"MP4 size: {mp4_info.file_size/1024**3:.2f}GB", flush=True)
-          except Exception as e:
-              print(f"ZIP check error (normal se incompleto): {e}", flush=True)
-
-          print("\n=== STEP 5: Iniciar upload resumable ===", flush=True)
-          body = {
-              "snippet": {"title":"Rain & Thunder Black Screen | 10 Hours Sleep Sounds","description":"Pure rain and thunder sounds. Black screen 10h.","categoryId":"22"},
-              "status": {"privacyStatus":"public","selfDeclaredMadeForKids":False}
+          CANAIS = {
+            "bsn":  {"rt_env":"YT_RT_BSN",  "artifact":"noise-bsn-36000s",  "title":"Baby White Noise | 10 Hours Sleep Black Screen"},
+            "pink": {"rt_env":"YT_RT_PINK", "artifact":"noise-pink-36000s", "title":"Pink Noise 10 Hours | Black Screen Sleep Therapy"},
+            "rain": {"rt_env":"YT_RT_RAIN", "artifact":"noise-rain-36000s", "title":"Rain & Thunder Black Screen | 10 Hours Sleep Sounds"},
           }
-          init_req = urllib.request.Request(
-              "https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status",
-              data=json.dumps(body).encode(), method="POST",
-              headers={
-                  "Authorization":f"Bearer {at}",
-                  "Content-Type":"application/json; charset=UTF-8",
-                  "X-Upload-Content-Length":"1149000000",
-                  "X-Upload-Content-Type":"video/mp4"
-              }
-          )
-          try:
-              with urllib.request.urlopen(init_req, timeout=30) as r:
-                  upload_url = r.headers.get("Location")
-              print(f"Upload URL OK: {upload_url[:80]}...", flush=True)
-          except urllib.error.HTTPError as e:
-              print(f"ERRO init upload: {e.code} {e.read().decode()}", flush=True)
-              exit(1)
 
-          print("\n✅ DIAGNÓSTICO COMPLETO:", flush=True)
-          print(f"  - Token: OK", flush=True)
-          print(f"  - Canal: {name} (ID={ch_id})", flush=True)
-          print(f"  - Artifact: OK ({art_size/1024**3:.2f}GB)", flush=True)
-          print(f"  - Upload URL: OBTIDA", flush=True)
-          print("  - Problema anterior: upload provavelmente falhou por token expirado ou erro 403 swallowed", flush=True)
+          def get_at(rt):
+              d = urllib.parse.urlencode({"client_id":CID,"client_secret":CSC,"refresh_token":rt,"grant_type":"refresh_token"}).encode()
+              req = urllib.request.Request("https://oauth2.googleapis.com/token",data=d,method="POST",headers={"Content-Type":"application/x-www-form-urlencoded"})
+              with urllib.request.urlopen(req,timeout=15) as r:
+                  return json.loads(r.read())
+
+          gh_headers = {"Authorization":f"token {GH_TOKEN}","Accept":"application/vnd.github.v3+json","User-Agent":"noise-bot"}
+
+          for canal, info in CANAIS.items():
+              print(f"\n=== {canal.upper()} ===", flush=True)
+              rt = os.environ.get(info["rt_env"],"")
+              td = get_at(rt)
+              at = td.get("access_token")
+              if not at:
+                  print(f"NO_AT: {td.get('error','')} {td.get('error_description','')}", flush=True)
+                  continue
+              print(f"AT OK (len={len(at)})", flush=True)
+
+              # Verificar qual canal este token representa
+              with urllib.request.urlopen(urllib.request.Request(
+                  "https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true",
+                  headers={"Authorization":f"Bearer {at}"}),timeout=10) as r:
+                  ch = json.loads(r.read())
+              name = ch.get("items",[{}])[0].get("snippet",{}).get("title","?")
+              ch_id = ch.get("items",[{}])[0].get("id","?")
+              print(f"Channel: {name} (ID={ch_id})", flush=True)
+
+              # Buscar artifact
+              with urllib.request.urlopen(urllib.request.Request(
+                  f"https://api.github.com/repos/{REPO}/actions/artifacts?per_page=5&name={info['artifact']}",
+                  headers=gh_headers),timeout=10) as r:
+                  arts = [a for a in json.loads(r.read()).get("artifacts",[]) if not a.get("expired")]
+              if not arts:
+                  print(f"ARTIFACT NOT FOUND: {info['artifact']}", flush=True)
+                  continue
+              art = arts[0]
+              print(f"Artifact OK: {art['id']} ({art['size_in_bytes']/1024**3:.2f}GB)", flush=True)
+
+              # Testar download do ZIP (só headers)
+              req2 = urllib.request.Request(
+                  f"https://api.github.com/repos/{REPO}/actions/artifacts/{art['id']}/zip",
+                  headers=gh_headers
+              )
+              with urllib.request.urlopen(req2,timeout=30) as r2:
+                  content_length = r2.headers.get("Content-Length","?")
+                  first_chunk = r2.read(4096)
+              print(f"Download ZIP OK: first 4KB={len(first_chunk)}bytes, Content-Length={content_length}", flush=True)
+
+              # Testar upload init
+              body = {"snippet":{"title":info["title"],"description":"10 hours. Black screen.","categoryId":"22"},"status":{"privacyStatus":"public","selfDeclaredMadeForKids":False}}
+              try:
+                  init_req = urllib.request.Request(
+                      "https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status",
+                      data=json.dumps(body).encode(),method="POST",
+                      headers={"Authorization":f"Bearer {at}","Content-Type":"application/json; charset=UTF-8","X-Upload-Content-Length":"1000000000","X-Upload-Content-Type":"video/mp4"}
+                  )
+                  with urllib.request.urlopen(init_req,timeout=30) as r3:
+                      upload_url = r3.headers.get("Location","?")
+                  print(f"Upload URL OBTIDA: {upload_url[:50]}...", flush=True)
+              except urllib.error.HTTPError as e:
+                  print(f"Upload init ERRO {e.code}: {e.read().decode()[:200]}", flush=True)
+
+          print("\n=== FIM DO DIAGNÓSTICO ===", flush=True)
           PYEOF2
