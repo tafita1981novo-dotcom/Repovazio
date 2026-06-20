@@ -1,0 +1,106 @@
+name: Rain Channel Setup
+
+on:
+  workflow_dispatch:
+
+jobs:
+  setup-rain:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install deps
+        run: pip install pillow requests
+
+      - name: Generate Rain logo and banner
+        run: |
+          python3 << 'EOF'
+import os, json
+from PIL import Image, ImageDraw, ImageFont
+
+# LOGO 800x800 - Rain channel
+img = Image.new('RGB', (800, 800), color='#000814')
+draw = ImageDraw.Draw(img)
+
+# Gradient effect (dark blue to black)
+for y in range(800):
+    alpha = int(20 + (y/800)*40)
+    draw.rectangle([(0,y),(800,y)], fill=(0, alpha//3, alpha))
+
+# Rain drops
+import random
+random.seed(42)
+for i in range(120):
+    x = random.randint(50, 750)
+    y = random.randint(50, 700)
+    length = random.randint(10, 35)
+    opacity = random.randint(80, 200)
+    draw.line([(x, y), (x-3, y+length)], fill=(opacity, opacity+30, 255), width=2)
+
+# Center text
+try:
+    font_lg = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 80)
+    font_sm = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 32)
+except:
+    font_lg = ImageFont.load_default()
+    font_sm = font_lg
+
+draw.text((400, 320), "🌧", font=font_lg, anchor="mm", fill=(100, 150, 255))
+draw.text((400, 480), "RAIN", font=font_lg, anchor="mm", fill=(180, 210, 255))
+draw.text((400, 570), "& THUNDER", font=font_sm, anchor="mm", fill=(120, 160, 220))
+draw.text((400, 640), "BLACK SCREEN", font=font_sm, anchor="mm", fill=(80, 120, 180))
+
+os.makedirs("noise_assets", exist_ok=True)
+img.save("noise_assets/rain_logo.jpg", "JPEG", quality=95)
+print("Logo saved")
+
+# BANNER 2560x1440
+banner = Image.new('RGB', (2560, 1440), color='#000814')
+bdraw = ImageDraw.Draw(banner)
+
+# Rain background
+for y in range(1440):
+    alpha = int(15 + (y/1440)*35)
+    bdraw.rectangle([(0,y),(2560,y)], fill=(0, alpha//4, alpha))
+
+# Many rain drops
+random.seed(99)
+for i in range(500):
+    x = random.randint(0, 2560)
+    y = random.randint(0, 1300)
+    length = random.randint(15, 50)
+    opacity = random.randint(60, 180)
+    bdraw.line([(x, y), (x-4, y+length)], fill=(opacity, opacity+20, 255), width=2)
+
+try:
+    font_huge = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 160)
+    font_med = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 64)
+    font_tag = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 48)
+except:
+    font_huge = ImageFont.load_default()
+    font_med = font_huge
+    font_tag = font_huge
+
+bdraw.text((1280, 480), "Rain & Thunder", font=font_huge, anchor="mm", fill=(160, 200, 255))
+bdraw.text((1280, 680), "Black Screen", font=font_huge, anchor="mm", fill=(100, 150, 240))
+bdraw.text((1280, 830), "Sleep • Focus • Relaxation", font=font_med, anchor="mm", fill=(80, 120, 200))
+bdraw.text((1280, 950), "10 Hours • No Ads • Pure Rain", font=font_tag, anchor="mm", fill=(60, 100, 160))
+
+banner.save("noise_assets/rain_banner.jpg", "JPEG", quality=95)
+print("Banner saved")
+EOF
+
+      - name: Upload assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: rain-assets
+          path: noise_assets/rain_*.jpg
+          retention-days: 30
+
+      - name: Commit assets to repo
+        run: |
+          git config user.email "tafita81@gmail.com"
+          git config user.name "Noise Bot"
+          git add noise_assets/rain_logo.jpg noise_assets/rain_banner.jpg || true
+          git diff --cached --quiet || git commit -m "feat: rain channel logo and banner"
+          git push || true
