@@ -37,7 +37,7 @@ jobs:
 
       - name: Upload videos (stream zip->youtube, zero extra disk)
         env:
-          GH_PAT: ${{ secrets.GH_PAT }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           YT_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID_NEW }}
           YT_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET_NEW }}
           YT_RT_DBN: ${{ secrets.YOUTUBE_RT_DBN }}
@@ -52,7 +52,7 @@ jobs:
           python3 << 'PYEOF'
           import json, os, time, zipfile, shutil, urllib.request, urllib.parse, urllib.error
 
-          GH_TOKEN = os.environ["GH_PAT"]
+          GH_TOKEN = os.environ["GH_TOKEN"]
           CLIENT_ID = os.environ["YT_CLIENT_ID"]
           CLIENT_SECRET = os.environ["YT_CLIENT_SECRET"]
           CANAL_INPUT = os.environ["CANAL"]
