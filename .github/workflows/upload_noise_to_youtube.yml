@@ -23,9 +23,9 @@ jobs:
           python-version: '3.11'
 
       - name: Install deps
-        run: pip install google-auth google-auth-oauthlib google-api-python-client requests
+        run: pip install requests
 
-      - name: Upload videos
+      - name: Upload videos (zero disk - stream zip->youtube)
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
           YT_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID_NEW }}
@@ -40,7 +40,7 @@ jobs:
           CANAL: ${{ inputs.canal }}
         run: |
           python3 << 'PYEOF'
-          import json, os, time, zipfile, urllib.request, urllib.parse
+          import json, os, time, zipfile, urllib.request, urllib.parse, urllib.error
 
           GH_TOKEN = os.environ["GH_PAT"]
           CLIENT_ID = os.environ["YT_CLIENT_ID"]
@@ -72,7 +72,7 @@ jobs:
             "dbn":      "Deep brown noise for sleep, ADHD focus and tinnitus masking. Pure black screen 10 hours.\n\n#BrownNoise #DeepSleep #ADHDFocus #BlackScreen #SleepSounds",
             "adhd":     "Brown noise scientifically shown to improve ADHD focus. Pure black screen 10 hours.\n\n#ADHDFocus #BrownNoise #BlackScreen #FocusMusic #ADHD",
             "wnv":      "Classic white noise for deep sleep and office noise blocking. Pure black screen 10 hours.\n\n#WhiteNoise #SleepSounds #BlackScreen #DeepSleep",
-            "bsn":      "White noise that mimics womb sounds to soothe babies to sleep. Pure black screen 10 hours.\n\n#BabySleep #WhiteNoise #InfantSleep #BlackScreen",
+            "bsn":      "White noise to soothe babies to sleep. Pure black screen 10 hours.\n\n#BabySleep #WhiteNoise #InfantSleep #BlackScreen",
             "pink":     "Pink noise reduces stress and improves sleep quality. Pure black screen 10 hours.\n\n#PinkNoise #SleepSounds #BlackScreen #SleepTherapy",
             "tinnitus": "Pink noise for tinnitus masking and sound therapy. Pure black screen 10 hours.\n\n#TinnitusRelief #PinkNoise #SoundTherapy #BlackScreen",
             "rain":     "Pure rain and thunder sounds for deep sleep. Pure black screen 10 hours.\n\n#RainSounds #SleepSounds #BlackScreen #RelaxingRain",
@@ -81,11 +81,11 @@ jobs:
           TAGS = {
             "dbn":      ["brown noise","deep brown noise","sleep sounds","black screen","ADHD focus","tinnitus","sleep music","deep sleep"],
             "adhd":     ["ADHD focus","brown noise","ADHD brown noise","black screen","focus music","hyperfocus","study music"],
-            "wnv":      ["white noise","sleep sounds","black screen","sleep music","deep sleep","white noise sleep","office noise"],
-            "bsn":      ["baby sleep","white noise baby","infant sleep","newborn sleep","baby sleep music","sleep sounds","black screen"],
-            "pink":     ["pink noise","sleep sounds","black screen","pink noise sleep","sleep therapy","deep sleep","stress relief"],
-            "tinnitus": ["tinnitus relief","tinnitus masking","pink noise","black screen","sound therapy","ear ringing"],
-            "rain":     ["rain sounds","thunder sounds","sleep sounds","black screen","rain ASMR","sleep aid","relaxing rain"],
+            "wnv":      ["white noise","sleep sounds","black screen","sleep music","deep sleep","white noise sleep"],
+            "bsn":      ["baby sleep","white noise baby","infant sleep","newborn sleep","sleep sounds","black screen"],
+            "pink":     ["pink noise","sleep sounds","black screen","pink noise sleep","sleep therapy","deep sleep"],
+            "tinnitus": ["tinnitus relief","tinnitus masking","pink noise","black screen","sound therapy"],
+            "rain":     ["rain sounds","thunder sounds","sleep sounds","black screen","rain ASMR","sleep aid"],
           }
 
           def get_at(refresh_token):
@@ -105,38 +105,43 @@ jobs:
               })
               with urllib.request.urlopen(req, timeout=30) as r:
                   arts = [a for a in json.loads(r.read()).get("artifacts",[]) if not a.get("expired")]
-              return arts[0]["id"] if arts else None
+              return (arts[0]["id"], arts[0]["size_in_bytes"]) if arts else (None, None)
 
-          def download_artifact(art_id, canal):
-              print(f"[{canal}] Baixando artifact {art_id}...")
-              url = f"https://api.github.com/repos/{REPO}/actions/artifacts/{art_id}/zip"
+          def download_zip_stream(artifact_id, canal, zip_path):
+              """Baixa ZIP do artifact com redirect handling."""
+              url = f"https://api.github.com/repos/{REPO}/actions/artifacts/{artifact_id}/zip"
               req = urllib.request.Request(url, headers={
                   "Authorization": f"token {GH_TOKEN}", "Accept": "application/vnd.github.v3+json"
               })
-              zip_path = f"/tmp/noise_{canal}.zip"
-              mp4_path = f"/tmp/noise_{canal}.mp4"
-              with urllib.request.urlopen(req, timeout=600) as r:
-                  with open(zip_path, "wb") as f:
-                      while True:
-                          chunk = r.read(65536)
-                          if not chunk: break
-                          f.write(chunk)
-              with zipfile.ZipFile(zip_path) as z:
-                  for name in z.namelist():
-                      if name.endswith(".mp4"):
-                          with z.open(name) as src, open(mp4_path, "wb") as dst:
-                              while True:
-                                  chunk = src.read(65536)
-                                  if not chunk: break
-                                  dst.write(chunk)
-                          break
-              os.remove(zip_path)
-              size = os.path.getsize(mp4_path)
-              print(f"[{canal}] {size/1024**3:.2f}GB extraído")
-              return mp4_path
+              print(f"[{canal}] Baixando ZIP...")
+              CHUNK = 10 * 1024 * 1024  # 10MB chunks
+              with urllib.request.urlopen(req, timeout=600) as r, open(zip_path, "wb") as f:
+                  downloaded = 0
+                  while True:
+                      chunk = r.read(CHUNK)
+                      if not chunk: break
+                      f.write(chunk)
+                      downloaded += len(chunk)
+                      print(f"[{canal}] Download: {downloaded/1024**3:.2f}GB", flush=True)
+              size = os.path.getsize(zip_path)
+              print(f"[{canal}] ZIP pronto: {size/1024**3:.2f}GB")
 
-          def upload_youtube(mp4_path, canal, access_token):
-              print(f"[{canal}] Iniciando upload YouTube...")
+          def stream_zip_to_youtube(zip_path, canal, access_token):
+              """
+              ZERO DISK EXTRA: abre o ZIP, encontra o MP4, 
+              faz upload resumable sem extrair para disco.
+              Peak de disco = apenas o ZIP (~1GB).
+              """
+              # Encontrar o MP4 dentro do ZIP e seu tamanho real
+              with zipfile.ZipFile(zip_path) as zf:
+                  mp4_entries = [info for info in zf.infolist() if info.filename.endswith(".mp4")]
+                  if not mp4_entries:
+                      raise Exception("MP4 não encontrado no ZIP")
+                  mp4_info = mp4_entries[0]
+                  file_size = mp4_info.file_size  # tamanho descomprimido real
+                  print(f"[{canal}] MP4: {mp4_info.filename} ({file_size/1024**3:.2f}GB)")
+
+              # Iniciar upload resumable no YouTube
               body = {
                   "snippet": {
                       "title": TITULOS[canal],
@@ -150,7 +155,6 @@ jobs:
                       "selfDeclaredMadeForKids": False,
                   }
               }
-              file_size = os.path.getsize(mp4_path)
               init_req = urllib.request.Request(
                   "https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status",
                   data=json.dumps(body).encode(), method="POST",
@@ -163,58 +167,81 @@ jobs:
               )
               with urllib.request.urlopen(init_req, timeout=30) as r:
                   upload_url = r.headers.get("Location")
-              print(f"[{canal}] Upload URL ok. Enviando {file_size/1024**3:.2f}GB...")
-              CHUNK = 50 * 1024 * 1024
+              print(f"[{canal}] Upload URL ok. Iniciando stream {file_size/1024**3:.2f}GB...")
+
+              # Stream ZIP entry → YouTube sem extrair para disco
+              CHUNK = 50 * 1024 * 1024  # 50MB por chunk
               uploaded = 0
               video_id = None
-              with open(mp4_path, "rb") as f:
-                  while uploaded < file_size:
-                      chunk = f.read(CHUNK)
-                      end = uploaded + len(chunk) - 1
-                      req2 = urllib.request.Request(upload_url, data=chunk, method="PUT", headers={
-                          "Authorization": f"Bearer {access_token}",
-                          "Content-Length": str(len(chunk)),
-                          "Content-Range": f"bytes {uploaded}-{end}/{file_size}",
-                          "Content-Type": "video/mp4"
-                      })
-                      try:
-                          with urllib.request.urlopen(req2, timeout=600) as r2:
-                              if r2.status in [200, 201]:
-                                  video_id = json.loads(r2.read()).get("id")
-                                  print(f"[{canal}] ✅ Upload completo! Video ID: {video_id}")
-                      except urllib.error.HTTPError as e:
-                          if e.code == 308:
-                              rng = e.headers.get("Range", "")
-                              if rng: uploaded = int(rng.split("-")[1]) + 1
-                              pct = (uploaded/file_size)*100
-                              print(f"[{canal}] {pct:.1f}% ({uploaded/1024**2:.0f}MB)")
-                              continue
-                          else: raise
-                      uploaded += len(chunk)
+
+              with zipfile.ZipFile(zip_path) as zf:
+                  with zf.open(mp4_info) as mp4_stream:
+                      while uploaded < file_size:
+                          chunk = mp4_stream.read(CHUNK)
+                          if not chunk: break
+                          end = uploaded + len(chunk) - 1
+                          req2 = urllib.request.Request(upload_url, data=chunk, method="PUT", headers={
+                              "Authorization": f"Bearer {access_token}",
+                              "Content-Length": str(len(chunk)),
+                              "Content-Range": f"bytes {uploaded}-{end}/{file_size}",
+                              "Content-Type": "video/mp4"
+                          })
+                          try:
+                              with urllib.request.urlopen(req2, timeout=300) as r2:
+                                  if r2.status in [200, 201]:
+                                      video_id = json.loads(r2.read()).get("id")
+                                      print(f"[{canal}] ✅ Upload completo! Video: {video_id}")
+                          except urllib.error.HTTPError as e:
+                              if e.code == 308:
+                                  rng = e.headers.get("Range", "")
+                                  if rng: uploaded = int(rng.split("-")[1]) + 1
+                                  pct = (uploaded/file_size)*100
+                                  print(f"[{canal}] {pct:.1f}% ({uploaded/1024**2:.0f}MB/{file_size/1024**2:.0f}MB)", flush=True)
+                                  continue
+                              else:
+                                  raise
+                          uploaded += len(chunk)
+
               return video_id
 
           # Processar canais
           to_process = list(CANAIS.keys()) if CANAL_INPUT == "all" else [CANAL_INPUT]
           print(f"Processando: {to_process}")
+          print(f"Disco disponível em /tmp: apenas para o ZIP (~1GB por vez)")
 
           results = {}
+          ZIP_PATH = "/tmp/noise_current.zip"
+
           for canal in to_process:
               try:
                   rt = os.environ[CANAIS[canal]["rt_env"]]
                   at = get_at(rt)
-                  print(f"[{canal}] Token OK: {at[:20]}...")
-                  art_id = get_artifact_id(CANAIS[canal]["artifact"])
+                  print(f"[{canal}] Token OK")
+
+                  art_id, art_size = get_artifact_id(CANAIS[canal]["artifact"])
                   if not art_id:
                       raise Exception(f"Artifact {CANAIS[canal]['artifact']} não encontrado")
-                  mp4 = download_artifact(art_id, canal)
-                  at = get_at(rt)  # refresh antes do upload longo
-                  vid = upload_youtube(mp4, canal, at)
+                  print(f"[{canal}] Artifact: {art_id} ({art_size/1024**3:.2f}GB)")
+
+                  # Baixar ZIP para /tmp (único arquivo em disco)
+                  download_zip_stream(art_id, canal, ZIP_PATH)
+
+                  # Refresh token antes do upload longo
+                  at = get_at(rt)
+
+                  # Stream ZIP → YouTube SEM extrair o MP4
+                  vid = stream_zip_to_youtube(ZIP_PATH, canal, at)
                   results[canal] = {"ok": True, "video_id": vid}
-                  os.remove(mp4)
-                  print(f"[{canal}] ✅ https://youtu.be/{vid}")
+
+                  # Deletar ZIP imediatamente para liberar espaço para o próximo
+                  os.remove(ZIP_PATH)
+                  print(f"[{canal}] ✅ https://youtu.be/{vid} | ZIP deletado")
+
               except Exception as e:
                   print(f"[{canal}] ❌ {e}")
                   results[canal] = {"ok": False, "error": str(e)}
+                  if os.path.exists(ZIP_PATH):
+                      os.remove(ZIP_PATH)
 
           print("\n=== RESULTADO FINAL ===")
           for c, r in results.items():
