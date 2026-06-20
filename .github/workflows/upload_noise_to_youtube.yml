@@ -182,6 +182,7 @@ jobs:
                               if downloaded - last_log >= 100 * 1024 * 1024:
                                   disk_info(f"{canal} baixando")
                                   last_log = downloaded
+              size_gb = downloaded / 1024**3
               print(f"[{canal}] ZIP baixado: {size_gb:.2f}GB", flush=True)
               disk_info(f"{canal} pós-download")
 
