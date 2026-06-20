@@ -1,0 +1,20 @@
+name: Diagnose Token Status
+
+on:
+  workflow_dispatch:
+
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test all 4 tokens
+        env:
+          YT_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID_NEW }}
+          YT_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET_NEW }}
+          YT_RT_DBN: ${{ secrets.YOUTUBE_RT_DBN }}
+          YT_RT_ADHD: ${{ secrets.YOUTUBE_RT_ADHD }}
+          YT_RT_WNV: ${{ secrets.YOUTUBE_RT_WNV }}
+          YT_RT_TINNITUS: ${{ secrets.YOUTUBE_RT_TINNITUS }}
+        run: python3 scripts/diag_tokens.py
