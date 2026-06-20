@@ -1,0 +1,152 @@
+name: Configure Noise Videos
+
+on:
+  workflow_dispatch:
+
+jobs:
+  configure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      YT_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID_NEW }}
+      YT_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET_NEW }}
+      YT_RT_DBN: ${{ secrets.YOUTUBE_RT_DBN }}
+      YT_RT_ADHD: ${{ secrets.YOUTUBE_RT_ADHD }}
+      YT_RT_WNV: ${{ secrets.YOUTUBE_RT_WNV }}
+      YT_RT_BSN: ${{ secrets.YOUTUBE_RT_BSN }}
+      YT_RT_PINK: ${{ secrets.YOUTUBE_RT_PINK }}
+      YT_RT_TINNITUS: ${{ secrets.YOUTUBE_RT_TINNITUS }}
+      YT_RT_RAIN: ${{ secrets.YOUTUBE_RT_RAIN }}
+    steps:
+      - name: Configure videos
+        run: |
+          python3 << 'PYEOF'
+          import urllib.request, urllib.parse, json, os, time
+
+          CLIENT_ID = os.environ["YT_CLIENT_ID"]
+          CLIENT_SECRET = os.environ["YT_CLIENT_SECRET"]
+
+          CANAIS = {
+            "dbn":      {"rt": os.environ["YT_RT_DBN"],      "new_vid": "R7yXx0eXaMA", "live_ids": ["NQSWz7-kcIA", "iyA2CnXEk3k"]},
+            "adhd":     {"rt": os.environ["YT_RT_ADHD"],     "new_vid": "_quJc1kuCQQ", "live_ids": ["YJ2BW03q9eY"]},
+            "wnv":      {"rt": os.environ["YT_RT_WNV"],      "new_vid": "0Er9oW4iikQ", "live_ids": []},
+            "bsn":      {"rt": os.environ["YT_RT_BSN"],      "new_vid": "PuahLOdzyzA", "live_ids": []},
+            "pink":     {"rt": os.environ["YT_RT_PINK"],     "new_vid": "TADyBfu6xek", "live_ids": []},
+            "tinnitus": {"rt": os.environ["YT_RT_TINNITUS"], "new_vid": "O_47JhFDCHk", "live_ids": []},
+            "rain":     {"rt": os.environ["YT_RT_RAIN"],     "new_vid": "RMmDchkV5UA", "live_ids": []},
+          }
+
+          TITULOS = {
+            "dbn":      "Deep Brown Noise 10 Hours | Black Screen Sleep ADHD Focus",
+            "adhd":     "ADHD Focus Brown Noise 10 Hours | Black Screen Concentration",
+            "wnv":      "White Noise 10 Hours | Black Screen Sleep & Study",
+            "bsn":      "Baby White Noise 10 Hours | Black Screen Newborn Sleep",
+            "pink":     "Pink Noise 10 Hours | Black Screen Sleep Therapy",
+            "tinnitus": "Tinnitus Relief Pink Noise 10 Hours | Black Screen",
+            "rain":     "Rain & Thunder Sounds 10 Hours | Black Screen Sleep",
+          }
+
+          DESCRICOES = {
+            "dbn":      "10 hours of pure deep brown noise for sleep, focus, and ADHD. Black screen for battery saving.\n\nIdeal for:\n• Deep sleep\n• ADHD focus\n• Studying\n• Tinnitus relief\n• Meditation\n\n#BrownNoise #SleepSounds #ADHDFocus #BlackScreen #DeepSleep",
+            "adhd":     "10 hours of brown noise optimized for ADHD focus and concentration. Black screen for battery saving.\n\nIdeal for:\n• ADHD focus\n• Studying\n• Working\n• Deep concentration\n• Sleep\n\n#ADHDFocus #BrownNoise #Concentration #BlackScreen #Focus",
+            "wnv":      "10 hours of pure white noise for sleep and study. Black screen for battery saving.\n\nIdeal for:\n• Deep sleep\n• Blocking distractions\n• Studying\n• Baby sleep\n• Tinnitus masking\n\n#WhiteNoise #SleepSounds #Study #BlackScreen #Sleep",
+            "bsn":      "10 hours of soothing white noise to help babies and newborns sleep. Black screen for battery saving.\n\nIdeal for:\n• Baby sleep\n• Newborn soothing\n• Infant nap time\n• Night sleep\n• Colic relief\n\n#BabySleep #WhiteNoise #NewbornSleep #BlackScreen #InfantSleep",
+            "pink":     "10 hours of pure pink noise for deep sleep and memory consolidation. Black screen for battery saving.\n\nIdeal for:\n• Deep sleep\n• Memory consolidation\n• Stress reduction\n• Concentration\n• Tinnitus relief\n\n#PinkNoise #SleepSounds #DeepSleep #BlackScreen #SleepTherapy",
+            "tinnitus": "10 hours of pink noise for tinnitus relief and masking. Black screen for battery saving.\n\nIdeal for:\n• Tinnitus masking\n• Ear ringing relief\n• Sleep with tinnitus\n• Sound therapy\n• Concentration\n\n#TinnitusRelief #PinkNoise #SoundTherapy #BlackScreen #TinnitusMasking",
+            "rain":     "10 hours of calming rain and thunder sounds for deep sleep. Black screen for battery saving.\n\nIdeal for:\n• Deep sleep\n• Relaxation\n• Stress relief\n• Study\n• Meditation\n\n#RainSounds #ThunderSounds #SleepSounds #BlackScreen #RelaxingRain",
+          }
+
+          def get_at(rt):
+              data = urllib.parse.urlencode({
+                  "client_id": CLIENT_ID, "client_secret": CLIENT_SECRET,
+                  "refresh_token": rt, "grant_type": "refresh_token"
+              }).encode()
+              req = urllib.request.Request("https://oauth2.googleapis.com/token", data=data, method="POST",
+                  headers={"Content-Type": "application/x-www-form-urlencoded"})
+              with urllib.request.urlopen(req, timeout=15) as r:
+                  return json.loads(r.read())["access_token"]
+
+          def yt(path, at, method="GET", body=None, params=""):
+              url = f"https://www.googleapis.com/youtube/v3/{path}{params}"
+              hdrs = {"Authorization": f"Bearer {at}", "Content-Type": "application/json"}
+              data = json.dumps(body).encode() if body else None
+              req = urllib.request.Request(url, data=data, method=method, headers=hdrs)
+              try:
+                  with urllib.request.urlopen(req, timeout=15) as r:
+                      return json.loads(r.read()) if r.status != 204 else {"ok": True}
+              except urllib.error.HTTPError as e:
+                  err = e.read().decode()
+                  return {"error": err}
+
+          results = {}
+          for canal, info in CANAIS.items():
+              print(f"\n=== [{canal}] ===", flush=True)
+              try:
+                  at = get_at(info["rt"])
+                  print(f"  ✅ Access token OK", flush=True)
+
+                  # 1. DELETAR live streams antigos
+                  for live_id in info["live_ids"]:
+                      r = yt("videos", at, method="DELETE", params=f"?id={live_id}")
+                      if "ok" in str(r):
+                          print(f"  🗑️ Live stream {live_id} DELETADO", flush=True)
+                      else:
+                          print(f"  ⚠️ Delete {live_id}: {str(r)[:100]}", flush=True)
+                      time.sleep(1)
+
+                  # 2. Obter metadados atuais do novo vídeo
+                  vid_id = info["new_vid"]
+                  v = yt("videos", at, params=f"?id={vid_id}&part=snippet,status,contentDetails")
+                  if "items" not in v or not v["items"]:
+                      print(f"  ❌ Vídeo {vid_id} não encontrado!", flush=True)
+                      results[canal] = "VIDEO_NOT_FOUND"
+                      continue
+                  
+                  item = v["items"][0]
+                  snippet = item["snippet"]
+                  status = item["status"]
+                  
+                  print(f"  Vídeo: {vid_id}", flush=True)
+                  print(f"  Título atual: {snippet.get('title','?')[:50]}", flush=True)
+                  print(f"  made_for_kids: {status.get('madeForKids','?')}", flush=True)
+                  print(f"  selfDeclaredMadeForKids: {status.get('selfDeclaredMadeForKids','?')}", flush=True)
+                  print(f"  privacyStatus: {status.get('privacyStatus','?')}", flush=True)
+
+                  # 3. Atualizar: título, descrição, made_for_kids=false, público
+                  update_body = {
+                      "id": vid_id,
+                      "snippet": {
+                          "title": TITULOS[canal],
+                          "description": DESCRICOES[canal],
+                          "categoryId": "22",  # People & Blogs (aceita noise/ambience)
+                          "defaultLanguage": "en",
+                          "tags": snippet.get("tags", []),
+                      },
+                      "status": {
+                          "privacyStatus": "public",
+                          "selfDeclaredMadeForKids": False,
+                          "embeddable": True,
+                          "publicStatsViewable": True,
+                      }
+                  }
+                  
+                  r2 = yt("videos", at, method="PUT", body=update_body,
+                          params="?part=snippet,status")
+                  
+                  if "id" in r2:
+                      mfk = r2.get("status", {}).get("selfDeclaredMadeForKids")
+                      print(f"  ✅ Atualizado! made_for_kids={mfk}", flush=True)
+                      results[canal] = f"OK - made_for_kids={mfk}"
+                  else:
+                      print(f"  ❌ Erro update: {str(r2)[:200]}", flush=True)
+                      results[canal] = f"ERROR: {str(r2)[:100]}"
+
+              except Exception as e:
+                  print(f"  ❌ Exception: {e}", flush=True)
+                  results[canal] = f"EXCEPTION: {e}"
+
+          print("\n=== RESULTADO FINAL ===")
+          for canal, r in results.items():
+              icon = "✅" if r.startswith("OK") else "❌"
+              print(f"  {icon} [{canal}]: {r}")
+          PYEOF
