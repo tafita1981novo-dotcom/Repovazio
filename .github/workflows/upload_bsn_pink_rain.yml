@@ -1,0 +1,190 @@
+name: Upload BSN PINK RAIN
+
+on:
+  workflow_dispatch:
+
+jobs:
+  upload-bsn:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      YT_CLIENT_ID: ${ secrets.YOUTUBE_CLIENT_ID_NEW }
+      YT_CLIENT_SECRET: ${ secrets.YOUTUBE_CLIENT_SECRET_NEW }
+      YT_RT: ${ secrets.YOUTUBE_RT_BSN }
+      GH_PAT: ${ secrets.GH_PAT }
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: 7760929460
+          github-token: ${ secrets.GH_PAT }
+          repository: tafita1981novo-dotcom/Repovazio
+      - name: Upload to YouTube
+        run: |
+          pip install requests -q
+          ls -la
+          VIDEO_FILE=$(find . -name "*.mp4" -o -name "*.webm" | head -1)
+          echo "Video: $VIDEO_FILE"
+          python3 << 'PY'
+          import requests, os, glob
+          CI = os.environ["YT_CLIENT_ID"]
+          CS = os.environ["YT_CLIENT_SECRET"]
+          RT = os.environ["YT_RT"]
+          r = requests.post("https://oauth2.googleapis.com/token", data={
+            "client_id": CI, "client_secret": CS, "refresh_token": RT, "grant_type": "refresh_token"
+          })
+          at = r.json().get("access_token")
+          print(f"AT: {at[:20] if at else 'NONE'}")
+          
+          # Encontrar o arquivo
+          files = glob.glob("**/*.mp4", recursive=True) + glob.glob("**/*.webm", recursive=True)
+          if not files:
+            print("❌ Nenhum arquivo de vídeo encontrado")
+            import sys; sys.exit(1)
+          video_file = files[0]
+          file_size = os.path.getsize(video_file)
+          print(f"Arquivo: {video_file} ({file_size/1e6:.0f}MB)")
+          
+          # Iniciar upload resumable
+          meta = {
+            "snippet": {
+              "title": "Baby White Noise 10 Hours | Black Screen Newborn Sleep",
+              "description": "Baby White Noise 10 Hours Black Screen\n\nDeep white noise for baby sleep, newborn sleep, and infant comfort.\n\n#babysleep #whitenoise #newbornsleep",
+              "categoryId": "22",
+              "tags": ["baby sleep","white noise","newborn","infant","black screen","lullaby","baby white noise","sleep sounds"]
+            },
+            "status": {
+              "privacyStatus": "public",
+              "selfDeclaredMadeForKids": False
+            }
+          }
+          
+          # Passo 1: Iniciar upload
+          r2 = requests.post(
+            "https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status",
+            headers={
+              "Authorization": f"Bearer {at}",
+              "Content-Type": "application/json",
+              "X-Upload-Content-Type": "video/mp4",
+              "X-Upload-Content-Length": str(file_size)
+            },
+            json=meta
+          )
+          print(f"Init upload: {r2.status_code}")
+          upload_url = r2.headers.get("Location")
+          print(f"Upload URL: {upload_url[:60] if upload_url else 'NONE'}")
+          
+          if not upload_url:
+            print(f"❌ Sem upload URL: {r2.text[:200]}")
+            import sys; sys.exit(1)
+          
+          # Passo 2: Upload do arquivo em chunks
+          CHUNK = 64*1024*1024  # 64MB chunks
+          uploaded = 0
+          with open(video_file, "rb") as f:
+            while uploaded < file_size:
+              chunk = f.read(CHUNK)
+              end = uploaded + len(chunk) - 1
+              headers_upload = {
+                "Content-Range": f"bytes {uploaded}-{end}/{file_size}",
+                "Content-Type": "video/mp4"
+              }
+              r3 = requests.put(upload_url, headers=headers_upload, data=chunk, timeout=300)
+              uploaded += len(chunk)
+              pct = uploaded/file_size*100
+              print(f"  Uploaded {pct:.0f}%: status={r3.status_code}", flush=True)
+              if r3.status_code in [200, 201]:
+                vid = r3.json()
+                print(f"✅ Video ID: {vid.get('id')}")
+                print(f"   Title: {vid.get('snippet',{}).get('title','?')}")
+                print(f"   madeForKids: {vid.get('status',{}).get('selfDeclaredMadeForKids')}")
+                break
+          PY
+
+  upload-pink:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    needs: upload-bsn
+    env:
+      YT_CLIENT_ID: ${ secrets.YOUTUBE_CLIENT_ID_NEW }
+      YT_CLIENT_SECRET: ${ secrets.YOUTUBE_CLIENT_SECRET_NEW }
+      YT_RT: ${ secrets.YOUTUBE_RT_PINK }
+      GH_PAT: ${ secrets.GH_PAT }
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: 7760948379
+          github-token: ${ secrets.GH_PAT }
+          repository: tafita1981novo-dotcom/Repovazio
+      - name: Upload to YouTube
+        run: |
+          pip install requests -q
+          python3 << 'PY'
+          import requests, os, glob
+          CI = os.environ["YT_CLIENT_ID"]
+          CS = os.environ["YT_CLIENT_SECRET"]
+          RT = os.environ["YT_RT"]
+          r = requests.post("https://oauth2.googleapis.com/token", data={"client_id": CI, "client_secret": CS, "refresh_token": RT, "grant_type": "refresh_token"})
+          at = r.json().get("access_token")
+          files = glob.glob("**/*.mp4", recursive=True) + glob.glob("**/*.webm", recursive=True)
+          if not files: print("❌ No video"); import sys; sys.exit(1)
+          video_file = files[0]; file_size = os.path.getsize(video_file)
+          print(f"File: {video_file} ({file_size/1e6:.0f}MB)")
+          meta = {"snippet": {"title": "Pink Noise 10 Hours | Black Screen Sleep Therapy", "description": "Pink Noise 10 Hours Black Screen\n\n#pinknoise #sleeptherapy #sleep", "categoryId": "22", "tags": ["pink noise","sleep therapy","relaxation","black screen","deep sleep"]}, "status": {"privacyStatus": "public", "selfDeclaredMadeForKids": False}}
+          r2 = requests.post("https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status", headers={"Authorization": f"Bearer {at}", "Content-Type": "application/json", "X-Upload-Content-Type": "video/mp4", "X-Upload-Content-Length": str(file_size)}, json=meta)
+          upload_url = r2.headers.get("Location")
+          print(f"Upload URL: {upload_url[:60] if upload_url else 'NONE'} ({r2.status_code})")
+          if not upload_url: print(f"❌ {r2.text[:200]}"); import sys; sys.exit(1)
+          CHUNK = 64*1024*1024; uploaded = 0
+          with open(video_file, "rb") as f:
+            while uploaded < file_size:
+              chunk = f.read(CHUNK); end = uploaded + len(chunk) - 1
+              r3 = requests.put(upload_url, headers={"Content-Range": f"bytes {uploaded}-{end}/{file_size}", "Content-Type": "video/mp4"}, data=chunk, timeout=300)
+              uploaded += len(chunk); print(f"  {uploaded/file_size*100:.0f}% status={r3.status_code}", flush=True)
+              if r3.status_code in [200, 201]: vid=r3.json(); print(f"✅ ID: {vid.get('id')} madeForKids={vid.get('status',{}).get('selfDeclaredMadeForKids')}"); break
+          PY
+
+  upload-rain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    needs: upload-pink
+    env:
+      YT_CLIENT_ID: ${ secrets.YOUTUBE_CLIENT_ID_NEW }
+      YT_CLIENT_SECRET: ${ secrets.YOUTUBE_CLIENT_SECRET_NEW }
+      YT_RT: ${ secrets.YOUTUBE_RT_RAIN }
+      GH_PAT: ${ secrets.GH_PAT }
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: 7760812042
+          github-token: ${ secrets.GH_PAT }
+          repository: tafita1981novo-dotcom/Repovazio
+      - name: Upload to YouTube
+        run: |
+          pip install requests -q
+          python3 << 'PY'
+          import requests, os, glob
+          CI = os.environ["YT_CLIENT_ID"]
+          CS = os.environ["YT_CLIENT_SECRET"]
+          RT = os.environ["YT_RT"]
+          r = requests.post("https://oauth2.googleapis.com/token", data={"client_id": CI, "client_secret": CS, "refresh_token": RT, "grant_type": "refresh_token"})
+          at = r.json().get("access_token")
+          files = glob.glob("**/*.mp4", recursive=True) + glob.glob("**/*.webm", recursive=True)
+          if not files: print("❌ No video"); import sys; sys.exit(1)
+          video_file = files[0]; file_size = os.path.getsize(video_file)
+          print(f"File: {video_file} ({file_size/1e6:.0f}MB)")
+          meta = {"snippet": {"title": "Rain & Thunder Sounds 10 Hours | Black Screen Sleep", "description": "Rain and Thunder Sounds 10 Hours Black Screen\n\n#rainsounds #thunder #sleep #blackscreen", "categoryId": "22", "tags": ["rain sounds","thunder","sleep sounds","black screen","relaxing rain","asmr"]}, "status": {"privacyStatus": "public", "selfDeclaredMadeForKids": False}}
+          r2 = requests.post("https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status", headers={"Authorization": f"Bearer {at}", "Content-Type": "application/json", "X-Upload-Content-Type": "video/mp4", "X-Upload-Content-Length": str(file_size)}, json=meta)
+          upload_url = r2.headers.get("Location")
+          print(f"Upload URL: {upload_url[:60] if upload_url else 'NONE'} ({r2.status_code})")
+          if not upload_url: print(f"❌ {r2.text[:200]}"); import sys; sys.exit(1)
+          CHUNK = 64*1024*1024; uploaded = 0
+          with open(video_file, "rb") as f:
+            while uploaded < file_size:
+              chunk = f.read(CHUNK); end = uploaded + len(chunk) - 1
+              r3 = requests.put(upload_url, headers={"Content-Range": f"bytes {uploaded}-{end}/{file_size}", "Content-Type": "video/mp4"}, data=chunk, timeout=300)
+              uploaded += len(chunk); print(f"  {uploaded/file_size*100:.0f}% status={r3.status_code}", flush=True)
+              if r3.status_code in [200, 201]: vid=r3.json(); print(f"✅ ID: {vid.get('id')} madeForKids={vid.get('status',{}).get('selfDeclaredMadeForKids')}"); break
+          PY
