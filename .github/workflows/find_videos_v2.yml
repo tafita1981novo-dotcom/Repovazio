@@ -1,0 +1,65 @@
+name: Find Videos V2
+
+on:
+  workflow_dispatch:
+
+jobs:
+  find:
+    runs-on: ubuntu-latest
+    env:
+      YT_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID_NEW }}
+      YT_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET_NEW }}
+      YT_RT_BSN: ${{ secrets.YOUTUBE_RT_BSN }}
+      YT_RT_PINK: ${{ secrets.YOUTUBE_RT_PINK }}
+      YT_RT_RAIN: ${{ secrets.YOUTUBE_RT_RAIN }}
+    steps:
+      - name: Find videos v2
+        run: |
+          pip install requests -q
+          python3 << 'PY'
+          import requests, os
+          CI = os.environ["YT_CLIENT_ID"]
+          CS = os.environ["YT_CLIENT_SECRET"]
+          CANAIS = {
+            "bsn":  {"rt": os.environ["YT_RT_BSN"],  "ch": "UCy4d2yt8eRywJS7PMTDX3xA"},
+            "pink": {"rt": os.environ["YT_RT_PINK"], "ch": "UCXQ_-FOGTJk17T06gy0bYqQ"},
+            "rain": {"rt": os.environ["YT_RT_RAIN"], "ch": "UCSW8cGz1OcT1v90Vwc2-UPA"},
+          }
+          for canal, info in CANAIS.items():
+            print(f"\n=== {canal.upper()} ({info['ch']}) ===")
+            r = requests.post("https://oauth2.googleapis.com/token", data={
+              "client_id": CI, "client_secret": CS,
+              "refresh_token": info["rt"], "grant_type": "refresh_token"
+            })
+            at = r.json().get("access_token")
+            if not at: print(f"  ❌ No AT"); continue
+            print(f"  ✅ AT OK scope={r.json().get('scope','?')[:60]}")
+            
+            # Método 1: videos?myRating=like (não, usa mine=true)
+            # Método 2: channels -> contentDetails -> uploads playlist
+            r2 = requests.get("https://www.googleapis.com/youtube/v3/channels",
+              params={"mine": "true", "part": "contentDetails,snippet"},
+              headers={"Authorization": f"Bearer {at}"})
+            ch_data = r2.json()
+            print(f"  channels: status={r2.status_code}")
+            items = ch_data.get("items", [])
+            if not items:
+              print(f"  ❌ Sem items. Error: {ch_data.get('error',{})}")
+              continue
+            ch_name = items[0]["snippet"]["title"]
+            uploads_id = items[0]["contentDetails"]["relatedPlaylists"]["uploads"]
+            print(f"  Canal: {ch_name}")
+            print(f"  Uploads playlist: {uploads_id}")
+            
+            # Buscar vídeos da playlist uploads
+            r3 = requests.get("https://www.googleapis.com/youtube/v3/playlistItems",
+              params={"playlistId": uploads_id, "part": "contentDetails,snippet", "maxResults": 5},
+              headers={"Authorization": f"Bearer {at}"})
+            pl_data = r3.json()
+            pl_items = pl_data.get("items", [])
+            print(f"  Total uploads: {pl_data.get('pageInfo',{}).get('totalResults','?')}")
+            for item in pl_items:
+              vid_id = item["contentDetails"]["videoId"]
+              title = item["snippet"]["title"]
+              print(f"  📹 {vid_id}: {title[:60]}")
+          PY
