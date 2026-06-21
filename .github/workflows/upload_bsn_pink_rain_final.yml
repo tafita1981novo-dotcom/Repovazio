@@ -3,10 +3,6 @@ name: Upload BSN PINK RAIN Final
 on:
   workflow_dispatch:
 
-permissions:
-  actions: read
-  contents: read
-
 jobs:
   upload-bsn:
     runs-on: ubuntu-latest
@@ -16,7 +12,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           artifact-ids: 7760929460
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GH_PAT }}
           repository: tafita1981novo-dotcom/Repovazio
           path: video/
       - run: pip install requests -q && ls video/ && python3 scripts/upload_yt.py bsn
@@ -35,7 +31,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           artifact-ids: 7760948379
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GH_PAT }}
           repository: tafita1981novo-dotcom/Repovazio
           path: video/
       - run: pip install requests -q && ls video/ && python3 scripts/upload_yt.py pink
@@ -54,7 +50,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           artifact-ids: 7760812042
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GH_PAT }}
           repository: tafita1981novo-dotcom/Repovazio
           path: video/
       - run: pip install requests -q && ls video/ && python3 scripts/upload_yt.py rain
