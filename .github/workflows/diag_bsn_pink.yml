@@ -1,10 +1,10 @@
-name: Diag BSN PINK Videos
+name: Diag Fix BSN PINK
 
 on:
   workflow_dispatch:
 
 jobs:
-  diag:
+  fix:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
@@ -13,28 +13,5 @@ jobs:
       YT_RT_BSN: ${{ secrets.YOUTUBE_RT_BSN }}
       YT_RT_PINK: ${{ secrets.YOUTUBE_RT_PINK }}
     steps:
-      - name: Check BSN and PINK videos
-        run: |
-          pip install requests -q
-          python3 -c "
-import requests, os
-CI=os.environ['YT_CLIENT_ID']
-CS=os.environ['YT_CLIENT_SECRET']
-for canal, rt_env, vid in [('bsn','YT_RT_BSN','dGdrOUA0G9w'),('pink','YT_RT_PINK','NYpPMJOfsJQ')]:
-  rt=os.environ[rt_env]
-  r=requests.post('https://oauth2.googleapis.com/token',data={'client_id':CI,'client_secret':CS,'refresh_token':rt,'grant_type':'refresh_token'})
-  at=r.json().get('access_token')
-  print(f'{canal} AT={bool(at)}')
-  if not at: print(r.json()); continue
-  r2=requests.get('https://www.googleapis.com/youtube/v3/videos',params={'id':vid,'part':'snippet,status,processingDetails'},headers={'Authorization':f'Bearer {at}'})
-  items=r2.json().get('items',[])
-  print(f'{canal} vid={vid} found={bool(items)}')
-  if items:
-    s=items[0]
-    print(f'  title={s["snippet"].get("title","?")}')
-    print(f'  mfk={s["status"].get("madeForKids")} selfDecl={s["status"].get("selfDeclaredMadeForKids")}')
-    proc=s.get("processingDetails",{})
-    print(f'  processing={proc.get("processingStatus","?")} progress={proc.get("processingProgress",{})}')
-  else:
-    print(f'  {canal} response: {r2.json().get("error",{}).get("message",r2.text[:100])}')
-"
+      - uses: actions/checkout@v4
+      - run: pip install requests -q && python3 scripts/diag_bsn_pink.py
