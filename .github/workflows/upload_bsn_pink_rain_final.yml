@@ -6,16 +6,20 @@ on:
 jobs:
   upload-bsn:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          artifact-ids: 7760929460
-          github-token: ${{ secrets.GH_PAT }}
-          repository: tafita1981novo-dotcom/Repovazio
-          path: video/
-      - run: pip install requests -q && ls video/ && python3 scripts/upload_yt.py bsn
+      - name: Download BSN artifact via API
+        run: |
+          mkdir -p video
+          curl -L -H "Authorization: Bearer ${{ secrets.GH_PAT }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/tafita1981novo-dotcom/Repovazio/actions/artifacts/7760929460/zip" \
+            -o video/artifact.zip
+          cd video && unzip -o artifact.zip && ls -la
+          rm -f artifact.zip
+      - name: Upload BSN to YouTube
+        run: pip install requests -q && python3 scripts/upload_yt.py bsn
         env:
           YT_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID_NEW }}
           YT_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET_NEW }}
@@ -24,17 +28,21 @@ jobs:
 
   upload-pink:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     needs: upload-bsn
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          artifact-ids: 7760948379
-          github-token: ${{ secrets.GH_PAT }}
-          repository: tafita1981novo-dotcom/Repovazio
-          path: video/
-      - run: pip install requests -q && ls video/ && python3 scripts/upload_yt.py pink
+      - name: Download PINK artifact via API
+        run: |
+          mkdir -p video
+          curl -L -H "Authorization: Bearer ${{ secrets.GH_PAT }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/tafita1981novo-dotcom/Repovazio/actions/artifacts/7760948379/zip" \
+            -o video/artifact.zip
+          cd video && unzip -o artifact.zip && ls -la
+          rm -f artifact.zip
+      - name: Upload PINK to YouTube
+        run: pip install requests -q && python3 scripts/upload_yt.py pink
         env:
           YT_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID_NEW }}
           YT_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET_NEW }}
@@ -43,17 +51,21 @@ jobs:
 
   upload-rain:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     needs: upload-pink
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          artifact-ids: 7760812042
-          github-token: ${{ secrets.GH_PAT }}
-          repository: tafita1981novo-dotcom/Repovazio
-          path: video/
-      - run: pip install requests -q && ls video/ && python3 scripts/upload_yt.py rain
+      - name: Download RAIN artifact via API
+        run: |
+          mkdir -p video
+          curl -L -H "Authorization: Bearer ${{ secrets.GH_PAT }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/tafita1981novo-dotcom/Repovazio/actions/artifacts/7760812042/zip" \
+            -o video/artifact.zip
+          cd video && unzip -o artifact.zip && ls -la
+          rm -f artifact.zip
+      - name: Upload RAIN to YouTube
+        run: pip install requests -q && python3 scripts/upload_yt.py rain
         env:
           YT_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID_NEW }}
           YT_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET_NEW }}
