@@ -1,0 +1,16 @@
+name: Check RAIN Video
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      YT_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID_NEW }}
+      YT_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET_NEW }}
+      YT_RT_RAIN: ${{ secrets.YOUTUBE_RT_RAIN }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install requests -q && python3 scripts/check_rain.py
