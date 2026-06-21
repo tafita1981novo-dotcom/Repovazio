@@ -7,88 +7,72 @@ jobs:
   upload-bsn:
     runs-on: ubuntu-latest
     timeout-minutes: 90
+    env:
+      YT_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID_NEW }}
+      YT_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET_NEW }}
+      YT_RT: ${{ secrets.YOUTUBE_RT_BSN }}
+      GH_PAT: ${{ secrets.GH_PAT }}
     steps:
       - uses: actions/checkout@v4
-      - name: Download BSN artifact via API
-        env:
-          GH_PAT: ${{ secrets.GH_PAT }}
+      - name: Download and upload BSN
         run: |
+          pip install requests -q
           mkdir -p video
-          echo "Downloading BSN artifact (1GB)..."
+          echo "Downloading BSN (1GB)..."
           curl -L --max-time 3600 --retry 3 --retry-delay 30 \
             -H "Authorization: Bearer $GH_PAT" \
             -H "Accept: application/vnd.github+json" \
             "https://api.github.com/repos/tafita1981novo-dotcom/Repovazio/actions/artifacts/7760929460/zip" \
             -o video/artifact.zip
-          echo "Download complete. File size:"
-          ls -lh video/artifact.zip
-          echo "Verifying ZIP..."
-          python3 -c "import zipfile; z=zipfile.ZipFile('video/artifact.zip'); print('ZIP valid, files:', z.namelist())"
-          echo "Extracting..."
-          cd video && unzip -o artifact.zip
-          rm -f artifact.zip
-          echo "Contents:"
-          ls -lh
-      - name: Upload BSN to YouTube
-        env:
-          YT_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID_NEW }}
-          YT_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET_NEW }}
-          YT_RT: ${{ secrets.YOUTUBE_RT_BSN }}
-        run: |
-          pip install requests -q
+          python3 -c "import zipfile,os; z=zipfile.ZipFile('video/artifact.zip'); z.extractall('video/'); print('Extracted:',os.listdir('video/'))"
+          rm -f video/artifact.zip
+          echo "Running upload..."
           python3 scripts/upload_yt.py bsn
-        working-directory: video/
 
   upload-pink:
     runs-on: ubuntu-latest
     timeout-minutes: 90
     needs: upload-bsn
+    env:
+      YT_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID_NEW }}
+      YT_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET_NEW }}
+      YT_RT: ${{ secrets.YOUTUBE_RT_PINK }}
+      GH_PAT: ${{ secrets.GH_PAT }}
     steps:
       - uses: actions/checkout@v4
-      - name: Download PINK artifact via API
-        env:
-          GH_PAT: ${{ secrets.GH_PAT }}
+      - name: Download and upload PINK
         run: |
+          pip install requests -q
           mkdir -p video
           curl -L --max-time 3600 --retry 3 --retry-delay 30 \
             -H "Authorization: Bearer $GH_PAT" \
             -H "Accept: application/vnd.github+json" \
             "https://api.github.com/repos/tafita1981novo-dotcom/Repovazio/actions/artifacts/7760948379/zip" \
             -o video/artifact.zip
-          ls -lh video/artifact.zip
-          python3 -c "import zipfile; z=zipfile.ZipFile('video/artifact.zip'); print('ZIP files:', z.namelist())"
-          cd video && unzip -o artifact.zip && rm -f artifact.zip && ls -lh
-      - name: Upload PINK to YouTube
-        env:
-          YT_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID_NEW }}
-          YT_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET_NEW }}
-          YT_RT: ${{ secrets.YOUTUBE_RT_PINK }}
-        run: pip install requests -q && python3 scripts/upload_yt.py pink
-        working-directory: video/
+          python3 -c "import zipfile,os; z=zipfile.ZipFile('video/artifact.zip'); z.extractall('video/'); print('Extracted:',os.listdir('video/'))"
+          rm -f video/artifact.zip
+          python3 scripts/upload_yt.py pink
 
   upload-rain:
     runs-on: ubuntu-latest
     timeout-minutes: 90
     needs: upload-pink
+    env:
+      YT_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID_NEW }}
+      YT_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET_NEW }}
+      YT_RT: ${{ secrets.YOUTUBE_RT_RAIN }}
+      GH_PAT: ${{ secrets.GH_PAT }}
     steps:
       - uses: actions/checkout@v4
-      - name: Download RAIN artifact via API
-        env:
-          GH_PAT: ${{ secrets.GH_PAT }}
+      - name: Download and upload RAIN
         run: |
+          pip install requests -q
           mkdir -p video
           curl -L --max-time 3600 --retry 3 --retry-delay 30 \
             -H "Authorization: Bearer $GH_PAT" \
             -H "Accept: application/vnd.github+json" \
             "https://api.github.com/repos/tafita1981novo-dotcom/Repovazio/actions/artifacts/7760812042/zip" \
             -o video/artifact.zip
-          ls -lh video/artifact.zip
-          python3 -c "import zipfile; z=zipfile.ZipFile('video/artifact.zip'); print('ZIP files:', z.namelist())"
-          cd video && unzip -o artifact.zip && rm -f artifact.zip && ls -lh
-      - name: Upload RAIN to YouTube
-        env:
-          YT_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID_NEW }}
-          YT_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET_NEW }}
-          YT_RT: ${{ secrets.YOUTUBE_RT_RAIN }}
-        run: pip install requests -q && python3 scripts/upload_yt.py rain
-        working-directory: video/
+          python3 -c "import zipfile,os; z=zipfile.ZipFile('video/artifact.zip'); z.extractall('video/'); print('Extracted:',os.listdir('video/'))"
+          rm -f video/artifact.zip
+          python3 scripts/upload_yt.py rain
