@@ -1,0 +1,139 @@
+name: Upload BSN PINK RAIN V3
+
+on:
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  upload-bsn:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Download BSN artifact
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: 7760929460
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: tafita1981novo-dotcom/Repovazio
+      - name: Upload BSN to YouTube
+        env:
+          YT_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID_NEW }}
+          YT_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET_NEW }}
+          YT_RT: ${{ secrets.YOUTUBE_RT_BSN }}
+        run: |
+          pip install requests -q
+          ls -la
+          find . -type f | head -20
+          python3 -c "
+import requests,os,glob,sys
+CI=os.environ['YT_CLIENT_ID'];CS=os.environ['YT_CLIENT_SECRET'];RT=os.environ['YT_RT']
+r=requests.post('https://oauth2.googleapis.com/token',data={'client_id':CI,'client_secret':CS,'refresh_token':RT,'grant_type':'refresh_token'})
+at=r.json().get('access_token')
+print('AT='+str(bool(at)))
+if not at: sys.exit(1)
+files=glob.glob('**/*.mp4',recursive=True)+glob.glob('**/*.webm',recursive=True)+glob.glob('**/*.opus',recursive=True)
+print('files='+str(files))
+if not files: sys.exit(1)
+vf=files[0]; fs=os.path.getsize(vf); print('size='+str(fs))
+meta={'snippet':{'title':'Baby White Noise 10 Hours | Black Screen Newborn Sleep','description':'Baby White Noise 10 Hours Black Screen','categoryId':'22','tags':['baby sleep','white noise','newborn','black screen']},'status':{'privacyStatus':'public','selfDeclaredMadeForKids':False}}
+r2=requests.post('https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status',headers={'Authorization':'Bearer '+at,'Content-Type':'application/json','X-Upload-Content-Type':'video/mp4','X-Upload-Content-Length':str(fs)},json=meta)
+ul=r2.headers.get('Location'); print('ul='+str(bool(ul))+' s='+str(r2.status_code))
+if not ul: print(r2.text[:200]); sys.exit(1)
+C=64*1024*1024; up=0
+f2=open(vf,'rb')
+while up<fs:
+ ch=f2.read(C); end=up+len(ch)-1
+ r3=requests.put(ul,headers={'Content-Range':'bytes '+str(up)+'-'+str(end)+'/'+str(fs),'Content-Type':'video/mp4'},data=ch,timeout=300)
+ up+=len(ch); print(str(round(up/fs*100))+'% s='+str(r3.status_code),flush=True)
+ if r3.status_code in [200,201]: v=r3.json(); print('BSN_ID='+str(v.get('id'))+' mfk='+str(v.get('status',{}).get('selfDeclaredMadeForKids'))); break
+f2.close()
+"
+
+  upload-pink:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    needs: upload-bsn
+    steps:
+      - name: Download PINK artifact
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: 7760948379
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: tafita1981novo-dotcom/Repovazio
+      - name: Upload PINK to YouTube
+        env:
+          YT_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID_NEW }}
+          YT_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET_NEW }}
+          YT_RT: ${{ secrets.YOUTUBE_RT_PINK }}
+        run: |
+          pip install requests -q
+          find . -type f | head -20
+          python3 -c "
+import requests,os,glob,sys
+CI=os.environ['YT_CLIENT_ID'];CS=os.environ['YT_CLIENT_SECRET'];RT=os.environ['YT_RT']
+r=requests.post('https://oauth2.googleapis.com/token',data={'client_id':CI,'client_secret':CS,'refresh_token':RT,'grant_type':'refresh_token'})
+at=r.json().get('access_token'); print('AT='+str(bool(at)))
+if not at: sys.exit(1)
+files=glob.glob('**/*.mp4',recursive=True)+glob.glob('**/*.webm',recursive=True)+glob.glob('**/*.opus',recursive=True)
+print('files='+str(files))
+if not files: sys.exit(1)
+vf=files[0]; fs=os.path.getsize(vf); print('size='+str(fs))
+meta={'snippet':{'title':'Pink Noise 10 Hours | Black Screen Sleep Therapy','description':'Pink Noise 10 Hours Black Screen','categoryId':'22','tags':['pink noise','sleep therapy','black screen','deep sleep']},'status':{'privacyStatus':'public','selfDeclaredMadeForKids':False}}
+r2=requests.post('https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status',headers={'Authorization':'Bearer '+at,'Content-Type':'application/json','X-Upload-Content-Type':'video/mp4','X-Upload-Content-Length':str(fs)},json=meta)
+ul=r2.headers.get('Location'); print('ul='+str(bool(ul))+' s='+str(r2.status_code))
+if not ul: print(r2.text[:200]); sys.exit(1)
+C=64*1024*1024; up=0
+f2=open(vf,'rb')
+while up<fs:
+ ch=f2.read(C); end=up+len(ch)-1
+ r3=requests.put(ul,headers={'Content-Range':'bytes '+str(up)+'-'+str(end)+'/'+str(fs),'Content-Type':'video/mp4'},data=ch,timeout=300)
+ up+=len(ch); print(str(round(up/fs*100))+'% s='+str(r3.status_code),flush=True)
+ if r3.status_code in [200,201]: v=r3.json(); print('PINK_ID='+str(v.get('id'))+' mfk='+str(v.get('status',{}).get('selfDeclaredMadeForKids'))); break
+f2.close()
+"
+
+  upload-rain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    needs: upload-pink
+    steps:
+      - name: Download RAIN artifact
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: 7760812042
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: tafita1981novo-dotcom/Repovazio
+      - name: Upload RAIN to YouTube
+        env:
+          YT_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID_NEW }}
+          YT_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET_NEW }}
+          YT_RT: ${{ secrets.YOUTUBE_RT_RAIN }}
+        run: |
+          pip install requests -q
+          find . -type f | head -20
+          python3 -c "
+import requests,os,glob,sys
+CI=os.environ['YT_CLIENT_ID'];CS=os.environ['YT_CLIENT_SECRET'];RT=os.environ['YT_RT']
+r=requests.post('https://oauth2.googleapis.com/token',data={'client_id':CI,'client_secret':CS,'refresh_token':RT,'grant_type':'refresh_token'})
+at=r.json().get('access_token'); print('AT='+str(bool(at)))
+if not at: sys.exit(1)
+files=glob.glob('**/*.mp4',recursive=True)+glob.glob('**/*.webm',recursive=True)+glob.glob('**/*.opus',recursive=True)
+print('files='+str(files))
+if not files: sys.exit(1)
+vf=files[0]; fs=os.path.getsize(vf); print('size='+str(fs))
+meta={'snippet':{'title':'Rain and Thunder Sounds 10 Hours | Black Screen Sleep','description':'Rain and Thunder Sounds 10 Hours Black Screen','categoryId':'22','tags':['rain sounds','thunder','sleep sounds','black screen','asmr']},'status':{'privacyStatus':'public','selfDeclaredMadeForKids':False}}
+r2=requests.post('https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status',headers={'Authorization':'Bearer '+at,'Content-Type':'application/json','X-Upload-Content-Type':'video/mp4','X-Upload-Content-Length':str(fs)},json=meta)
+ul=r2.headers.get('Location'); print('ul='+str(bool(ul))+' s='+str(r2.status_code))
+if not ul: print(r2.text[:200]); sys.exit(1)
+C=64*1024*1024; up=0
+f2=open(vf,'rb')
+while up<fs:
+ ch=f2.read(C); end=up+len(ch)-1
+ r3=requests.put(ul,headers={'Content-Range':'bytes '+str(up)+'-'+str(end)+'/'+str(fs),'Content-Type':'video/mp4'},data=ch,timeout=300)
+ up+=len(ch); print(str(round(up/fs*100))+'% s='+str(r3.status_code),flush=True)
+ if r3.status_code in [200,201]: v=r3.json(); print('RAIN_ID='+str(v.get('id'))+' mfk='+str(v.get('status',{}).get('selfDeclaredMadeForKids'))); break
+f2.close()
+"
