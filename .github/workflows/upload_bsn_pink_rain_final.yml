@@ -1,0 +1,65 @@
+name: Upload BSN PINK RAIN Final
+
+on:
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  upload-bsn:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          artifact-ids: 7760929460
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: tafita1981novo-dotcom/Repovazio
+          path: video/
+      - run: pip install requests -q && ls video/ && python3 scripts/upload_yt.py bsn
+        env:
+          YT_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID_NEW }}
+          YT_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET_NEW }}
+          YT_RT: ${{ secrets.YOUTUBE_RT_BSN }}
+        working-directory: video/
+
+  upload-pink:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    needs: upload-bsn
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          artifact-ids: 7760948379
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: tafita1981novo-dotcom/Repovazio
+          path: video/
+      - run: pip install requests -q && ls video/ && python3 scripts/upload_yt.py pink
+        env:
+          YT_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID_NEW }}
+          YT_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET_NEW }}
+          YT_RT: ${{ secrets.YOUTUBE_RT_PINK }}
+        working-directory: video/
+
+  upload-rain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    needs: upload-pink
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          artifact-ids: 7760812042
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: tafita1981novo-dotcom/Repovazio
+          path: video/
+      - run: pip install requests -q && ls video/ && python3 scripts/upload_yt.py rain
+        env:
+          YT_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID_NEW }}
+          YT_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET_NEW }}
+          YT_RT: ${{ secrets.YOUTUBE_RT_RAIN }}
+        working-directory: video/
