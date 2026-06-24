@@ -1,0 +1,207 @@
+name: Generate and Upload 5 Noise Videos
+
+on:
+  workflow_dispatch:
+
+jobs:
+  gen-upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 480
+    strategy:
+      max-parallel: 1
+      matrix:
+        include:
+          - canal: dbn
+            noise: brown
+            rt_secret: YOUTUBE_RT_DBN
+            channel_id: UCD4LLFnsiVzA-DeSN6oaUzg
+            titulo: "Brown Noise 12 Hours | Deep Sleep ADHD Focus Study | Black Screen"
+            tags: "brown noise,deep sleep,ADHD focus,sleep sounds,black screen,study music,white noise,focus music,tinnitus relief,12 hours,ADHD,concentration,brown noise sleep,deep work"
+          - canal: adhd
+            noise: brown
+            rt_secret: YOUTUBE_RT_ADHD
+            channel_id: UCK3xZDFY84ffNrLEAI1Qmyw
+            titulo: "ADHD Focus Noise 12 Hours | Brown Noise Concentration Deep Work | Black Screen"
+            tags: "ADHD focus,ADHD,brown noise ADHD,concentration,deep work,focus music,neurodivergent,study noise,work noise,flow state,12 hours,black screen,executive function,brown noise"
+          - canal: bsn
+            noise: white
+            rt_secret: YOUTUBE_RT_BSN
+            channel_id: UCy4d2yt8eRywJS7PMTDX3xA
+            titulo: "Baby Sleep White Noise 12 Hours | Womb Sounds Newborn Infant | Black Screen"
+            tags: "baby sleep,white noise baby,newborn,womb sounds,colic baby,baby calm,newborn sleep,infant sleep,12 hours,black screen,bedtime routine,baby white noise,fussy baby"
+          - canal: pink
+            noise: pink
+            rt_secret: YOUTUBE_RT_PINK
+            channel_id: UCXQ_-FOGTJk17T06gy0bYqQ
+            titulo: "Pink Noise 12 Hours | Deep Sleep Memory Boost Tinnitus Relief | Black Screen"
+            tags: "pink noise,deep sleep,tinnitus,memory boost,sleep science,black screen,12 hours,sleep better,tinnitus relief,slow wave sleep,anxiety relief,pure pink noise"
+          - canal: rain
+            noise: brown
+            rt_secret: YOUTUBE_RT_RAIN
+            channel_id: UCSW8cGz1OcT1v90Vwc2-UPA
+            titulo: "Rain Sounds 12 Hours | Heavy Rain Sleep Study Relaxation | Black Screen"
+            tags: "rain sounds,sleep rain,rain for sleep,study rain,relaxing rain,ASMR,rain ASMR,sleep sounds,black screen,12 hours,heavy rain,rainy night,anxiety relief"
+
+    steps:
+      - name: Install ffmpeg
+        run: sudo apt-get install -y ffmpeg
+
+      - name: Generate video (${{ matrix.canal }})
+        run: |
+          echo "Generating ${{ matrix.canal }} - ${{ matrix.noise }} noise - 36000s"
+          ffmpeg -y \
+            -f lavfi -i "color=color=black:size=1920x1080:rate=1:duration=36000" \
+            -f lavfi -i "anoisesrc=color=${{ matrix.noise }}:amplitude=0.5:sample_rate=48000:duration=36000" \
+            -c:v libx264 -preset ultrafast -crf 40 -pix_fmt yuv420p -r 1 \
+            -c:a aac -b:a 192k -ar 48000 -ac 2 \
+            -af "loudnorm=I=-14:TP=-1:LRA=11" \
+            -t 36000 -movflags +faststart \
+            /tmp/${{ matrix.canal }}.mp4
+          echo "Done: $(ls -lh /tmp/${{ matrix.canal }}.mp4)"
+          ffprobe -v quiet -show_streams /tmp/${{ matrix.canal }}.mp4 2>&1 | grep -E "codec_name|duration|bit_rate|width|height" | head -10
+
+      - name: Upload to YouTube (${{ matrix.canal }})
+        env:
+          CLIENT_ID: ${{ secrets.YT_CLIENT_ID_2 }}
+          CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET_2 }}
+          REFRESH_TOKEN: ${{ secrets[matrix.rt_secret] }}
+          CANAL: ${{ matrix.canal }}
+          CHANNEL_ID: ${{ matrix.channel_id }}
+          TITULO: ${{ matrix.titulo }}
+          TAGS: ${{ matrix.tags }}
+          SUPABASE_URL: https://tpjvalzwkqwttvmszvie.supabase.co
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          pip install requests -q
+          python3 << 'PYEOF'
+import requests, os, time
+
+CLIENT_ID     = os.environ["CLIENT_ID"]
+CLIENT_SECRET = os.environ["CLIENT_SECRET"]
+RT            = os.environ["REFRESH_TOKEN"]
+CANAL         = os.environ["CANAL"]
+CHANNEL_ID    = os.environ["CHANNEL_ID"]
+TITULO        = os.environ["TITULO"]
+TAGS          = [t.strip() for t in os.environ["TAGS"].split(",")]
+SB_URL        = os.environ["SUPABASE_URL"]
+SB_KEY        = os.environ["SUPABASE_KEY"]
+
+DESCRICOES = {
+    "dbn":  "Brown Noise 12 Hours - Black Screen\n\nPure brown noise for deep sleep, ADHD focus, studying and stress relief.\n\n✅ Deep Sleep ✅ ADHD Focus ✅ Study Music ✅ Tinnitus Relief\n\n🎧 Best with headphones\n⬛ Black screen saves battery\n⏰ 12 hours non-stop\n\n#BrownNoise #DeepSleep #ADHDFocus #SleepSounds #BlackScreen #StudyMusic #12Hours",
+    "adhd": "ADHD Focus Noise 12 Hours - Black Screen\n\nCalibrated noise for ADHD brains. Brown noise supporting executive function and sustained attention.\n\n✅ ADHD Focus ✅ Deep Work ✅ Study Sessions ✅ Remote Work ✅ Anxiety Relief\n\n🎧 Headphones recommended\n⬛ No visual stimulation\n⏰ 12 hours\n\n#ADHDFocus #BrownNoise #ADHD #Concentration #DeepWork #FocusMusic #12Hours",
+    "bsn":  "Baby Sleep White Noise 12 Hours - Black Screen\n\nGentle white noise for babies from birth through 12 months. Safe, consistent and effective.\n\n✅ Newborn Sleep ✅ Colic Relief ✅ Bedtime Routine ✅ Nap Time ✅ Parent Sleep\n\n⬛ Safe for nursery\n🎧 Keep below 50 dB\n👶 Safe for all ages\n\n#BabySleep #WhiteNoise #Newborn #WombSounds #BabyCalm #12Hours",
+    "pink": "Pink Noise 12 Hours - Black Screen\n\nScientifically superior sleep sound. Pink noise increases deep sleep and improves memory by up to 35%.\n\n✅ Deep Sleep ✅ Memory Consolidation ✅ Tinnitus Relief ✅ Stress Reduction\n\n🧠 Northwestern University research backed\n⬛ Full 12-hour dark screen\n\n#PinkNoise #DeepSleep #Tinnitus #MemoryBoost #SleepScience #BlackScreen #12Hours",
+    "rain": "Rain Sounds 12 Hours - Black Screen\n\nHeavy continuous rain for deep sleep, study and relaxation. No thunder, no transitions.\n\n✅ Sleep ✅ Study and Focus ✅ Relaxation ✅ ASMR ✅ Anxiety Relief\n\n🌧️ Heavy rain no thunder\n⬛ No light pollution\n⏰ 12 hours non-stop\n\n#RainSounds #SleepRain #ASMR #SleepSounds #BlackScreen #12Hours",
+}
+
+# Access token
+r = requests.post("https://oauth2.googleapis.com/token", data={
+    "client_id": CLIENT_ID, "client_secret": CLIENT_SECRET,
+    "refresh_token": RT, "grant_type": "refresh_token"}, timeout=15)
+at = r.json().get("access_token")
+print(f"Token: {'OK' if at else 'ERRO ' + r.text[:100]}")
+if not at: exit(1)
+
+# Apagar videos existentes
+r2 = requests.get("https://www.googleapis.com/youtube/v3/channels",
+    params={"part":"contentDetails,statistics","id":CHANNEL_ID},
+    headers={"Authorization":f"Bearer {at}"}, timeout=10)
+if r2.status_code==200 and r2.json().get("items"):
+    n = int(r2.json()["items"][0]["statistics"].get("videoCount",0))
+    if n > 0:
+        pl = r2.json()["items"][0]["contentDetails"]["relatedPlaylists"]["uploads"]
+        r3 = requests.get("https://www.googleapis.com/youtube/v3/playlistItems",
+            params={"part":"snippet","playlistId":pl,"maxResults":50},
+            headers={"Authorization":f"Bearer {at}"}, timeout=10)
+        for item in r3.json().get("items",[]):
+            vid = item["snippet"]["resourceId"]["videoId"]
+            rd = requests.delete("https://www.googleapis.com/youtube/v3/videos",
+                params={"id":vid}, headers={"Authorization":f"Bearer {at}"}, timeout=10)
+            print(f"Apagado {vid}: {rd.status_code}")
+            time.sleep(0.5)
+
+# Upload
+path = f"/tmp/{CANAL}.mp4"
+size = os.path.getsize(path)
+print(f"Arquivo: {size/(1024**3):.2f} GB")
+
+meta = {
+    "snippet": {
+        "title": TITULO,
+        "description": DESCRICOES.get(CANAL, TITULO),
+        "tags": TAGS,
+        "categoryId": "22",
+        "defaultLanguage": "en",
+        "defaultAudioLanguage": "en",
+    },
+    "status": {
+        "privacyStatus": "public",
+        "selfDeclaredMadeForKids": False,
+        "madeForKids": False,
+        "license": "youtube",
+        "embeddable": True,
+        "publicStatsViewable": True,
+        "notifySubscribers": True,
+    }
+}
+
+r4 = requests.post(
+    "https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status",
+    headers={"Authorization":f"Bearer {at}","Content-Type":"application/json",
+             "X-Upload-Content-Type":"video/mp4","X-Upload-Content-Length":str(size)},
+    json=meta, timeout=30)
+
+if r4.status_code != 200:
+    print(f"ERRO iniciar upload: {r4.status_code} {r4.text[:300]}")
+    exit(1)
+
+upload_url = r4.headers["Location"]
+CHUNK = 50*1024*1024
+sent, video_id = 0, None
+
+with open(path, "rb") as f:
+    while sent < size:
+        chunk = f.read(CHUNK)
+        if not chunk: break
+        end = sent+len(chunk)-1
+        r5 = requests.put(upload_url,
+            headers={"Authorization":f"Bearer {at}",
+                     "Content-Range":f"bytes {sent}-{end}/{size}",
+                     "Content-Type":"video/mp4"},
+            data=chunk, timeout=600)
+        sent += len(chunk)
+        pct = sent/size*100
+        if r5.status_code in (200,201):
+            video_id = r5.json().get("id")
+            print(f"\nUPLOAD COMPLETO: {video_id}")
+            break
+        elif r5.status_code == 308:
+            print(f"\r{pct:.1f}%", end="", flush=True)
+        elif r5.status_code == 503:
+            time.sleep(20); sent-=len(chunk); f.seek(sent)
+        else:
+            print(f"\nERRO chunk: {r5.status_code} {r5.text[:150]}")
+            exit(1)
+
+if not video_id: exit(1)
+
+# Monetizacao
+time.sleep(5)
+requests.put(
+    "https://www.googleapis.com/youtube/v3/videos?part=monetizationDetails,status",
+    headers={"Authorization":f"Bearer {at}","Content-Type":"application/json"},
+    json={"id":video_id,"monetizationDetails":{"access":{"allowed":True}},
+          "status":{"selfDeclaredMadeForKids":False,"madeForKids":False,"license":"youtube","embeddable":True}},
+    timeout=20)
+print("Monetizacao: configurada")
+
+# Supabase
+if SB_KEY and "eyJ" in SB_KEY:
+    sb_h = {"apikey":SB_KEY,"Authorization":f"Bearer {SB_KEY}","Content-Type":"application/json"}
+    requests.patch(f"{SB_URL}/rest/v1/noise_channels?canal_key=eq.{CANAL}",
+        headers=sb_h, json={"video_id":video_id,"video_uploaded":True}, timeout=10)
+    print(f"Supabase: {CANAL} = {video_id}")
+
+print(f"URL: https://youtube.com/watch?v={video_id}")
+print(f"CANAL: {CANAL} DONE")
+          'PYEOF'
