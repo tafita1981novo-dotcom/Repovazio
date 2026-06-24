@@ -1,0 +1,95 @@
+name: OMNIBRAIN — Fetch Transcripts
+
+on:
+  schedule:
+    # Roda a cada 4 horas: 00:00, 04:00, 08:00, 12:00, 16:00, 20:00 UTC
+    - cron: '0 */4 * * *'
+  workflow_dispatch:
+    inputs:
+      batch_size:
+        description: 'Número de vídeos por run (padrão: 50)'
+        required: false
+        default: '50'
+        type: string
+
+jobs:
+  fetch-transcripts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-omnibrain-${{ hashFiles('omnibrain/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-omnibrain-
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install youtube-transcript-api supabase
+
+      - name: Check pending count
+        id: check
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          python3 - <<'EOF'
+          import os
+          from supabase import create_client
+          sb = create_client(os.environ['SUPABASE_URL'], os.environ['SUPABASE_KEY'])
+          res = sb.table('yt_transcripts').select('video_id', count='exact').eq('status', 'pending').execute()
+          count = res.count or 0
+          print(f"Pending videos: {count}")
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              f.write(f"pending_count={count}\n")
+          EOF
+
+      - name: Skip if no pending
+        if: steps.check.outputs.pending_count == '0'
+        run: |
+          echo "✅ No pending videos — nothing to do"
+          exit 0
+
+      - name: Fetch transcripts
+        if: steps.check.outputs.pending_count != '0'
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          BATCH_SIZE: ${{ github.event.inputs.batch_size || '50' }}
+        run: |
+          python3 omnibrain/fetch_transcripts.py
+
+      - name: Print summary
+        if: always()
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          python3 - <<'EOF'
+          import os
+          from supabase import create_client
+          sb = create_client(os.environ['SUPABASE_URL'], os.environ['SUPABASE_KEY'])
+          
+          statuses = ['pending', 'done', 'no_captions', 'error']
+          print("=== OMNIBRAIN Status ===")
+          total = 0
+          for s in statuses:
+              res = sb.table('yt_transcripts').select('video_id', count='exact').eq('status', s).execute()
+              count = res.count or 0
+              total += count
+              emoji = {'pending':'⏳','done':'✅','no_captions':'🔇','error':'❌'}.get(s,'?')
+              print(f"  {emoji} {s}: {count}")
+          print(f"  📊 Total: {total}")
+          EOF
