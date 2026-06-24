@@ -1,0 +1,121 @@
+name: Upload Noise Videos from Release
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published, edited]
+
+jobs:
+  dbn:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install requests -q
+      - name: Download + Upload DBN
+        env:
+          CLIENT_ID: ${{ secrets.YT_CLIENT_ID_2 }}
+          CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET_2 }}
+          REFRESH_TOKEN: ${{ secrets.YOUTUBE_RT_DBN }}
+          CANAL: dbn
+          CHANNEL_ID: UCD4LLFnsiVzA-DeSN6oaUzg
+          TITULO: "Brown Noise 12 Hours | Deep Sleep, ADHD Focus & Study | Black Screen"
+          TAGS: "brown noise,brown noise 12 hours,deep sleep,ADHD focus,sleep sounds,black screen,study music,white noise,tinnitus relief,12 hours,ADHD,concentration"
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: tafita1981novo-dotcom/Repovazio
+          ASSET_NAME: DBN.MP4
+          SUPABASE_URL: https://tpjvalzwkqwttvmszvie.supabase.co
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python scripts/noise_upload.py
+
+  adhd:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    needs: dbn
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install requests -q
+      - name: Download + Upload ADHD
+        env:
+          CLIENT_ID: ${{ secrets.YT_CLIENT_ID_2 }}
+          CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET_2 }}
+          REFRESH_TOKEN: ${{ secrets.YOUTUBE_RT_ADHD }}
+          CANAL: adhd
+          CHANNEL_ID: UCK3xZDFY84ffNrLEAI1Qmyw
+          TITULO: "ADHD Focus Noise 12 Hours | Brown Noise for Concentration & Deep Work | Black Screen"
+          TAGS: "ADHD focus,ADHD,brown noise ADHD,concentration,deep work,focus music,neurodivergent,12 hours,black screen,executive function"
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: tafita1981novo-dotcom/Repovazio
+          ASSET_NAME: ADHD.MP4
+          SUPABASE_URL: https://tpjvalzwkqwttvmszvie.supabase.co
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python scripts/noise_upload.py
+
+  bsn:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    needs: adhd
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install requests -q
+      - name: Download + Upload BSN
+        env:
+          CLIENT_ID: ${{ secrets.YT_CLIENT_ID_2 }}
+          CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET_2 }}
+          REFRESH_TOKEN: ${{ secrets.YOUTUBE_RT_BSN }}
+          CANAL: bsn
+          CHANNEL_ID: UCy4d2yt8eRywJS7PMTDX3xA
+          TITULO: "Baby Sleep White Noise 12 Hours | Womb Sounds for Newborn & Infant | Black Screen"
+          TAGS: "baby sleep,white noise baby,newborn,womb sounds,colic baby,baby calm,newborn sleep,12 hours,black screen"
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: tafita1981novo-dotcom/Repovazio
+          ASSET_NAME: BSN.MP4
+          SUPABASE_URL: https://tpjvalzwkqwttvmszvie.supabase.co
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python scripts/noise_upload.py
+
+  pink:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    needs: bsn
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install requests -q
+      - name: Download + Upload PINK
+        env:
+          CLIENT_ID: ${{ secrets.YT_CLIENT_ID_2 }}
+          CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET_2 }}
+          REFRESH_TOKEN: ${{ secrets.YOUTUBE_RT_PINK }}
+          CANAL: pink
+          CHANNEL_ID: UCXQ_-FOGTJk17T06gy0bYqQ
+          TITULO: "Pink Noise 12 Hours | Deep Sleep, Memory Boost & Tinnitus Relief | Black Screen"
+          TAGS: "pink noise,deep sleep,tinnitus,memory boost,sleep science,black screen,12 hours,tinnitus relief,anxiety relief"
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: tafita1981novo-dotcom/Repovazio
+          ASSET_NAME: PINK.MP4
+          SUPABASE_URL: https://tpjvalzwkqwttvmszvie.supabase.co
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python scripts/noise_upload.py
+
+  rain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    needs: pink
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install requests -q
+      - name: Download + Upload RAIN
+        env:
+          CLIENT_ID: ${{ secrets.YT_CLIENT_ID_2 }}
+          CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET_2 }}
+          REFRESH_TOKEN: ${{ secrets.YOUTUBE_RT_RAIN }}
+          CANAL: rain
+          CHANNEL_ID: UCSW8cGz1OcT1v90Vwc2-UPA
+          TITULO: "Rain Sounds 12 Hours | Heavy Rain for Sleep, Study & Relaxation | Black Screen"
+          TAGS: "rain sounds,sleep rain,rain for sleep,ASMR,sleep sounds,black screen,12 hours,heavy rain,anxiety relief"
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: tafita1981novo-dotcom/Repovazio
+          ASSET_NAME: RAIN.MP4
+          SUPABASE_URL: https://tpjvalzwkqwttvmszvie.supabase.co
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python scripts/noise_upload.py
