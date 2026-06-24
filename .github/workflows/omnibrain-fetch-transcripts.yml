@@ -32,18 +32,19 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-yt-v2
+          key: ${{ runner.os }}-pip-yt-v3
 
       - name: Install deps
         run: |
           pip install --upgrade pip
-          pip install "youtube-transcript-api>=0.6" "supabase>=2.0" httpx
+          pip install "youtube-transcript-api>=0.6" "supabase>=2.0" httpx requests
 
       - name: Check pending
         id: check
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          # Usa SUPABASE_KEY2 que tem o service_role key migrado corretamente
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY2 }}
         run: |
           python3 - <<'EOF'
           import os
@@ -64,7 +65,7 @@ jobs:
         if: steps.check.outputs.pending != '0'
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY2 }}
           BATCH_SIZE:   ${{ github.event.inputs.batch_size  || '500' }}
           MAX_WORKERS:  ${{ github.event.inputs.max_workers || '30'  }}
         run: python3 omnibrain/fetch_transcripts.py
@@ -73,7 +74,7 @@ jobs:
         if: always()
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY2 }}
         run: |
           python3 - <<'EOF'
           import os
