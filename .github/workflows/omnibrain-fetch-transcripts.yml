@@ -2,8 +2,6 @@ name: OMNIBRAIN — Fetch Transcripts Fast
 
 on:
   schedule:
-    # A cada 2 horas — 500 vídeos por run × 12 runs/dia = 6.000/dia
-    # Com 2.595 vídeos, completa em menos de 1 dia
     - cron: '0 */2 * * *'
   workflow_dispatch:
     inputs:
@@ -21,7 +19,7 @@ on:
 jobs:
   fetch:
     runs-on: ubuntu-latest
-    timeout-minutes: 55    # YouTube pode ser lento; 55 min de margem
+    timeout-minutes: 55
 
     steps:
       - uses: actions/checkout@v4
@@ -34,12 +32,12 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-yt-${{ hashFiles('**/requirements*.txt') }}
+          key: ${{ runner.os }}-pip-yt-v2
 
       - name: Install deps
         run: |
           pip install --upgrade pip
-          pip install youtube-transcript-api "supabase>=2.0" httpx
+          pip install "youtube-transcript-api>=0.6" "supabase>=2.0" httpx
 
       - name: Check pending
         id: check
@@ -60,7 +58,7 @@ jobs:
 
       - name: Skip if done
         if: steps.check.outputs.pending == '0'
-        run: echo "✅ Nada pendente — workflow encerrado." && exit 0
+        run: echo "✅ Nada pendente." && exit 0
 
       - name: Fetch transcripts (parallel)
         if: steps.check.outputs.pending != '0'
