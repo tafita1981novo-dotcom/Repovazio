@@ -1,28 +1,32 @@
-name: OMNIBRAIN — Fetch Transcripts
+name: OMNIBRAIN — Fetch Transcripts Fast
 
 on:
   schedule:
-    # Roda a cada 4 horas: 00:00, 04:00, 08:00, 12:00, 16:00, 20:00 UTC
-    - cron: '0 */4 * * *'
+    # A cada 2 horas — 500 vídeos por run × 12 runs/dia = 6.000/dia
+    # Com 2.595 vídeos, completa em menos de 1 dia
+    - cron: '0 */2 * * *'
   workflow_dispatch:
     inputs:
       batch_size:
-        description: 'Número de vídeos por run (padrão: 50)'
+        description: 'Vídeos por run (padrão 500)'
         required: false
-        default: '50'
+        default: '500'
+        type: string
+      max_workers:
+        description: 'Threads paralelas (padrão 30)'
+        required: false
+        default: '30'
         type: string
 
 jobs:
-  fetch-transcripts:
+  fetch:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 55    # YouTube pode ser lento; 55 min de margem
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
@@ -30,16 +34,14 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-omnibrain-${{ hashFiles('omnibrain/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-omnibrain-
+          key: ${{ runner.os }}-pip-yt-${{ hashFiles('**/requirements*.txt') }}
 
-      - name: Install dependencies
+      - name: Install deps
         run: |
           pip install --upgrade pip
-          pip install youtube-transcript-api supabase
+          pip install youtube-transcript-api "supabase>=2.0" httpx
 
-      - name: Check pending count
+      - name: Check pending
         id: check
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -49,29 +51,27 @@ jobs:
           import os
           from supabase import create_client
           sb = create_client(os.environ['SUPABASE_URL'], os.environ['SUPABASE_KEY'])
-          res = sb.table('yt_transcripts').select('video_id', count='exact').eq('status', 'pending').execute()
-          count = res.count or 0
-          print(f"Pending videos: {count}")
+          r = sb.table('yt_transcripts').select('video_id', count='exact').eq('status','pending').execute()
+          count = r.count or 0
+          print(f"Pending: {count}")
           with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
-              f.write(f"pending_count={count}\n")
+              f.write(f"pending={count}\n")
           EOF
 
-      - name: Skip if no pending
-        if: steps.check.outputs.pending_count == '0'
-        run: |
-          echo "✅ No pending videos — nothing to do"
-          exit 0
+      - name: Skip if done
+        if: steps.check.outputs.pending == '0'
+        run: echo "✅ Nada pendente — workflow encerrado." && exit 0
 
-      - name: Fetch transcripts
-        if: steps.check.outputs.pending_count != '0'
+      - name: Fetch transcripts (parallel)
+        if: steps.check.outputs.pending != '0'
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-          BATCH_SIZE: ${{ github.event.inputs.batch_size || '50' }}
-        run: |
-          python3 omnibrain/fetch_transcripts.py
+          BATCH_SIZE:   ${{ github.event.inputs.batch_size  || '500' }}
+          MAX_WORKERS:  ${{ github.event.inputs.max_workers || '30'  }}
+        run: python3 omnibrain/fetch_transcripts.py
 
-      - name: Print summary
+      - name: Summary
         if: always()
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -81,15 +81,8 @@ jobs:
           import os
           from supabase import create_client
           sb = create_client(os.environ['SUPABASE_URL'], os.environ['SUPABASE_KEY'])
-          
-          statuses = ['pending', 'done', 'no_captions', 'error']
-          print("=== OMNIBRAIN Status ===")
-          total = 0
-          for s in statuses:
-              res = sb.table('yt_transcripts').select('video_id', count='exact').eq('status', s).execute()
-              count = res.count or 0
-              total += count
-              emoji = {'pending':'⏳','done':'✅','no_captions':'🔇','error':'❌'}.get(s,'?')
-              print(f"  {emoji} {s}: {count}")
-          print(f"  📊 Total: {total}")
+          print("=== OMNIBRAIN yt_transcripts ===")
+          for s, emoji in [('pending','⏳'),('done','✅'),('no_captions','🔇'),('error','❌')]:
+              r = sb.table('yt_transcripts').select('video_id', count='exact').eq('status',s).execute()
+              print(f"  {emoji} {s}: {r.count}")
           EOF
