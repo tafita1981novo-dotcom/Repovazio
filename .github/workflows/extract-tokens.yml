@@ -1,41 +1,43 @@
-name: Extract YT Tokens to Supabase
+name: Extract YT Tokens
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/extract-tokens.yml'
+
 jobs:
   extract:
     runs-on: ubuntu-latest
     steps:
-      - name: Save all YT refresh tokens to Supabase
+      - name: Extract all YT tokens to Supabase
         run: |
-          pip install requests -q
-          python3 << 'PYEOF'
-import requests, json
+          pip install requests -q 2>/dev/null
+          python3 - << 'PYEOF'
+import requests
 
-SUPABASE_URL = "https://tpjvalzwkqwttvmszvie.supabase.co"
-SUPABASE_KEY = "${{ secrets.SUPABASE_SERVICE_KEY }}"
-SB_H = {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}", "Content-Type": "application/json", "Prefer": "resolution=merge-duplicates"}
+SB_URL = "https://tpjvalzwkqwttvmszvie.supabase.co"
+SB_KEY = "${{ secrets.SUPABASE_SERVICE_KEY }}"
+SB_H = {
+  "apikey": SB_KEY,
+  "Authorization": f"Bearer {SB_KEY}",
+  "Content-Type": "application/json",
+  "Prefer": "resolution=merge-duplicates"
+}
 
 tokens = {
-    "secret:YOUTUBE_RT_DBN":     "${{ secrets.YOUTUBE_RT_DBN }}",
-    "secret:YOUTUBE_RT_ADHD":    "${{ secrets.YOUTUBE_RT_ADHD }}",
-    "secret:YOUTUBE_RT_WNV":     "${{ secrets.YOUTUBE_RT_WNV }}",
-    "secret:YOUTUBE_RT_BSN":     "${{ secrets.YOUTUBE_RT_BSN }}",
-    "secret:YOUTUBE_RT_PINK":    "${{ secrets.YOUTUBE_RT_PINK }}",
-    "secret:YOUTUBE_RT_TINNITUS":"${{ secrets.YOUTUBE_RT_TINNITUS }}",
-    "secret:YOUTUBE_RT_RAIN":    "${{ secrets.YOUTUBE_RT_RAIN }}",
-    "secret:YT_CLIENT_ID_2":     "${{ secrets.YT_CLIENT_ID_2 }}",
-    "secret:YT_CLIENT_SECRET_2": "${{ secrets.YT_CLIENT_SECRET_2 }}",
+  "secret:YOUTUBE_RT_DBN":      "${{ secrets.YOUTUBE_RT_DBN }}",
+  "secret:YOUTUBE_RT_ADHD":     "${{ secrets.YOUTUBE_RT_ADHD }}",
+  "secret:YOUTUBE_RT_WNV":      "${{ secrets.YOUTUBE_RT_WNV }}",
+  "secret:YOUTUBE_RT_BSN":      "${{ secrets.YOUTUBE_RT_BSN }}",
+  "secret:YOUTUBE_RT_PINK":     "${{ secrets.YOUTUBE_RT_PINK }}",
+  "secret:YOUTUBE_RT_TINNITUS": "${{ secrets.YOUTUBE_RT_TINNITUS }}",
+  "secret:YOUTUBE_RT_RAIN":     "${{ secrets.YOUTUBE_RT_RAIN }}",
+  "secret:YT_CLIENT_ID_2":      "${{ secrets.YT_CLIENT_ID_2 }}",
+  "secret:YT_CLIENT_SECRET_2":  "${{ secrets.YT_CLIENT_SECRET_2 }}",
 }
 
 for key, val in tokens.items():
-    if val and val.strip():
-        r = requests.post(
-            f"{SUPABASE_URL}/rest/v1/ia_cache",
-            headers=SB_H,
-            json={"cache_key": key, "value": val}
-        )
-        status = "OK" if r.status_code in (200, 201) else f"ERRO {r.status_code}"
-        print(f"{status}: {key}")
-    else:
-        print(f"VAZIO: {key}")
+    r = requests.post(f"{SB_URL}/rest/v1/ia_cache", headers=SB_H,
+                      json={"cache_key": key, "value": val})
+    print(f"{'OK' if r.status_code in (200,201) else 'ERR '+str(r.status_code)}: {key}")
 PYEOF
