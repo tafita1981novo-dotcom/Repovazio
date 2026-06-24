@@ -1,0 +1,40 @@
+name: _copy-anon-key
+on:
+  repository_dispatch:
+    types: [copy-anon]
+jobs:
+  copy:
+    runs-on: ubuntu-latest
+    steps:
+      - run: pip install PyNaCl requests -q
+      - run: |
+          python3 << 'PYEOF'
+          import base64, requests, os
+          from nacl import encoding, public
+
+          TOKEN = os.environ["PAT"]
+          ANON  = os.environ["ANON"]
+          URL   = os.environ["URL"]
+          HDR = {"Authorization": f"token {TOKEN}"}
+          DEST = "tafita1981novo-dotcom/omnibrain-knowledge"
+
+          pk = requests.get(f"https://api.github.com/repos/{DEST}/actions/secrets/public-key", headers=HDR).json()
+          kid, pub = pk["key_id"], pk["key"]
+
+          def enc(val):
+              k = public.PublicKey(pub.encode(), encoding.Base64Encoder())
+              return base64.b64encode(public.SealedBox(k).encrypt(val.encode())).decode()
+
+          def set_s(name, val):
+              r = requests.put(f"https://api.github.com/repos/{DEST}/actions/secrets/{name}",
+                               headers=HDR, json={"encrypted_value": enc(val), "key_id": kid})
+              print(f"  {name}: {'✅' if r.status_code in (201,204) else '❌'} ({r.status_code})")
+
+          print(f"ANON vazio: {not bool(ANON)}")
+          set_s("SUPABASE_ANON_KEY", ANON)
+          set_s("SUPABASE_URL",      URL)
+          PYEOF
+        env:
+          PAT:  ${{ secrets.GH_PAT }}
+          ANON: ${{ secrets.SUPABASE_ANON_KEY }}
+          URL:  ${{ secrets.SUPABASE_URL }}
