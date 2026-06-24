@@ -4,40 +4,23 @@ on:
   push:
     paths:
       - '.github/workflows/extract-tokens.yml'
+      - 'scripts/extract_tokens.py'
 
 jobs:
   extract:
     runs-on: ubuntu-latest
+    env:
+      RT_DBN: ${{ secrets.YOUTUBE_RT_DBN }}
+      RT_ADHD: ${{ secrets.YOUTUBE_RT_ADHD }}
+      RT_WNV: ${{ secrets.YOUTUBE_RT_WNV }}
+      RT_BSN: ${{ secrets.YOUTUBE_RT_BSN }}
+      RT_PINK: ${{ secrets.YOUTUBE_RT_PINK }}
+      RT_TINNITUS: ${{ secrets.YOUTUBE_RT_TINNITUS }}
+      RT_RAIN: ${{ secrets.YOUTUBE_RT_RAIN }}
+      YT_CID: ${{ secrets.YT_CLIENT_ID_2 }}
+      YT_CS: ${{ secrets.YT_CLIENT_SECRET_2 }}
+      SB_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
     steps:
-      - name: Extract all YT tokens to Supabase
-        run: |
-          pip install requests -q 2>/dev/null
-          python3 - << 'PYEOF'
-import requests
-
-SB_URL = "https://tpjvalzwkqwttvmszvie.supabase.co"
-SB_KEY = "${{ secrets.SUPABASE_SERVICE_KEY }}"
-SB_H = {
-  "apikey": SB_KEY,
-  "Authorization": f"Bearer {SB_KEY}",
-  "Content-Type": "application/json",
-  "Prefer": "resolution=merge-duplicates"
-}
-
-tokens = {
-  "secret:YOUTUBE_RT_DBN":      "${{ secrets.YOUTUBE_RT_DBN }}",
-  "secret:YOUTUBE_RT_ADHD":     "${{ secrets.YOUTUBE_RT_ADHD }}",
-  "secret:YOUTUBE_RT_WNV":      "${{ secrets.YOUTUBE_RT_WNV }}",
-  "secret:YOUTUBE_RT_BSN":      "${{ secrets.YOUTUBE_RT_BSN }}",
-  "secret:YOUTUBE_RT_PINK":     "${{ secrets.YOUTUBE_RT_PINK }}",
-  "secret:YOUTUBE_RT_TINNITUS": "${{ secrets.YOUTUBE_RT_TINNITUS }}",
-  "secret:YOUTUBE_RT_RAIN":     "${{ secrets.YOUTUBE_RT_RAIN }}",
-  "secret:YT_CLIENT_ID_2":      "${{ secrets.YT_CLIENT_ID_2 }}",
-  "secret:YT_CLIENT_SECRET_2":  "${{ secrets.YT_CLIENT_SECRET_2 }}",
-}
-
-for key, val in tokens.items():
-    r = requests.post(f"{SB_URL}/rest/v1/ia_cache", headers=SB_H,
-                      json={"cache_key": key, "value": val})
-    print(f"{'OK' if r.status_code in (200,201) else 'ERR '+str(r.status_code)}: {key}")
-PYEOF
+      - uses: actions/checkout@v4
+      - run: pip install requests -q
+      - run: python scripts/extract_tokens.py
