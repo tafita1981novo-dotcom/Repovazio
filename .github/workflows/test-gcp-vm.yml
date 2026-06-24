@@ -2,42 +2,37 @@ name: Test GCP VM Connection
 
 on:
   workflow_dispatch:
+  repository_dispatch:
+    types: [test-gcp-vm]
 
 jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Test VM reachable (porta 22)
+      - name: Test porta 22
         run: |
-          echo "Testando conectividade com 34.148.152.96..."
-          nc -zv -w 5 34.148.152.96 22 && echo "✅ Porta 22 ABERTA" || echo "❌ Porta 22 inacessível"
+          nc -zv -w 8 34.148.152.96 22 && echo "✅ Porta 22 ABERTA" || echo "❌ Porta 22 fechada"
 
-      - name: Setup SSH key
-        if: ${{ secrets.GCP_SSH_KEY != '' }}
+      - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.GCP_SSH_KEY }}" > ~/.ssh/vm
+          printf '%s\n' "${{ secrets.GCP_SSH_KEY }}" > ~/.ssh/vm
           chmod 600 ~/.ssh/vm
           ssh-keyscan -H 34.148.152.96 >> ~/.ssh/known_hosts 2>/dev/null || true
-          echo "✅ SSH key configurada"
 
       - name: SSH test
-        if: ${{ secrets.GCP_SSH_KEY != '' }}
         run: |
-          ssh -i ~/.ssh/vm -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
+          ssh -i ~/.ssh/vm \
+            -o StrictHostKeyChecking=no \
+            -o ConnectTimeout=10 \
+            -o BatchMode=yes \
             rafael@34.148.152.96 "
-            echo '✅ VM ONLINE'
-            echo 'Hostname:' \$(hostname)
-            echo 'Uptime:' \$(uptime -p)
-            echo 'RAM:' \$(free -h | grep Mem | awk '{print \$2\" total, \"\$3\" usada\"}')
-            echo 'Disco:' \$(df -h / | tail-1 | awk '{print \$3\"/\"\$2\" usado\"}')
-            echo 'Python:' \$(python3 --version)
-            echo 'yt-dlp:' \$(yt-dlp --version 2>/dev/null || echo 'não instalado')
-          "
-
-      - name: Aviso se sem SSH key
-        if: ${{ secrets.GCP_SSH_KEY == '' }}
-        run: |
-          echo "⚠ Secret GCP_SSH_KEY não encontrado"
-          echo "Adicione em: https://github.com/tafita1981novo-dotcom/Repovazio/settings/secrets/actions/new"
+              echo '=== VM ONLINE ==='
+              hostname
+              uptime -p
+              free -h | grep Mem
+              df -h / | tail -1
+              python3 --version
+              pip3 show yt-dlp 2>/dev/null | grep Version || echo 'yt-dlp: não instalado'
+            "
