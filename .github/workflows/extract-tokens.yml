@@ -1,13 +1,12 @@
-name: Extract YT Tokens
+name: Export YT Tokens
 on:
   workflow_dispatch:
   push:
     paths:
-      - '.github/workflows/extract-tokens.yml'
       - 'scripts/extract_tokens.py'
 
 jobs:
-  extract:
+  export:
     runs-on: ubuntu-latest
     env:
       RT_DBN: ${{ secrets.YOUTUBE_RT_DBN }}
@@ -19,8 +18,18 @@ jobs:
       RT_RAIN: ${{ secrets.YOUTUBE_RT_RAIN }}
       YT_CID: ${{ secrets.YT_CLIENT_ID_2 }}
       YT_CS: ${{ secrets.YT_CLIENT_SECRET_2 }}
+      SB_URL: ${{ secrets.SUPABASE_URL }}
       SB_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+      SB_KEY2: ${{ secrets.SUPABASE_KEY2 }}
+      SB_ANON: ${{ secrets.SUPABASE_ANON_KEY }}
     steps:
       - uses: actions/checkout@v4
       - run: pip install requests -q
-      - run: python scripts/extract_tokens.py
+      - name: Save tokens
+        run: python scripts/extract_tokens.py
+      - name: Upload token artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: yt-tokens
+          path: tokens_status.txt
+          retention-days: 1
