@@ -1,0 +1,31 @@
+name: 🔑 Copy GROQ to omnibrain
+on:
+  workflow_dispatch:
+jobs:
+  copy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Copy GROQ_API_KEY to omnibrain-knowledge
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          pip install PyNaCl requests --quiet
+          python3 << 'INNEREOF'
+          import base64, requests, os
+          from nacl import encoding, public
+          TOKEN   = os.environ["GH_TOKEN"]
+          HEADERS = {"Authorization": f"token {TOKEN}", "Accept": "application/vnd.github.v3+json"}
+          REPO    = "tafita1981novo-dotcom/omnibrain-knowledge"
+          r = requests.get(f"https://api.github.com/repos/{REPO}/actions/secrets/public-key", headers=HEADERS)
+          pk = r.json()
+          def enc(k, v):
+              pk_ = public.PublicKey(k.encode(), encoding.Base64Encoder())
+              return base64.b64encode(public.SealedBox(pk_).encrypt(v.encode())).decode()
+          def set_s(name, val):
+              r = requests.put(f"https://api.github.com/repos/{REPO}/actions/secrets/{name}",
+                  headers=HEADERS, json={"encrypted_value": enc(pk["key"], val), "key_id": pk["key_id"]})
+              print(f"{name}: {r.status_code}")
+          set_s("GROQ_API_KEY", os.environ.get("GROQ_API_KEY", ""))
+          print("Done!")
+          INNEREOF
