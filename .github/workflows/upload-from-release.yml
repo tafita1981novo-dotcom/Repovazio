@@ -1,4 +1,4 @@
-name: Upload Noise Videos from Release
+name: Watch Release and Upload to YouTube
 
 on:
   workflow_dispatch:
@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: pip install requests -q
-      - name: Download + Upload DBN
+      - name: Download DBN from Release + Upload YouTube
         env:
           CLIENT_ID: ${{ secrets.YT_CLIENT_ID_2 }}
           CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET_2 }}
@@ -35,7 +35,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: pip install requests -q
-      - name: Download + Upload ADHD
+      - name: Download ADHD from Release + Upload YouTube
         env:
           CLIENT_ID: ${{ secrets.YT_CLIENT_ID_2 }}
           CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET_2 }}
@@ -58,7 +58,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: pip install requests -q
-      - name: Download + Upload BSN
+      - name: Download BSN from Release + Upload YouTube
         env:
           CLIENT_ID: ${{ secrets.YT_CLIENT_ID_2 }}
           CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET_2 }}
@@ -81,7 +81,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: pip install requests -q
-      - name: Download + Upload PINK
+      - name: Download PINK from Release + Upload YouTube
         env:
           CLIENT_ID: ${{ secrets.YT_CLIENT_ID_2 }}
           CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET_2 }}
@@ -104,7 +104,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: pip install requests -q
-      - name: Download + Upload RAIN
+      - name: Download RAIN from Release + Upload YouTube
         env:
           CLIENT_ID: ${{ secrets.YT_CLIENT_ID_2 }}
           CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET_2 }}
