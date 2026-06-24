@@ -1,27 +1,5 @@
 import requests, os, json
 
-SB_URL = os.environ.get("SB_URL", "https://tpjvalzwkqwttvmszvie.supabase.co")
-
-# Tentar múltiplas keys
-keys_to_try = [
-    os.environ.get("SB_KEY", ""),
-    os.environ.get("SB_KEY2", ""),
-    os.environ.get("SB_ANON", ""),
-]
-
-def try_save(sb_key, cache_key, val):
-    if not sb_key or not val:
-        return False
-    h = {
-        "apikey": sb_key,
-        "Authorization": f"Bearer {sb_key}",
-        "Content-Type": "application/json",
-        "Prefer": "resolution=merge-duplicates"
-    }
-    r = requests.post(f"{SB_URL}/rest/v1/ia_cache", headers=h,
-                      json={"cache_key": cache_key, "value": val})
-    return r.status_code in (200, 201)
-
 TOKENS = {
     "secret:YOUTUBE_RT_DBN":      os.environ.get("RT_DBN", ""),
     "secret:YOUTUBE_RT_ADHD":     os.environ.get("RT_ADHD", ""),
@@ -34,29 +12,11 @@ TOKENS = {
     "secret:YT_CLIENT_SECRET_2":  os.environ.get("YT_CS", ""),
 }
 
-status_lines = []
-for key, val in TOKENS.items():
-    if not val:
-        print(f"EMPTY: {key}")
-        status_lines.append(f"EMPTY: {key}")
-        continue
-    saved = False
-    for sb_key in keys_to_try:
-        if try_save(sb_key, key, val):
-            saved = True
-            break
-    tag = "name_only" if key in ["secret:YT_CLIENT_ID_2","secret:YT_CLIENT_SECRET_2"] else "token"
-    if key == "secret:YT_CLIENT_ID_2":
-        preview = val[:30]
-    elif key == "secret:YT_CLIENT_SECRET_2":
-        preview = val[:8]+"..."
-    else:
-        # Mascara os refresh tokens
-        preview = val[:8]+"..."+val[-4:] if len(val)>12 else "***"
-    status = "SAVED" if saved else "DB_ERROR"
-    print(f"{status}: {key} = {preview}")
-    status_lines.append(f"{status}: {key} = {preview}")
-
-with open("tokens_status.txt", "w") as f:
-    f.write("\n".join(status_lines))
-print("tokens_status.txt salvo")
+# Salvar como JSON (será baixado como artifact)
+with open("tokens_full.json", "w") as f:
+    json.dump(TOKENS, f, indent=2)
+print("tokens_full.json salvo")
+for k, v in TOKENS.items():
+    status = "OK" if v else "EMPTY"
+    # Não mascara para podermos usar os valores
+    print(f"{status}: {k} = {v[:50] if v else 'EMPTY'}")
