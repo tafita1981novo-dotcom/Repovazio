@@ -1,21 +1,16 @@
-name: OMNIBRAIN — Fetch Transcripts via GCP VM
+name: OMNIBRAIN — GCP VM Fetch
 
 on:
   workflow_dispatch:
     inputs:
-      batch_size:
-        description: 'Vídeos por round'
-        default: '50'
-      max_workers:
-        description: 'Threads paralelas'
-        default: '5'
-  schedule:
-    - cron: '0 */3 * * *'   # a cada 3h enquanto tiver pending
+      rounds:
+        description: 'Quantos rounds de 50 vídeos'
+        default: '52'
 
 jobs:
   fetch:
     runs-on: ubuntu-latest
-    timeout-minutes: 170
+    timeout-minutes: 340
 
     steps:
       - uses: actions/checkout@v4
@@ -23,55 +18,28 @@ jobs:
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.GCP_SSH_KEY }}" > ~/.ssh/gcp_vm
-          chmod 600 ~/.ssh/gcp_vm
-          ssh-keyscan -H 34.148.152.96 >> ~/.ssh/known_hosts 2>/dev/null
+          echo "${{ secrets.GCP_SSH_KEY }}" > ~/.ssh/vm
+          chmod 600 ~/.ssh/vm
+          ssh-keyscan -H 34.148.152.96 >> ~/.ssh/known_hosts 2>/dev/null || true
 
-      - name: Check VM alive
+      - name: Deploy script na VM
         run: |
-          ssh -i ~/.ssh/gcp_vm -o ConnectTimeout=10 rafael@34.148.152.96 "echo '✅ VM online'; uptime"
+          scp -i ~/.ssh/vm -o StrictHostKeyChecking=no \
+            omnibrain/fetch_gcp.py \
+            rafael@34.148.152.96:/home/rafael/omnibrain_fetch.py
 
-      - name: Upload script + install deps
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY2 }}
+      - name: Instala deps na VM
         run: |
-          # Copia o script para a VM
-          scp -i ~/.ssh/gcp_vm omnibrain/fetch_gcp.py rafael@34.148.152.96:/home/rafael/omnibrain_fetch.py
+          ssh -i ~/.ssh/vm -o StrictHostKeyChecking=no rafael@34.148.152.96 \
+            "pip3 install yt-dlp requests --quiet --break-system-packages 2>/dev/null; yt-dlp --version"
 
-          # Instala dependências
-          ssh -i ~/.ssh/gcp_vm rafael@34.148.152.96 << 'SSH'
-            pip3 install yt-dlp requests --quiet --break-system-packages 2>/dev/null || \
-            pip3 install yt-dlp requests --quiet
-            yt-dlp --version
-          SSH
-
-      - name: Export cookies (if needed)
+      - name: Roda fetcher
         run: |
-          # Verifica se já tem cookies na VM
-          HAS_COOKIES=$(ssh -i ~/.ssh/gcp_vm rafael@34.148.152.96 \
-            "test -f /home/rafael/yt_cookies.txt && echo yes || echo no")
-          echo "Cookies na VM: $HAS_COOKIES"
-
-      - name: Run transcript fetcher
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY2 }}
-          BATCH:  ${{ github.event.inputs.batch_size  || '50' }}
-          WORKERS: ${{ github.event.inputs.max_workers || '5' }}
-        run: |
-          ssh -i ~/.ssh/gcp_vm rafael@34.148.152.96 << SSHEOF
+          ssh -i ~/.ssh/vm -o StrictHostKeyChecking=no rafael@34.148.152.96 << 'SSH'
             export SUPABASE_URL="${{ secrets.SUPABASE_URL }}"
             export SUPABASE_KEY="${{ secrets.SUPABASE_KEY2 }}"
-            export BATCH_SIZE="${BATCH}"
-            export MAX_WORKERS="${WORKERS}"
+            export BATCH_SIZE="50"
+            export MAX_WORKERS="5"
             export COOKIES_FILE="/home/rafael/yt_cookies.txt"
-            cd /home/rafael
-            python3 omnibrain_fetch.py 2>&1 | tee /home/rafael/omnibrain_last.log
-          SSHEOF
-
-      - name: Show summary
-        if: always()
-        run: |
-          ssh -i ~/.ssh/gcp_vm rafael@34.148.152.96 \
-            "tail -20 /home/rafael/omnibrain_last.log 2>/dev/null || echo 'sem log'"
+            python3 /home/rafael/omnibrain_fetch.py 2>&1
+          SSH
