@@ -1,154 +1,183 @@
 #!/usr/bin/env python3
 """
-OMNIBRAIN — YouTube Transcript Fetcher
-Busca transcrições dos vídeos pending no Supabase.
-Roda via GitHub Actions a cada 4h, processando 50 vídeos por run.
+OMNIBRAIN — YouTube Transcript Fetcher FAST
+Usa ThreadPoolExecutor para buscar 500 transcrições em paralelo por run.
 """
 
 import os
 import json
 import time
 import logging
-from datetime import datetime
+import concurrent.futures
+from datetime import datetime, timezone
 from supabase import create_client, Client
-from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled, NoTranscriptFound, VideoUnavailable
-from youtube_transcript_api.formatters import TextFormatter
+from youtube_transcript_api import (
+    YouTubeTranscriptApi,
+    TranscriptsDisabled,
+    NoTranscriptFound,
+    VideoUnavailable,
+    CouldNotRetrieveTranscript,
+)
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s %(message)s',
+    handlers=[logging.StreamHandler()]
+)
 logger = logging.getLogger(__name__)
 
 SUPABASE_URL = os.environ['SUPABASE_URL']
 SUPABASE_KEY = os.environ['SUPABASE_KEY']
-BATCH_SIZE = int(os.environ.get('BATCH_SIZE', '50'))
+BATCH_SIZE   = int(os.environ.get('BATCH_SIZE', '500'))
+MAX_WORKERS  = int(os.environ.get('MAX_WORKERS', '30'))
+MAX_CHARS    = 60_000   # chars máximos por transcrição
 
-# Idiomas preferidos para busca de transcrição
-LANG_PRIORITY = ['pt', 'pt-BR', 'pt-PT', 'en', 'en-US', 'en-GB', 'es', 'fr', 'de', 'it', 'ja', 'ko', 'zh']
+LANG_PRIORITY = ['pt', 'pt-BR', 'pt-PT', 'en', 'en-US', 'en-GB',
+                 'es', 'fr', 'de', 'it', 'ja', 'ko', 'zh-Hans', 'zh']
 
-def get_supabase() -> Client:
-    return create_client(SUPABASE_URL, SUPABASE_KEY)
 
-def fetch_transcript(video_id: str) -> dict:
-    """Busca transcrição de um vídeo. Retorna dict com transcript, lang, word_count."""
+def fetch_one(video_id: str) -> dict:
+    """Busca a transcrição de um vídeo. Retorna dict seguro para UPDATE."""
     try:
-        # Lista todas as transcrições disponíveis
         transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
-        
+
         transcript = None
-        lang_used = None
-        
-        # Tenta idiomas na ordem de prioridade
+        lang_used  = None
+
+        # 1) tenta idiomas na ordem de prioridade
         for lang in LANG_PRIORITY:
             try:
                 t = transcript_list.find_transcript([lang])
                 transcript = t
-                lang_used = t.language_code
+                lang_used  = t.language_code
                 break
-            except (NoTranscriptFound, Exception):
-                continue
-        
-        # Se não achou nenhum da lista, pega o primeiro disponível
-        if not transcript:
-            try:
-                # Tenta pegar qualquer transcrição manualmente gerada
-                for t in transcript_list:
-                    transcript = t
-                    lang_used = t.language_code
-                    break
             except Exception:
-                pass
-        
-        if not transcript:
-            return {'status': 'no_captions', 'error': 'No transcript found in any language'}
-        
-        # Busca o conteúdo da transcrição
-        formatter = TextFormatter()
-        snippets = transcript.fetch()
-        
-        # Concatena texto
-        text_parts = [s['text'] for s in snippets]
-        full_text = ' '.join(text_parts).strip()
-        
+                continue
+
+        # 2) pega o primeiro disponível (manual ou gerado)
+        if transcript is None:
+            for t in transcript_list:
+                transcript = t
+                lang_used  = t.language_code
+                break
+
+        if transcript is None:
+            return {
+                'video_id': video_id,
+                'status':   'no_captions',
+                'error_msg': 'no transcript in any language',
+            }
+
+        snippets  = transcript.fetch()
+        full_text = ' '.join(s.get('text', '') for s in snippets).strip()
+
         if not full_text:
-            return {'status': 'no_captions', 'error': 'Empty transcript'}
-        
-        word_count = len(full_text.split())
-        
+            return {
+                'video_id':  video_id,
+                'status':    'no_captions',
+                'error_msg': 'empty transcript',
+            }
+
         return {
-            'status': 'done',
-            'transcript': full_text[:50000],  # limita a 50k chars
-            'lang': lang_used,
-            'word_count': word_count
+            'video_id':   video_id,
+            'status':     'done',
+            'transcript': full_text[:MAX_CHARS],
+            'lang':       lang_used or '',
+            'word_count': len(full_text.split()),
         }
-        
-    except TranscriptsDisabled:
-        return {'status': 'no_captions', 'error': 'Transcripts disabled'}
-    except VideoUnavailable:
-        return {'status': 'no_captions', 'error': 'Video unavailable'}
-    except NoTranscriptFound:
-        return {'status': 'no_captions', 'error': 'No transcript found'}
+
+    except (TranscriptsDisabled, NoTranscriptFound, VideoUnavailable):
+        return {'video_id': video_id, 'status': 'no_captions',
+                'error_msg': 'disabled or unavailable'}
+    except CouldNotRetrieveTranscript as e:
+        return {'video_id': video_id, 'status': 'no_captions',
+                'error_msg': str(e)[:200]}
     except Exception as e:
-        err = str(e)[:200]
-        logger.error(f"Error fetching {video_id}: {err}")
-        return {'status': 'error', 'error': err}
+        return {'video_id': video_id, 'status': 'error',
+                'error_msg': str(e)[:200]}
+
+
+def update_batch(sb: Client, results: list[dict]) -> None:
+    """Grava todos os resultados de volta no Supabase em upserts individuais."""
+    now = datetime.now(timezone.utc).isoformat()
+    for r in results:
+        data = {
+            'status':     r['status'],
+            'fetched_at': now,
+        }
+        if r['status'] == 'done':
+            data['transcript'] = r.get('transcript', '')
+            data['lang']       = r.get('lang', '')
+            data['word_count'] = r.get('word_count', 0)
+        else:
+            data['error_msg'] = r.get('error_msg', '')
+
+        try:
+            sb.table('yt_transcripts') \
+              .update(data) \
+              .eq('video_id', r['video_id']) \
+              .execute()
+        except Exception as e:
+            logger.warning(f"Supabase update failed for {r['video_id']}: {e}")
+
 
 def main():
-    logger.info(f"Starting transcript fetch — batch size: {BATCH_SIZE}")
-    sb = get_supabase()
-    
-    # Busca batch de vídeos pendentes
-    res = sb.table('yt_transcripts')\
-        .select('video_id, title')\
-        .eq('status', 'pending')\
-        .limit(BATCH_SIZE)\
-        .execute()
-    
-    videos = res.data
-    logger.info(f"Found {len(videos)} pending videos to process")
-    
+    logger.info(f"⚡ OMNIBRAIN fast-fetch | batch={BATCH_SIZE} workers={MAX_WORKERS}")
+    sb = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+    # Pega os vídeos pending
+    res = (
+        sb.table('yt_transcripts')
+          .select('video_id')
+          .eq('status', 'pending')
+          .limit(BATCH_SIZE)
+          .execute()
+    )
+    videos = res.data or []
+    logger.info(f"📋 {len(videos)} vídeos a processar")
+
     if not videos:
-        logger.info("No pending videos. Done!")
+        logger.info("✅ Nada pendente.")
         return
-    
-    stats = {'done': 0, 'no_captions': 0, 'error': 0}
-    
-    for i, video in enumerate(videos):
-        vid_id = video['video_id']
-        title = video.get('title', '')[:60]
-        logger.info(f"[{i+1}/{len(videos)}] {vid_id} — {title}")
-        
-        result = fetch_transcript(vid_id)
-        status = result['status']
-        stats[status] = stats.get(status, 0) + 1
-        
-        # Atualiza no Supabase
-        update_data = {
-            'status': status,
-            'fetched_at': datetime.utcnow().isoformat()
-        }
-        if status == 'done':
-            update_data['transcript'] = result.get('transcript', '')
-            update_data['lang'] = result.get('lang', '')
-            update_data['word_count'] = result.get('word_count', 0)
-        else:
-            update_data['error_msg'] = result.get('error', '')
-        
-        try:
-            sb.table('yt_transcripts')\
-                .update(update_data)\
-                .eq('video_id', vid_id)\
-                .execute()
-        except Exception as e:
-            logger.error(f"Supabase update error for {vid_id}: {e}")
-        
-        # Rate limiting gentil
-        time.sleep(0.3)
-    
-    logger.info(f"Batch complete — done:{stats.get('done',0)} no_captions:{stats.get('no_captions',0)} error:{stats.get('error',0)}")
-    
-    # Relatório final
-    count_res = sb.table('yt_transcripts').select('status', count='exact').execute()
-    total = sum(1 for r in sb.table('yt_transcripts').select('video_id').execute().data)
-    logger.info(f"Total in table: {total}")
+
+    video_ids = [v['video_id'] for v in videos]
+
+    # Processa em paralelo
+    results = []
+    done_count = 0
+    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as pool:
+        futures = {pool.submit(fetch_one, vid): vid for vid in video_ids}
+        for future in concurrent.futures.as_completed(futures):
+            result = future.result()
+            results.append(result)
+            done_count += 1
+            if done_count % 50 == 0:
+                logger.info(f"  ↳ {done_count}/{len(video_ids)} processados...")
+
+    # Salva no Supabase
+    logger.info(f"💾 Gravando {len(results)} resultados no Supabase...")
+    update_batch(sb, results)
+
+    # Estatísticas
+    stats = {}
+    for r in results:
+        s = r['status']
+        stats[s] = stats.get(s, 0) + 1
+
+    logger.info("=== Resultado do batch ===")
+    logger.info(f"  ✅ done:        {stats.get('done', 0)}")
+    logger.info(f"  🔇 no_captions: {stats.get('no_captions', 0)}")
+    logger.info(f"  ❌ error:       {stats.get('error', 0)}")
+
+    # Contagem geral
+    try:
+        total_res  = sb.table('yt_transcripts').select('video_id', count='exact').execute()
+        pend_res   = sb.table('yt_transcripts').select('video_id', count='exact').eq('status', 'pending').execute()
+        done_res   = sb.table('yt_transcripts').select('video_id', count='exact').eq('status', 'done').execute()
+        logger.info(f"📊 Total: {total_res.count} | Pending: {pend_res.count} | Done: {done_res.count}")
+    except Exception:
+        pass
+
 
 if __name__ == '__main__':
     main()
