@@ -1,0 +1,68 @@
+name: Regen WNV TINNITUS
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'scripts/noise_upload_wt.py'
+
+jobs:
+  wnv:
+    runs-on: ubuntu-latest
+    timeout-minutes: 480
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get install -y ffmpeg
+      - run: pip install requests -q
+      - name: Generate WNV
+        run: |
+          ffmpeg -y \
+            -f lavfi -i "color=color=black:size=1920x1080:rate=1:duration=36000" \
+            -f lavfi -i "anoisesrc=color=white:amplitude=0.5:sample_rate=48000:duration=36000" \
+            -c:v libx264 -preset ultrafast -crf 40 -pix_fmt yuv420p -r 1 \
+            -c:a aac -b:a 192k -ar 48000 -ac 2 \
+            -af "loudnorm=I=-14:TP=-1:LRA=11" \
+            -t 36000 -movflags +faststart /tmp/wnv.mp4
+          ls -lh /tmp/wnv.mp4
+      - name: Upload WNV
+        env:
+          CLIENT_ID: ${{ secrets.YT_CLIENT_ID_2 }}
+          CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET_2 }}
+          REFRESH_TOKEN: ${{ secrets.YOUTUBE_RT_WNV }}
+          CANAL: wnv
+          CHANNEL_ID: UC0mFKp42jfL0ZobYEj7uwUA
+          TITULO: "White Noise 12 Hours | Pure Sleep Baby Calm Tinnitus Masking | Black Screen"
+          TAGS: "white noise,sleep sounds,baby sleep,tinnitus,black screen,sleep aid,12 hours,pure white noise"
+          SUPABASE_URL: https://tpjvalzwkqwttvmszvie.supabase.co
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python scripts/noise_upload.py
+
+  tinnitus:
+    runs-on: ubuntu-latest
+    timeout-minutes: 480
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get install -y ffmpeg
+      - run: pip install requests -q
+      - name: Generate TINNITUS
+        run: |
+          ffmpeg -y \
+            -f lavfi -i "color=color=black:size=1920x1080:rate=1:duration=36000" \
+            -f lavfi -i "anoisesrc=color=pink:amplitude=0.5:sample_rate=48000:duration=36000" \
+            -c:v libx264 -preset ultrafast -crf 40 -pix_fmt yuv420p -r 1 \
+            -c:a aac -b:a 192k -ar 48000 -ac 2 \
+            -af "loudnorm=I=-14:TP=-1:LRA=11" \
+            -t 36000 -movflags +faststart /tmp/tinnitus.mp4
+          ls -lh /tmp/tinnitus.mp4
+      - name: Upload TINNITUS
+        env:
+          CLIENT_ID: ${{ secrets.YT_CLIENT_ID_2 }}
+          CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET_2 }}
+          REFRESH_TOKEN: ${{ secrets.YOUTUBE_RT_TINNITUS }}
+          CANAL: tinnitus
+          CHANNEL_ID: UCZ5pmYA2ESO1vIhtE86l3_Q
+          TITULO: "Tinnitus Relief 12 Hours | Pink White Noise Masking Ringing Ears | Black Screen"
+          TAGS: "tinnitus,tinnitus relief,ringing ears,tinnitus masking,pink noise,white noise,12 hours,black screen"
+          SUPABASE_URL: https://tpjvalzwkqwttvmszvie.supabase.co
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python scripts/noise_upload.py
