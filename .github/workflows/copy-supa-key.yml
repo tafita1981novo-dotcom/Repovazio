@@ -1,0 +1,51 @@
+name: Copy Supabase Key to omnibrain-knowledge
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types: [copy-supa-key]
+jobs:
+  copy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Copy SUPABASE_KEY2 → omnibrain-knowledge/SUPABASE_SERVICE_KEY
+        env:
+          SUPA_KEY: ${{ secrets.SUPABASE_KEY2 }}
+          SUPA_URL: ${{ secrets.SUPABASE_URL }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          pip install PyNaCl requests --quiet 2>/dev/null
+          python3 << 'PYEOF'
+          import base64, requests, os
+          from nacl import encoding, public
+
+          TOKEN = os.environ["GH_TOKEN"]
+          SUPA_KEY = os.environ["SUPA_KEY"]
+          SUPA_URL = os.environ["SUPA_URL"]
+          HEADERS = {"Authorization": f"token {TOKEN}", "Accept": "application/vnd.github.v3+json"}
+          REPO = "tafita1981novo-dotcom/omnibrain-knowledge"
+
+          # Pega public key do repo destino
+          r = requests.get(f"https://api.github.com/repos/{REPO}/actions/secrets/public-key", headers=HEADERS)
+          pk = r.json()
+          key_id = pk["key_id"]
+          pub_key = pk["key"]
+
+          def encrypt(pub_b64, val):
+              k = public.PublicKey(pub_b64.encode(), encoding.Base64Encoder())
+              return base64.b64encode(public.SealedBox(k).encrypt(val.encode())).decode()
+
+          def set_secret(name, val):
+              enc = encrypt(pub_key, val)
+              r = requests.put(
+                  f"https://api.github.com/repos/{REPO}/actions/secrets/{name}",
+                  headers=HEADERS,
+                  json={"encrypted_value": enc, "key_id": key_id}
+              )
+              print(f"  {name}: HTTP {r.status_code} {'✅' if r.status_code in (201,204) else '❌'}")
+
+          print(f"KEY presente: {'sim' if SUPA_KEY else 'NAO'}")
+          print(f"URL: {SUPA_URL[:40] if SUPA_URL else 'VAZIO'}")
+          set_secret("SUPABASE_SERVICE_KEY", SUPA_KEY)
+          set_secret("SUPABASE_URL", SUPA_URL)
+          print("Concluído!")
+          PYEOF
