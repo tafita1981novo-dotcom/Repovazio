@@ -1,0 +1,43 @@
+name: Copy Supabase Anon Key
+on:
+  repository_dispatch:
+    types: [copy-anon-key]
+jobs:
+  copy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Copy keys
+        env:
+          ANON: ${{ secrets.SUPABASE_ANON_KEY }}
+          URL: ${{ secrets.SUPABASE_URL }}
+          PAT: ${{ secrets.GH_PAT }}
+        run: |
+          pip install PyNaCl requests --quiet 2>/dev/null
+          python3 << 'PYEOF'
+import base64, requests, os
+from nacl import encoding, public
+
+TOKEN = os.environ["PAT"]
+ANON  = os.environ["ANON"]
+URL   = os.environ["URL"]
+HDR = {"Authorization": f"token {TOKEN}", "Accept": "application/vnd.github.v3+json"}
+REPO = "tafita1981novo-dotcom/omnibrain-knowledge"
+
+r = requests.get(f"https://api.github.com/repos/{REPO}/actions/secrets/public-key", headers=HDR)
+pk = r.json(); kid = pk["key_id"]; pub = pk["key"]
+
+def enc(val):
+    k = public.PublicKey(pub.encode(), encoding.Base64Encoder())
+    return base64.b64encode(public.SealedBox(k).encrypt(val.encode())).decode()
+
+def set_s(name, val):
+    if not val: print(f"  {name}: VAZIO"); return
+    r = requests.put(f"https://api.github.com/repos/{REPO}/actions/secrets/{name}",
+                     headers=HDR, json={"encrypted_value": enc(val), "key_id": kid})
+    print(f"  {name}: {'✅' if r.status_code in (201,204) else '❌'} {r.status_code}")
+
+print(f"ANON: {'ok' if ANON else 'VAZIO'} | URL: {URL[:40] if URL else 'VAZIO'}")
+set_s("SUPABASE_ANON_KEY", ANON)
+set_s("SUPABASE_URL", URL)
+print("Done!")
+PYEOF
