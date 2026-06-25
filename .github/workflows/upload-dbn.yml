@@ -1,0 +1,30 @@
+name: Generate and Upload DBN 12h
+
+on:
+  workflow_dispatch:
+
+jobs:
+  generate-upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install numpy requests
+
+      - name: Install ffmpeg
+        run: sudo apt-get install -y ffmpeg
+
+      - name: Generate and Upload DBN 12h
+        env:
+          YT_CLIENT_ID_2:     ${{ secrets.YT_CLIENT_ID_2 }}
+          YT_CLIENT_SECRET_2: ${{ secrets.YT_CLIENT_SECRET_2 }}
+          YOUTUBE_RT_DBN:     ${{ secrets.YOUTUBE_RT_DBN }}
+        run: python scripts/upload_dbn.py
