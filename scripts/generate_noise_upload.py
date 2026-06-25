@@ -12,7 +12,7 @@ OUT        = f"/tmp/{CANAL}_gen.mp4"
 
 # Noise sintético por canal (seeds e filtros diferentes = fingerprint único)
 NOISE_FILTERS = {
-    "dbn":  "anoisesrc=color=brown:amplitude=0.3,aresample=44100",
+    "dbn":  "anoisesrc=color=brown:amplitude=0.35,bass=g=5:f=80:w=100,equalizer=f=200:t=o:w=2:g=-2.5,lowpass=f=1500,equalizer=f=4000:t=o:w=2:g=-2.5,volume=-13dB,aresample=44100",
     "adhd": "anoisesrc=color=brown:amplitude=0.25,highpass=f=60,aresample=44100",
     "bsn":  "anoisesrc=color=white:amplitude=0.2,lowpass=f=8000,aresample=44100",
     "pink": "anoisesrc=color=pink:amplitude=0.3,aresample=44100",
