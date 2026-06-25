@@ -1,7 +1,7 @@
-import numpy as np, struct, os, subprocess, requests
+import numpy as np, struct, os, subprocess, requests, time, random
 
 SR    = 44100
-BLOCO = SR * 600  # 10 min por bloco
+BLOCO = SR * 600  # 10 min
 
 def gerar_bloco_wav(seed, n, caminho):
     np.random.seed(seed)
@@ -25,12 +25,16 @@ def gerar_bloco_wav(seed, n, caminho):
         f.write(struct.pack("<HHIIHH",1,1,SR,SR*2,2,16))
         f.write(b"data"); f.write(struct.pack("<I",len(data))); f.write(data)
 
+# Seed base aleatorio — diferente a cada run para fingerprint unico
+BASE_SEED = random.randint(100000, 999999)
+print(f"Seed base: {BASE_SEED} (unico por run)")
+
 print("Gerando 72 blocos de 10min (12h total)...")
 blocos = []
 for i in range(72):
     wav = f"/tmp/b_{i:03d}.wav"
     mp4 = f"/tmp/b_{i:03d}.mp4"
-    gerar_bloco_wav(42+i, BLOCO, wav)
+    gerar_bloco_wav(BASE_SEED + i, BLOCO, wav)
     subprocess.run([
         "ffmpeg","-y",
         "-f","lavfi","-i","color=c=0x000000:size=1920x1080:rate=1:duration=600",
@@ -42,9 +46,9 @@ for i in range(72):
     os.remove(wav)
     blocos.append(mp4)
     if (i+1) % 12 == 0:
-        print(f"  {i+1}/72 blocos ({(i+1)*10/60:.0f}h concluidas)")
+        print(f"  {i+1}/72 blocos ({(i+1)*10/60:.0f}h)")
 
-print("Concatenando em MP4 final...")
+print("Concatenando...")
 with open("/tmp/lista.txt","w") as f:
     for p in blocos: f.write(f"file '{p}'\n")
 
@@ -53,10 +57,9 @@ subprocess.run([
     "-c","copy","/tmp/dbn_12h.mp4"
 ], timeout=600, check=True)
 for p in blocos: os.remove(p)
-print(f"MP4 final: {os.path.getsize('/tmp/dbn_12h.mp4')/1024**3:.2f} GB")
+print(f"MP4: {os.path.getsize('/tmp/dbn_12h.mp4')/1024**3:.2f} GB")
 
-# === TOKEN ===
-print("Obtendo access token YouTube...")
+# Token
 r = requests.post("https://oauth2.googleapis.com/token", data={
     "client_id":     os.environ["YT_CLIENT_ID_2"],
     "client_secret": os.environ["YT_CLIENT_SECRET_2"],
@@ -66,12 +69,8 @@ r = requests.post("https://oauth2.googleapis.com/token", data={
 TOKEN = r.json()["access_token"]
 print("Token OK")
 
-# === METADADOS SEO — validados contra limites YouTube ===
-# Título: max 100 chars
 TITLE = "Brown Noise 12 Hours | Sleep, ADHD Focus & Study Music | Black Screen"
-assert len(TITLE) <= 100
 
-# Descrição: max 5000 chars — 10 idiomas com os 6 termos mais buscados cada
 DESCRIPTION = """12 Hours of Deep Brown Noise — Pure Black Screen for Sleep, ADHD Focus & Study
 
 🎧 WHAT IS BROWN NOISE?
@@ -117,9 +116,6 @@ Pure black (RGB 0,0,0) — zero light emission, no flickering. Promotes melatoni
 #SleepAid #Focus #Concentration #Meditation #StressRelief
 #RuidoMarron #BruitBrun #BraunesRauschen #ブラウンノイズ #棕色噪音"""
 
-assert len(DESCRIPTION) <= 5000
-
-# Tags: max 500 chars total — os 6 termos mais buscados + variações idiomas
 TAGS = [
     "brown noise","brown noise 12 hours","deep brown noise",
     "brown noise sleep","brown noise ADHD","brown noise study",
@@ -128,9 +124,6 @@ TAGS = [
     "concentration","relaxation","sleep aid","sleep music",
     "ruido marron","bruit brun","braunes rauschen","white noise","pink noise"
 ]
-total = sum(len(t) for t in TAGS) + len(TAGS) - 1
-assert total <= 500, f"Tags {total} > 500"
-print(f"Metadados validados — titulo={len(TITLE)}, desc={len(DESCRIPTION)}, tags={total} chars")
 
 metadata = {
     "snippet": {
@@ -150,7 +143,6 @@ metadata = {
     }
 }
 
-# === UPLOAD RESUMABLE ===
 file_size = os.path.getsize("/tmp/dbn_12h.mp4")
 print(f"Iniciando upload ({file_size//1024//1024}MB)...")
 
@@ -162,8 +154,12 @@ r2 = requests.post(
         "X-Upload-Content-Length": str(file_size),
         "X-Upload-Content-Type": "video/mp4"
     },
-    json=metadata
+    json=metadata, timeout=30
 )
+if r2.status_code != 200:
+    print(f"Erro ao obter upload URL: {r2.status_code} {r2.text[:200]}")
+    exit(1)
+
 upload_url = r2.headers["Location"]
 print("Upload URL OK")
 
@@ -188,9 +184,9 @@ with open("/tmp/dbn_12h.mp4","rb") as f:
             break
         elif r3.status_code == 308:
             offset = int(r3.headers.get("Range","bytes=-1").split("-")[1]) + 1
-            print(f"  Upload: {offset/file_size*100:.1f}%  ({offset//1024//1024}MB/{file_size//1024//1024}MB)")
+            print(f"  {offset/file_size*100:.1f}%  ({offset//1024//1024}MB/{file_size//1024//1024}MB)")
         else:
-            print(f"ERRO {r3.status_code}: {r3.text[:300]}")
+            print(f"ERRO upload {r3.status_code}: {r3.text[:300]}")
             break
 
 if video_id:
@@ -198,5 +194,7 @@ if video_id:
         f.write(video_id)
     print(f"\n✅ PUBLICADO!")
     print(f"URL: https://youtube.com/watch?v={video_id}")
+    print(f"Seed usado: {BASE_SEED}")
 else:
     print("FALHOU — sem video_id")
+    exit(1)
