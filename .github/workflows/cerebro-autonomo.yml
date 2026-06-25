@@ -1,192 +1,21 @@
 name: 🧠 Cérebro Autônomo 24/7
-
 on:
   schedule:
     - cron: '*/30 * * * *'
   workflow_dispatch:
-
 jobs:
-  processar_fila:
+  run:
     runs-on: ubuntu-latest
     timeout-minutes: 45
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-
-      - name: Install deps
-        run: pip install requests --quiet
-
-      - name: 🧠 Executar Cérebro Autônomo
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with: {python-version: '3.11'}
+      - run: pip install requests --quiet
+      - name: Executar Cérebro
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           GH_TOKEN: ${{ secrets.GH_PAT }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: |
-          python3 << 'PYEOF'
-          import os, json, time, requests
-          from datetime import datetime, timezone
-
-          SUPA_URL = os.environ.get('SUPABASE_URL', '')
-          SUPA_KEY = os.environ.get('SUPABASE_KEY', '')
-
-          if not SUPA_URL or not SUPA_KEY:
-              print("❌ SUPABASE_URL ou SUPABASE_SERVICE_KEY não configurados")
-              exit(1)
-
-          headers = {
-            'apikey': SUPA_KEY,
-            'Authorization': f'Bearer {SUPA_KEY}',
-            'Content-Type': 'application/json',
-            'Prefer': 'return=representation'
-          }
-
-          def supa_get(table, params=''):
-            r = requests.get(f'{SUPA_URL}/rest/v1/{table}?{params}', headers=headers)
-            return r.json() if r.ok else []
-
-          def supa_patch(table, match, data):
-            p = '&'.join([f'{k}=eq.{v}' for k,v in match.items()])
-            r = requests.patch(f'{SUPA_URL}/rest/v1/{table}?{p}', headers=headers, json=data)
-            return r.ok
-
-          def supa_post(table, data):
-            r = requests.post(f'{SUPA_URL}/rest/v1/{table}', headers=headers, json=data)
-            return r.ok
-
-          def log_acao(tarefa, canal, acao, resultado, detalhe=None):
-            supa_post('autonomous_log', {
-              'tarefa': tarefa, 'canal_slug': canal,
-              'acao_executada': acao, 'resultado': resultado,
-              'detalhe': detalhe or {},
-              'data_hora': datetime.now(timezone.utc).isoformat()
-            })
-
-          print(f"🧠 Cérebro Autônomo — {datetime.now(timezone.utc).isoformat()}")
-
-          # Buscar tarefas pendentes com agendamento vencido
-          tarefas = supa_get('autonomous_queue',
-            'status=eq.pendente&order=prioridade.asc,criado_em.asc&limit=5')
-
-          print(f"📋 Tarefas na fila: {len(tarefas)}")
-
-          if not tarefas:
-            print("✅ Fila vazia")
-
-          for tarefa in tarefas:
-            tid = tarefa['id']
-            tipo = tarefa['tarefa']
-            canal = tarefa.get('canal_slug', '')
-            payload = tarefa.get('payload', {})
-            if isinstance(payload, str):
-              try: payload = json.loads(payload)
-              except: payload = {}
-
-            print(f"\n🔄 ID={tid} | {tipo} | {canal}")
-
-            supa_patch('autonomous_queue', {'id': tid}, {
-              'status': 'executando',
-              'iniciado_em': datetime.now(timezone.utc).isoformat(),
-              'tentativas': (tarefa.get('tentativas') or 0) + 1
-            })
-
-            try:
-              resultado = 'ok'
-
-              if tipo == 'render_short':
-                script_id = tarefa.get('script_id')
-                if script_id:
-                  gh = os.environ.get('GH_TOKEN', '')
-                  r = requests.post(
-                    'https://api.github.com/repos/tafita1981novo-dotcom/Repovazio/actions/workflows/render-short-58s.yml/dispatches',
-                    headers={'Authorization': f'token {gh}', 'Accept': 'application/vnd.github.v3+json'},
-                    json={'ref': 'main', 'inputs': {'script_id': str(script_id)}}
-                  )
-                  resultado = 'dispatched' if r.ok else f'dispatch_err_{r.status_code}'
-                  print(f"  → render_short script {script_id}: {resultado}")
-                  log_acao(tipo, canal, f'render_short_{script_id}', resultado)
-                else:
-                  resultado = 'sem_script_id'
-
-              elif tipo == 'render_long':
-                script_id = tarefa.get('script_id')
-                if script_id:
-                  gh = os.environ.get('GH_TOKEN', '')
-                  r = requests.post(
-                    'https://api.github.com/repos/tafita1981novo-dotcom/Repovazio/actions/workflows/render-long-bank.yml/dispatches',
-                    headers={'Authorization': f'token {gh}', 'Accept': 'application/vnd.github.v3+json'},
-                    json={'ref': 'main', 'inputs': {'script_id': str(script_id)}}
-                  )
-                  resultado = 'dispatched' if r.ok else f'dispatch_err_{r.status_code}'
-                  print(f"  → render_long script {script_id}: {resultado}")
-                  log_acao(tipo, canal, f'render_long_{script_id}', resultado)
-
-              elif tipo in ('setup_affiliate_clickbank', 'setup_hotmart_affiliate',
-                            'create_youtube_channel_en', 'ativar_mid_rolls_noise'):
-                # Tarefas manuais — gerar instruções detalhadas no log
-                instrucoes = {
-                  'setup_affiliate_clickbank': {
-                    'url': 'https://www.clickbank.com',
-                    'acao': 'Criar conta → Marketplace → pegar hoplinks: bbrainwave, adhdfocus, tinnitus911, sleepwell, brainsong → atualizar descriptions 5 vídeos noise'
-                  },
-                  'setup_hotmart_affiliate': {
-                    'url': 'https://app.hotmart.com/affiliates',
-                    'acao': 'Solicitar afiliação em: Protocolo Anti-Ansiedade + Saindo da Codependência → colocar link na bio @psidanicoelho'
-                  },
-                  'create_youtube_channel_en': {
-                    'url': 'https://youtube.com/create_channel',
-                    'acao': 'Criar canal @MindBehindTheGame com Gmail novo → adicionar token OAuth ao Supabase ia_cache como YOUTUBE_RT_EN'
-                  },
-                  'ativar_mid_rolls_noise': {
-                    'url': 'https://studio.youtube.com',
-                    'acao': 'Para cada canal noise → Videos → Editar → Monetização → Ad breaks a cada 15min (900s)',
-                    'video_ids': payload.get('video_ids', ['R7yXx0eXaMA','_quJc1kuCQQ','0Er9oW4iikQ','O_47JhFDCHk','-EG_D3khz1E'])
-                  }
-                }.get(tipo, {'acao': tipo})
-                log_acao(tipo, canal, f'instrucoes_{tipo}', 'pendente_manual', instrucoes)
-                resultado = 'instrucoes_geradas'
-                print(f"  → {tipo}: instruções salvas no log")
-
-              elif tipo == 'post_reddit':
-                post_id = payload.get('post_id', 1)
-                posts = supa_get('reddit_strategy', f'id=eq.{post_id}')
-                if posts:
-                  p = posts[0]
-                  log_acao(tipo, canal, f'reddit_{p.get("subreddit","")}', 'pendente_manual', {
-                    'subreddit': p.get('subreddit'), 'titulo': p.get('titulo'),
-                    'nota': 'Post educacional. NUNCA link direto. Bio = link canal.'
-                  })
-                  resultado = 'instrucoes_salvas'
-                  print(f"  → Reddit {p.get('subreddit')}: instruções salvas")
-
-              # Marcar concluído
-              supa_patch('autonomous_queue', {'id': tid}, {
-                'status': 'concluido',
-                'resultado': json.dumps({'status': resultado}),
-                'concluido_em': datetime.now(timezone.utc).isoformat()
-              })
-              print(f"  ✅ {resultado}")
-
-            except Exception as e:
-              err = str(e)[:300]
-              tent = (tarefa.get('tentativas') or 0) + 1
-              novo_status = 'erro' if tent >= (tarefa.get('max_tentativas') or 3) else 'pendente'
-              supa_patch('autonomous_queue', {'id': tid}, {
-                'status': novo_status, 'erro': err,
-                'concluido_em': datetime.now(timezone.utc).isoformat()
-              })
-              log_acao(tipo, canal, 'erro', 'falha', {'error': err})
-              print(f"  ❌ {err[:100]}")
-
-          print(f"\n✅ Ciclo completo — próximo em 30min")
-          PYEOF
-
-      - name: Reportar
-        if: always()
-        run: echo "🧠 Executado em $(date)"
+        run: python scripts/cerebro_run.py
