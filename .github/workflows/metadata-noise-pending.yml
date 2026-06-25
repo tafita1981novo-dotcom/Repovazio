@@ -1,0 +1,86 @@
+name: metadata-noise-pending
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "*/15 * * * *"
+
+jobs:
+  dbn:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install requests -q
+      - uses: actions/checkout@v4
+      - run: python3 scripts/update_channel_metadata.py
+        env:
+          CLIENT_ID: ${{ secrets.YT_CLIENT_ID_2 }}
+          CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET_2 }}
+          REFRESH_TOKEN: ${{ secrets.YOUTUBE_RT_DBN }}
+          CANAL: dbn
+          CHANNEL_ID: UCD4LLFnsiVzA-DeSN6oaUzg
+
+  adhd:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install requests -q
+      - uses: actions/checkout@v4
+      - run: python3 scripts/update_channel_metadata.py
+        env:
+          CLIENT_ID: ${{ secrets.YT_CLIENT_ID_2 }}
+          CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET_2 }}
+          REFRESH_TOKEN: ${{ secrets.YOUTUBE_RT_ADHD }}
+          CANAL: adhd
+          CHANNEL_ID: UCK3xZDFY84ffNrLEAI1Qmyw
+
+  bsn:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install requests -q
+      - uses: actions/checkout@v4
+      - run: python3 scripts/update_channel_metadata.py
+        env:
+          CLIENT_ID: ${{ secrets.YT_CLIENT_ID_2 }}
+          CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET_2 }}
+          REFRESH_TOKEN: ${{ secrets.YOUTUBE_RT_BSN }}
+          CANAL: bsn
+          CHANNEL_ID: UCy4d2yt8eRywJS7PMTDX3xA
+
+  pink:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install requests -q
+      - uses: actions/checkout@v4
+      - run: python3 scripts/update_channel_metadata.py
+        env:
+          CLIENT_ID: ${{ secrets.YT_CLIENT_ID_2 }}
+          CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET_2 }}
+          REFRESH_TOKEN: ${{ secrets.YOUTUBE_RT_PINK }}
+          CANAL: pink
+          CHANNEL_ID: UCXQ_-FOGTJk17T06gy0bYqQ
+
+  rain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install requests -q
+      - uses: actions/checkout@v4
+      - run: python3 scripts/update_channel_metadata.py
+        env:
+          CLIENT_ID: ${{ secrets.YT_CLIENT_ID_2 }}
+          CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET_2 }}
+          REFRESH_TOKEN: ${{ secrets.YOUTUBE_RT_RAIN }}
+          CANAL: rain
+          CHANNEL_ID: UCSW8cGz1OcT1v90Vwc2-UPA
