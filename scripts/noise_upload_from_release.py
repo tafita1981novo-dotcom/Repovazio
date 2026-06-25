@@ -262,7 +262,8 @@ print("  Aplicando faststart...")
 # timeout 1800 = 30min (suficiente para 1.2GB opus→aac)
 import shlex
 cmd = ["ffmpeg", "-y", "-i", path_orig,
-       "-c:v", "copy",
+       "-c:v", "libx264", "-preset", "ultrafast", "-crf", "18",
+       "-r", "30", "-vf", "fps=30",
        "-c:a", "aac", "-b:a", "192k", "-ar", "44100",
        "-threads", "0",
        "-movflags", "+faststart",
