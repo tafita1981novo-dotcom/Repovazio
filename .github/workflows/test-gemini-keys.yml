@@ -1,0 +1,32 @@
+name: _test-gemini-keys
+on:
+  repository_dispatch:
+    types: [test-gemini]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test all Gemini keys
+        env:
+          K1: ${{ secrets.GEMINI_API_KEY }}
+          K2: ${{ secrets.GEMINI_API_KEY_2 }}
+          K3: ${{ secrets.GEMINI_API_KEY_NEW }}
+        run: |
+          python3 << 'PYEOF'
+          import os, urllib.request, json
+
+          for name, key in [('GEMINI_API_KEY', os.environ.get('K1','')),
+                             ('GEMINI_API_KEY_2', os.environ.get('K2','')),
+                             ('GEMINI_API_KEY_NEW', os.environ.get('K3',''))]:
+              if not key:
+                  print(f"{name}: VAZIO")
+                  continue
+              try:
+                  url = f"https://generativelanguage.googleapis.com/v1beta/models?key={key}"
+                  r = urllib.request.urlopen(urllib.request.Request(url), timeout=10)
+                  models = json.loads(r.read())
+                  names = [m['name'] for m in models.get('models',[]) if 'gemini' in m['name'].lower()][:3]
+                  print(f"{name} ({len(key)} chars): ✅ OK - {names}")
+              except Exception as e:
+                  print(f"{name} ({len(key)} chars): ❌ {e}")
+          PYEOF
