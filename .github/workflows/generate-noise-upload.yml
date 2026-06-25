@@ -1,0 +1,102 @@
+name: generate-noise-upload
+on:
+  workflow_dispatch:
+    inputs:
+      canais:
+        description: 'Canais (ex: dbn adhd bsn pink rain)'
+        default: 'dbn adhd bsn pink rain'
+
+jobs:
+  dbn:
+    if: contains(github.event.inputs.canais || 'dbn adhd bsn pink rain', 'dbn')
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install requests -q && sudo apt-get install -y ffmpeg -q
+      - run: python scripts/generate_noise_upload.py
+        env:
+          CLIENT_ID: ${{ secrets.YT_CLIENT_ID_2 }}
+          CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET_2 }}
+          REFRESH_TOKEN: ${{ secrets.YOUTUBE_RT_DBN }}
+          CANAL: dbn
+          DURACAO_H: "12"
+          TITULO: "Brown Noise 12 Hours | Deep Sleep, ADHD Focus & Study Music | Black Screen No Ads"
+
+  adhd:
+    if: contains(github.event.inputs.canais || 'dbn adhd bsn pink rain', 'adhd')
+    needs: dbn
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install requests -q && sudo apt-get install -y ffmpeg -q
+      - run: python scripts/generate_noise_upload.py
+        env:
+          CLIENT_ID: ${{ secrets.YT_CLIENT_ID_2 }}
+          CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET_2 }}
+          REFRESH_TOKEN: ${{ secrets.YOUTUBE_RT_ADHD }}
+          CANAL: adhd
+          DURACAO_H: "10"
+          TITULO: "ADHD Focus Brown Noise 10 Hours | Concentration, Deep Work & Study | Black Screen No Ads"
+
+  bsn:
+    if: contains(github.event.inputs.canais || 'dbn adhd bsn pink rain', 'bsn')
+    needs: adhd
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install requests -q && sudo apt-get install -y ffmpeg -q
+      - run: python scripts/generate_noise_upload.py
+        env:
+          CLIENT_ID: ${{ secrets.YT_CLIENT_ID_2 }}
+          CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET_2 }}
+          REFRESH_TOKEN: ${{ secrets.YOUTUBE_RT_BSN }}
+          CANAL: bsn
+          DURACAO_H: "8"
+          TITULO: "Baby Sleep White Noise 8 Hours | Newborn, Infant & Toddler Sleep Sounds | Black Screen No Ads"
+
+  pink:
+    if: contains(github.event.inputs.canais || 'dbn adhd bsn pink rain', 'pink')
+    needs: bsn
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install requests -q && sudo apt-get install -y ffmpeg -q
+      - run: python scripts/generate_noise_upload.py
+        env:
+          CLIENT_ID: ${{ secrets.YT_CLIENT_ID_2 }}
+          CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET_2 }}
+          REFRESH_TOKEN: ${{ secrets.YOUTUBE_RT_PINK }}
+          CANAL: pink
+          DURACAO_H: "10"
+          TITULO: "Pink Noise 10 Hours | Deep Sleep, Memory Boost & Tinnitus Relief | Black Screen No Ads"
+
+  rain:
+    if: contains(github.event.inputs.canais || 'dbn adhd bsn pink rain', 'rain')
+    needs: pink
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install requests -q && sudo apt-get install -y ffmpeg -q
+      - run: python scripts/generate_noise_upload.py
+        env:
+          CLIENT_ID: ${{ secrets.YT_CLIENT_ID_2 }}
+          CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET_2 }}
+          REFRESH_TOKEN: ${{ secrets.YOUTUBE_RT_RAIN }}
+          CANAL: rain
+          DURACAO_H: "8"
+          TITULO: "Rain Sounds 8 Hours | Heavy Rain for Deep Sleep, Study & Relaxation | Black Screen No Ads"
