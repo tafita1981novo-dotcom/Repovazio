@@ -1,21 +1,234 @@
-name: 🧠 Cérebro Autônomo 24/7
+﻿name: 🧠 Cérebro Autônomo 24/7
+
 on:
   schedule:
+    # Roda a cada 30 minutos (horário BR: UTC-3)
     - cron: '*/30 * * * *'
   workflow_dispatch:
+    inputs:
+      task_id:
+        description: 'ID específico de tarefa (vazio = processar fila)'
+        required: false
+      force_task:
+        description: 'Tipo de tarefa forçada'
+        required: false
+
 jobs:
-  run:
+  processar_fila:
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
-        with: {python-version: '3.11'}
-      - run: pip install requests --quiet
-      - name: Executar Cérebro
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install deps
+        run: |
+          pip install requests supabase edge-tts pillow ffmpeg-python --break-system-packages 2>/dev/null || pip install requests supabase edge-tts pillow
+
+      - name: 🧠 Executar Cérebro Autônomo
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           GH_TOKEN: ${{ secrets.GH_PAT }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: python scripts/cerebro_run.py
+        run: |
+          cat << 'PYEOF' > cerebro_autonomo.py
+          import os, json, time, requests
+          from datetime import datetime, timezone
+          
+          SUPA_URL = os.environ['SUPABASE_URL']
+          SUPA_KEY = os.environ['SUPABASE_KEY']
+          
+          headers = {
+            'apikey': SUPA_KEY,
+            'Authorization': f'Bearer {SUPA_KEY}',
+            'Content-Type': 'application/json'
+          }
+          
+          def supa_get(table, params=''):
+            r = requests.get(f'{SUPA_URL}/rest/v1/{table}?{params}', headers=headers)
+            return r.json() if r.ok else []
+          
+          def supa_patch(table, match, data):
+            params = '&'.join([f'{k}=eq.{v}' for k,v in match.items()])
+            r = requests.patch(f'{SUPA_URL}/rest/v1/{table}?{params}', 
+                              headers=headers, json=data)
+            return r.ok
+          
+          def supa_post(table, data):
+            r = requests.post(f'{SUPA_URL}/rest/v1/{table}', headers=headers, json=data)
+            return r.ok
+          
+          def log_acao(tarefa, canal, acao, resultado, detalhe=None):
+            supa_post('autonomous_log', {
+              'tarefa': tarefa,
+              'canal_slug': canal,
+              'acao_executada': acao,
+              'resultado': resultado,
+              'detalhe': detalhe or {},
+              'data_hora': datetime.now(timezone.utc).isoformat()
+            })
+          
+          # Buscar próximas tarefas pendentes
+          tarefas = supa_get('autonomous_queue', 
+            'status=eq.pendente&order=prioridade.asc,criado_em.asc&limit=5')
+          
+          if not tarefas:
+            print("✅ Nenhuma tarefa pendente na fila")
+          
+          for tarefa in tarefas:
+            tid = tarefa['id']
+            tipo = tarefa['tarefa']
+            canal = tarefa.get('canal_slug', '')
+            payload = tarefa.get('payload', {})
+            
+            print(f"\n🔄 Processando: {tipo} | Canal: {canal} | ID: {tid}")
+            
+            # Marcar como executando
+            supa_patch('autonomous_queue', {'id': tid}, {
+              'status': 'executando',
+              'iniciado_em': datetime.now(timezone.utc).isoformat(),
+              'tentativas': tarefa.get('tentativas', 0) + 1
+            })
+            
+            try:
+              # === RENDER SHORT 58s ===
+              if tipo == 'render_short':
+                script_id = tarefa.get('script_id')
+                if script_id:
+                  # Disparar GitHub Action render-short-58s
+                  gh_token = os.environ.get('GH_TOKEN', '')
+                  r = requests.post(
+                    'https://api.github.com/repos/tafita1981novo-dotcom/Repovazio/actions/workflows/render-short-58s.yml/dispatches',
+                    headers={'Authorization': f'token {gh_token}', 'Accept': 'application/vnd.github.v3+json'},
+                    json={'ref': 'main', 'inputs': {'video_id': str(script_id)}}
+                  )
+                  resultado = 'sucesso' if r.ok else f'erro_{r.status_code}'
+                  print(f"  → Render Short dispatch: {resultado}")
+                  log_acao(tipo, canal, f'dispatch_render_short_script_{script_id}', resultado)
+              
+              # === SETUP AFFILIATE CLICKBANK ===
+              elif tipo == 'setup_affiliate_clickbank':
+                vendors = payload.get('vendors', [])
+                print(f"  → ClickBank vendors a configurar: {vendors}")
+                # Inserir instructions no log para Rafael executar manualmente
+                instructions = {
+                  'acao': 'ABRIR_CLICKBANK',
+                  'url': 'https://www.clickbank.com',
+                  'passos': [
+                    '1. Criar conta ClickBank em accounts.clickbank.com',
+                    '2. Ir em Marketplace > Search > buscar cada vendor',
+                    '3. Copiar hoplink: https://SEU_NICKNAME.VENDOR.hop.clickbank.net',
+                    f'4. Vendors: {", ".join(vendors)}',
+                    '5. Atualizar descriptions nos 5 canais noise no YouTube Studio'
+                  ]
+                }
+                log_acao(tipo, canal, 'instrucoes_clickbank', 'pendente_manual', instructions)
+                resultado = 'instrucoes_geradas'
+              
+              # === CRIAR CANAL EN ===
+              elif tipo == 'create_youtube_channel_en':
+                instructions = {
+                  'acao': 'CRIAR_CANAL_YOUTUBE_EN',
+                  'handle': payload.get('handle', '@MindBehindTheGame'),
+                  'passos': [
+                    '1. Acessar youtube.com com conta Google nova ou adicionar canal',
+                    '2. youtube.com/create_channel',
+                    f'3. Nome: MindBehindTheGame',
+                    '4. Handle: @MindBehindTheGame',
+                    '5. Descrição: Human behavior research on gaming psychology, gambling addiction, and dark psychology. New episodes every week. Researcher: Emma.',
+                    '6. Keywords: gaming addiction, gambling psychology, dark psychology, narcissism, parenting gaming',
+                    '7. Adicionar token OAuth ao Supabase ia_cache como YOUTUBE_RT_EN'
+                  ]
+                }
+                log_acao(tipo, canal, 'instrucoes_canal_en', 'pendente_manual', instructions)
+                resultado = 'instrucoes_geradas'
+              
+              # === ATIVAR MID-ROLLS ===
+              elif tipo == 'ativar_mid_rolls_noise':
+                video_ids = payload.get('video_ids', [])
+                instructions = {
+                  'acao': 'ATIVAR_MID_ROLLS',
+                  'video_ids': video_ids,
+                  'passos': [
+                    'Para cada vídeo nos canais noise:',
+                    '1. studio.youtube.com > Canal > Videos',
+                    '2. Editar vídeo > Monetização',
+                    '3. Ativar "Ad breaks" → cada 15 minutos (900 segundos)',
+                    '4. Salvar',
+                    f'IDs: {", ".join(video_ids)}'
+                  ]
+                }
+                log_acao(tipo, canal, 'instrucoes_midrolls', 'pendente_manual', instructions)
+                resultado = 'instrucoes_geradas'
+              
+              # === POST REDDIT ===
+              elif tipo == 'post_reddit':
+                post_id = payload.get('post_id')
+                posts = supa_get('reddit_strategy', f'id=eq.{post_id}') if post_id else []
+                if posts:
+                  post = posts[0]
+                  instructions = {
+                    'acao': 'POST_REDDIT',
+                    'subreddit': post['subreddit'],
+                    'titulo': post['titulo'],
+                    'conteudo': post['conteudo'][:500] + '...',
+                    'timing': post.get('timing_best', 'weekday_morning'),
+                    'nota': 'NÃO colocar link direto no post. Bio do perfil = link canal YT.'
+                  }
+                  log_acao(tipo, canal, f'instrucoes_reddit_{post["subreddit"]}', 'pendente_manual', instructions)
+                resultado = 'instrucoes_geradas'
+              
+              # === RENDER LONG ===
+              elif tipo == 'render_long':
+                script_id = tarefa.get('script_id')
+                if script_id:
+                  gh_token = os.environ.get('GH_TOKEN', '')
+                  r = requests.post(
+                    'https://api.github.com/repos/tafita1981novo-dotcom/Repovazio/actions/workflows/render-long-bank.yml/dispatches',
+                    headers={'Authorization': f'token {gh_token}', 'Accept': 'application/vnd.github.v3+json'},
+                    json={'ref': 'main', 'inputs': {'video_id': str(script_id)}}
+                  )
+                  resultado = 'sucesso' if r.ok else f'erro_{r.status_code}'
+                  print(f"  → Render Long dispatch: {resultado}")
+                  log_acao(tipo, canal, f'dispatch_render_long_script_{script_id}', resultado)
+              
+              else:
+                resultado = f'tipo_nao_implementado_{tipo}'
+                log_acao(tipo, canal, 'nao_implementado', 'skip')
+              
+              # Marcar como concluído
+              supa_patch('autonomous_queue', {'id': tid}, {
+                'status': 'concluido',
+                'resultado': {'status': resultado},
+                'concluido_em': datetime.now(timezone.utc).isoformat()
+              })
+              print(f"  ✅ Concluído: {resultado}")
+            
+            except Exception as e:
+              error_msg = str(e)[:500]
+              tentativas = tarefa.get('tentativas', 0) + 1
+              max_tent = tarefa.get('max_tentativas', 3)
+              new_status = 'erro' if tentativas >= max_tent else 'pendente'
+              supa_patch('autonomous_queue', {'id': tid}, {
+                'status': new_status,
+                'erro': error_msg,
+                'concluido_em': datetime.now(timezone.utc).isoformat()
+              })
+              print(f"  ❌ Erro: {error_msg}")
+              log_acao(tipo, canal, 'erro', 'falha', {'error': error_msg})
+          
+          print("\n✅ Cérebro Autônomo - ciclo completo")
+          PYEOF
+          python cerebro_autonomo.py
+
+      - name: Reportar Status
+        if: always()
+        run: |
+          echo "🧠 Cérebro Autônomo executado em: $(date)"
+          echo "Próxima execução: em ~30 minutos"
