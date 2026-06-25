@@ -1,0 +1,19 @@
+name: Check DBN Status
+on:
+  workflow_dispatch:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install requests
+      - name: Checar status DBN
+        env:
+          YT_CLIENT_ID_2:     ${{ secrets.YT_CLIENT_ID_2 }}
+          YT_CLIENT_SECRET_2: ${{ secrets.YT_CLIENT_SECRET_2 }}
+          YOUTUBE_RT_DBN:     ${{ secrets.YOUTUBE_RT_DBN }}
+        run: python scripts/check_dbn_status.py
