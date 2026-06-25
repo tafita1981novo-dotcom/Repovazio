@@ -258,11 +258,19 @@ print(f"\n  Download OK: {downloaded/(1024**3):.2f} GB")
 
 # 2. FASTSTART
 print("  Aplicando faststart...")
-result = subprocess.run(
-    ["ffmpeg", "-y", "-i", path_orig, "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-ar", "44100", "-movflags", "+faststart", path_final],
-    capture_output=True, text=True, timeout=600)
-if result.returncode != 0:
-    print(f"ERRO ffmpeg: {result.stderr[-200:]}")
+# Rodar ffmpeg sem capturar saída (evita timeout de subprocess com arquivos grandes)
+# timeout 1800 = 30min (suficiente para 1.2GB opus→aac)
+import shlex
+cmd = ["ffmpeg", "-y", "-i", path_orig,
+       "-c:v", "copy",
+       "-c:a", "aac", "-b:a", "192k", "-ar", "44100",
+       "-threads", "0",
+       "-movflags", "+faststart",
+       path_final]
+print(f"  cmd: {' '.join(cmd)}")
+ret = subprocess.call(cmd, timeout=1800)
+if ret != 0:
+    print(f"ERRO ffmpeg: exit code {ret}")
     sys.exit(1)
 print(f"  Faststart OK: {os.path.getsize(path_final)/(1024**3):.2f} GB")
 os.remove(path_orig)
