@@ -10,7 +10,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install requests numpy
+      - run: pip install requests numpy && sudo apt-get install -y ffmpeg -q
       - name: Checar status DBN
         env:
           YT_CLIENT_ID_2:     ${{ secrets.YT_CLIENT_ID_2 }}
