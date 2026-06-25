@@ -1,7 +1,5 @@
 import requests, os
 
-VIDEO_ID = "5tLftm98WPU"
-
 r = requests.post("https://oauth2.googleapis.com/token", data={
     "client_id":     os.environ["YT_CLIENT_ID_2"],
     "client_secret": os.environ["YT_CLIENT_SECRET_2"],
@@ -11,25 +9,43 @@ r = requests.post("https://oauth2.googleapis.com/token", data={
 TOKEN = r.json()["access_token"]
 print(f"Token: OK")
 
+# 1. Listar todos os vídeos do canal para ver o que existe
 rv = requests.get(
-    "https://www.googleapis.com/youtube/v3/videos",
-    params={"part":"snippet,status,contentDetails,processingDetails","id":VIDEO_ID},
+    "https://www.googleapis.com/youtube/v3/search",
+    params={
+        "part": "snippet",
+        "forMine": "true",
+        "type": "video",
+        "maxResults": 10,
+        "order": "date"
+    },
     headers={"Authorization": f"Bearer {TOKEN}"}, timeout=15
 )
-data  = rv.json()
+data = rv.json()
+print(f"\nVideos no canal DBN:")
 items = data.get("items", [])
-
-if not items:
-    print(f"VIDEO NAO ENCONTRADO — pode ter sido removido ou rejeitado")
-    print(f"Resposta API: {data}")
+if items:
+    for v in items:
+        vid_id = v["id"]["videoId"]
+        title  = v["snippet"]["title"]
+        status = v["snippet"].get("liveBroadcastContent","")
+        print(f"  ID:{vid_id}  {title[:60]}  [{status}]")
 else:
-    v = items[0]
-    print(f"Titulo:     {v['snippet']['title']}")
-    print(f"Status:     {v['status']['privacyStatus']}")
-    print(f"Upload:     {v['status'].get('uploadStatus','?')}")
-    print(f"Rejeicao:   {v['status'].get('rejectionReason','nenhuma')}")
-    print(f"Falha:      {v['status'].get('failureReason','nenhuma')}")
-    print(f"Duracao:    {v['contentDetails'].get('duration','?')}")
-    proc = v.get('processingDetails',{})
-    print(f"Processing: {proc.get('processingStatus','?')}")
-    print(f"URL:        https://youtube.com/watch?v={VIDEO_ID}")
+    print(f"  Nenhum video encontrado")
+    print(f"  Resposta: {data}")
+
+# 2. Checar quota restante
+rq = requests.get(
+    "https://www.googleapis.com/youtube/v3/channels",
+    params={"part":"snippet,status,contentDetails","mine":"true"},
+    headers={"Authorization": f"Bearer {TOKEN}"}, timeout=15
+)
+ch = rq.json()
+channels = ch.get("items",[])
+if channels:
+    c = channels[0]
+    print(f"\nCanal: {c['snippet']['title']}")
+    print(f"ID:    {c['id']}")
+    print(f"Status:{c['status'].get('longUploadsStatus','?')}")
+else:
+    print(f"\nCanal: {ch}")
