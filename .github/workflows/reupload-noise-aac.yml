@@ -1,0 +1,133 @@
+name: reupload-noise-aac
+on:
+  workflow_dispatch:
+    inputs:
+      canais:
+        description: 'Canais para reupar (ex: dbn adhd bsn pink rain)'
+        required: false
+        default: 'dbn adhd bsn pink rain'
+
+jobs:
+  dbn:
+    if: contains(github.event.inputs.canais || 'dbn adhd bsn pink rain', 'dbn')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install requests -q && sudo apt-get install -y ffmpeg -q
+      - run: python scripts/noise_upload_from_release.py
+        env:
+          CLIENT_ID: ${{ secrets.YT_CLIENT_ID_2 }}
+          CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET_2 }}
+          REFRESH_TOKEN: ${{ secrets.YOUTUBE_RT_DBN }}
+          CANAL: dbn
+          CHANNEL_ID: UCD4LLFnsiVzA-DeSN6oaUzg
+          TITULO: "Brown Noise 12 Hours | Deep Sleep, ADHD Focus & Study Music | Black Screen No Ads"
+          TAGS: "brown noise,brown noise 12 hours,ADHD focus,deep sleep,sleep sounds,black screen,study music,tinnitus relief,stress relief,insomnia,focus music,neurodivergent,12 hours,concentration,noise for sleep,brown noise sleep,brown noise ADHD,sleep aid,relax,deep work"
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: tafita1981novo-dotcom/Repovazio
+          ASSET_NAME: DBN.MP4
+          SUPABASE_URL: https://tpjvalzwkqwttvmszvie.supabase.co
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+
+  adhd:
+    if: contains(github.event.inputs.canais || 'dbn adhd bsn pink rain', 'adhd')
+    needs: dbn
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install requests -q && sudo apt-get install -y ffmpeg -q
+      - run: python scripts/noise_upload_from_release.py
+        env:
+          CLIENT_ID: ${{ secrets.YT_CLIENT_ID_2 }}
+          CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET_2 }}
+          REFRESH_TOKEN: ${{ secrets.YOUTUBE_RT_ADHD }}
+          CANAL: adhd
+          CHANNEL_ID: UCK3xZDFY84ffNrLEAI1Qmyw
+          TITULO: "ADHD Focus Brown Noise 10 Hours | Concentration, Deep Work & Study | Black Screen No Ads"
+          TAGS: "ADHD focus,ADHD,brown noise ADHD,focus music,concentration music,deep work,study music,neurodivergent,executive function,flow state,black screen,productivity music,brain focus,ADHD relief,adhd sounds,adhd studying,10 hours,adhd brown noise,work music,study sounds"
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: tafita1981novo-dotcom/Repovazio
+          ASSET_NAME: ADHD.MP4
+          SUPABASE_URL: https://tpjvalzwkqwttvmszvie.supabase.co
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+
+  bsn:
+    if: contains(github.event.inputs.canais || 'dbn adhd bsn pink rain', 'bsn')
+    needs: adhd
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install requests -q && sudo apt-get install -y ffmpeg -q
+      - run: python scripts/noise_upload_from_release.py
+        env:
+          CLIENT_ID: ${{ secrets.YT_CLIENT_ID_2 }}
+          CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET_2 }}
+          REFRESH_TOKEN: ${{ secrets.YOUTUBE_RT_BSN }}
+          CANAL: bsn
+          CHANNEL_ID: UCy4d2yt8eRywJS7PMTDX3xA
+          TITULO: "Baby Sleep White Noise 8 Hours | Newborn, Infant & Toddler Sleep Sounds | Black Screen No Ads"
+          TAGS: "baby sleep,white noise baby,newborn sleep,infant sleep,baby sleep sounds,womb sounds,baby calm,colic baby,baby white noise,toddler sleep,baby sleep aid,newborn white noise,baby bedtime,baby nap,baby soothing sounds,black screen,8 hours,new parents,fussy baby,baby sleep through night"
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: tafita1981novo-dotcom/Repovazio
+          ASSET_NAME: BSN.MP4
+          SUPABASE_URL: https://tpjvalzwkqwttvmszvie.supabase.co
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+
+  pink:
+    if: contains(github.event.inputs.canais || 'dbn adhd bsn pink rain', 'pink')
+    needs: bsn
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install requests -q && sudo apt-get install -y ffmpeg -q
+      - run: python scripts/noise_upload_from_release.py
+        env:
+          CLIENT_ID: ${{ secrets.YT_CLIENT_ID_2 }}
+          CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET_2 }}
+          REFRESH_TOKEN: ${{ secrets.YOUTUBE_RT_PINK }}
+          CANAL: pink
+          CHANNEL_ID: UCXQ_-FOGTJk17T06gy0bYqQ
+          TITULO: "Pink Noise 10 Hours | Deep Sleep, Memory Boost & Tinnitus Relief | Black Screen No Ads"
+          TAGS: "pink noise,pink noise sleep,pink noise 10 hours,deep sleep,tinnitus relief,memory boost,sleep science,pink noise tinnitus,sleep better,slow wave sleep,anxiety relief,pure pink noise,tinnitus masking,pink noise benefits,black screen,sleep sounds,relaxation,stress relief,sleep aid,concentration"
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: tafita1981novo-dotcom/Repovazio
+          ASSET_NAME: PINK.MP4
+          SUPABASE_URL: https://tpjvalzwkqwttvmszvie.supabase.co
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+
+  rain:
+    if: contains(github.event.inputs.canais || 'dbn adhd bsn pink rain', 'rain')
+    needs: pink
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install requests -q && sudo apt-get install -y ffmpeg -q
+      - run: python scripts/noise_upload_from_release.py
+        env:
+          CLIENT_ID: ${{ secrets.YT_CLIENT_ID_2 }}
+          CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET_2 }}
+          REFRESH_TOKEN: ${{ secrets.YOUTUBE_RT_RAIN }}
+          CANAL: rain
+          CHANNEL_ID: UCSW8cGz1OcT1v90Vwc2-UPA
+          TITULO: "Rain Sounds 8 Hours | Heavy Rain for Deep Sleep, Study & Relaxation | Black Screen No Ads"
+          TAGS: "rain sounds,rain sounds for sleeping,rain sounds 8 hours,heavy rain,rain sleep,rain study,rain relaxation,rain ASMR,rainstorm sounds,rain white noise,sleeping rain,rain sounds black screen,rain night,thunderstorm sleep,rain focus,8 hours rain,cozy rain,rain meditation,ambient rain,deep sleep rain"
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: tafita1981novo-dotcom/Repovazio
+          ASSET_NAME: RAIN.MP4
+          SUPABASE_URL: https://tpjvalzwkqwttvmszvie.supabase.co
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
