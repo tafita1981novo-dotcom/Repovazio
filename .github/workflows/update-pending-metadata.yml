@@ -1,0 +1,20 @@
+name: update-pending-metadata
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "*/15 * * * *"
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install requests
+      - name: Update DBN / BSN / RAIN metadata
+        run: python3 scripts/update_pending_metadata.py
+        env:
+          PYTHONUNBUFFERED: "1"
