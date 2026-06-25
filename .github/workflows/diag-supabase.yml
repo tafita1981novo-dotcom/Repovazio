@@ -1,0 +1,24 @@
+name: 🔍 Diag Supabase
+on:
+  workflow_dispatch:
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    steps:
+      - run: pip install requests --quiet
+      - name: Test
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          python3 -c "
+          import os, requests
+          url = os.environ.get('SUPABASE_URL','')
+          key = os.environ.get('SUPABASE_KEY','')
+          print(f'URL len={len(url)} starts={url[:30] if url else NONE}')
+          print(f'KEY len={len(key)} prefix={key[:15] if key else NONE}')
+          headers = {'apikey': key, 'Authorization': f'Bearer {key}'}
+          r = requests.get(f'{url}/rest/v1/autonomous_queue?limit=3', headers=headers)
+          print(f'Status: {r.status_code}')
+          print(f'Body: {r.text[:200]}')
+          "
