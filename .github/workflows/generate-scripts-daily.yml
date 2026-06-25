@@ -1,0 +1,58 @@
+name: 📝 Auto Script Generator — Daily
+
+on:
+  schedule:
+    - cron: '0 1 * * *'  # 22:00 BR = 01:00 UTC
+  workflow_dispatch:
+    inputs:
+      force_count:
+        description: 'Número de scripts a gerar (default: auto)'
+        required: false
+        default: '3'
+
+jobs:
+  gerar_scripts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install
+        run: pip install requests --quiet
+      
+      - name: Gerar Scripts
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -f scripts/auto_script_generator.py ]; then
+            python scripts/auto_script_generator.py
+          else
+            echo "Script não encontrado, criando inline..."
+            python << 'PYEOF'
+import os, json, requests, time
+from datetime import datetime, timezone
+
+SUPA_URL = os.environ.get('SUPABASE_URL', '')
+SUPA_KEY = os.environ.get('SUPABASE_KEY', '')
+
+headers = {'apikey': SUPA_KEY, 'Authorization': f'Bearer {SUPA_KEY}', 'Content-Type': 'application/json'}
+
+# Check queue
+r = requests.get(f'{SUPA_URL}/rest/v1/video_scripts?status=eq.script_pronto&select=id', headers=headers)
+count = len(r.json()) if r.ok else 0
+print(f"Scripts prontos: {count}")
+
+if count < 6:
+    print(f"Fila baixa ({count}). Precisaria chamar gerador. Aguardando ANTHROPIC_API_KEY...")
+else:
+    print(f"Fila suficiente: {count} scripts")
+PYEOF
+          fi
