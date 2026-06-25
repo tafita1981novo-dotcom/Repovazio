@@ -1,4 +1,4 @@
-import requests, os, sys, time
+import requests, os, sys, time, subprocess
 
 CLIENT_ID     = os.environ["CLIENT_ID"]
 CLIENT_SECRET = os.environ["CLIENT_SECRET"]
@@ -24,7 +24,7 @@ DESCRICOES = {
 }
 
 # 1. BAIXAR do GitHub Release
-print(f"[{CANAL}] Baixando {ASSET_NAME} do GitHub Release...")
+print(f"[{CANAL.upper()}] Baixando {ASSET_NAME} do GitHub Release...")
 GH_H = {"Authorization": f"token {GH_TOKEN}", "Accept": "application/vnd.github.v3+json"}
 
 r = requests.get(
@@ -47,7 +47,9 @@ if not asset_url:
     print(f"ERRO: {ASSET_NAME} nao encontrado. Disponiveis: {disponiveis}")
     sys.exit(1)
 
-path = f"/tmp/{CANAL}.mp4"
+path_original = f"/tmp/{CANAL}_original.mp4"
+path_final    = f"/tmp/{CANAL}.mp4"
+
 r2 = requests.get(asset_url,
     headers={"Authorization": f"token {GH_TOKEN}", "Accept": "application/octet-stream"},
     stream=True, timeout=3600)
@@ -56,15 +58,34 @@ if r2.status_code != 200:
     sys.exit(1)
 
 downloaded = 0
-with open(path, "wb") as f:
+with open(path_original, "wb") as f:
     for chunk in r2.iter_content(chunk_size=32*1024*1024):
         if chunk:
             f.write(chunk)
             downloaded += len(chunk)
             print(f"\r  {downloaded/(1024**3):.2f}/{size_total/(1024**3):.2f} GB", end="", flush=True)
-print(f"\n  Download OK: {os.path.getsize(path)/(1024**3):.2f} GB")
+print(f"\n  Download OK: {os.path.getsize(path_original)/(1024**3):.2f} GB")
 
-# 2. ACCESS TOKEN
+# 2. FASTSTART — move moov atom para o inicio (sem recodificar audio/video)
+print(f"  Aplicando faststart (moov atom para o inicio)...")
+result = subprocess.run([
+    "ffmpeg", "-y",
+    "-i", path_original,
+    "-c", "copy",           # copia audio e video sem recodificar
+    "-movflags", "+faststart",  # move moov para o inicio
+    path_final
+], capture_output=True, text=True, timeout=600)
+
+if result.returncode != 0:
+    print(f"ERRO ffmpeg: {result.stderr[-300:]}")
+    sys.exit(1)
+
+size_orig = os.path.getsize(path_original)
+size_fast = os.path.getsize(path_final)
+print(f"  Faststart OK: {size_orig/(1024**3):.2f} GB -> {size_fast/(1024**3):.2f} GB")
+os.remove(path_original)
+
+# 3. ACCESS TOKEN
 r3 = requests.post("https://oauth2.googleapis.com/token", data={
     "client_id": CLIENT_ID, "client_secret": CLIENT_SECRET,
     "refresh_token": RT, "grant_type": "refresh_token"}, timeout=15)
@@ -74,7 +95,7 @@ if not at:
     sys.exit(1)
 print("  Token OAuth: OK")
 
-# 3. LIMPAR canal
+# 4. LIMPAR canal
 r4 = requests.get("https://www.googleapis.com/youtube/v3/channels",
     params={"part": "contentDetails,statistics", "id": CHANNEL_ID},
     headers={"Authorization": f"Bearer {at}"}, timeout=10)
@@ -94,8 +115,8 @@ if r4.status_code == 200 and r4.json().get("items"):
     else:
         print("  Canal limpo")
 
-# 4. UPLOAD — part=snippet,status APENAS
-size = os.path.getsize(path)
+# 5. UPLOAD — part=snippet,status APENAS (sem monetizationDetails)
+size = os.path.getsize(path_final)
 meta = {
     "snippet": {
         "title": TITULO,
@@ -133,7 +154,7 @@ upload_url = r6.headers["Location"]
 CHUNK = 50 * 1024 * 1024
 sent, video_id = 0, None
 
-with open(path, "rb") as f:
+with open(path_final, "rb") as f:
     while sent < size:
         chunk = f.read(CHUNK)
         if not chunk:
@@ -152,19 +173,19 @@ with open(path, "rb") as f:
         elif r7.status_code == 308:
             print(f"\r  {sent/size*100:.1f}%...", end="", flush=True)
         elif r7.status_code == 503:
-            print("\n  503 retry...")
+            print("\n  503 retry 20s...")
             time.sleep(20)
             sent -= len(chunk)
             f.seek(sent)
         else:
-            print(f"\n  ERRO upload: {r7.status_code} {r7.text[:200]}")
+            print(f"\n  ERRO: {r7.status_code} {r7.text[:200]}")
             sys.exit(1)
 
 if not video_id:
     print("ERRO: sem video_id ao final")
     sys.exit(1)
 
-# 5. MONETIZACAO (separado do upload)
+# 6. MONETIZACAO (separado do upload)
 time.sleep(5)
 r8 = requests.put(
     "https://www.googleapis.com/youtube/v3/videos?part=monetizationDetails,status",
@@ -174,14 +195,14 @@ r8 = requests.put(
           "status": {"selfDeclaredMadeForKids": False, "madeForKids": False,
                      "license": "youtube", "embeddable": True}},
     timeout=20)
-print(f"  Monetizacao: {r8.status_code} {'OK' if r8.status_code==200 else r8.text[:100]}")
+print(f"  Monetizacao: {r8.status_code} {'OK' if r8.status_code==200 else r8.text[:80]}")
 
-# 6. SUPABASE
+# 7. SUPABASE
 if SB_KEY and len(SB_KEY) > 20:
     sb_h = {"apikey": SB_KEY, "Authorization": f"Bearer {SB_KEY}",
             "Content-Type": "application/json"}
     requests.patch(f"{SB_URL}/rest/v1/noise_channels?canal_key=eq.{CANAL}",
         headers=sb_h, json={"video_id": video_id, "video_uploaded": True}, timeout=10)
 
-print(f"\nURL: https://youtube.com/watch?v={video_id}")
-print(f"DONE {CANAL.upper()} = {video_id}")
+print(f"\n  URL: https://youtube.com/watch?v={video_id}")
+print(f"  DONE {CANAL.upper()} = {video_id}")
