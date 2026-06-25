@@ -20,7 +20,7 @@ jobs:
           REFRESH_TOKEN: ${{ secrets.YOUTUBE_RT_DBN }}
           CANAL: dbn
           CHANNEL_ID: UCD4LLFnsiVzA-DeSN6oaUzg
-          VIDEO_ID: lD_mS444Mto
+          VIDEO_ID: cVGuHSaRtZg
 
   adhd:
     runs-on: ubuntu-latest
