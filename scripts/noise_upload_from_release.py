@@ -259,7 +259,7 @@ print(f"\n  Download OK: {downloaded/(1024**3):.2f} GB")
 # 2. FASTSTART
 print("  Aplicando faststart...")
 result = subprocess.run(
-    ["ffmpeg", "-y", "-i", path_orig, "-c", "copy", "-movflags", "+faststart", path_final],
+    ["ffmpeg", "-y", "-i", path_orig, "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-ar", "44100", "-movflags", "+faststart", path_final],
     capture_output=True, text=True, timeout=600)
 if result.returncode != 0:
     print(f"ERRO ffmpeg: {result.stderr[-200:]}")
