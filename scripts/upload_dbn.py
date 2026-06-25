@@ -25,7 +25,7 @@ def gerar_bloco_wav(seed, n, caminho):
         f.write(struct.pack("<HHIIHH",1,1,SR,SR*2,2,16))
         f.write(b"data"); f.write(struct.pack("<I",len(data))); f.write(data)
 
-print("Gerando 72 blocos de 10min (12h)...")
+print("Gerando 72 blocos de 10min (12h total)...")
 blocos = []
 for i in range(72):
     wav = f"/tmp/b_{i:03d}.wav"
@@ -42,9 +42,9 @@ for i in range(72):
     os.remove(wav)
     blocos.append(mp4)
     if (i+1) % 12 == 0:
-        print(f"  {i+1}/72 ({(i+1)*10/60:.0f}h)")
+        print(f"  {i+1}/72 blocos ({(i+1)*10/60:.0f}h concluidas)")
 
-print("Concatenando...")
+print("Concatenando em MP4 final...")
 with open("/tmp/lista.txt","w") as f:
     for p in blocos: f.write(f"file '{p}'\n")
 
@@ -52,13 +52,11 @@ subprocess.run([
     "ffmpeg","-y","-f","concat","-safe","0","-i","/tmp/lista.txt",
     "-c","copy","/tmp/dbn_12h.mp4"
 ], timeout=600, check=True)
-
 for p in blocos: os.remove(p)
-size_gb = os.path.getsize("/tmp/dbn_12h.mp4")/1024**3
-print(f"MP4 final: {size_gb:.2f} GB")
+print(f"MP4 final: {os.path.getsize('/tmp/dbn_12h.mp4')/1024**3:.2f} GB")
 
-# === UPLOAD YOUTUBE ===
-print("Obtendo access token...")
+# === TOKEN ===
+print("Obtendo access token YouTube...")
 r = requests.post("https://oauth2.googleapis.com/token", data={
     "client_id":     os.environ["YT_CLIENT_ID_2"],
     "client_secret": os.environ["YT_CLIENT_SECRET_2"],
@@ -68,53 +66,71 @@ r = requests.post("https://oauth2.googleapis.com/token", data={
 TOKEN = r.json()["access_token"]
 print("Token OK")
 
-TITLE = "Brown Noise 12 Hours | Deep Sleep, ADHD Focus & Study | Black Screen"
+# === METADADOS SEO — validados contra limites YouTube ===
+# Título: max 100 chars
+TITLE = "Brown Noise 12 Hours | Sleep, ADHD Focus & Study Music | Black Screen"
+assert len(TITLE) <= 100
 
-DESCRIPTION = """12 Hours of Deep Brown Noise — Pure Black Screen for Sleep, Focus & Relaxation
+# Descrição: max 5000 chars — 10 idiomas com os 6 termos mais buscados cada
+DESCRIPTION = """12 Hours of Deep Brown Noise — Pure Black Screen for Sleep, ADHD Focus & Study
 
-🎧 What is Brown Noise?
-Brown noise (red noise) has more energy in low frequencies — a deep, rich rumble like a powerful waterfall or distant thunder. Scientifically studied for sleep, ADHD, tinnitus and focus.
+🎧 WHAT IS BROWN NOISE?
+Brown noise has more energy in low frequencies — a deep rumble like a powerful waterfall or distant thunder. Scientifically studied for sleep quality, ADHD focus and tinnitus relief.
 
-✅ Benefits:
+✅ BENEFITS:
 • Deep sleep & insomnia relief
-• ADHD focus & concentration
-• Study & deep work
+• ADHD concentration & focus
+• Study, work & productivity
 • Tinnitus masking
 • Baby & infant sleep
 • Anxiety & stress relief
+• Meditation & mindfulness
 
-😴 Why Black Screen?
-Total darkness promotes melatonin production for deeper, more restorative sleep.
+😴 WHY BLACK SCREEN?
+Pure black (RGB 0,0,0) — zero light emission, no flickering. Promotes melatonin production for deeper, more restorative sleep. Safe for all night use.
 
-⏱️ Timestamps:
+⏱️ TIMESTAMPS:
 00:00:00 — Start
 03:00:00 — Hour 3
 06:00:00 — Hour 6
 09:00:00 — Hour 9
 12:00:00 — End
 
-— EN: Brown Noise 12 hours black screen sleep focus
-— ES: Ruido marrón 12 horas pantalla negra dormir concentración
-— PT: Ruído marrom 12 horas tela preta dormir foco
-— FR: Bruit brun 12 heures écran noir sommeil concentration
-— DE: Braunes Rauschen 12 Stunden schwarzer Bildschirm Schlaf Fokus
-— JA: ブラウンノイズ 12時間 黒画面 睡眠 集中
-— KO: 브라운 노이즈 12시간 검은 화면 수면 집중
-— ZH: 棕色噪音12小时黑屏睡眠专注
-— AR: ضوضاء بنية 12 ساعة شاشة سوداء نوم تركيز
-— RU: Коричневый шум 12 часов чёрный экран сон концентрация
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🌍 10 LANGUAGES — 10 IDIOMAS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-#BrownNoise #DeepSleep #ADHDFocus #BlackScreen #SleepSounds #StudyMusic #Tinnitus #Focus #Relaxation #BabySleep"""
+🇺🇸 EN — Brown Noise 12 hours black screen sleep focus ADHD study music
+🇪🇸 ES — Ruido marrón 12 horas pantalla negra dormir concentración música estudio TDAH
+🇧🇷 PT — Ruído marrom 12 horas tela preta dormir foco TDAH música estudo sons para dormir
+🇫🇷 FR — Bruit brun 12 heures écran noir sommeil concentration musique étude TDAH
+🇩🇪 DE — Braunes Rauschen 12 Stunden schwarzer Bildschirm Schlaf Fokus Lernen ADHS Musik
+🇯🇵 JP — ブラウンノイズ 12時間 黒画面 睡眠 集中 勉強 ADHD 睡眠音楽
+🇰🇷 KR — 브라운 노이즈 12시간 검은 화면 수면 집중 공부 ADHD 수면 음악
+🇨🇳 ZH — 棕色噪音12小时黑屏深度睡眠专注学习ADHD睡眠音乐
+🇸🇦 AR — ضوضاء بنية 12 ساعة شاشة سوداء نوم تركيز دراسة موسيقى ADHD
+🇷🇺 RU — Коричневый шум 12 часов чёрный экран сон концентрация учёба музыка СДВГ
 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#BrownNoise #DeepSleep #ADHDFocus #BlackScreen #SleepSounds
+#StudyMusic #WhiteNoise #Tinnitus #BabySleep #Relaxation
+#SleepAid #Focus #Concentration #Meditation #StressRelief
+#RuidoMarron #BruitBrun #BraunesRauschen #ブラウンノイズ #棕色噪音"""
+
+assert len(DESCRIPTION) <= 5000
+
+# Tags: max 500 chars total — os 6 termos mais buscados + variações idiomas
 TAGS = [
-    "brown noise","brown noise 12 hours","deep brown noise","brown noise sleep",
-    "brown noise ADHD","brown noise focus","brown noise study","black screen",
-    "sleep sounds","ADHD focus","tinnitus relief","baby sleep","study music",
-    "deep sleep","concentration","relaxation","ambient noise","sleep aid",
-    "brown noise black screen","ruido marron","bruit brun","braunes rauschen",
-    "ブラウンノイズ","브라운 노이즈","棕色噪音","коричневый шум","ضوضاء بنية",
-    "brown noise 12 hours black screen","white noise","pink noise","sleep music"
+    "brown noise","brown noise 12 hours","deep brown noise",
+    "brown noise sleep","brown noise ADHD","brown noise study",
+    "brown noise focus","black screen","sleep sounds","ADHD focus",
+    "tinnitus relief","baby sleep","study music","deep sleep",
+    "concentration","relaxation","sleep aid","sleep music",
+    "ruido marron","bruit brun","braunes rauschen","white noise","pink noise"
 ]
+total = sum(len(t) for t in TAGS) + len(TAGS) - 1
+assert total <= 500, f"Tags {total} > 500"
+print(f"Metadados validados — titulo={len(TITLE)}, desc={len(DESCRIPTION)}, tags={total} chars")
 
 metadata = {
     "snippet": {
@@ -134,7 +150,10 @@ metadata = {
     }
 }
 
+# === UPLOAD RESUMABLE ===
 file_size = os.path.getsize("/tmp/dbn_12h.mp4")
+print(f"Iniciando upload ({file_size//1024//1024}MB)...")
+
 r2 = requests.post(
     "https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status",
     headers={
@@ -146,9 +165,9 @@ r2 = requests.post(
     json=metadata
 )
 upload_url = r2.headers["Location"]
-print("Upload URL obtida")
+print("Upload URL OK")
 
-CHUNK = 50 * 1024 * 1024
+CHUNK    = 50 * 1024 * 1024
 video_id = None
 with open("/tmp/dbn_12h.mp4","rb") as f:
     offset = 0
@@ -169,14 +188,15 @@ with open("/tmp/dbn_12h.mp4","rb") as f:
             break
         elif r3.status_code == 308:
             offset = int(r3.headers.get("Range","bytes=-1").split("-")[1]) + 1
-            print(f"  {offset/file_size*100:.1f}%  ({offset//1024//1024}MB/{file_size//1024//1024}MB)")
+            print(f"  Upload: {offset/file_size*100:.1f}%  ({offset//1024//1024}MB/{file_size//1024//1024}MB)")
         else:
             print(f"ERRO {r3.status_code}: {r3.text[:300]}")
             break
 
 if video_id:
-    print(f"\n✅ PUBLICADO!")
-    print(f"URL: https://youtube.com/watch?v={video_id}")
-    # Salvar ID para workflow de metadados
     with open("dbn_video_id.txt","w") as f:
         f.write(video_id)
+    print(f"\n✅ PUBLICADO!")
+    print(f"URL: https://youtube.com/watch?v={video_id}")
+else:
+    print("FALHOU — sem video_id")
