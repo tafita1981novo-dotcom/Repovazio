@@ -9,7 +9,10 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
-      - run: pip install requests -q
+      - name: Instalar dependencias
+        run: |
+          pip install requests -q
+          sudo apt-get install -y ffmpeg -q
       - name: Upload DBN
         env:
           CLIENT_ID: ${{ secrets.YT_CLIENT_ID_2 }}
@@ -17,7 +20,7 @@ jobs:
           REFRESH_TOKEN: ${{ secrets.YOUTUBE_RT_DBN }}
           CANAL: dbn
           CHANNEL_ID: UCD4LLFnsiVzA-DeSN6oaUzg
-          TITULO: "Brown Noise 12 Hours | Deep Sleep, ADHD Focus & Study | Black Screen"
+          TITULO: "Brown Noise 12 Hours | Deep Sleep, ADHD Focus & Study Music | Black Screen No Ads"
           TAGS: "brown noise,brown noise 12 hours,deep sleep,ADHD focus,sleep sounds,black screen,study music,white noise,tinnitus relief,12 hours,ADHD,concentration"
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: tafita1981novo-dotcom/Repovazio
@@ -25,14 +28,16 @@ jobs:
           SUPABASE_URL: https://tpjvalzwkqwttvmszvie.supabase.co
           SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: python scripts/noise_upload_from_release.py
-
   adhd:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     needs: dbn
     steps:
       - uses: actions/checkout@v4
-      - run: pip install requests -q
+      - name: Instalar dependencias
+        run: |
+          pip install requests -q
+          sudo apt-get install -y ffmpeg -q
       - name: Upload ADHD
         env:
           CLIENT_ID: ${{ secrets.YT_CLIENT_ID_2 }}
@@ -40,22 +45,24 @@ jobs:
           REFRESH_TOKEN: ${{ secrets.YOUTUBE_RT_ADHD }}
           CANAL: adhd
           CHANNEL_ID: UCK3xZDFY84ffNrLEAI1Qmyw
-          TITULO: "ADHD Focus Noise 12 Hours | Brown Noise for Concentration & Deep Work | Black Screen"
-          TAGS: "ADHD focus,ADHD,brown noise ADHD,concentration,deep work,focus music,neurodivergent,12 hours,black screen,executive function"
+          TITULO: "ADHD Focus Brown Noise 10 Hours | Concentration, Deep Work & Study | Black Screen No Ads"
+          TAGS: "ADHD focus,ADHD,brown noise ADHD,concentration,deep work,focus music,neurodivergent,10 hours,black screen,executive function"
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: tafita1981novo-dotcom/Repovazio
           ASSET_NAME: ADHD.MP4
           SUPABASE_URL: https://tpjvalzwkqwttvmszvie.supabase.co
           SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: python scripts/noise_upload_from_release.py
-
   bsn:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     needs: adhd
     steps:
       - uses: actions/checkout@v4
-      - run: pip install requests -q
+      - name: Instalar dependencias
+        run: |
+          pip install requests -q
+          sudo apt-get install -y ffmpeg -q
       - name: Upload BSN
         env:
           CLIENT_ID: ${{ secrets.YT_CLIENT_ID_2 }}
@@ -63,22 +70,24 @@ jobs:
           REFRESH_TOKEN: ${{ secrets.YOUTUBE_RT_BSN }}
           CANAL: bsn
           CHANNEL_ID: UCy4d2yt8eRywJS7PMTDX3xA
-          TITULO: "Baby Sleep White Noise 12 Hours | Womb Sounds for Newborn & Infant | Black Screen"
-          TAGS: "baby sleep,white noise baby,newborn,womb sounds,colic baby,baby calm,newborn sleep,12 hours,black screen"
+          TITULO: "Baby Sleep White Noise 8 Hours | Newborn, Infant & Toddler Sleep Sounds | Black Screen No Ads"
+          TAGS: "baby sleep,white noise baby,newborn sleep,infant sleep,womb sounds,baby calm,colic baby,8 hours,black screen"
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: tafita1981novo-dotcom/Repovazio
           ASSET_NAME: BSN.MP4
           SUPABASE_URL: https://tpjvalzwkqwttvmszvie.supabase.co
           SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: python scripts/noise_upload_from_release.py
-
   pink:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     needs: bsn
     steps:
       - uses: actions/checkout@v4
-      - run: pip install requests -q
+      - name: Instalar dependencias
+        run: |
+          pip install requests -q
+          sudo apt-get install -y ffmpeg -q
       - name: Upload PINK
         env:
           CLIENT_ID: ${{ secrets.YT_CLIENT_ID_2 }}
@@ -86,22 +95,24 @@ jobs:
           REFRESH_TOKEN: ${{ secrets.YOUTUBE_RT_PINK }}
           CANAL: pink
           CHANNEL_ID: UCXQ_-FOGTJk17T06gy0bYqQ
-          TITULO: "Pink Noise 12 Hours | Deep Sleep, Memory Boost & Tinnitus Relief | Black Screen"
-          TAGS: "pink noise,deep sleep,tinnitus,memory boost,sleep science,black screen,12 hours,tinnitus relief,anxiety relief"
+          TITULO: "Pink Noise 10 Hours | Deep Sleep, Memory Boost & Tinnitus Relief | Black Screen No Ads"
+          TAGS: "pink noise,deep sleep,tinnitus relief,memory boost,sleep science,black screen,10 hours,tinnitus masking,anxiety relief"
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: tafita1981novo-dotcom/Repovazio
           ASSET_NAME: PINK.MP4
           SUPABASE_URL: https://tpjvalzwkqwttvmszvie.supabase.co
           SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: python scripts/noise_upload_from_release.py
-
   rain:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     needs: pink
     steps:
       - uses: actions/checkout@v4
-      - run: pip install requests -q
+      - name: Instalar dependencias
+        run: |
+          pip install requests -q
+          sudo apt-get install -y ffmpeg -q
       - name: Upload RAIN
         env:
           CLIENT_ID: ${{ secrets.YT_CLIENT_ID_2 }}
@@ -109,8 +120,8 @@ jobs:
           REFRESH_TOKEN: ${{ secrets.YOUTUBE_RT_RAIN }}
           CANAL: rain
           CHANNEL_ID: UCSW8cGz1OcT1v90Vwc2-UPA
-          TITULO: "Rain Sounds 12 Hours | Heavy Rain for Sleep, Study & Relaxation | Black Screen"
-          TAGS: "rain sounds,sleep rain,rain for sleep,ASMR,sleep sounds,black screen,12 hours,heavy rain,anxiety relief"
+          TITULO: "Rain Sounds 8 Hours | Heavy Rain for Deep Sleep, Study & Relaxation | Black Screen No Ads"
+          TAGS: "rain sounds,sleep rain,rain for sleep,ASMR,sleep sounds,black screen,8 hours,heavy rain,anxiety relief"
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: tafita1981novo-dotcom/Repovazio
           ASSET_NAME: RAIN.MP4
