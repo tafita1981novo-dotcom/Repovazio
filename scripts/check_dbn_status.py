@@ -1,21 +1,39 @@
 import requests, os
 
 r = requests.post("https://oauth2.googleapis.com/token", data={
-    "client_id": os.environ["YT_CLIENT_ID_2"],
+    "client_id":     os.environ["YT_CLIENT_ID_2"],
     "client_secret": os.environ["YT_CLIENT_SECRET_2"],
     "refresh_token": os.environ["YOUTUBE_RT_DBN"],
-    "grant_type": "refresh_token"})
+    "grant_type":    "refresh_token"
+})
 TOKEN = r.json()["access_token"]
 
-# Checar video de teste
-for vid in ["-ktxYWYY_UI", "xpEdBTQUFmo", "5tLftm98WPU"]:
-    rv = requests.get(
-        "https://www.googleapis.com/youtube/v3/videos",
-        params={"part":"snippet,status","id":vid},
-        headers={"Authorization": f"Bearer {TOKEN}"}, timeout=10)
-    items = rv.json().get("items",[])
-    if items:
-        st = items[0]["status"]
-        print(f"{vid}: EXISTE — upload={st.get('uploadStatus')} privacy={st.get('privacyStatus')} rejection={st.get('rejectionReason','none')}")
-    else:
-        print(f"{vid}: DELETADO/NAO ENCONTRADO")
+# Checar o video de teste 30s privado que subimos
+TEST_ID = "-ktxYWYY_UI"
+rv = requests.get(
+    "https://www.googleapis.com/youtube/v3/videos",
+    params={"part":"snippet,status,processingDetails","id":TEST_ID},
+    headers={"Authorization": f"Bearer {TOKEN}"}, timeout=15
+)
+items = rv.json().get("items",[])
+if items:
+    v = items[0]
+    print(f"TEST 30s:   EXISTE")
+    print(f"Upload:     {v['status'].get('uploadStatus','?')}")
+    print(f"Privacy:    {v['status']['privacyStatus']}")
+    print(f"Rejection:  {v['status'].get('rejectionReason','none')}")
+    proc = v.get("processingDetails",{})
+    print(f"Processing: {proc.get('processingStatus','?')}")
+else:
+    print(f"TEST 30s:   DELETADO TAMBEM")
+
+# Checar canal
+rc = requests.get(
+    "https://www.googleapis.com/youtube/v3/channels",
+    params={"part":"snippet,status","mine":"true"},
+    headers={"Authorization": f"Bearer {TOKEN}"}, timeout=15
+)
+for c in rc.json().get("items",[]):
+    print(f"\nCanal: {c['snippet']['title']}")
+    print(f"LongUploads: {c['status'].get('longUploadsStatus')}")
+    print(f"IsLinked:    {c['status'].get('isLinked')}")
