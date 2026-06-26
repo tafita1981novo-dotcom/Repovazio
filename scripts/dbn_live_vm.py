@@ -4,8 +4,8 @@ import numpy as np
 import subprocess
 
 SR      = 44100
-CHUNK_N = SR * 600   # 10 min por bloco
-FADE_N  = SR * 5     # 5s crossfade
+CHUNK_N = SR * 60    # 1 min por bloco — usa ~40MB RAM (era 400MB com 10min)
+FADE_N  = SR * 3     # 3s crossfade imperceptivel
 
 KEY = os.environ.get("DEEP_BROWN_STREAM_KEY","")
 if not KEY:
@@ -31,10 +31,10 @@ def gerar_v7(seed, n):
 
 def crossfade(a, b, fade_n):
     t      = np.linspace(0.0, 1.0, fade_n)
-    fade_o = (1.0 - t) ** 2
-    fade_i = t ** 2
+    fo     = (1.0 - t) ** 2
+    fi     = t ** 2
     result = np.copy(a)
-    result[-fade_n:] = a[-fade_n:] * fade_o + b[:fade_n] * fade_i
+    result[-fade_n:] = a[-fade_n:] * fo + b[:fade_n] * fi
     return np.concatenate([result, b[fade_n:]])
 
 def to_pcm(audio):
@@ -52,18 +52,17 @@ CMD = [
 ]
 
 BASE = random.randint(100000, 999999)
-print(f"DBN Live 24/7 | seed={BASE}")
-print(f"Gerando primeiro bloco antes de conectar...")
+print(f"DBN Live 24/7 | seed={BASE} | blocos de 1min")
+print(f"Gerando bloco inicial...")
 
-# Pre-gerar primeiro bloco ANTES de abrir ffmpeg
-# Evita timeout do systemd durante geração
 atual = gerar_v7(BASE, CHUNK_N)
-print(f"Bloco 1 gerado. Conectando RTMP...")
+print(f"Pronto. Conectando RTMP...")
 
-proc = None
+proc   = None
+bloco  = 1
 
 def shutdown(sig, frame):
-    print("Encerrando..."); 
+    print("Encerrando...")
     try: proc.stdin.close(); proc.terminate(); proc.wait()
     except: pass
     sys.exit(0)
@@ -72,32 +71,34 @@ signal.signal(signal.SIGTERM, shutdown)
 signal.signal(signal.SIGINT,  shutdown)
 
 tentativa = 0
-bloco     = 1
-
 while True:
     tentativa += 1
     print(f"[tentativa {tentativa}] Conectando RTMP...")
     proc = subprocess.Popen(CMD, stdin=subprocess.PIPE)
 
     try:
-        # Enviar bloco atual
         pcm = to_pcm(atual)
         for i in range(0, len(pcm), 32768):
             proc.stdin.write(pcm[i:i+32768])
 
         while True:
             bloco += 1
-            print(f"Gerando bloco {bloco}...")
             prox  = gerar_v7(BASE + bloco, CHUNK_N)
             audio = crossfade(atual, prox, FADE_N)
             pcm   = to_pcm(audio)
             for i in range(0, len(pcm), 32768):
                 proc.stdin.write(pcm[i:i+32768])
             atual = prox
-            print(f"Bloco {bloco} enviado — {bloco*10}min no ar")
+            if bloco % 10 == 0:
+                print(f"Bloco {bloco} — {bloco}min no ar")
 
     except (BrokenPipeError, OSError):
         try: proc.wait(timeout=5)
         except: proc.kill()
         print("Stream caiu — reiniciando em 15s...")
+        time.sleep(15)
+    except Exception as e:
+        print(f"Erro: {e} — reiniciando em 15s...")
+        try: proc.wait(timeout=5)
+        except: proc.kill()
         time.sleep(15)
