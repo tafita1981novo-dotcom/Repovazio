@@ -4,8 +4,8 @@ import numpy as np
 import subprocess
 
 SR      = 44100
-CHUNK_N = SR * 60    # 1 min por bloco — usa ~40MB RAM (era 400MB com 10min)
-FADE_N  = SR * 3     # 3s crossfade imperceptivel
+CHUNK_N = SR * 30    # 30s por bloco — usa ~6MB RAM
+FADE_N  = SR * 2     # 2s crossfade imperceptivel
 
 KEY = os.environ.get("DEEP_BROWN_STREAM_KEY","")
 if not KEY:
@@ -30,12 +30,10 @@ def gerar_v7(seed, n):
     return brown.astype(np.float32)
 
 def crossfade(a, b, fade_n):
-    t      = np.linspace(0.0, 1.0, fade_n)
-    fo     = (1.0 - t) ** 2
-    fi     = t ** 2
-    result = np.copy(a)
-    result[-fade_n:] = a[-fade_n:] * fo + b[:fade_n] * fi
-    return np.concatenate([result, b[fade_n:]])
+    t = np.linspace(0.0, 1.0, fade_n)
+    r = np.copy(a)
+    r[-fade_n:] = a[-fade_n:] * (1-t)**2 + b[:fade_n] * t**2
+    return np.concatenate([r, b[fade_n:]])
 
 def to_pcm(audio):
     return (np.clip(audio, -1.0, 1.0) * 32767).astype(np.int16).tobytes()
@@ -52,14 +50,14 @@ CMD = [
 ]
 
 BASE = random.randint(100000, 999999)
-print(f"DBN Live 24/7 | seed={BASE} | blocos de 1min")
-print(f"Gerando bloco inicial...")
+print(f"DBN Live 24/7 | seed={BASE} | blocos 30s | ~6MB RAM")
 
+# Pre-gerar primeiro bloco (rapido — 30s leva <1s)
 atual = gerar_v7(BASE, CHUNK_N)
-print(f"Pronto. Conectando RTMP...")
+print(f"Conectando RTMP...")
 
-proc   = None
-bloco  = 1
+proc  = None
+bloco = 1
 
 def shutdown(sig, frame):
     print("Encerrando...")
@@ -73,9 +71,8 @@ signal.signal(signal.SIGINT,  shutdown)
 tentativa = 0
 while True:
     tentativa += 1
-    print(f"[tentativa {tentativa}] Conectando RTMP...")
+    print(f"[tentativa {tentativa}] Conectando...")
     proc = subprocess.Popen(CMD, stdin=subprocess.PIPE)
-
     try:
         pcm = to_pcm(atual)
         for i in range(0, len(pcm), 32768):
@@ -89,16 +86,16 @@ while True:
             for i in range(0, len(pcm), 32768):
                 proc.stdin.write(pcm[i:i+32768])
             atual = prox
-            if bloco % 10 == 0:
-                print(f"Bloco {bloco} — {bloco}min no ar")
+            if bloco % 20 == 0:
+                print(f"{bloco*30//60}min no ar")
 
     except (BrokenPipeError, OSError):
         try: proc.wait(timeout=5)
         except: proc.kill()
-        print("Stream caiu — reiniciando em 15s...")
+        print("Caiu — reiniciando em 15s...")
         time.sleep(15)
     except Exception as e:
-        print(f"Erro: {e} — reiniciando em 15s...")
+        print(f"Erro: {e}")
         try: proc.wait(timeout=5)
         except: proc.kill()
         time.sleep(15)
