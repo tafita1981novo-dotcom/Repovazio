@@ -7,33 +7,29 @@ r = requests.post("https://oauth2.googleapis.com/token", data={
     "grant_type":    "refresh_token"
 })
 TOKEN = r.json()["access_token"]
+print("Token OK")
 
-# Checar o video de teste 30s privado que subimos
-TEST_ID = "-ktxYWYY_UI"
-rv = requests.get(
-    "https://www.googleapis.com/youtube/v3/videos",
-    params={"part":"snippet,status,processingDetails","id":TEST_ID},
+# Checar se ha live ativa no canal DBN
+rl = requests.get(
+    "https://www.googleapis.com/youtube/v3/liveBroadcasts",
+    params={"part":"snippet,status","broadcastStatus":"active","broadcastType":"all"},
     headers={"Authorization": f"Bearer {TOKEN}"}, timeout=15
 )
-items = rv.json().get("items",[])
-if items:
-    v = items[0]
-    print(f"TEST 30s:   EXISTE")
-    print(f"Upload:     {v['status'].get('uploadStatus','?')}")
-    print(f"Privacy:    {v['status']['privacyStatus']}")
-    print(f"Rejection:  {v['status'].get('rejectionReason','none')}")
-    proc = v.get("processingDetails",{})
-    print(f"Processing: {proc.get('processingStatus','?')}")
-else:
-    print(f"TEST 30s:   DELETADO TAMBEM")
+items = rl.json().get("items", [])
+print(f"Lives ativas: {len(items)}")
+for v in items:
+    print(f"  ID:     {v['id']}")
+    print(f"  Titulo: {v['snippet']['title']}")
+    print(f"  Status: {v['status']['lifeCycleStatus']}")
+    print(f"  URL:    https://youtube.com/watch?v={v['id']}")
 
-# Checar canal
-rc = requests.get(
-    "https://www.googleapis.com/youtube/v3/channels",
-    params={"part":"snippet,status","mine":"true"},
+# Checar broadcasts em geral (all statuses)
+ra = requests.get(
+    "https://www.googleapis.com/youtube/v3/liveBroadcasts",
+    params={"part":"snippet,status","broadcastStatus":"all","broadcastType":"all","maxResults":5},
     headers={"Authorization": f"Bearer {TOKEN}"}, timeout=15
 )
-for c in rc.json().get("items",[]):
-    print(f"\nCanal: {c['snippet']['title']}")
-    print(f"LongUploads: {c['status'].get('longUploadsStatus')}")
-    print(f"IsLinked:    {c['status'].get('isLinked')}")
+all_items = ra.json().get("items", [])
+print(f"\nTodos os broadcasts ({len(all_items)}):")
+for v in all_items:
+    print(f"  {v['id']}  {v['status']['lifeCycleStatus']}  {v['snippet']['title'][:50]}")
