@@ -1,59 +1,117 @@
 #!/usr/bin/env python3
 """
-DBN Live 24/7 para VM GCP
-Brown noise V7 via ffmpeg lavfi — tela preta absoluta
-Reinicia automaticamente se cair
+DBN Live 24/7 — Som idêntico ao V7 aprovado
+Gera áudio via FFT Python (mesmo algoritmo do arquivo aprovado)
+e faz pipe direto para ffmpeg → YouTube RTMP
 """
-import os, subprocess, sys, signal, time, random
+import os, sys, signal, time, random
+import numpy as np
+import subprocess
+
+SR         = 44100
+CHUNK_SECS = 600        # 10 min por chunk
+CHUNK_N    = SR * CHUNK_SECS
+CROSSFADE  = SR * 3     # 3s crossfade imperceptível
 
 STREAM_KEY = os.environ.get("DEEP_BROWN_STREAM_KEY","")
 if not STREAM_KEY:
-    print("ERRO: DEEP_BROWN_STREAM_KEY não definida")
-    sys.exit(1)
+    print("ERRO: DEEP_BROWN_STREAM_KEY nao definida"); sys.exit(1)
 
 RTMP = f"rtmp://a.rtmp.youtube.com/live2/{STREAM_KEY}"
+print(f"DBN Live 24/7 — som V7 identico ao arquivo aprovado")
+print(f"RTMP: rtmp://a.rtmp.youtube.com/live2/****")
 
-# Filtro V7 corrigido — sem NaN/Inf
-# lowpass duplo 300Hz replica perfil V7 + bass boost sub-grave
-AUDIO = (
-    "anoisesrc=color=brown:amplitude=0.35:sample_rate=44100,"
-    "lowpass=f=300,"
-    "lowpass=f=300,"
-    "bass=g=4:f=60:w=80,"
-    "aresample=44100,"
-    "asetnsamples=n=1024,"
-    "aformat=sample_rates=44100:channel_layouts=stereo:sample_fmts=fltp,"
-    "volume=0.7"
-)
+def gerar_v7(seed, n):
+    """Perfil V7 exato via FFT — identico ao arquivo aprovado"""
+    np.random.seed(seed)
+    white   = np.random.randn(n)
+    f_white = np.fft.rfft(white)
+    freqs   = np.fft.rfftfreq(n, d=1.0/SR)
+    freqs[0]= 1
+    f_brown  = f_white / freqs
+    boost    = np.ones_like(freqs)
+    boost   += 1.8 * np.exp(-((freqs - 50)**2) / (2 * 25**2))
+    shelving = np.ones_like(freqs)
+    shelving[freqs > 300] = (300.0 / freqs[freqs > 300]) ** 2.2
+    f_final  = f_brown * boost * shelving
+    f_final[freqs < 18] = 0
+    brown = np.fft.irfft(f_final, n=n)
+    return (brown / np.max(np.abs(brown)) * 0.707).astype(np.float32)
 
-CMD = [
-    "ffmpeg", "-y", "-re",
-    "-f", "lavfi", "-i", f"color=c=0x000000:size=1920x1080:rate=1",
-    "-f", "lavfi", "-i", AUDIO,
-    "-c:v", "libx264",
-    "-preset", "ultrafast",
-    "-tune",   "stillimage",
-    "-pix_fmt","yuv420p",
-    "-g",      "2",
-    "-b:v",    "500k",
-    "-maxrate","500k",
-    "-bufsize","1000k",
-    "-c:a",    "aac",
-    "-b:a",    "192k",
-    "-ar",     "44100",
-    "-f",      "flv", RTMP
+def crossfade(a, b, fade_n):
+    """Emenda imperceptível entre blocos"""
+    fade_out = np.linspace(1.0, 0.0, fade_n) ** 2
+    fade_in  = np.linspace(0.0, 1.0, fade_n) ** 2
+    joined = np.copy(a)
+    joined[-fade_n:] = a[-fade_n:] * fade_out + b[:fade_n] * fade_in
+    return np.concatenate([joined, b[fade_n:]])
+
+def to_i16(samples_f32):
+    return (np.clip(samples_f32, -1.0, 1.0) * 32767).astype(np.int16).tobytes()
+
+# FFmpeg — recebe PCM s16le mono via stdin
+ffmpeg_cmd = [
+    "ffmpeg", "-y",
+    # Audio pipe
+    "-f","s16le", "-ar",str(SR), "-ac","1", "-i","pipe:0",
+    # Video preto absoluto
+    "-f","lavfi", "-i","color=c=0x000000:size=1920x1080:rate=1",
+    # Encode video
+    "-c:v","libx264", "-preset","ultrafast", "-tune","stillimage",
+    "-pix_fmt","yuv420p", "-g","2",
+    "-b:v","500k", "-maxrate","500k", "-bufsize","1000k",
+    # Encode audio
+    "-c:a","aac", "-b:a","192k", "-ar",str(SR),
+    # Output
+    "-f","flv", RTMP
 ]
 
-print(f"DBN Live 24/7 iniciando...")
-print(f"RTMP: rtmp://a.rtmp.youtube.com/live2/****")
+BASE_SEED = random.randint(100000, 999999)
+print(f"Seed base: {BASE_SEED}")
+
+def shutdown(sig, frame):
+    print("\nEncerrando live...")
+    try: proc.stdin.close()
+    except: pass
+    try: proc.terminate(); proc.wait()
+    except: pass
+    sys.exit(0)
+
+signal.signal(signal.SIGTERM, shutdown)
+signal.signal(signal.SIGINT,  shutdown)
 
 tentativa = 0
 while True:
     tentativa += 1
-    print(f"[tentativa {tentativa}] Conectando...")
-    proc = subprocess.run(CMD)
-    if proc.returncode == 0:
-        print("Stream encerrado normalmente")
-        break
-    print(f"Stream caiu (código {proc.returncode}) — reiniciando em 10s...")
-    time.sleep(10)
+    print(f"[tentativa {tentativa}] Iniciando ffmpeg...")
+
+    proc = subprocess.Popen(ffmpeg_cmd, stdin=subprocess.PIPE)
+
+    try:
+        # Pré-gerar primeiro bloco
+        bloco_atual = gerar_v7(BASE_SEED, CHUNK_N)
+        bloco_num   = 0
+
+        while True:
+            bloco_num += 1
+
+            # Gerar próximo bloco em paralelo
+            proximo = gerar_v7(BASE_SEED + bloco_num, CHUNK_N)
+
+            # Crossfade imperceptível
+            audio = crossfade(bloco_atual, proximo, CROSSFADE)
+            audio_i16 = to_i16(audio)
+
+            # Enviar para ffmpeg em chunks de 8192 amostras
+            CHUNK = 8192 * 2  # bytes
+            for offset in range(0, len(audio_i16), CHUNK):
+                proc.stdin.write(audio_i16[offset:offset+CHUNK])
+
+            bloco_atual = proximo
+            print(f"  Bloco {bloco_num} — {bloco_num * CHUNK_SECS // 60}min no ar")
+
+    except (BrokenPipeError, OSError):
+        print(f"Stream caiu — reiniciando em 10s...")
+        try: proc.wait()
+        except: pass
+        time.sleep(10)
