@@ -1,0 +1,26 @@
+name: DBN Live 24x7
+
+on:
+  workflow_dispatch:
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Instalar dependências
+        run: |
+          pip install numpy
+          sudo apt-get install -y ffmpeg -q
+
+      - name: Iniciar live DBN 24x7
+        env:
+          DEEP_BROWN_STREAM_KEY: ${{ secrets.DEEP_BROWN_STREAM_KEY }}
+        run: python scripts/dbn_live.py
